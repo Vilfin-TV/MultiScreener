@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>intro</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:radial-gradient(ellipse at 50% 42%,#0e1f3b 0%,#060f1c 55%,#030810 100%);font-family:'Segoe UI',Arial,sans-serif}
+  .wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px}
+  .logo{width:300px;height:300px;border-radius:50%;opacity:0;transform:scale(.55);
+    animation:pop 1.4s cubic-bezier(.22,1.4,.36,1) .3s forwards;
+    box-shadow:0 0 120px rgba(37,99,235,.55),0 0 240px rgba(37,99,235,.25)}
+  @keyframes pop{to{opacity:1;transform:scale(1)}}
+  .title{display:flex;gap:18px;align-items:baseline;opacity:0;transform:translateY(26px);animation:rise 1s ease .9s forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .t1{font-size:74px;font-weight:800;letter-spacing:6px;color:#fff}
+  .t1 span{color:#38bdf8}
+  .t2{font-size:74px;font-weight:300;letter-spacing:14px;color:#f59e0b}
+  .sub{font-size:21px;letter-spacing:7px;color:#8ea8c8;text-transform:uppercase;opacity:0;animation:rise .9s ease 1.5s forwards}
+  .ring{position:fixed;inset:0;margin:auto;width:340px;height:340px;border-radius:50%;border:2px solid rgba(56,189,248,.35);
+    opacity:0;animation:ringx 2.2s ease-out 1s forwards}
+  @keyframes ringx{0%{opacity:.9;transform:scale(.9)}100%{opacity:0;transform:scale(2.1)}}
+</style>
+</head>
+<body>
+<div class="ring"></div>
+<div class="wrap">
+  <img class="logo" src="../images/vilfintv-logo.jpg" alt="">
+  <div class="title"><div class="t1">Vilfin<span>TV</span></div><div class="t2">NEWS</div></div>
+  <div class="sub">Every headline · One place</div>
+</div>
+</body>
+</html>

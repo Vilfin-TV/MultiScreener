@@ -103,8 +103,6 @@
   .ghost-btn{padding:9px 14px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid var(--border-strong);
     color:var(--text-dim);transition:var(--t-fast);white-space:nowrap}
   .ghost-btn:hover{color:var(--text);border-color:var(--accent);background:var(--accent-soft)}
-  /* The Exit button closes the native TV app — only meaningful in the APK. */
-  html:not(.tv-app) [data-exit]{display:none}
   .icon-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--border-strong);color:var(--text-dim);display:grid;place-items:center;transition:var(--t-fast)}
   .icon-btn:hover{color:var(--text);border-color:var(--accent);background:var(--accent-soft)}
   .icon-btn svg{width:19px;height:19px}
@@ -117,7 +115,6 @@
   .provider-grid{margin-top:42px;display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
   .provider-card{position:relative;overflow:hidden;background:linear-gradient(170deg,var(--surface-2),var(--surface));
     border:1px solid var(--border);border-radius:20px;padding:28px 26px;text-align:left;transition:transform var(--t-med),border-color var(--t-med),box-shadow var(--t-med)}
-  .provider-card > *{position:relative;z-index:1}
   .provider-card::after{content:"";position:absolute;inset:0;background: linear-gradient(135deg, #020c1b, #0a192f);opacity:0;transition:opacity var(--t-med)}
   .provider-card:hover{transform:translateY(-6px);border-color:var(--border-strong);box-shadow:var(--shadow)}
   .provider-card:hover::after{opacity:1}
@@ -127,10 +124,6 @@
   .provider-card .pc-go{margin-top:18px;font-size:13px;font-weight:700;color:var(--accent-2);display:inline-flex;align-items:center;gap:6px}
   .pc-jio .provider-badge{background:linear-gradient(135deg,#1a73e8,#0b3d91)} .pc-jio{--glow:rgba(26,115,232,.22)}
   .pc-zee5 .provider-badge{background:linear-gradient(135deg,#8224e3,#4f158b)} .pc-zee5{--glow:rgba(130,36,227,.22)}
-  .pc-netflix .provider-badge{background:linear-gradient(135deg,#e50914,#b20710)} .pc-netflix{--glow:rgba(229,9,20,.22)}
-  .pc-prime .provider-badge{background:linear-gradient(135deg,#00a8e1,#0082b4)} .pc-prime{--glow:rgba(0,168,225,.22)}
-  .pc-hotstar .provider-badge{background:linear-gradient(135deg,#1f3e7a,#0a1b3f)} .pc-hotstar{--glow:rgba(31,62,122,.22)}
-  .pc-sonyliv .provider-badge{background:linear-gradient(135deg,#ff5a00,#cc4800)} .pc-sonyliv{--glow:rgba(255,90,0,.22)}
   .pc-airtel .provider-badge{background:linear-gradient(135deg,#ff2e2e,#b30000)} .pc-airtel{--glow:rgba(255,46,46,.2)}
   .pc-free .provider-badge{background:linear-gradient(135deg,#21c45d,#0f8a3c)} .pc-free{--glow:rgba(33,196,93,.22)}
   .pc-pro .provider-badge{background:linear-gradient(135deg,#f59e0b,#b45309)} .pc-pro{--glow:rgba(245,158,11,.22)}
@@ -509,109 +502,14 @@
     border-radius: 6px;
     color: #06121e;
   }
-  /* Favourite = pure status indicator now (actions live in the context menu,
-     opened by right-click / long-press / TV deep-press). Non-interactive so it
-     never intercepts a click or becomes a stray D-pad stop. */
   .ch-card .star {
     position: absolute;
     top: 8px;
     right: 8px;
     font-size: 16px;
-    color: var(--gold);
-    pointer-events: none;
-  }
-  /* Kebab affordance — a discoverable menu trigger on desktop hover/focus.
-     Hidden on TV, where the menu opens via a deep-press on the OK button. */
-  .ch-card .ch-kebab {
-    position: absolute;
-    bottom: 4px;
-    right: 6px;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 7px;
-    font-size: 17px;
-    line-height: 1;
     color: var(--text-faint);
-    background: rgba(4, 9, 26, .55);
-    opacity: 0;
-    cursor: pointer;
-    transition: var(--t-fast);
   }
-  .ch-card:hover .ch-kebab, .ch-card:focus-within .ch-kebab { opacity: 1; }
-  .ch-kebab:hover { color: #fff; background: rgba(4, 9, 26, .92); }
-  html.tv-app .ch-card .ch-kebab { display: none; }
-
-  /* ===== Channel context menu (hide / favourite) ===== */
-  .ch-ctx-backdrop { position: fixed; inset: 0; z-index: 9998; display: none; }
-  .ch-ctx-backdrop.open { display: block; }
-  .ch-ctx {
-    position: fixed;
-    z-index: 9999;
-    min-width: 210px;
-    max-width: 300px;
-    background: #0e1a30;
-    border: 1px solid rgba(255, 255, 255, .12);
-    border-radius: 12px;
-    box-shadow: 0 18px 50px rgba(0, 0, 0, .6);
-    padding: 6px;
-    display: none;
-  }
-  .ch-ctx.open { display: block; }
-  .ch-ctx .ctx-title {
-    padding: 8px 12px 8px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-faint);
-    border-bottom: 1px solid rgba(255, 255, 255, .08);
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .ch-ctx button {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    width: 100%;
-    text-align: left;
-    background: transparent;
-    border: 0;
-    color: var(--text);
-    font: inherit;
-    font-size: 14px;
-    padding: 11px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-  .ch-ctx button:hover, .ch-ctx button:focus {
-    background: rgba(255, 255, 255, .09);
-    outline: none;
-  }
-  .ch-ctx button .ico { font-size: 16px; width: 18px; text-align: center; }
-  .ch-ctx button.danger { color: #ff7a7a; }
-  html.tv-app .ch-ctx { min-width: 260px; padding: 8px; }
-  html.tv-app .ch-ctx button { padding: 14px 14px; font-size: 16px; }
-
-  /* TV option picker for <select> filters (All Countries / Categories /
-     Languages). The native dropdown can't be opened from the remote bridge
-     (no user gesture) and OK used to pop the text keyboard instead — this
-     centered, D-pad-modal list replaces it. */
-  .tv-sel-menu {
-    position: fixed !important;
-    left: 50% !important; top: 50% !important;
-    transform: translate(-50%, -50%);
-    max-height: 72vh; overflow-y: auto;
-    min-width: 340px; max-width: 520px;
-  }
-  .tv-sel-menu .ctx-title { position: sticky; top: 0; background: inherit; z-index: 1; font-size: 14px; }
-  .tv-sel-menu button .ico { color: var(--accent); width: 22px; }
-  .tv-sel-menu button:focus {
-    background: var(--accent-soft) !important;
-    outline: 2px solid #64ffda !important; outline-offset: -2px;
-  }
+  .ch-card .star.on { color: var(--gold); }
 
   /* ===== Category-row (Netflix/Fox) browse mode ===== */
   .channel-track.grouped {
@@ -814,258 +712,6 @@
   }
 
   .ph-logo { max-width: 70px; height: auto; border-radius: 50%; box-shadow: 0 4px 10px rgba(100, 255, 218, 0.2); margin-bottom: 12px; display: inline-block; }
-
-  /* ═══ TV-app mode (Android TV / Nvidia Shield remote) — ?app=tv ═══
-     D-pad focus needs a bold, always-visible ring since there is no cursor. */
-  html.tv-app :focus,
-  html.tv-app :focus-visible {
-    outline: 3px solid #64ffda !important;
-    outline-offset: 2px;
-    border-radius: 8px;
-    scroll-margin: 120px;
-  }
-  html.tv-app .provider-card:focus,
-  html.tv-app .channel-item:focus,
-  html.tv-app .category-result-card:focus,
-  html.tv-app button:focus,
-  html.tv-app [tabindex]:focus {
-    box-shadow: 0 0 0 3px #64ffda, 0 0 22px rgba(100,255,218,.45) !important;
-    transform: scale(1.03);
-    z-index: 5;
-    position: relative;
-  }
-  /* Hide the tiny mouse cursor on TV and give comfortable 10-foot spacing */
-  html.tv-app, html.tv-app * { cursor: none !important; }
-  html.tv-app .provider-grid { gap: 20px; }
-
-  /* TV login: bigger tap targets + unmistakable focus ring on the fields the
-     remote lands on, so signing in with the on-screen keyboard is effortless. */
-  html.tv-app .login-card { padding: 34px 34px 30px; max-width: 460px; }
-  html.tv-app .field input {
-    padding: 15px 16px; font-size: 17px; border-width: 2px;
-  }
-  html.tv-app .field input:focus {
-    outline: 3px solid #64ffda !important; outline-offset: 3px;
-    box-shadow: 0 0 0 3px #64ffda, 0 0 22px rgba(100,255,218,.5) !important;
-    border-color: #64ffda !important;
-  }
-  html.tv-app #login-btn {
-    padding: 16px; font-size: 17px;
-  }
-  html.tv-app #login-btn:focus {
-    outline: 3px solid #ffffff !important; outline-offset: 3px;
-    box-shadow: 0 0 0 3px #64ffda, 0 0 26px rgba(100,255,218,.6) !important;
-  }
-
-  /* Never let anything spill off the screen edges on TV (caused the hub hero
-     to be clipped on the left / "screen too wide"). */
-  html.tv-app, html.tv-app body { overflow-x: hidden !important; max-width: 100%; }
-  html.tv-app .provider-wrap, html.tv-app .layout, html.tv-app .player-hero,
-  html.tv-app .content-shelf, html.tv-app .filters-row {
-    max-width: 100% !important; box-sizing: border-box;
-  }
-
-  /* ── TV landing hub: compact hero so IPTV + Jio TV sit above the fold ── */
-  html.tv-app .provider-hero { padding: 18px 20px 14px; margin-bottom: 12px; }
-  html.tv-app .provider-hero h1 { font-size: 26px; margin: 8px 0 6px; }
-  html.tv-app .provider-hero .ph-tag { font-size: 13px; max-width: 640px; }
-  html.tv-app .provider-hero .ph-logo { max-width: 48px; margin-bottom: 6px; }
-  html.tv-app .provider-hero .ph-badges { margin-top: 8px; }
-  html.tv-app .grid-label { margin: 6px 0 4px; }
-
-  /* ── Force the desktop 3-panel player layout on TV (video + Program Guide +
-     Favorites), overriding the density-driven phone layout so both panels show
-     and the video stays large. ── */
-  html.tv-app .player-hero { flex-direction: row !important; height: auto; position: static !important; }
-  html.tv-app .remote-panel { display: flex !important; flex: 0 0 340px !important; }
-  html.tv-app .fav-panel { display: flex !important; flex: 0 0 240px !important; }
-  html.tv-app .player-stage { max-height: 56vh; }
-  html.tv-app .controls { position: static !important; opacity: 1 !important; }
-  html.tv-app .tb-ext { display: none; }   /* keep topbar uncrowded for the remote */
-
-  /* Keep the filter + search row fully on-screen on TV. The row is
-     overflow-x:auto by default, which the D-pad can't scroll, so the search
-     box (last child) sat off the right edge. Wrap instead, and drop the
-     flex-spacer that pushed search to the far right. */
-  html.tv-app .filters-row { flex-wrap: wrap !important; overflow: visible !important; row-gap: 10px; }
-  html.tv-app .filters-row > div[style*="flex:1"] { display: none !important; }
-  html.tv-app .filters-row #search-new { width: 260px !important; }
-  /* Channel search relocated into the player topbar (out of the D-pad grid path). */
-  html.tv-app .tv-topbar-search { width: 210px !important; margin: 0 10px 0 0 !important; padding: 8px 14px !important; font-size: 14px; }
-
-  /* ── Strong, unmistakable focus ring for every remote-reachable target ── */
-  html.tv-app .ch-card:focus,
-  html.tv-app .fav-item:focus,
-  html.tv-app .filter-chip:focus,
-  html.tv-app .ctrl-btn:focus,
-  html.tv-app .provider-card:focus {
-    outline: 3px solid #64ffda !important; outline-offset: 2px;
-    box-shadow: 0 0 0 3px #64ffda, 0 0 24px rgba(100,255,218,.55) !important;
-    transform: scale(1.06);
-    transition: transform .12s ease;
-    z-index: 6; position: relative;
-  }
-  html.tv-app .ctrl-btn:focus { transform: scale(1.14); background: var(--accent-soft) !important; }
-  /* The ACTIVE chip is already filled mint, so a mint focus ring disappears
-     against it — use a white ring there so focus is always distinguishable. */
-  html.tv-app .filter-chip.active:focus {
-    outline: 3px solid #ffffff !important;
-    box-shadow: 0 0 0 3px #ffffff, 0 0 24px rgba(255,255,255,.55) !important;
-  }
-  /* Bigger channel cards + controls for 10-foot legibility */
-  html.tv-app .ch-card { padding: 12px; }
-  html.tv-app .ctrl-btn { width: 44px; height: 44px; }
-
-  /* Program Guide slots, filter selects and the side panels themselves are all
-     remote-reachable zones — give each the same unmistakable focus ring so the
-     cursor is never lost when crossing between zones (windowed AND cinema). */
-  html.tv-app .epg-slot:focus,
-  html.tv-app select:focus,
-  html.tv-app #search-new:focus {
-    outline: 3px solid #64ffda !important; outline-offset: 2px;
-    box-shadow: 0 0 0 3px #64ffda, 0 0 24px rgba(100,255,218,.55) !important;
-    z-index: 6; position: relative;
-  }
-  /* Empty panels (e.g. Guide before a channel plays) receive focus on their
-     container so RIGHT from the player controls always lands somewhere visible. */
-  html.tv-app #hero-remote-panel:focus,
-  html.tv-app #fav-panel:focus {
-    outline: 3px solid #64ffda !important; outline-offset: -3px;
-    box-shadow: inset 0 0 0 2px rgba(100,255,218,.35), 0 0 24px rgba(100,255,218,.35) !important;
-  }
-
-  /* ── Exit Confirmation (TV root-level BACK) ─────────────────────────────
-     BACK at the provider hub opens this instead of quitting; one more
-     explicitly focused OK press on "Yes, exit to Home" closes the app. */
-  .tv-exit-backdrop {
-    display: none; position: fixed; inset: 0; z-index: 11000;
-    background: rgba(2, 6, 16, .82); backdrop-filter: blur(6px);
-    align-items: center; justify-content: center;
-  }
-  .tv-exit-backdrop.open { display: flex; animation: tvExitIn .18s ease; }
-  @keyframes tvExitIn { from { opacity: 0; } to { opacity: 1; } }
-  .tv-exit-card {
-    background: linear-gradient(180deg, #0d1f3d, #0a192f);
-    border: 1px solid var(--border-strong); border-radius: 18px;
-    padding: 40px 48px 36px; text-align: center; max-width: 500px;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, .65);
-  }
-  .tv-exit-card .tv-exit-ico { font-size: 40px; margin-bottom: 10px; }
-  .tv-exit-card h2 { margin: 0 0 8px; font-size: 24px; color: var(--text); letter-spacing: .3px; }
-  .tv-exit-card p { margin: 0 0 26px; font-size: 15px; color: var(--text-dim); }
-  .tv-exit-actions { display: flex; gap: 16px; justify-content: center; }
-  .tv-exit-btn {
-    padding: 14px 26px; font-size: 16px; font-weight: 700; letter-spacing: .3px;
-    border-radius: 12px; border: 1px solid var(--border-strong); cursor: pointer;
-    background: var(--surface-2, #12233f); color: var(--text);
-    transition: transform .12s ease, background .12s ease;
-  }
-  .tv-exit-btn.primary { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-  .tv-exit-btn:focus {
-    outline: 3px solid #64ffda !important; outline-offset: 3px;
-    box-shadow: 0 0 0 3px #64ffda, 0 0 26px rgba(100,255,218,.6) !important;
-    transform: scale(1.06);
-  }
-
-  /* ── Cinema (fullscreen) mode ──────────────────────────────────────────────
-     A gesture-free fullscreen for TV: the native remote intercepts OK and
-     replays it via evaluateJavascript, which the HTML5 Fullscreen API rejects
-     for lack of a user gesture. So on TV, "fullscreen" is a CSS class toggle
-     that fills the viewport with the video and hides everything else. Channel
-     up/down keep working (the <video> is reused), and BACK exits. */
-  html.tv-cinema, html.tv-cinema body { background: #000 !important; }
-  html.tv-cinema .topbar,
-  html.tv-cinema .provider-hero,
-  html.tv-cinema .remote-panel,
-  html.tv-cinema .fav-panel,
-  html.tv-cinema .content-shelf { display: none !important; }
-  html.tv-cinema .layout { padding: 0 !important; margin: 0 !important; }
-  html.tv-cinema .player-hero { padding: 0 !important; gap: 0 !important; }
-  html.tv-cinema .player-hero .video-col { flex: 1 1 100% !important; }
-  html.tv-cinema #video-shell {
-    position: fixed !important; inset: 0 !important;
-    width: 100% !important; height: 100% !important;
-    max-width: none !important; max-height: none !important;   /* .player-stage caps at 1200px → 80px blue strip on the right without this */
-    border-radius: 0 !important; z-index: 9998 !important;
-    background: #000 !important;
-  }
-  html.tv-cinema #video-shell video,
-  html.tv-cinema #video-shell .video-js,
-  html.tv-cinema #video-shell .vjs-tech {
-    position: absolute !important; inset: 0 !important;
-    width: 100% !important; height: 100% !important; object-fit: contain !important; background: #000 !important;
-  }
-  /* Keep the now-playing chip as a channel OSD while in cinema mode — move it to
-     the TOP so it doesn't collide with the control bar at the bottom. */
-  html.tv-cinema #video-shell .now-playing { position: absolute; left: 24px; top: 22px; bottom: auto; z-index: 9999; max-width: 60vw; }
-
-  /* Playback controls as a D-pad-navigable overlay bar in cinema fullscreen
-     (prev/next channel, prev/next source, play·pause, mute + volume, PiP,
-     fullscreen). Without this the controls sat in normal flow below the 100%-
-     height video and were off-screen — "no control buttons in fullscreen". */
-  html.tv-cinema #video-shell .controls {
-    position: absolute !important; left: 0; right: 0; bottom: 0; top: auto !important;
-    z-index: 10000 !important; opacity: 1 !important;
-    display: flex !important; align-items: center; justify-content: center; gap: 16px;
-    padding: 30px 44px 24px;
-    background: linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,.4) 60%, transparent);
-  }
-  html.tv-cinema #video-shell .controls .ctrl-btn { width: 52px; height: 52px; }
-  html.tv-cinema #video-shell .controls .vol-slider { width: 120px; }
-
-  /* Guide/Favorites buttons only make sense in fullscreen (windowed mode already
-     shows both panels beside the video). The bar shown in cinema is the static
-     #controls, so the real buttons are #btn-guide/#btn-favs there. */
-  .tv-cin-only { display: none !important; }
-  html.tv-cinema #video-shell .controls .tv-cin-only { display: inline-flex !important; }
-  /* In cinema, show ONLY the static control bar (video.js's own bar would double
-     up / hide our Guide+Favorites buttons). */
-  html.tv-cinema .vjs-control-bar { display: none !important; }
-  .vjs-guide-btn, .vjs-favs-btn { display: none !important; }
-  html.tv-cinema .vjs-guide-btn, html.tv-cinema .vjs-favs-btn { display: inline-flex !important; }
-  html.tv-cinema .vjs-guide-btn span, html.tv-cinema .vjs-favs-btn span { font-size: 20px; line-height: 1; }
-  html.tv-cinema.cin-guide .vjs-guide-btn, html.tv-cinema.cin-favs .vjs-favs-btn {
-    color: var(--accent) !important; background: var(--accent-soft) !important; border-radius: 8px;
-  }
-
-  /* The All-Channels drawer is TV-cinema-only: never shown in windowed mode. */
-  .channels-panel { display: none; flex-direction: column; }
-  .channels-panel .fav-head { display: flex; align-items: center; justify-content: space-between;
-    gap: 8px; padding: 4px 4px 12px; font-weight: 700; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
-  .channels-panel .fav-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
-  /* The active cinema drawer button lights up like the vjs ones. */
-  html.tv-cinema.cin-guide #btn-guide,
-  html.tv-cinema.cin-favs  #btn-favs,
-  html.tv-cinema.cin-channels #btn-channels {
-    color: var(--accent) !important; background: var(--accent-soft) !important; border-radius: 8px;
-  }
-  /* Fullscreen expand icon is meaningless once already in cinema — on TV the
-     Channel-list button takes its place (BACK exits cinema). */
-  html.tv-app.tv-cinema #video-shell .controls #btn-fs { display: none !important; }
-
-  /* Slide-in side drawers over the fullscreen video for Program Guide / Favorites / All Channels. */
-  html.tv-cinema.cin-guide    .remote-panel,
-  html.tv-cinema.cin-favs     .fav-panel,
-  html.tv-cinema.cin-channels .channels-panel {
-    display: flex !important; flex-direction: column;
-    position: fixed !important; top: 0; right: 0; bottom: 0; left: auto;
-    width: min(520px, 46vw); height: 100vh; margin: 0 !important; flex: none !important;
-    z-index: 10006 !important; border-radius: 0 !important;
-    background: rgba(6, 13, 26, .975) !important;
-    border-left: 1px solid var(--border-strong);
-    box-shadow: -16px 0 48px rgba(0, 0, 0, .65);
-    overflow-y: auto; padding: 26px 22px 32px;
-    animation: cinDrawerIn .22s ease;
-  }
-  @keyframes cinDrawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-  html.tv-cinema.cin-guide    .remote-panel:focus,
-  html.tv-cinema.cin-favs     .fav-panel:focus,
-  html.tv-cinema.cin-channels .channels-panel:focus { outline: none; }
-  html.tv-cinema.cin-guide    .remote-panel .epg-slot:focus,
-  html.tv-cinema.cin-favs     .fav-panel .fav-item:focus,
-  html.tv-cinema.cin-channels .channels-panel .fav-item:focus {
-    outline: 3px solid #64ffda !important; outline-offset: 2px; border-radius: 8px;
-  }
 </style>
 </head>
 <body>
@@ -1086,7 +732,7 @@
 <section id="provider-screen" class="screen">
   <header class="topbar">
     <div class="brand"><span class="logo-dot"><img src="images/vilfintv-logo.jpg" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:9px"></span>VilfinTV IPTV</div>
-    <div class="topbar-actions"><button class="ghost-btn" data-exit>Exit</button><button class="ghost-btn" data-logout>Sign out</button></div>
+    <div class="topbar-actions"><button class="ghost-btn" data-logout>Sign out</button></div>
   </header>
   <div class="provider-wrap">
     <div class="provider-hero">
@@ -1102,12 +748,12 @@
     </div>
     <div class="grid-label">Browse providers</div>
     <div class="provider-grid">
-      <button class="provider-card pc-jio" data-provider="jio"><div class="provider-badge">J</div><h3>Jio IPTV</h3><div class="pc-sub">Load the Jio channel lineup</div><span class="pc-go">Open Zee5 →</span></button>
-      <button class="provider-card pc-zee5" data-provider="zee5"><div class="provider-badge">Z</div><h3>Zee5 TV</h3><div class="pc-sub">Launch native interface via Proxy</div><span class="pc-go">Open Zee5 →</span></button>
-      <button class="provider-card pc-airtel" data-provider="airtel"><div class="provider-badge">A</div><h3>Airtel IPTV</h3><div class="pc-sub">Load the Airtel channel lineup</div><span class="pc-go">Open Zee5 →</span></button>
-      <button class="provider-card pc-free" data-provider="free"><div class="provider-badge">F</div><h3>Free IPTV</h3><div class="pc-sub">Open-source channels from iptv-org</div><span class="pc-go">Open Zee5 →</span></button>
-      <button class="provider-card pc-pro" data-provider="pro"><div class="provider-badge">P</div><h3>IPTV Pro</h3><div class="pc-sub">Curated premium channel lineup</div><span class="pc-go">Open Zee5 →</span></button>
-      <button class="provider-card pc-custom" data-provider="custom"><div class="provider-badge">C</div><h3>Custom</h3><div class="pc-sub">Your own playlist URL from settings</div><span class="pc-go">Open Zee5 →</span></button>
+      <button class="provider-card pc-jio" data-provider="jio"><div class="provider-badge">J</div><h3>Jio IPTV</h3><div class="pc-sub">Load the Jio channel lineup</div><span class="pc-go">Open lineup →</span></button>
+      <button class="provider-card pc-zee5" data-provider="zee5"><div class="provider-badge">Z</div><h3>Zee5 TV</h3><div class="pc-sub">Load the Zee5 channel lineup</div><span class="pc-go">Open lineup →</span></button>
+      <button class="provider-card pc-airtel" data-provider="airtel"><div class="provider-badge">A</div><h3>Airtel IPTV</h3><div class="pc-sub">Load the Airtel channel lineup</div><span class="pc-go">Open lineup →</span></button>
+      <button class="provider-card pc-free" data-provider="free"><div class="provider-badge">F</div><h3>Free IPTV</h3><div class="pc-sub">Open-source channels from iptv-org</div><span class="pc-go">Open lineup →</span></button>
+      <button class="provider-card pc-pro" data-provider="pro"><div class="provider-badge">P</div><h3>IPTV Pro</h3><div class="pc-sub">Curated premium channel lineup</div><span class="pc-go">Open lineup →</span></button>
+      <button class="provider-card pc-custom" data-provider="custom"><div class="provider-badge">C</div><h3>Custom</h3><div class="pc-sub">Your own playlist URL from settings</div><span class="pc-go">Open lineup →</span></button>
     </div>
   </div>
 </section>
@@ -1132,7 +778,6 @@
       <a class="ghost-btn tb-ext" href="story.html" title="Stories" style="text-decoration:none">📖 Stories</a>
       <a class="ghost-btn tb-ext" href="blog_intelligence_hub.html" title="Blog" style="text-decoration:none">📝 Blog</a>
       <button class="ghost-btn" data-back>Providers</button>
-      <button class="ghost-btn" data-exit>Exit</button>
       <button class="ghost-btn" data-logout>Sign out</button>
     </div>
   </header>
@@ -1158,9 +803,6 @@
           </div>
           <div class="ctrl-spacer"></div>
           <span class="now-live"><span class="live-dot"></span>LIVE</span>
-          <button class="ctrl-btn tv-cin-only" id="btn-guide" title="Program Guide"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16v2H4zm0 4h16v2H4zm0 4h10v2H4zm0 4h10v2H4z"/></svg></button>
-          <button class="ctrl-btn tv-cin-only" id="btn-favs" title="Favorites"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
-          <button class="ctrl-btn tv-cin-only" id="btn-channels" title="Channel list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3.5" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="3.5" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="3.5" cy="18" r="1.3" fill="currentColor" stroke="none"/></svg></button>
           <button class="ctrl-btn" id="btn-pip" title="Picture in Picture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="10" width="7" height="6" rx="1" fill="currentColor" stroke="none"/></svg></button>
           <button class="ctrl-btn" id="btn-fs" title="Fullscreen"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg></button>
         </div>
@@ -1183,14 +825,6 @@
       <aside class="fav-panel" id="fav-panel">
         <div class="fav-head"><span>★ Favorites</span><span class="fav-count" id="fav-count"></span></div>
         <div class="fav-list" id="fav-list"></div>
-      </aside>
-
-      <!-- All-channels drawer — TV cinema only. Slides in from the right over the
-           fullscreen video so you can scroll the full lineup and pick a channel
-           without leaving the video. Hidden everywhere else. -->
-      <aside class="channels-panel" id="channels-panel">
-        <div class="fav-head"><span>☰ All Channels</span><span class="fav-count" id="chd-count"></span></div>
-        <div class="fav-list" id="chd-list"></div>
       </aside>
     </div>
     
@@ -1244,32 +878,6 @@
 function __iptvBoot(){
   "use strict";
   var _yr=document.getElementById("sf-year"); if(_yr) _yr.textContent=new Date().getFullYear();
-
-  // TV-app mode (?app=tv): Android TV / Shield remote build. Shows only the
-  // IPTV + Jio TV lineups and enables D-pad focus styling. Set by the native
-  // WebView wrapper's URL.
-  var TV_APP = /[?&]app=tv\b/i.test(location.search);
-  if (TV_APP) {
-    document.documentElement.classList.add("tv-app");
-    // TVs report a narrow CSS width (density-scaled), which drops iptv.html into
-    // its phone layout — hiding the Program Guide + Favorites and shrinking the
-    // video. Pin a 1280px logical viewport so the full desktop 3-panel layout
-    // renders and the WebView scales it up to the 10-foot screen.
-    var vp = document.querySelector('meta[name="viewport"]');
-    if (!vp) { vp = document.createElement("meta"); vp.name = "viewport"; document.head.appendChild(vp); }
-    // width only (no initial-scale) so the WebView's overview mode zooms the
-    // 1280px layout to fit the TV width exactly — no horizontal cropping.
-    vp.setAttribute("content", "width=1280");
-    // Move the channel search OUT of the vertical D-pad path. It sat on its own
-    // row between the filter chips and the grid, so scrolling down kept landing
-    // on it and popping the on-screen keyboard. Park it in the player topbar so
-    // the down-path is chips → channels directly; search is a deliberate trip up.
-    try {
-      var _srch = document.getElementById("search-new");
-      var _acts = document.querySelector("#player-screen .topbar-actions");
-      if (_srch && _acts) { _srch.classList.add("tv-topbar-search"); _acts.insertBefore(_srch, _acts.firstChild); }
-    } catch (e) {}
-  }
 
   var WORKER="https://page-iptv.vilfintv.workers.dev";
   var API={
@@ -1344,26 +952,12 @@ function __iptvBoot(){
         if (!provs || !Array.isArray(provs) || provs.length === 0) {
           provs = [
             { id: 'jio', name: 'Jio IPTV', icon: 'J' },
-            { id: 'zee5', name: 'Zee5 TV', icon: 'Z' },
-            { id: 'netflix', name: 'Netflix India', icon: 'N' },
-            { id: 'prime', name: 'Prime Video', icon: 'P' },
-            { id: 'hotstar', name: 'Hotstar', icon: 'H' },
-            { id: 'sonyliv', name: 'SonyLIV', icon: 'S' },
             { id: 'airtel', name: 'Airtel IPTV', icon: 'A' },
             { id: 'free', name: 'Free IPTV', icon: 'F' },
             { id: 'pro', name: 'IPTV Pro', icon: 'P' },
             { id: 'custom', name: 'Custom', icon: 'C' }
           ];
         }
-        
-        var hasZee5 = false;
-        for (var i=0; i<provs.length; i++) {
-          if (provs[i].id === 'zee5') hasZee5 = true;
-        }
-        if (!hasZee5) {
-          provs.push({ id: 'zee5', name: 'Zee5 TV', icon: 'Z' });
-        }
-        
         state.providersList = provs;
         renderProviderBrowse();
       })
@@ -1403,7 +997,7 @@ function __iptvBoot(){
       '<div class="provider-badge">'+providerBadgeHtml(p)+'</div>' +
       '<h3>'+esc(p.name)+'</h3>' +
       '<div class="pc-sub">Open the '+esc(p.name)+' lineup</div>' +
-      '<span class="pc-go">Open Zee5 →</span></button>';
+      '<span class="pc-go">Open lineup →</span></button>';
   }
   function _bindProviderCards(grid){
     Array.prototype.forEach.call(grid.querySelectorAll(".provider-card[data-provider]"),function(c){
@@ -1439,33 +1033,11 @@ function __iptvBoot(){
       '<h3>Jio TV</h3>'+
       '<div class="pc-sub">Exclusive live Indian channels</div>'+
       '<span class="pc-go">Open Jio TV →</span></button>'+
-      // TV-app build ships IPTV + Jio TV only — hide the native-app launchers.
-      (TV_APP ? '' :
       '<button class="provider-card pc-zee5" data-provider="zee5">'+
-      '<div class="provider-badge">Z</div>'+
+      '<div class="provider-badge">🎬</div>'+
       '<h3>Zee5 TV</h3>'+
-      '<div class="pc-sub">Launch native interface via Proxy</div>'+
-      '<span class="pc-go">Open Zee5 →</span></button>'+
-      '<button class="provider-card pc-netflix" data-provider="netflix">'+
-      '<div class="provider-badge">N</div>'+
-      '<h3>Netflix India</h3>'+
-      '<div class="pc-sub">Launch native interface via Proxy</div>'+
-      '<span class="pc-go">Open Netflix →</span></button>'+
-      '<button class="provider-card pc-prime" data-provider="prime">'+
-      '<div class="provider-badge">P</div>'+
-      '<h3>Prime Video</h3>'+
-      '<div class="pc-sub">Launch native interface via Proxy</div>'+
-      '<span class="pc-go">Open Prime →</span></button>'+
-      '<button class="provider-card pc-hotstar" data-provider="hotstar">'+
-      '<div class="provider-badge">H</div>'+
-      '<h3>Hotstar</h3>'+
-      '<div class="pc-sub">Launch native interface via Proxy</div>'+
-      '<span class="pc-go">Open Hotstar →</span></button>'+
-      '<button class="provider-card pc-sonyliv" data-provider="sonyliv">'+
-      '<div class="provider-badge">S</div>'+
-      '<h3>SonyLIV</h3>'+
-      '<div class="pc-sub">Launch native interface via Proxy</div>'+
-      '<span class="pc-go">Open SonyLIV →</span></button>');
+      '<div class="pc-sub">Exclusive live Indian channels</div>'+
+      '<span class="pc-go">Open Zee5 TV →</span></button>';
     var card=grid.querySelector('.provider-card[data-iptv]');
     if(card)card.addEventListener("click",function(){openIPTV();});
     var jioCard=grid.querySelector('.provider-card[data-provider="jio"]');
@@ -1479,23 +1051,11 @@ function __iptvBoot(){
     });
     var zee5Card=grid.querySelector('.provider-card[data-provider="zee5"]');
     if(zee5Card)zee5Card.addEventListener("click",function(){
-      window.open("https://www.zee5.com", "_blank");
-    });
-    var netflixCard=grid.querySelector('.provider-card[data-provider="netflix"]');
-    if(netflixCard)netflixCard.addEventListener("click",function(){
-      window.open("https://www.netflix.com/in/", "_blank");
-    });
-    var primeCard=grid.querySelector('.provider-card[data-provider="prime"]');
-    if(primeCard)primeCard.addEventListener("click",function(){
-      window.open("https://www.primevideo.com/region/in/", "_blank");
-    });
-    var hotstarCard=grid.querySelector('.provider-card[data-provider="hotstar"]');
-    if(hotstarCard)hotstarCard.addEventListener("click",function(){
-      window.open("https://www.hotstar.com/in", "_blank");
-    });
-    var sonylivCard=grid.querySelector('.provider-card[data-provider="sonyliv"]');
-    if(sonylivCard)sonylivCard.addEventListener("click",function(){
-      window.open("https://www.sonyliv.com/", "_blank");
+      state.provider = "zee5";
+      state.group = null;
+      var pr = _enabledProvs().find(function(p){ return p.id==="zee5"; });
+      if(pr) loadProvider("zee5");
+      else alert("Zee5 TV playlist is missing or not configured yet!");
     });
   }
   // Enabled providers, de-duplicated by m3u URL (so the same playlist is listed once).
@@ -1709,24 +1269,12 @@ function __iptvBoot(){
   });
   function logout(){stopPlayback();state.token=null;state.channels=[];state.filtered=[];localStorage.removeItem(TOKEN_KEY);show("login-screen");}
   Array.prototype.forEach.call(document.querySelectorAll("[data-logout]"),function(b){b.addEventListener("click",logout);});
-  // Exit button (TV only): close the native app via the AndroidTV bridge.
-  Array.prototype.forEach.call(document.querySelectorAll("[data-exit]"),function(b){
-    b.addEventListener("click",function(){
-      try{ if(window.AndroidTV && typeof AndroidTV.exitApp==="function"){ AndroidTV.exitApp(); return; } }catch(e){}
-      try{ window.close(); }catch(e){}
-    });
-  });
   Array.prototype.forEach.call(document.querySelectorAll("[data-back]"),function(b){b.addEventListener("click",function(){stopPlayback();showProviderScreen();});});
 
   /* ---------- Provider ---------- */
   Array.prototype.forEach.call(document.querySelectorAll(".provider-card"),function(card){card.addEventListener("click",function(){loadProvider(card.getAttribute("data-provider"));});});
 
   function loadProvider(provider){
-    if (provider === 'zee5') { window.open("https://www.zee5.com", "_blank"); return; }
-    if (provider === 'netflix') { window.open("https://www.netflix.com/in/", "_blank"); return; }
-    if (provider === 'prime') { window.open("https://www.primevideo.com/region/in/", "_blank"); return; }
-    if (provider === 'hotstar') { window.open("https://www.hotstar.com/in", "_blank"); return; }
-    if (provider === 'sonyliv') { window.open("https://www.sonyliv.com/", "_blank"); return; }
     if(!state.token){logout();return;}
     state.provider=provider;
     var L={jio:"Jio IPTV",airtel:"Airtel IPTV",free:"Free IPTV",pro:"IPTV Pro",custom:"Custom"};
@@ -1750,7 +1298,6 @@ function __iptvBoot(){
         applyDefaults();
         populateFilters();
         applyFilters(); // render the channel grid immediately (all channels) instead of an empty "pick a filter" state
-        renderFavPanel();  // channels just arrived — repaint favourites now that favKey() can match them (was left empty on provider load)
         toast(state.channels.length.toLocaleString()+" channels available.");
       })
       .catch(function(err){
@@ -1760,38 +1307,11 @@ function __iptvBoot(){
       });
   }
 
-  const _LANG_MAP = [
-    { name: "Hindi", regex: /\b(aaj\s*tak|zee\s*hind|abp\s*news|india\s*tv|ndtv\s*india|republic\s*bharat|news18\s*india|tv9\s*bharatvarsh|good\s*news|times\s*now\s*navbharat|hindi\b|bharat\s*samachar|janta\s*tv|sansad|dd\s*news|dd\s*national)\b/i },
-    { name: "Malayalam", regex: /\b(asianet|manorama|mathrubhumi|mazhavil|surya|kairali|amrita|reporter|media\s*one|jeevan|24\s*news|goodness|jai\s*hind\s*malayalam|kappa|kaumudi|safari|news18\s*kerala|janam|swasthya|malayalam|kerala)\b/i },
-    { name: "Tamil", regex: /\b(sun\s*tv|vijay\s*tv|star\s*vijay|polimer|kalaignar|raj\s*tv|captain|puthiya\s*thalaimurai|thanthi|news\s*7\s*tamil|j\s*movies|peppers|news18\s*tamil|jaya\s*tv|tamil)\b/i },
-    { name: "Telugu", regex: /\b(etv|tv5|tv9\s*telugu|sakshi|abn\s*andhra|10tv|t\s*news|ntv\s*telugu|raj\s*news|hmtv|mahaa|v6|i\s*news|maa\s*tv|gemini|telugu)\b/i },
-    { name: "Kannada", regex: /\b(suvarna|public\s*tv|tv9\s*kannada|asianet\s*suvarna|power\s*tv|news18\s*kannada|udaya|udaya\s*news|kannada)\b/i },
-    { name: "Marathi", regex: /\b(abp\s*majha|saam\s*marathi|tv9\s*marathi|zee\s*marathi|star\s*pravah|news18\s*lokmat|ibn\s*lokmat|jai\s*maharashtra|sahyadri|colors\s*marathi|marathi)\b/i },
-    { name: "Punjabi", regex: /\b(ptc\s*news|ptc\s*punjabi|abp\s*sanjha|zee\s*punjabi|news18\s*punjab|day\s*&\s*night|chardikla|9x\s*tashan|punjab|punjabi)\b/i },
-    { name: "Bengali", regex: /\b(abp\s*ananda|zee\s*bangla|star\s*jalsha|news18\s*bangla|kolkata\s*tv|24\s*ghanta|akash\s*aath|news\s*time\s*bangla|tara\s*muzik|bengali|bangla)\b/i },
-    { name: "Odia", regex: /\b(otv|kalinga\s*tv|news18\s*odia|kanak\s*news|tarang|sidharth\s*tv|prarthana|odisha|odia)\b/i },
-    { name: "Assamese", regex: /\b(dy365|news18\s*assam|pratidin\s*time|prag\s*news|protidin|gnn|hayagrib|rongali|assamese|assam)\b/i },
-    { name: "English", regex: /\b(english|bbc|cnn|cnbc|bloomberg|al\s*jazeera|ndtv\s*24x7|republic\s*tv|wion|times\s*now|india\s*today|mirror\s*now|news18\s*lokmat|news\s*x)\b/i },
-    { name: "Spanish", regex: /\b(spanish|español|telemundo|univision|tve)\b/i },
-    { name: "French", regex: /\b(french|français|tf1|france\s*24|tv5monde)\b/i },
-    { name: "Arabic", regex: /\b(arabic|mbc|al\s*arabiya|rotana|sky\s*news\s*arabia)\b/i }
-  ];
-
-  function inferLanguage(c) {
-    var hay = ((c.name||"") + " " + (c.category||"")).toLowerCase();
-    for(var i=0; i<_LANG_MAP.length; i++){
-      if(_LANG_MAP[i].regex.test(hay)) return _LANG_MAP[i].name;
-    }
-    return "—";
-  }
-
   function normalizeChannel(c){
     var q=(c.quality||"").toString().toUpperCase();
     if(q!=="HD"&&q!=="SD")q=/\bHD\b|FHD|1080|720/i.test((c.name||"")+" "+(c.url||""))?"HD":"SD";
-    var lang = (c.language||c.lang||"").trim();
-    if (!lang || lang === "—") lang = inferLanguage(c);
     return{name:c.name||"Unknown channel",id:c.id||"",logo:c.logo||"",category:c.category||"General",
-      language:lang,country:countryOf(c),url:c.url||"",quality:q,source:c.source||"",sourceId:c.sourceId||""};
+      language:(c.language||c.lang||"").trim()||"—",country:countryOf(c),url:c.url||"",quality:q,source:c.source||"",sourceId:c.sourceId||""};
   }
   function countryOf(c){
     var id=(c.id||"");var m=id.match(/\.([a-zA-Z]{2})$/);
@@ -2042,102 +1562,19 @@ function __iptvBoot(){
           <div class="nm" title="${esc(c.name)}">${esc(c.name)}</div>
           <div class="sub" title="${sub}">${sub}</div>
           <span class="rq ${c.quality}">${c.quality}</span>
-          ${on?'<span class="star">★</span>':''}
-          <span class="ch-kebab" data-menu="${i}" title="More options" aria-label="More options">⋮</span>
+          <span class="star${on}" data-fav="${i}">${on?'★':'☆'}</span>
+          <label class="hide-cb" title="Hide this channel (e.g. not working)"><input type="checkbox" data-hide="${i}"></label>
         </div>`;
   }
   function bindChCards(els){
     Array.prototype.forEach.call(els,function(el){
-      var idx=parseInt(el.getAttribute("data-idx"),10);
-      el.addEventListener("click",function(){playIndex(idx);});
-      // Right-click (desktop) → context menu at the cursor.
-      el.addEventListener("contextmenu",function(ev){ev.preventDefault();ev.stopPropagation();openChMenu(idx,ev.clientX,ev.clientY);});
-      // Kebab affordance (desktop hover) → context menu anchored to the card.
-      var kebab=el.querySelector("[data-menu]");
-      if(kebab)kebab.addEventListener("click",function(ev){ev.preventDefault();ev.stopPropagation();openChMenuForCard(el,idx);});
-      // Long-press (touch) → context menu. Cancel on move/scroll/lift.
-      var lpTimer=null, lpX=0, lpY=0;
-      el.addEventListener("touchstart",function(ev){
-        var t=ev.touches&&ev.touches[0]; if(!t)return; lpX=t.clientX; lpY=t.clientY;
-        lpTimer=setTimeout(function(){lpTimer=null;openChMenu(idx,lpX,lpY);},500);
-      },{passive:true});
-      function cancelLp(){ if(lpTimer){clearTimeout(lpTimer);lpTimer=null;} }
-      el.addEventListener("touchend",cancelLp,{passive:true});
-      el.addEventListener("touchcancel",cancelLp,{passive:true});
-      el.addEventListener("touchmove",function(ev){
-        var t=ev.touches&&ev.touches[0]; if(!t)return;
-        if(Math.abs(t.clientX-lpX)>10||Math.abs(t.clientY-lpY)>10) cancelLp();
-      },{passive:true});
+      el.addEventListener("click",function(){playIndex(parseInt(el.getAttribute("data-idx"),10));});
+      var star=el.querySelector("[data-fav]");
+      if(star)star.addEventListener("click",function(ev){ev.stopPropagation();toggleFav(parseInt(star.getAttribute("data-fav"),10),star);});
+      var hide=el.querySelector("[data-hide]");
+      if(hide){ hide.addEventListener("click",function(ev){ev.stopPropagation();});
+        hide.addEventListener("change",function(ev){ev.stopPropagation();hideChannel(parseInt(hide.getAttribute("data-hide"),10));}); }
     });
-  }
-
-  /* ===== Channel context menu (hide / favourite) =====================
-     Opened by desktop right-click, touch long-press, the hover kebab, or a
-     TV deep-press on OK (native APK → window.__tvContext). Actions operate on
-     the ABSOLUTE index into state.filtered. */
-  var _chMenuEls=null;          // {backdrop, menu} once built
-  var _chMenuReturnFocus=null;  // element to refocus on close (TV)
-  function _buildChMenu(){
-    if(_chMenuEls) return _chMenuEls;
-    var backdrop=document.createElement("div"); backdrop.className="ch-ctx-backdrop";
-    var menu=document.createElement("div"); menu.className="ch-ctx"; menu.setAttribute("role","menu");
-    backdrop.addEventListener("click",closeChMenu);
-    backdrop.addEventListener("contextmenu",function(e){e.preventDefault();closeChMenu();});
-    document.body.appendChild(backdrop); document.body.appendChild(menu);
-    _chMenuEls={backdrop:backdrop,menu:menu};
-    return _chMenuEls;
-  }
-  function chMenuOpen(){ return !!(_chMenuEls&&_chMenuEls.menu.classList.contains("open")); }
-  function openChMenuForCard(card,idx){
-    var r=card.getBoundingClientRect();
-    openChMenu(idx, r.right-8, r.bottom-8, card);
-  }
-  function openChMenu(idx,x,y,returnFocusEl){
-    var c=state.filtered[idx]; if(!c) return;
-    var els=_buildChMenu(); var menu=els.menu, backdrop=els.backdrop;
-    var isFav=state.favs.has(favKey(c));
-    _chMenuReturnFocus = returnFocusEl || document.activeElement;
-    menu.innerHTML =
-      '<div class="ctx-title" title="'+esc(c.name)+'">'+esc(c.name)+'</div>'+
-      '<button type="button" data-act="fav"><span class="ico">'+(isFav?'★':'☆')+'</span>'+(isFav?'Remove from Favourites':'Add to Favourites')+'</button>'+
-      '<button type="button" class="danger" data-act="hide"><span class="ico">🚫</span>Hide this channel</button>';
-    menu.querySelector('[data-act="fav"]').addEventListener("click",function(){ toggleFavIdx(idx); closeChMenu(); });
-    menu.querySelector('[data-act="hide"]').addEventListener("click",function(){ closeChMenu(); hideChannel(idx); });
-    backdrop.classList.add("open"); menu.classList.add("open");
-    // Position within the viewport (flip if it would overflow).
-    menu.style.visibility="hidden";
-    var mw=menu.offsetWidth, mh=menu.offsetHeight;
-    var px=Math.max(8,Math.min(x, innerWidth-mw-8));
-    var py=Math.max(8,Math.min(y, innerHeight-mh-8));
-    menu.style.left=px+"px"; menu.style.top=py+"px"; menu.style.visibility="";
-    // Focus the first item so the D-pad / keyboard can drive it immediately.
-    var first=menu.querySelector("button"); if(first){ try{ first.focus(); }catch(e){} }
-  }
-  document.addEventListener("keydown",function(e){
-    if(e.key==="Escape"&&chMenuOpen()){ e.preventDefault(); closeChMenu(); }
-  });
-  function closeChMenu(){
-    if(!_chMenuEls) return;
-    _chMenuEls.menu.classList.remove("open"); _chMenuEls.backdrop.classList.remove("open");
-    var rf=_chMenuReturnFocus; _chMenuReturnFocus=null;
-    if(rf&&rf.focus&&document.contains(rf)){ try{ rf.focus(); }catch(e){} }
-  }
-  // Toggle favourite by index and refresh any visible star for that card.
-  function toggleFavIdx(idx){
-    var c=state.filtered[idx]; if(!c) return; var k=favKey(c);
-    if(state.favs.has(k)){ state.favs.delete(k); toast("Removed from favorites"); }
-    else{ state.favs.add(k); toast("Added to favorites"); }
-    saveFavs();
-    // Update the on-screen star without a full re-render when possible.
-    var card=document.querySelector('.ch-card[data-idx="'+idx+'"]');
-    if(card){
-      var star=card.querySelector('.star');
-      if(state.favs.has(k)){ if(!star){ star=document.createElement('span'); star.className='star'; star.textContent='★'; card.appendChild(star);} }
-      else if(star){ star.remove(); }
-    }
-    if(state.filter.favOnly)applyFilters();
-    if(state.mode2==="favorites"&&!state.langHidden)renderFavList($("lang-search").value);
-    renderFavPanel();
   }
   // Override renderList — vertical grid, first page only (grows via renderMore on scroll)
   function renderList(){
@@ -2407,12 +1844,12 @@ function __iptvBoot(){
     if(window.__vjsNavRegistered||!window.videojs)return;
     window.__vjsNavRegistered=true;
     var Button=videojs.getComponent("Button");
-    function make(name,label,glyph,fn,extraCls){
+    function make(name,label,glyph,fn){
       class NavBtn extends Button {
-        constructor(p,o){ super(p,o); this.controlText(label); this.addClass("vjs-nav-btn"); if(extraCls) this.addClass(extraCls); }
+        constructor(p,o){ super(p,o); this.controlText(label); this.addClass("vjs-nav-btn"); }
         handleClick(){ fn(); }
         createEl(){
-          var el=Button.prototype.createEl.call(this,"button",{className:"vjs-nav-btn vjs-control vjs-button"+(extraCls?(" "+extraCls):"")});
+          var el=Button.prototype.createEl.call(this,"button",{className:"vjs-nav-btn vjs-control vjs-button"});
           var span=document.createElement("span"); span.setAttribute("aria-hidden","true"); span.textContent=glyph;
           el.appendChild(span);
           return el;
@@ -2424,95 +1861,7 @@ function __iptvBoot(){
     make("PrevChannelButton","Previous channel","◀",function(){navHoriz(-1);});
     make("NextChannelButton","Next channel","▶",function(){navHoriz(1);});
     make("NextSourceButton","Next source","▼",function(){navVert(1);});
-    // In fullscreen these slide the Program Guide / Favorites in as a drawer so
-    // the user can browse them without leaving the video (see _cinToggleDrawer).
-    make("GuideButton","Program guide","☰",function(){_cinToggleDrawer("guide");},"vjs-guide-btn");
-    make("FavoritesButton","Favorites","★",function(){_cinToggleDrawer("favs");},"vjs-favs-btn");
   }
-  // The three fullscreen side-drawers, keyed by name.
-  var CIN_DRAWERS = {
-    guide:    { cls:"cin-guide",    panel:"#hero-remote-panel", opener:"btn-guide" },
-    favs:     { cls:"cin-favs",     panel:"#fav-panel",         opener:"btn-favs" },
-    channels: { cls:"cin-channels", panel:"#channels-panel",    opener:"btn-channels" }
-  };
-  // Toggle a fullscreen (cinema) side-drawer: Program Guide, Favorites, or the
-  // full channel list. Only one is open at a time; it slides in from the right
-  // over the video (never hides it).
-  function _cinToggleDrawer(which){
-    var d=document.documentElement;
-    if(!d.classList.contains("tv-cinema")) return;   // only meaningful in fullscreen
-    var cfg=CIN_DRAWERS[which]; if(!cfg) return;
-    // Close whichever other drawer is open.
-    Object.keys(CIN_DRAWERS).forEach(function(k){ if(k!==which) d.classList.remove(CIN_DRAWERS[k].cls); });
-    var opening = !d.classList.contains(cfg.cls);
-    d.classList.toggle(cfg.cls);
-    if(opening){
-      if(which==="channels") renderChannelsDrawer(true);
-      // Remember which control opened the drawer so BACK returns focus to it.
-      state._cinDrawerOpener = document.getElementById(cfg.opener);
-      setTimeout(function(){
-        var panel=document.querySelector(cfg.panel);
-        if(!panel) return;
-        var f=panel.querySelector(".fav-item,.epg-slot,button,a[href],[tabindex]");
-        if(f){ try{ f.focus(); }catch(e){} }
-        else { panel.setAttribute("tabindex","0"); try{ panel.focus(); }catch(e){} }
-      },90);
-    } else {
-      _cinFocusOpener();
-    }
-  }
-
-  // Fill the All-Channels drawer from the current filtered lineup. Rendered in
-  // growing batches so a 20k-channel list stays snappy: each time D-pad focus
-  // (or a scroll) nears the bottom, the next batch appends. Selecting an item
-  // plays it and stays in cinema.
-  var _chdCount = 0, CHD_STEP = 60;
-  function renderChannelsDrawer(reset){
-    var host=document.getElementById("chd-list"); if(!host) return;
-    var list=state.filtered||[];
-    var cnt=document.getElementById("chd-count"); if(cnt) cnt.textContent=list.length?list.length.toLocaleString():"";
-    if(reset){ _chdCount=0; host.innerHTML=""; }
-    if(!list.length){ host.innerHTML='<div class="fav-empty">No channels match your filters.</div>'; return; }
-    var from=_chdCount, to=Math.min(list.length, _chdCount+CHD_STEP);
-    var curKey=state.currentChannel?favKey(state.currentChannel):null;
-    var frag="";
-    for(var i=from;i<to;i++){
-      var c=list[i];
-      var logo=c.logo?'<img loading="lazy" src="'+esc(c.logo)+'" alt="" onerror="this.parentNode.innerHTML=\'📺\'">':'📺';
-      var playing=(curKey&&favKey(c)===curKey)?" playing":"";
-      frag+='<div class="fav-item'+playing+'" data-chd="'+i+'" tabindex="0">'+
-        '<span class="fi-logo">'+logo+'</span>'+
-        '<span class="fi-body"><span class="fi-name" title="'+esc(c.name)+'">'+esc(c.name)+'</span>'+
-        (c.source?'<span class="fi-src">'+esc(c.source)+'</span>':'')+'</span></div>';
-    }
-    host.insertAdjacentHTML("beforeend", frag);
-    _chdCount=to;
-    // Bind only the newly-added rows.
-    Array.prototype.forEach.call(host.querySelectorAll('.fav-item[data-chd]:not([data-bound])'), function(el){
-      el.setAttribute("data-bound","1");
-      el.addEventListener("click", function(){
-        playIndex(parseInt(el.getAttribute("data-chd"),10));
-        // Close the drawer so the newly-selected channel fills the screen;
-        // openPlayer() refocuses the control bar and keeps cinema mode.
-        document.documentElement.classList.remove("cin-channels");
-      });
-    });
-    if(!host._chdScroll){
-      host._chdScroll=true;
-      host.addEventListener("scroll", function(){
-        if(host.scrollTop+host.clientHeight >= host.scrollHeight-240) renderChannelsDrawer(false);
-      });
-    }
-  }
-  window.renderChannelsDrawer=renderChannelsDrawer;
-  // Return focus to the control that opened the last drawer (else a sane default).
-  function _cinFocusOpener(){
-    var o=state._cinDrawerOpener;
-    if(o && o.offsetParent!==null){ try{ o.focus(); return; }catch(e){} }
-    var b=document.getElementById("btn-guide")||document.getElementById("btn-play");
-    if(b){ try{ b.focus(); }catch(e){} }
-  }
-  window._cinToggleDrawer=_cinToggleDrawer;
   // Gear/settings menu — currently just stream quality (video.js 8 bundles
   // qualityLevels() so no extra plugin is needed). Forcing a level works by
   // disabling every other level; VHS's own ABR only picks among enabled ones.
@@ -2603,56 +1952,27 @@ function __iptvBoot(){
     }
     videojs.registerComponent("SettingsButton",SettingsButton);
   }
-  // Cap streaming quality to 720p. Jio (and other relayed sources) tunnel every
-  // segment through a bandwidth-limited hop, and 1080p (~2.5 Mbps) has no
-  // headroom there → buffering. 720p (~1.5 Mbps) plays smoothly and still looks
-  // sharp on a large TV. Applied to the video.js/VHS player here and to the
-  // hls.js fallback in loadStreamFallback().
-  var MAX_QUALITY_HEIGHT = 720;
-  function _capQuality(){
-    try{
-      var tech = player && player.tech && player.tech(true);
-      var vhs = tech && (tech.vhs || tech.hls);
-      if(!vhs || !vhs.representations) return;
-      var reps = vhs.representations();
-      if(!reps || !reps.length) return;
-      var withH = reps.filter(function(r){ return r.height; });
-      // Enable only renditions at/below the cap; if none qualify (heights
-      // unknown or all above), leave everything enabled rather than break.
-      var anyAtOrBelow = withH.some(function(r){ return r.height <= MAX_QUALITY_HEIGHT; });
-      reps.forEach(function(r){
-        if(anyAtOrBelow && r.height) r.enabled(r.height <= MAX_QUALITY_HEIGHT);
-        else r.enabled(true);
-      });
-    }catch(e){}
-  }
-
   function initPlayer(){
     if(player)return player;
     if(!window.videojs)return null;
     try{
       _vjsRegisterNavButtons();
       _vjsRegisterSettingsButton();
-      _jioInstallVhsHook();   // seamless Jio token renewal (rewrites __hdnea__ per request)
       player=videojs("video",{
         controls:true,autoplay:false,preload:"auto",liveui:true,playsinline:true,
         fill:true,
         html5:{
           vhs:{
             overrideNative:true,
-            useBandwidthFromLocalStorage:true,   // reuse last session's bandwidth → faster ABR
-            enableLowInitialPlaylist:true,        // start on the lowest rendition → fastest first frame
-            fastQualityChange:true,               // switch quality without rebuffering
-            cacheEncryptionKeys:true,
-            bandwidth:3000000,                    // 3 Mbps seed estimate so the start level isn't over-cautious
-            useNetworkInformationApi:true,        // use the OS bandwidth hint when available
-            handlePartialData:true                // append partial segments → less stall on live
+            useBandwidthFromLocalStorage:true,
+            enableLowInitialPlaylist:true,
+            fastQualityChange:true,
+            cacheEncryptionKeys:true
           }
         },
-        liveTracker:{ trackingThreshold:0, liveTolerance:15 },
         controlBar:{
           pictureInPictureToggle:true,fullscreenToggle:true,
-          children:["PrevSourceButton","PrevChannelButton","playToggle","NextChannelButton","NextSourceButton","spacer","volumePanel","liveDisplay","GuideButton","FavoritesButton","SettingsButton","pictureInPictureToggle","fullscreenToggle"]
+          children:["PrevSourceButton","PrevChannelButton","playToggle","NextChannelButton","NextSourceButton","spacer","volumePanel","liveDisplay","SettingsButton","pictureInPictureToggle","fullscreenToggle"]
         }
       });
       var savedVol=(state.prefs&&typeof state.prefs.volume==="number"&&isFinite(state.prefs.volume))
@@ -2669,9 +1989,7 @@ function __iptvBoot(){
       player.on("loadedmetadata",function(){
         var btn=player.controlBar.getChild("SettingsButton");
         if(btn) btn.update();
-        _capQuality();
       });
-      player.on("loadeddata",function(){ _capQuality(); });
       player.on("error",function(){
         var err=player.error();
         setLoading(false);
@@ -2712,48 +2030,9 @@ function __iptvBoot(){
     else{lastVol=video.volume;video.muted=true;$("vol-slider").value=0;}
     updateMute();
   }
-  // Gesture-free CSS "cinema" fullscreen: fills the viewport with the video
-  // and shows the overlay control bar, without touching the native Fullscreen
-  // API (which requires a genuine user gesture and silently no-ops when
-  // called from things like orientationchange). Originally built for the TV
-  // app's remote-replayed OK button; reused below for phone/tablet rotation,
-  // where the native API has the exact same gesture problem.
-  function setCinemaMode(on){
-    var d=document.documentElement;
-    d.classList.toggle("tv-cinema",!!on);
-    try{ window.dispatchEvent(new Event("resize")); }catch(e){}
-    try{ if(player&&VJS_OK&&player.trigger) player.trigger("resize"); }catch(e){}
-    return d.classList.contains("tv-cinema");
-  }
   function toggleFullscreen(){
-    // On TV the remote's OK is replayed via evaluateJavascript, which the
-    // Fullscreen API rejects (no user gesture). Use the gesture-free CSS cinema
-    // mode instead; the <video> is reused so channel hopping stays fullscreen.
-    if(typeof TV_APP!=="undefined" && TV_APP){
-      var on=setCinemaMode(!document.documentElement.classList.contains("tv-cinema"));
-      // Entering cinema: put focus on the play button so the remote can drive the
-      // control bar (◀◀ prev / play·pause / next ▶▶ / mute / volume) right away.
-      if(on){ setTimeout(function(){ var b=document.getElementById("btn-play"); if(b){ try{ b.focus(); }catch(e){} } }, 80); }
-      return on;
-    }
-    // Phone/tablet: if rotation already put us in cinema mode, or we're
-    // already in native fullscreen, the button's job is to exit both cleanly.
-    var nativeFs = (player&&VJS_OK) ? (function(){ try{ return player.isFullscreen(); }catch(e){ return false; } })() : !!document.fullscreenElement;
-    if(document.documentElement.classList.contains("tv-cinema") || nativeFs){
-      setCinemaMode(false);
-      try{ if(player&&VJS_OK){ if(player.isFullscreen())player.exitFullscreen(); } else if(document.fullscreenElement){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); } }catch(e){}
-      return false;
-    }
-    // A direct tap here DOES carry a user gesture, so try the native API first
-    // for true immersive fullscreen (hides browser chrome too) — cinema mode
-    // is the guaranteed-to-work layout underneath either way, regardless of
-    // whether the native request is granted.
-    setCinemaMode(true);
-    try{
-      if(player&&VJS_OK){ player.requestFullscreen(); }
-      else{ var s=$("video-shell"); (s.requestFullscreen||s.webkitRequestFullscreen||function(){if(video.webkitEnterFullscreen)video.webkitEnterFullscreen();}).call(s); }
-    }catch(e){}
-    return true;
+    if(player&&VJS_OK){ if(player.isFullscreen())player.exitFullscreen();else player.requestFullscreen(); return; }
+    var s=$("video-shell");if(!document.fullscreenElement){(s.requestFullscreen||s.webkitRequestFullscreen||function(){if(video.webkitEnterFullscreen)video.webkitEnterFullscreen();}).call(s);}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}
   }
   function togglePip(){
     if(player&&VJS_OK){
@@ -2817,15 +2096,6 @@ function __iptvBoot(){
     var gc=$("guide-ch"); if(gc)gc.textContent=ch.name||"";
     loadEpg(ch);loadStream(ch);
     if(window.innerWidth<=1000)$("video-shell").scrollIntoView({behavior:"smooth",block:"start"});
-    // Channel-surf while staying in cinema fullscreen: keep the remote focused on
-    // the control bar so a next/prev channel switch never drops back to the grid.
-    if(document.documentElement.classList.contains("tv-cinema")){
-      setTimeout(function(){
-        if(!document.documentElement.classList.contains("tv-cinema")) return;
-        var a=document.activeElement;
-        if(!a || !a.closest || !a.closest("#controls")){ var b=document.getElementById("btn-play"); if(b){ try{ b.focus(); }catch(e){} } }
-      }, 120);
-    }
   }
   function _epgFmtTime(ms){ return ms?new Date(ms).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):""; }
   function _epgBuildTimeline(programs){
@@ -2885,94 +2155,15 @@ function __iptvBoot(){
     playIndex(row.idxs[next]);
     return true;
   }
-  // Jio's Akamai stream URL is signed with an __hdnea__ token that expires in
-  // ~120s, so a channel would stop after a couple of minutes. SEAMLESS renewal:
-  // instead of reloading the player (which stalls the video), we keep a fresh
-  // __hdnea__ query string and rewrite it into every playlist/segment request via
-  // VHS's beforeRequest hook — so the stream never stops. One token covers the
-  // whole channel path (acl=/…/<Channel>/*), so a single swap keeps every
-  // variant/segment valid. Cleared on channel change.
-  function _jioClearRefresh(){ if(state._jioRefreshTimer){ clearTimeout(state._jioRefreshTimer); state._jioRefreshTimer=null; } state._jioTokenQ=null; }
-  function _b64dec(b){ try{ return atob(String(b).replace(/-/g,"+").replace(/_/g,"/")); }catch(e){ return null; } }
-  // Pull the fresh __hdnea__ token out of a play URL. Jio's URLs come as
-  // /proxy?url=<base64-of-the-real-Akamai-URL>, so decode that first.
-  function _jioExtractToken(u){
-    try{
-      if(!u) return null;
-      var akamai=u, m=/[?&]url=([^&]+)/.exec(u);
-      if(m){ var d=_b64dec(decodeURIComponent(m[1])); if(d) akamai=d; }
-      var t=/[?&](__hdnea__=[^&]+)/.exec(akamai);
-      return t?t[1]:null;
-    }catch(e){ return null; }
-  }
-  function _jioFetchFreshToken(jid){
-    // Use the JSON endpoint (CORS-clean) so we can read the fresh signed URL — a
-    // direct fetch that follows the 302 to Akamai is blocked from reading r.url.
-    var url=WORKER+"/api/jio/playurl?id="+jid+"&token="+encodeURIComponent(state.token||"")+"&_r="+Date.now();
-    return fetch(url).then(function(r){return r.json();}).then(function(d){ var t=_jioExtractToken(d&&d.url); if(t) state._jioTokenQ=t; return t; }).catch(function(){ return null; });
-  }
-  // Global VHS request rewriter: keep every Jio Akamai request on the freshest
-  // token. Non-Jio requests (no __hdnea__ / no active token) pass through untouched.
-  function _jioBeforeRequest(opts){
-    try{
-      if(state._jioTokenQ && opts && opts.uri){
-        var u=opts.uri;
-        if(u.indexOf("url=")!==-1){
-          // Jio: the real Akamai URL (with __hdnea__) is base64 inside the url=
-          // param of /proxy. Decode, swap the token for the fresh one, re-encode.
-          opts.uri = u.replace(/([?&]url=)([^&]+)/, function(all,pfx,enc){
-            var dec=_b64dec(decodeURIComponent(enc)); if(!dec||dec.indexOf("__hdnea__=")===-1) return all;
-            dec=dec.replace(/__hdnea__=[^&]*/, state._jioTokenQ);
-            return pfx+encodeURIComponent(btoa(dec));
-          });
-        } else if(u.indexOf("__hdnea__=")!==-1){
-          opts.uri = u.replace(/__hdnea__=[^&]*/, state._jioTokenQ);
-        }
-      }
-    }catch(e){}
-    return opts;
-  }
-  function _jioInstallVhsHook(){
-    try{
-      ["Vhs","Hls"].forEach(function(ns){
-        if(window.videojs && videojs[ns] && videojs[ns].xhr && !videojs[ns].xhr.__jioHook){
-          videojs[ns].xhr.__jioHook = true;
-          videojs[ns].xhr.beforeRequest = _jioBeforeRequest;
-        }
-      });
-    }catch(e){}
-  }
-  function _jioScheduleRefresh(rawUrl){
-    // Token renewal is now entirely BACKEND: the bridge re-signs the Akamai
-    // __hdnea__ token on each /proxy request before it expires (see
-    // _jio_fresh_keytok in jio_bridge.py). The front-end no longer refreshes or
-    // reloads the player, so the video never stops.
-    _jioClearRefresh();
-  }
   function loadStream(ch){
     var raw=ch&&ch.url?ch.url:ch;
     if(!raw){toast("This channel has no stream URL.",true);return;}
-    _jioClearRefresh();
     state._playTry={key:(ch&&typeof ch==="object"&&ch.url)?favKey(ch):null,raw:raw,attempt:0};
     var src=API.stream(raw,state.token||"",ch&&ch.referer,ch&&ch.userAgent);
     if(raw.indexOf("192.168.") !== -1) { src = raw; }
-    if(raw.startsWith("jio://")) { src = WORKER + "/api/jio/play?id=" + raw.substring(6) + "&token=" + encodeURIComponent(state.token||""); _jioScheduleRefresh(raw); }
-    if(raw.startsWith("zee5://")) { src = WORKER + "/api/zee5/play?id=" + raw.substring(7) + "&token=" + encodeURIComponent(state.token||""); }
+    if(raw.startsWith("jio://")) { src = WORKER + "/api/jio/play?id=" + raw.substring(6) + "&token=" + encodeURIComponent(state.token||""); }
     var p=initPlayer();
     setLoading(true);
-    // Stall watchdog: if the stream hasn't actually started within the window,
-    // stop the perpetual spinner and tell the user, instead of "loading" forever
-    // (common on geo-restricted / offline Jio channels). Cleared by setLoading(false),
-    // which the 'playing' event calls once video really starts.
-    if(state._stallTimer)clearTimeout(state._stallTimer);
-    state._stallTimer=setTimeout(function(){
-      state._stallTimer=null;
-      var ok = video && video.currentTime>0 && !video.paused && !video.ended && video.readyState>2;
-      if(ok) return;
-      setLoading(false);
-      try{ if(player&&VJS_OK&&player.loadingSpinner&&player.loadingSpinner.hide) player.loadingSpinner.hide(); }catch(e){}
-      toast("This channel is slow or unavailable right now — try another.",true);
-    },22000);
     if(p){
       stopHls();
       try{
@@ -2997,35 +2188,15 @@ function __iptvBoot(){
     state._hlsRetries=0;
     if(window.Hls&&window.Hls.isSupported()){
       var hls=new window.Hls({
-        // ── Fastest player load ──
-        lowLatencyMode:true,
-        enableWorker:true,               // demux/parse off the main thread
-        startFragPrefetch:true,          // prefetch the first fragment while the manifest parses
-        abrEwmaDefaultEstimate:2500000,  // 2.5 Mbps seed so the initial level is watchable, not tiny
-        // ── Anti-buffering / live tuning ──
         maxBufferLength:30,
         maxMaxBufferLength:60,
-        backBufferLength:30,             // keep memory low on the TV WebView
-        liveSyncDurationCount:3,
-        liveMaxLatencyDurationCount:10,
-        nudgeMaxRetry:6,                 // recover from buffer stalls/holes instead of erroring
-        // ── Faster failover on flaky segments ──
-        manifestLoadingTimeOut:8000, manifestLoadingMaxRetry:2,
-        levelLoadingTimeOut:8000,
-        fragLoadingTimeOut:20000, fragLoadingMaxRetry:4
+        backBufferLength:60,
+        lowLatencyMode:true,
+        enableWorker:true,
+        liveSyncDurationCount:3
       });state.hls=hls;
       hls.loadSource(src);hls.attachMedia(video);
-      hls.on(window.Hls.Events.MANIFEST_PARSED,function(evt,data){
-        // Cap to 720p (see _capQuality): pick the highest level whose height is
-        // at/below the cap; if none, leave uncapped.
-        try{
-          var levels=(data&&data.levels)||hls.levels||[];
-          var capIdx=-1;
-          for(var i=0;i<levels.length;i++){ if(levels[i].height&&levels[i].height<=MAX_QUALITY_HEIGHT&&i>capIdx) capIdx=i; }
-          if(capIdx>=0) hls.autoLevelCapping=capIdx;
-        }catch(e){}
-        tryPlay();
-      });
+      hls.on(window.Hls.Events.MANIFEST_PARSED,function(){tryPlay();});
       hls.on(window.Hls.Events.ERROR,function(evt,data){
         if(!data||!data.fatal)return;
         state._hlsRetries=(state._hlsRetries||0)+1;
@@ -3048,7 +2219,7 @@ function __iptvBoot(){
     else{setLoading(false);toast("HLS not supported in this browser.",true);}
   }
   function tryPlay(){setLoading(false);var p=video.play();if(p&&p.catch)p.catch(function(){setPlayIcon(false);});}
-  function setLoading(on){ if(!on&&state._stallTimer){clearTimeout(state._stallTimer);state._stallTimer=null;} if(VJS_OK)return; $("video-loading").classList.toggle("show",on); }
+  function setLoading(on){ if(VJS_OK)return; $("video-loading").classList.toggle("show",on); }
   function stopHls(){if(state.hls){try{state.hls.destroy();}catch(e){}state.hls=null;}}
   function stopPlayback(){
     stopHls();_epgStopTimer();state.epgPrograms=null;_epgSetPlaceholder(_epgEls(),"Select a channel to see its program guide.");
@@ -3091,10 +2262,6 @@ function __iptvBoot(){
   function updateMute(){var m=video.muted||video.volume===0;$("icon-vol").style.display=m?"none":"block";$("icon-mute").style.display=m?"block":"none";}
   $("btn-fs").addEventListener("click",toggleFullscreen);
   $("btn-pip").addEventListener("click",togglePip);
-  // Fullscreen Guide/Favorites: slide the panel in as a drawer over the video.
-  (function(){ var g=document.getElementById("btn-guide"); if(g) g.addEventListener("click",function(){ if(window._cinToggleDrawer) _cinToggleDrawer("guide"); }); })();
-  (function(){ var f=document.getElementById("btn-favs"); if(f) f.addEventListener("click",function(){ if(window._cinToggleDrawer) _cinToggleDrawer("favs"); }); })();
-  (function(){ var c=document.getElementById("btn-channels"); if(c) c.addEventListener("click",function(){ if(window._cinToggleDrawer) _cinToggleDrawer("channels"); }); })();
 
   /* ---------- Mobile drawer ---------- */
   function openRail(){$("col-filters").classList.add("open");$("rail-backdrop").classList.add("show");}
@@ -3134,25 +2301,15 @@ function __iptvBoot(){
       if(!isTouchDevice()||!state.currentChannel)return;
       if(isLandscape()){
         if(!isPlaying())return;
-        // Guaranteed layer: orientationchange carries no user gesture, so the
-        // native Fullscreen API silently no-ops on iOS Safari and modern
-        // Chrome — cinema mode is what actually makes rotation reliably work,
-        // and it's also the only path that keeps our custom controls (channel
-        // switch, guide, favorites) visible, since player.requestFullscreen()
-        // only fullscreens the inner video.js element, not the sibling
-        // controls bar.
-        setCinemaMode(true);
-        // Best-effort bonus: on the (uncommon) browser that still grants this
-        // without a gesture, also hide the OS/browser chrome. Deliberately NOT
-        // using video.webkitEnterFullscreen() here — that swaps in iOS's own
-        // native video player UI in place of our controls, working against
-        // the "all controls in fullscreen" requirement.
-        try{ if($("video-shell").requestFullscreen){ $("video-shell").requestFullscreen().catch(function(){}); } }catch(e){}
+        try{
+          if(player&&VJS_OK){ if(!player.isFullscreen())player.requestFullscreen(); }
+          else if(video.webkitEnterFullscreen){ video.webkitEnterFullscreen(); } // iOS Safari
+          else if($("video-shell").requestFullscreen){ $("video-shell").requestFullscreen().catch(function(){}); }
+        }catch(e){}
       }else{
-        setCinemaMode(false);
         try{
           if(player&&VJS_OK){ if(player.isFullscreen())player.exitFullscreen(); }
-          if(document.fullscreenElement){ document.exitFullscreen().catch(function(){}); }
+          else if(document.fullscreenElement){ document.exitFullscreen().catch(function(){}); }
         }catch(e){}
       }
     }
@@ -3258,643 +2415,6 @@ function __iptvBoot(){
   setInterval(_localClockTick,1000);
   _loadLocalWeather();
   setInterval(function(){_loadLocalWeather();},30*60*1000);
-
-  /* ---------- TV-app D-pad navigation (Android TV / Shield remote) ----------
-     Gives iptv.html a premium 10-foot experience: geometry-based spatial focus
-     on the arrow keys, OK to activate, media keys wired to the player, and BACK
-     that steps player → providers instead of quitting the app. */
-  if (TV_APP) {
-    var TV_SEL = '.provider-card,.ch-card,.fav-item,.filter-chip,.channel-item,.epg-slot,' +
-                 '.category-result-card,.ctrl-btn,button,a[href],input,select,[data-iptv],[data-idx]';
-
-    function tvVisible(el){
-      if(!el || el.disabled) return false;
-      // The volume slider is NOT a D-pad stop: with LEFT/RIGHT mapped to
-      // value-adjust it trapped focus in cinema mode (nothing above/below to
-      // escape to). The Shield remote's hardware rocker owns volume; the mute
-      // button stays reachable.
-      if(el.tagName==='INPUT' && el.type==='range') return false;
-      var r = el.getBoundingClientRect();
-      if(r.width < 4 || r.height < 4) return false;
-      if(r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth) return false;
-      // Must be inside the currently-active screen.
-      var scr = el.closest('.screen');
-      return !scr || scr.classList.contains('active');
-    }
-    function tvMakeFocusable(root){
-      Array.prototype.forEach.call((root||document).querySelectorAll(TV_SEL), function(el){
-        if(el.tabIndex < 0 && !el.hasAttribute('tabindex')) el.setAttribute('tabindex','0');
-      });
-    }
-    // When an overlay is open it is MODAL to the D-pad: focus may only move
-    // between its own items (never back onto the layout underneath). Priority:
-    // exit-confirmation modal → channel context menu → cinema side drawer.
-    function tvModalItems(){
-      if(typeof tvExitOpen==='function' && tvExitOpen()){
-        return Array.prototype.slice.call(_tvExitEls.querySelectorAll('button'));
-      }
-      if(typeof tvSelMenuOpen==='function' && tvSelMenuOpen()){
-        return Array.prototype.slice.call(_tvSelEls.menu.querySelectorAll('button'));
-      }
-      if(_chMenuEls && chMenuOpen()){
-        return Array.prototype.slice.call(_chMenuEls.menu.querySelectorAll('button'));
-      }
-      // Fullscreen Guide/Favorites drawer: keep the D-pad inside the drawer so
-      // Up/Down browse it; LEFT (or BACK) escapes back to the player controls.
-      var d=document.documentElement;
-      if(d.classList.contains('tv-cinema')){
-        var panel = d.classList.contains('cin-guide')    ? document.getElementById('hero-remote-panel')
-                  : d.classList.contains('cin-favs')     ? document.getElementById('fav-panel')
-                  : d.classList.contains('cin-channels') ? document.getElementById('channels-panel') : null;
-        if(panel){
-          var items=Array.prototype.filter.call(panel.querySelectorAll(TV_SEL), tvVisible);
-          if(items.length) return items;
-        }
-      }
-      return null;
-    }
-    function tvCandidates(){
-      var m=tvModalItems(); if(m) return m;
-      return Array.prototype.filter.call(document.querySelectorAll(TV_SEL), tvVisible);
-    }
-    // Like tvCandidates() but WITHOUT the viewport-bounds check — returns every
-    // rendered focusable in the active screen, including ones scrolled off the
-    // fold. display:none stays excluded (its rect collapses to 0×0).
-    function tvRendered(el){
-      if(!el || el.disabled) return false;
-      if(el.tagName==='INPUT' && el.type==='range') return false;  // volume slider: see tvVisible
-      var r = el.getBoundingClientRect();
-      if(r.width < 4 || r.height < 4) return false;
-      var scr = el.closest('.screen');
-      return !scr || scr.classList.contains('active');
-    }
-    function tvAllFocusable(){
-      var m=tvModalItems(); if(m) return m;
-      return Array.prototype.filter.call(document.querySelectorAll(TV_SEL), tvRendered);
-    }
-    // Which focus zone an element belongs to — used for deterministic routing
-    // between the player controls, side panels, filter row and channel grid.
-    function tvZoneOf(el){
-      if(!el || !el.closest) return null;
-      if(el.closest('#controls'))          return 'controls';
-      if(el.closest('#video-shell'))       return 'video';
-      if(el.closest('#hero-remote-panel')) return 'guide';
-      if(el.closest('#fav-panel'))         return 'favs';
-      if(el.closest('#sources-panel'))     return 'sources';
-      if(el.closest('.filters-row'))       return 'filters';
-      if(el.closest('.content-shelf'))     return 'grid';
-      if(el.closest('.topbar'))            return 'topbar';
-      return null;
-    }
-    // Score the nearest focusable in a direction over a candidate list, using a
-    // directional distance metric (in-line offset weighted lighter than
-    // cross-axis drift). Returns the best element or null.
-    function tvBestIn(dir, list, cur, cr){
-      var cx = (cr.left+cr.right)/2, cy = (cr.top+cr.bottom)/2;
-      var best=null, bestScore=Infinity;
-      list.forEach(function(el){
-        if(el===cur) return;
-        var r = el.getBoundingClientRect(), x=(r.left+r.right)/2, y=(r.top+r.bottom)/2;
-        var dx=x-cx, dy=y-cy, primary, cross;
-        if(dir==='right'){ if(r.left < cr.right-2) return; primary=dx; cross=Math.abs(dy); }
-        else if(dir==='left'){ if(r.right > cr.left+2) return; primary=-dx; cross=Math.abs(dy); }
-        else if(dir==='down'){ if(r.top < cr.bottom-2) return; primary=dy; cross=Math.abs(dx); }
-        else { if(r.bottom > cr.top+2) return; primary=-dy; cross=Math.abs(dx); }
-        if(primary <= 0) return;
-        var score = primary + cross*2;           // prefer aligned, then closest
-        if(score < bestScore){ bestScore=score; best=el; }
-      });
-      return best;
-    }
-    // Deterministic cross-zone routing for the edges where pure geometry has no
-    // answer (or a wrong one). Runs only AFTER the visible spatial pass fails,
-    // so ordinary in-zone movement is untouched. Returns true when it moved.
-    function tvEdgeRoute(dir, cur){
-      var z = tvZoneOf(cur);
-      var d = document.documentElement;
-      var cinema = d.classList.contains('tv-cinema');
-      var drawer = d.classList.contains('cin-guide')    ? 'guide'
-                 : d.classList.contains('cin-favs')     ? 'favs'
-                 : d.classList.contains('cin-channels') ? 'channels' : null;
-      function go(el){
-        if(!el) return false;
-        try{ el.focus(); }catch(e){}
-        try{ el.scrollIntoView({block:'center',inline:'nearest',behavior:'auto'}); }catch(e){}
-        if(document.activeElement===el){ tvRemember(el); return true; }
-        return false;
-      }
-      function firstVis(sel){
-        var list=document.querySelectorAll(sel);
-        for(var i=0;i<list.length;i++){ if(tvVisible(list[i])) return list[i]; }
-        return null;
-      }
-      // Fullscreen drawer open: LEFT escapes it back to the player controls
-      // (BACK does the same — see __tvControl.back).
-      if(drawer && dir==='left'){ _cinToggleDrawer(drawer); return true; }
-      // Player controls / video → RIGHT: reach the Program Guide (then Favorites)
-      // even when the Guide only shows its placeholder (no focusable children —
-      // the panel container itself takes focus). In cinema fullscreen the panels
-      // are hidden, so RIGHT past the last control slides the Guide drawer in.
-      if((z==='controls' || z==='video') && dir==='right'){
-        if(cinema){ if(!drawer) _cinToggleDrawer('guide'); return true; }
-        return go(firstVis('#hero-remote-panel .epg-slot, #hero-remote-panel button'))
-            || go(firstVis('#fav-panel .fav-item'))
-            || go(document.getElementById('hero-remote-panel'))
-            || go(document.getElementById('fav-panel'));
-      }
-      // Player controls → DOWN: the filter row is the next zone (windowed mode).
-      if((z==='controls' || z==='video') && dir==='down' && !cinema){
-        return go(firstVis('.filters-row .filter-chip.active'))
-            || go(firstVis('.filters-row .filter-chip, .filters-row select'));
-      }
-      // Filter row → UP: back to the player controls.
-      if(z==='filters' && dir==='up'){
-        return go(firstVis('#btn-play')) || go(firstVis('#controls .ctrl-btn'));
-      }
-      // Channel grid → UP past the first row: land on the filter row.
-      if(z==='grid' && dir==='up'){
-        return go(firstVis('.filters-row .filter-chip.active'))
-            || go(firstVis('.filters-row .filter-chip, .filters-row select'));
-      }
-      // Side panels → LEFT escapes back toward the main layout: Favorites steps
-      // onto the Guide first, the Guide steps onto the player controls.
-      if(z==='favs' && dir==='left'){
-        return go(firstVis('#hero-remote-panel .epg-slot'))
-            || go(document.getElementById('hero-remote-panel'))
-            || go(document.getElementById('btn-play'));
-      }
-      if(z==='guide' && dir==='left'){
-        return go(document.getElementById('btn-play'))
-            || go(firstVis('#controls .ctrl-btn'));
-      }
-      // Guide → RIGHT continues into Favorites.
-      if(z==='guide' && dir==='right'){
-        return go(firstVis('#fav-panel .fav-item')) || go(document.getElementById('fav-panel'));
-      }
-      return false;
-    }
-    // Pick the nearest focusable in a direction. Inside the player controls and
-    // side panels, movement is confined to the zone FIRST — otherwise a raw
-    // geometric pass can cross zones diagonally (e.g. RIGHT from the fullscreen
-    // button skipping past the Program Guide onto a filter select). Only at a
-    // zone edge do the deterministic routes fire; the global pass and the
-    // off-screen fallback (for grid rows below the fold) come after.
-    function tvMove(dir){
-      var cur = document.activeElement;
-      var cr = (cur && cur.getBoundingClientRect) ? cur.getBoundingClientRect() : {left:innerWidth/2,right:innerWidth/2,top:0,bottom:0,width:0,height:0};
-      var cands = tvCandidates();
-      var zone = tvZoneOf(cur);
-      var best = null;
-      if(zone==='controls'||zone==='guide'||zone==='favs'||zone==='filters'||zone==='sources'){
-        var inZone = [];
-        for(var i=0;i<cands.length;i++){ if(tvZoneOf(cands[i])===zone) inZone.push(cands[i]); }
-        best = tvBestIn(dir, inZone, cur, cr);
-        if(!best && tvEdgeRoute(dir, cur)) return true;
-      }
-      if(!best) best = tvBestIn(dir, cands, cur, cr);
-      if(!best && tvEdgeRoute(dir, cur)) return true;
-      if(!best) best = tvBestIn(dir, tvAllFocusable(), cur, cr);
-      if(best){
-        try{ best.focus(); }catch(e){}
-        try{ best.scrollIntoView({block:'center',inline:'nearest',behavior:'auto'}); }catch(e){}
-        // Remember explicitly — some WebView states swallow focusin events, and
-        // the restore-after-re-render logic depends on this memory.
-        tvRemember(best);
-        return true;
-      }
-      return false;
-    }
-    function tvFocusFirst(){
-      // Must land on a VISIBLE element. Using a raw querySelector picked the
-      // first match in DOM order regardless of visibility — on the player screen
-      // that's a hidden control (display:none menu-toggle / <select>), so
-      // .focus() was a silent no-op and focus stayed on <body>, leaving the
-      // D-pad dead. tvCandidates() already filters to visible, in-active-screen
-      // focusables, so choose from there. Preference order matters: the playing
-      // card, then a channel card, then the ACTIVE chip — never blindly the
-      // first chip in DOM order, which was the "cursor jumps to All Channels"
-      // bug (chip-all is the first .filter-chip on the page).
-      var cands = tvCandidates();
-      if(!cands.length) return;
-      var prefs = ['.ch-card.playing','.fav-item.playing','.ch-card','.filter-chip.active','.provider-card','.filter-chip'];
-      var first = null;
-      for(var p=0; p<prefs.length && !first; p++){
-        for(var i=0;i<cands.length;i++){
-          if(cands[i].matches && cands[i].matches(prefs[p])){ first = cands[i]; break; }
-        }
-      }
-      first = first || cands[0];
-      try{ first.focus(); }catch(e){}
-      tvRemember(first);
-    }
-
-    // ── Focus memory ─────────────────────────────────────────────────────
-    // Re-renders (playing a channel, filtering, hiding) replace the focused
-    // node, dropping focus to <body>; the old self-heal then re-focused the
-    // first chip ("All Channels"). Instead, remember a stable identity for the
-    // last focused element and restore to the SAME element — or its equivalent
-    // in the fresh DOM — so focus never teleports away from user intent.
-    var _tvMemEl = null, _tvMem = null;
-    function tvRemember(el){
-      if(!el || el===document.body || !el.getAttribute) return;
-      _tvMemEl = el;
-      _tvMem = {
-        id:   el.id || '',
-        fk:   el.getAttribute('data-fk')  || '',
-        idx:  el.getAttribute('data-idx') || '',
-        card: !!(el.classList && el.classList.contains('ch-card')),
-        zone: tvZoneOf(el)
-      };
-    }
-    function tvRestoreFocus(){
-      var m=_tvMem, el=null, i;
-      if(m){
-        // 1) Same element still alive (chips, controls, selects survive renders).
-        if(_tvMemEl && document.contains(_tvMemEl) && tvRendered(_tvMemEl)) el=_tvMemEl;
-        // 2) Same identity in the fresh DOM (id → data-fk → grid index).
-        if(!el && m.id){ var byId=document.getElementById(m.id); if(byId && tvRendered(byId)) el=byId; }
-        if(!el && m.fk){
-          var all=tvAllFocusable();
-          for(i=0;i<all.length;i++){ if(all[i].getAttribute && all[i].getAttribute('data-fk')===m.fk){ el=all[i]; break; } }
-        }
-        if(!el && m.card && m.idx!==''){
-          el=document.querySelector('.ch-card[data-idx="'+m.idx+'"]');
-          if(!el){ // index gone (e.g. last card hidden) → clamp to the last card
-            var cards=document.querySelectorAll('.ch-card[data-idx]');
-            el=cards.length ? cards[cards.length-1] : null;
-          }
-          if(el && !tvRendered(el)) el=null;
-        }
-        if(el){
-          try{ el.focus(); }catch(e){}
-          try{ el.scrollIntoView({block:'center',inline:'nearest',behavior:'auto'}); }catch(e){}
-          if(document.activeElement===el){ tvRemember(el); return; }
-        }
-        // 3) Anything in the same zone beats teleporting across the layout.
-        if(m.zone){
-          var cands=tvCandidates();
-          for(i=0;i<cands.length;i++){
-            if(tvZoneOf(cands[i])===m.zone){
-              try{ cands[i].focus(); }catch(e){}
-              tvRemember(cands[i]);
-              return;
-            }
-          }
-        }
-      }
-      tvFocusFirst();
-    }
-
-    // ── Native D-pad bridge ──────────────────────────────────────────────
-    // The Android wrapper captures every remote press in dispatchKeyEvent and
-    // calls this directly, so navigation never depends on the WebView routing
-    // arrow keys to the page (which it doesn't do reliably on the player
-    // screen). Returns "input" for a focused text field so the native side can
-    // pop the on-screen keyboard; otherwise moves focus / clicks.
-    window.__tvNav = function(action){
-      var t = document.activeElement, tag = (t && t.tagName || '').toLowerCase();
-      // NOTE: <select> is NOT a keyboard field — OK on it opens the TV option
-      // picker below. Reporting it as 'input' popped the text keyboard.
-      var onField = ((tag==='input' && t.type!=='range') || tag==='textarea');
-      if(!t || t===document.body){ tvFocusFirst(); return 'move'; }
-      if(action==='ok'){
-        if(tag==='select'){ openTvSelectMenu(t); return 'menu'; }
-        if(onField) return 'input';          // let native show the keyboard
-        // OK on the channel you're already watching, or on the video, toggles
-        // fullscreen (cinema) directly.
-        // Toggle fullscreen only when OK is pressed on the VIDEO itself — NOT on a
-        // control button, which also lives inside #video-shell. (This was the bug:
-        // every control in cinema matched "#video-shell" and toggled fullscreen,
-        // kicking you back to the grid instead of running the control.)
-        var onCtrl = !!(t.closest && t.closest('.controls,.vjs-control-bar,button,a[href],input,select,[role="button"]'));
-        var onVideoArea = !onCtrl && !!(t.tagName==='VIDEO' || t.id==='video-shell'
-          || (t.closest && (t.closest('.vjs-tech')||t.closest('#player-placeholder')||t.closest('.ch-card.playing')||t.closest('.fav-item.playing'))));
-        if(onVideoArea && document.querySelector('#player-screen.active')){
-          toggleFullscreen(); return 'fullscreen';
-        }
-        // OK on a channel/favourite card: play it AND open it in fullscreen, so
-        // one press "opens the channel full-screen". Remote BACK exits cinema
-        // back to the grid (see __tvControl.back).
-        var card = t.closest && t.closest('.ch-card,.fav-item,.ch-row');
-        try{ t.click(); }catch(e){}
-        if(card && document.querySelector('#player-screen.active')){
-          setTimeout(function(){
-            if(!document.documentElement.classList.contains('tv-cinema')) toggleFullscreen();
-          }, 300);
-        }
-        return 'click';
-      }
-      if(action==='up'||action==='down'||action==='left'||action==='right'){
-        // On the volume (or any range) slider, LEFT/RIGHT changes the value
-        // instead of moving focus — otherwise the D-pad can't adjust volume.
-        // Once the value is pinned at its end-stop, the same press moves focus
-        // out instead, so the slider is never a trap (RIGHT at max volume
-        // continues on toward the Program Guide / Favorites).
-        if(t && t.tagName==='INPUT' && t.type==='range' && (action==='left'||action==='right')){
-          var mn=parseFloat(t.min)||0, mx=isNaN(parseFloat(t.max))?1:parseFloat(t.max);
-          var stp=Math.max((mx-mn)*0.05, (parseFloat(t.step)||0.05));   // ~5% per press for a premium feel
-          var ov=parseFloat(t.value)||0;
-          var nv=Math.max(mn,Math.min(mx,ov+(action==='right'?stp:-stp)));
-          if(Math.abs(nv-ov) < 1e-9){ if(!tvMove(action)) tvFocusFirst(); return 'move'; }
-          t.value=nv;
-          try{ t.dispatchEvent(new Event('input',{bubbles:true})); t.dispatchEvent(new Event('change',{bubbles:true})); }catch(e){}
-          return 'move';
-        }
-        // Dead-end press: focus STAYS where it is (never teleport). Self-heal
-        // via tvFocusFirst only when focus is genuinely stranded — on <body>
-        // or on an element a screen swap just hid.
-        if(!tvMove(action)){
-          if(!t || t===document.body || !document.contains(t) || !tvRendered(t)) tvFocusFirst();
-        }
-        return 'move';
-      }
-      return 'noop';
-    };
-
-    // Deep-press (long-press OK) on a channel card → open its context menu.
-    // The native wrapper calls this when it detects a held OK button. Opens the
-    // menu for whichever channel card currently has focus; no-op elsewhere.
-    window.__tvContext = function(){
-      if(chMenuOpen()){ closeChMenu(); return 'closed'; }   // toggle
-      var t=document.activeElement;
-      var card=t&&t.closest&&t.closest('.ch-card[data-idx]');
-      if(!card) return 'noop';
-      var idx=parseInt(card.getAttribute('data-idx'),10);
-      if(isNaN(idx)) return 'noop';
-      openChMenuForCard(card, idx);
-      return 'menu';
-    };
-
-    // ── Exit Confirmation (root-level BACK) ──────────────────────────────
-    // BACK with nothing left to close no longer quits straight to the Android
-    // home screen: it opens this modal, and only an explicitly focused OK press
-    // on "Yes, exit to Home" actually closes the app (via the native
-    // AndroidTV.exitApp bridge). BACK again — or Cancel — stays in the app.
-    var _tvExitEls=null, _tvExitReturn=null;
-    function _buildTvExit(){
-      if(_tvExitEls) return _tvExitEls;
-      var wrap=document.createElement('div');
-      wrap.className='tv-exit-backdrop';
-      wrap.innerHTML =
-        '<div class="tv-exit-card" role="dialog" aria-modal="true" aria-label="Exit confirmation">'+
-          // Inline SVG power symbol — the ⏻ glyph is missing from Android WebView fonts (renders as tofu).
-          '<div class="tv-exit-ico"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#64ffda" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v9"/><path d="M6.2 6.2a8 8 0 1 0 11.6 0"/></svg></div>'+
-          '<h2>Leave VilfinTV?</h2>'+
-          '<p>You are about to exit to the Home screen.</p>'+
-          '<div class="tv-exit-actions">'+
-            '<button type="button" id="tv-exit-yes" class="tv-exit-btn primary">Yes, exit to Home</button>'+
-            '<button type="button" id="tv-exit-no" class="tv-exit-btn">Cancel</button>'+
-          '</div>'+
-        '</div>';
-      document.body.appendChild(wrap);
-      wrap.querySelector('#tv-exit-yes').addEventListener('click', function(){
-        try{ if(window.AndroidTV && typeof AndroidTV.exitApp==='function'){ AndroidTV.exitApp(); return; } }catch(e){}
-        try{ window.close(); }catch(e){}
-        try{ history.back(); }catch(e){}
-      });
-      wrap.querySelector('#tv-exit-no').addEventListener('click', closeTvExit);
-      _tvExitEls=wrap;
-      return wrap;
-    }
-    function tvExitOpen(){ return !!(_tvExitEls && _tvExitEls.classList.contains('open')); }
-    function openTvExit(){
-      var w=_buildTvExit();
-      _tvExitReturn=document.activeElement;
-      w.classList.add('open');
-      // Requirement: exiting takes ONE more deliberate, focused click — land on
-      // the exit button; LEFT/RIGHT reaches Cancel, BACK dismisses.
-      setTimeout(function(){ var y=w.querySelector('#tv-exit-yes'); if(y){ try{ y.focus(); }catch(e){} } }, 50);
-    }
-    function closeTvExit(){
-      if(!_tvExitEls) return;
-      _tvExitEls.classList.remove('open');
-      var rf=_tvExitReturn; _tvExitReturn=null;
-      if(rf && document.contains(rf) && tvRendered(rf)){ try{ rf.focus(); return; }catch(e){} }
-      tvFocusFirst();
-    }
-
-    // ── TV option picker for <select> filters ────────────────────────────
-    // OK on All Countries / All Categories / All Languages used to report
-    // 'input' to the native side, which popped the TEXT KEYBOARD (useless for
-    // a dropdown — and the WebView can't open the native picker without a
-    // user gesture). Instead OK opens this centered, D-pad-modal option list:
-    // Up/Down browse, OK applies (fires the select's change), BACK cancels.
-    var _tvSelEls=null, _tvSelReturn=null;
-    function _buildTvSelMenu(){
-      if(_tvSelEls) return _tvSelEls;
-      var backdrop=document.createElement('div'); backdrop.className='ch-ctx-backdrop';
-      var menu=document.createElement('div'); menu.className='ch-ctx tv-sel-menu'; menu.setAttribute('role','listbox');
-      backdrop.addEventListener('click', closeTvSelMenu);
-      document.body.appendChild(backdrop); document.body.appendChild(menu);
-      _tvSelEls={backdrop:backdrop, menu:menu};
-      return _tvSelEls;
-    }
-    function tvSelMenuOpen(){ return !!(_tvSelEls && _tvSelEls.menu.classList.contains('open')); }
-    function openTvSelectMenu(sel){
-      if(!sel || !sel.options || !sel.options.length) return;
-      var els=_buildTvSelMenu(), menu=els.menu;
-      _tvSelReturn=sel;
-      // The placeholder option ("All Countries" etc.) doubles as the title.
-      var title = sel.options[0].value==='' ? sel.options[0].text : (sel.title || 'Choose an option');
-      var html='<div class="ctx-title">'+esc(title)+'</div>';
-      for(var i=0;i<sel.options.length;i++){
-        var o=sel.options[i];
-        html+='<button type="button"><span class="ico">'+(o.value===sel.value?'✓':'')+'</span>'+esc(o.text)+'</button>';
-      }
-      menu.innerHTML=html;
-      var btns=menu.querySelectorAll('button');
-      Array.prototype.forEach.call(btns, function(b, idx){
-        b.addEventListener('click', function(){
-          sel.value=sel.options[idx].value;
-          try{ sel.dispatchEvent(new Event('change',{bubbles:true})); }catch(e){}
-          closeTvSelMenu();
-        });
-      });
-      els.backdrop.classList.add('open'); menu.classList.add('open');
-      var cur=btns[Math.max(0, sel.selectedIndex)] || btns[0];
-      setTimeout(function(){
-        try{ cur.focus(); }catch(e){}
-        try{ cur.scrollIntoView({block:'center', behavior:'auto'}); }catch(e){}
-      }, 40);
-    }
-    function closeTvSelMenu(){
-      if(!_tvSelEls) return;
-      _tvSelEls.menu.classList.remove('open'); _tvSelEls.backdrop.classList.remove('open');
-      var rf=_tvSelReturn; _tvSelReturn=null;
-      if(rf && document.contains(rf) && tvRendered(rf)){ try{ rf.focus(); return; }catch(e){} }
-      tvRestoreFocus();
-    }
-
-    // Sources panel: opening it moves focus inside; Apply/✕ hand focus back to
-    // the Sources chip — never letting it reset to "All Channels".
-    function _tvAfterClick(id, fn){
-      var el=document.getElementById(id);
-      if(el) el.addEventListener('click', function(){ setTimeout(fn, 120); });
-    }
-    _tvAfterClick('btn-sources', function(){
-      var p=document.getElementById('sources-panel');
-      if(p && p.offsetParent!==null){
-        var f=p.querySelector('input,button');
-        if(f){ try{ f.focus(); }catch(e){} }
-      }
-    });
-    function _tvBackToSources(){ var b=document.getElementById('btn-sources'); if(b){ try{ b.focus(); }catch(e){} } }
-    _tvAfterClick('src-apply', _tvBackToSources);
-    _tvAfterClick('src-close', _tvBackToSources);
-
-    // Player controls exposed for the remote's media keys (native side calls these).
-    function _clk(id){ var b=document.getElementById(id); if(b){ b.click(); return true; } return false; }
-    window.__tvControl = {
-      playPause: function(){ return _clk('btn-play'); },
-      next:      function(){ return _clk('btn-next'); },
-      prev:      function(){ return _clk('btn-prev'); },
-      fullscreen:function(){ return _clk('btn-fs'); },
-      // Jump focus to the filter chips row (All Channels / Favorites / Sources…).
-      filters:   function(){ var c=document.querySelector('#player-screen.active .filter-chip'); if(c){ try{c.focus();}catch(e){} return true; } return false; },
-      // BACK — a real back-stack, innermost context first:
-      //   exit modal → context menu → cinema drawer → cinema fullscreen →
-      //   native fullscreen → grid/filters focus back to the player →
-      //   player → providers → root exit confirmation.
-      // Returning true consumes the press on the native side; the app can now
-      // only be closed through the Exit Confirmation's own button.
-      back: function(){
-        // The exit modal itself: BACK dismisses it (stay in the app).
-        if(tvExitOpen()){ closeTvExit(); return true; }
-        // An open filter option picker just closes (refocuses its select).
-        if(tvSelMenuOpen()){ closeTvSelMenu(); return true; }
-        // An open channel context menu swallows BACK next (just closes it).
-        if(chMenuOpen()){ closeChMenu(); return true; }
-        // Close an open fullscreen Guide/Favorites/Channels drawer first (stay in cinema).
-        var _d=document.documentElement;
-        if(_d.classList.contains('cin-guide')||_d.classList.contains('cin-favs')||_d.classList.contains('cin-channels')){
-          _d.classList.remove('cin-guide','cin-favs','cin-channels');
-          try{ _cinFocusOpener(); }catch(e){}
-          return true;
-        }
-        // Exit cinema (CSS fullscreen) first, staying on the player.
-        if(_d.classList.contains('tv-cinema')){
-          _d.classList.remove('tv-cinema');
-          try{ window.dispatchEvent(new Event('resize')); }catch(e){}
-          return true;
-        }
-        if(document.fullscreenElement){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); return true; }
-        if(document.querySelector('#player-screen.active')){
-          // Browsing the bottom shelf (filters / sources / channel grid):
-          // BACK first returns focus to the player area at the top.
-          var a=document.activeElement, z=tvZoneOf(a);
-          if(z==='grid'||z==='filters'||z==='sources'){
-            if(z==='sources'){ var sc=document.getElementById('src-close'); if(sc) sc.click(); }
-            var p=document.getElementById('btn-play')||document.querySelector('#controls .ctrl-btn');
-            if(p){
-              try{ p.focus(); }catch(e){}
-              try{ p.scrollIntoView({block:'center',behavior:'auto'}); }catch(e){}
-              return true;
-            }
-          }
-          var pv=document.querySelector('[data-back]'); if(pv){ pv.click(); return true; }
-        }
-        // Root level (provider hub / login): confirm before quitting.
-        openTvExit();
-        return true;
-      }
-    };
-
-    document.addEventListener('focusin', function(e){
-      var el=e.target; if(!el||!el.scrollIntoView) return;
-      // Remember every focus target so a re-render can restore it (see
-      // tvRestoreFocus) instead of teleporting to the first chip.
-      tvRemember(el);
-      // Keep the focused item centred — this scrolls the video/panels up out of the
-      // way as you move down the grid, so all rows become reachable. ('nearest' kept
-      // the video pinned and stranded the grid at ~2 visible rows.) Instant, not
-      // smooth: holding the D-pad fires rapid repeats, and a running smooth-scroll
-      // animation makes getBoundingClientRect read mid-flight positions, which
-      // misdirects the next spatial move and stalls fast navigation.
-      try{ el.scrollIntoView({block:'center',inline:'nearest',behavior:'auto'}); }catch(_){}
-    });
-
-    document.addEventListener('keydown', function(e){
-      var t=document.activeElement, tag=(t&&t.tagName||'').toLowerCase();
-      var k=e.key;
-      // Arrow keys → spatial focus move. On TV, text is edited in the full-screen
-      // keyboard (not the inline field), so arrows always navigate — including
-      // between the username / password / Sign In controls.
-      if(k==='ArrowRight'||k==='ArrowLeft'||k==='ArrowUp'||k==='ArrowDown'){
-        var dir = k==='ArrowRight'?'right':k==='ArrowLeft'?'left':k==='ArrowUp'?'up':'down';
-        if(tvMove(dir)) e.preventDefault();
-        return;
-      }
-      // OK / Enter → native inputs open the keyboard; selects open the TV
-      // option picker; everything else clicks.
-      if(k==='Enter'||e.keyCode===13){
-        if(tag==='select'){ openTvSelectMenu(t); e.preventDefault(); return; }
-        if(t && tag!=='input'&&tag!=='textarea'){ t.click(); e.preventDefault(); }
-        return;
-      }
-      // Media keys that some remotes deliver straight to the WebView.
-      if(k==='MediaPlayPause'||e.keyCode===179){ window.__tvControl.playPause(); e.preventDefault(); return; }
-      if(k==='MediaTrackNext'||k==='MediaFastForward'){ window.__tvControl.next(); e.preventDefault(); return; }
-      if(k==='MediaTrackPrevious'||k==='MediaRewind'){ window.__tvControl.prev(); e.preventDefault(); return; }
-      // BACK delivered as a key (browser testing / remotes that bypass the
-      // native bridge) runs the same back-stack as the hardware button.
-      if(k==='Escape'||k==='GoBack'||k==='BrowserBack'||e.keyCode===10009){
-        if(window.__tvControl.back()) e.preventDefault();
-        return;
-      }
-    }, true);
-
-    // BACK via popstate: entering the player pushes a history state so the
-    // remote's BACK returns to the provider hub rather than exiting the app.
-    var _tvPlayerPushed=false;
-    function tvSyncHistory(){
-      var onPlayer = !!document.querySelector('#player-screen.active');
-      if(onPlayer && !_tvPlayerPushed){
-        history.pushState({tv:'player'},''); _tvPlayerPushed=true;
-        // Entering the player: immediately give the remote a visible target
-        // (first channel card) so the D-pad works without a "blind" first press.
-        setTimeout(function(){
-          var a=document.activeElement;
-          if(!a || a===document.body || !a.closest || !a.closest('#player-screen.active')) tvFocusFirst();
-        }, 250);
-      }
-      if(!onPlayer){ _tvPlayerPushed=false; }
-    }
-    window.addEventListener('popstate', function(){
-      if(document.querySelector('#player-screen.active')){
-        _tvPlayerPushed=false;
-        var pv=document.querySelector('[data-back]'); if(pv) pv.click();
-      }
-    });
-
-    // Removing the focused node (a grid re-render wipes innerHTML) silently
-    // drops focus to <body> WITHOUT a focusout event, so the focusout heal
-    // below never sees it. Restore from the mutation stream instead, debounced
-    // so a render burst settles before the cursor is put back.
-    var _tvHealT=null;
-    var tvObs = new MutationObserver(function(){
-      tvMakeFocusable(); tvSyncHistory();
-      if(_tvHealT) clearTimeout(_tvHealT);
-      _tvHealT=setTimeout(function(){
-        _tvHealT=null;
-        if(!document.activeElement || document.activeElement===document.body) tvRestoreFocus();
-      }, 80);
-    });
-    tvObs.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
-    tvMakeFocusable();
-    // The side panels themselves are focus fallbacks (an empty Program Guide
-    // has no focusable children, but RIGHT from the controls must still land).
-    ['hero-remote-panel','fav-panel'].forEach(function(id){
-      var p=document.getElementById(id);
-      if(p && !p.hasAttribute('tabindex')) p.setAttribute('tabindex','0');
-    });
-    setTimeout(tvFocusFirst, 500);
-    // Re-assert focus after screen swaps and re-renders. tvRestoreFocus puts the
-    // cursor back on the element the user was on (or its replacement) — never
-    // arbitrarily on the first chip.
-    document.addEventListener('focusout', function(){
-      setTimeout(function(){ if(!document.activeElement||document.activeElement===document.body) tvRestoreFocus(); }, 60);
-    });
-  }
 
   /* ---------- Boot ---------- */
   if(state.token){syncPull();showProviderScreen();}else show("login-screen");

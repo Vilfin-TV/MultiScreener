@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VilfinTV Logo Reveal</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:#000;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif}
+
+  .glowbg{position:fixed;inset:0;background:radial-gradient(circle at 50% 46%, rgba(37,99,235,0), transparent 60%);
+    animation:bgglow 6.5s ease-in forwards}
+  @keyframes bgglow{to{background:radial-gradient(circle at 50% 46%, rgba(37,99,235,.32), transparent 62%)}}
+
+  .stage{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;
+    background:radial-gradient(ellipse 62% 62% at 50% 47%, #0b1f3d 0%, #050d1c 46%, #000 100%)}
+
+  .rays{position:fixed;left:50%;top:46%;width:1900px;height:1900px;margin:-950px 0 0 -950px;
+    background:repeating-conic-gradient(from 0deg at 50% 50%,
+      rgba(120,180,255,.10) 0deg 2.5deg, transparent 2.5deg 13deg);
+    opacity:0;transform:scale(.6) rotate(0deg);
+    animation:raysIn 6.5s ease-in forwards, raysBurst 1.2s ease-out 6.45s forwards, raysSpin 60s linear infinite}
+  @keyframes raysIn{0%{opacity:0;transform:scale(.55) rotate(0deg)}100%{opacity:.16;transform:scale(.92) rotate(10deg)}}
+  @keyframes raysBurst{0%{opacity:.16;transform:scale(.92)}25%{opacity:.55;transform:scale(1.08)}100%{opacity:.22;transform:scale(1.0)}}
+  @keyframes raysSpin{to{transform:rotate(360deg)}}
+
+  .logo{width:330px;height:330px;border-radius:50%;display:block;position:relative;z-index:5;
+    opacity:0;filter:blur(26px) brightness(.4);transform:scale(.24) rotate(-22deg);
+    animation:reveal 6.5s cubic-bezier(.64,0,.84,.25) forwards,
+              glow 3.2s ease-out 6.5s forwards,
+              breathe 4.2s ease-in-out 7.8s infinite}
+  @keyframes reveal{
+    0%{opacity:0;transform:scale(.24) rotate(-22deg);filter:blur(26px) brightness(.35)}
+    55%{opacity:.45;filter:blur(12px) brightness(.6)}
+    100%{opacity:1;transform:scale(1) rotate(0deg);filter:blur(0) brightness(1.05)}}
+  @keyframes glow{
+    0%{box-shadow:0 0 140px 36px rgba(56,189,248,.95), 0 0 280px 90px rgba(37,99,235,.55)}
+    100%{box-shadow:0 0 64px 8px rgba(37,99,235,.45)}}
+  @keyframes breathe{0%,100%{box-shadow:0 0 58px 7px rgba(37,99,235,.40)}50%{box-shadow:0 0 88px 14px rgba(56,189,248,.55)}}
+
+  .flash{position:fixed;inset:0;z-index:9;pointer-events:none;
+    background:radial-gradient(circle at 50% 46%, #ffffff 0%, rgba(255,255,255,0) 46%);
+    opacity:0;animation:flash .7s ease-out 6.35s}
+  @keyframes flash{0%{opacity:0}14%{opacity:.95}100%{opacity:0}}
+
+  .word{position:relative;z-index:6;font-size:78px;font-weight:800;letter-spacing:5px;color:#fff;
+    opacity:0;transform:translateY(36px);animation:rise 1s cubic-bezier(.2,.85,.2,1) 6.95s forwards;
+    text-shadow:0 4px 40px rgba(37,99,235,.5)}
+  .word span{color:#38bdf8}
+  .tag{position:relative;z-index:6;font-size:21px;font-weight:400;letter-spacing:11px;color:#8ea8c8;text-transform:uppercase;
+    opacity:0;transform:translateY(26px);animation:rise 1s cubic-bezier(.2,.85,.2,1) 7.3s forwards;margin-top:-8px}
+  @keyframes rise{to{opacity:1;transform:none}}
+
+  .sweep{position:fixed;top:0;bottom:0;width:38%;left:-55%;z-index:7;pointer-events:none;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.16),transparent);transform:skewX(-12deg);
+    animation:sweep 1.15s ease-in 7.35s}
+  @keyframes sweep{0%{left:-55%}100%{left:130%}}
+
+  .p{position:fixed;left:50%;top:46%;width:7px;height:7px;border-radius:50%;z-index:8;
+    background:radial-gradient(circle,#bae6fd,#38bdf8);opacity:0;
+    animation:fly 1.4s ease-out 6.5s forwards}
+  @keyframes fly{0%{opacity:0;transform:translate(0,0) scale(.3)}
+    18%{opacity:1}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(1)}}
+
+  .endfade{position:fixed;inset:0;z-index:20;background:#000;opacity:0;animation:efade 1.5s ease-in 11.8s forwards}
+  @keyframes efade{to{opacity:1}}
+</style>
+</head>
+<body>
+  <div class="glowbg"></div>
+  <div class="rays"></div>
+  <div class="stage">
+    <img class="logo" src="../images/vilfintv-logo.jpg" alt="">
+    <div class="word">Vilfin<span>TV</span></div>
+    <div class="tag">Markets · News · Stories · Academy</div>
+  </div>
+  <div class="flash"></div>
+  <div class="sweep"></div>
+  <div class="endfade"></div>
+  <script>
+    // burst particles from the centre at the impact moment
+    var n = 16;
+    for (var i = 0; i < n; i++) {
+      var d = document.createElement('div'); d.className = 'p';
+      var ang = (Math.PI * 2 * i / n) + (Math.random() * .4);
+      var dist = 320 + Math.random() * 240;
+      d.style.setProperty('--tx', Math.cos(ang) * dist + 'px');
+      d.style.setProperty('--ty', Math.sin(ang) * dist + 'px');
+      d.style.animationDelay = (6.5 + Math.random() * .08) + 's';
+      document.body.appendChild(d);
+    }
+  </script>
+</body>
+</html>
