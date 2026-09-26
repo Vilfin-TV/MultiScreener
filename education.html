@@ -1031,7 +1031,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
           <div class="subject-title">Mechanical Engineering</div>
         </div>
         <div class="subject-links">
-          <a href="#" onclick="return false; alert('Coming Soon');">Thermodynamics</a>
+          <a href="#" onclick="openMechLesson(0); return false;">Thermodynamics</a>
           <a href="#" onclick="return false; alert('Coming Soon');">Fluid Mechanics</a>
           <a href="#" onclick="return false; alert('Coming Soon');">Robotics &amp; Mechatronics</a>
           <a href="#" onclick="return false; alert('Coming Soon');">Solid Mechanics</a>
@@ -1559,6 +1559,22 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
       </div>
     </div>
 
+    <!-- ── MECHANICAL & MOBILITY ── -->
+    <div id="mech-content-area" style="display:none;">
+      <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">⚙️ Mechanical &amp; Mobility</h2>
+      <p style="margin:0 0 20px; font-size:14px; color:var(--text2);">5-lesson course · Teaching-style · Simple language</p>
+      <div class="fin-layout">
+        <aside class="fin-toc" id="mech-toc">
+          <div class="fin-toc-header">📚 Course Outline</div>
+          <div class="fin-toc-list" id="mech-toc-list"></div>
+        </aside>
+        <div class="fin-main" id="mech-main">
+          <div class="fin-progress-bar"><div class="fin-progress-fill" id="mech-progress-fill" style="width:20%"></div></div>
+          <div id="mech-lesson-content"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── AI & ROBOTICS ── -->
     <div id="ai-content-area" style="display:none;">
       <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">🤖 AI &amp; Robotics</h2>
@@ -1646,6 +1662,8 @@ function _hideAllLessonAreas() {
   if (_lsk) _lsk.style.display = 'none';
   var _bio = document.getElementById('bio-content-area');
   if (_bio) _bio.style.display = 'none';
+  var _mech = document.getElementById('mech-content-area');
+  if (_mech) _mech.style.display = 'none';
 }
 
 function openCbseLesson(subject, classNum) {
@@ -1907,6 +1925,21 @@ function openBioLesson(startIdx) {
   if (typeof renderBioLesson === 'function') renderBioLesson(_activeBioIdx);
   document.getElementById('lesson-view-container').scrollTop = 0;
   try { history.replaceState(null, '', '?subject=life-sciences'); } catch(e){}
+}
+
+var _activeMechIdx = 0;
+function openMechLesson(startIdx) {
+  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('subjects-section').style.display = 'none';
+  document.getElementById('lesson-view-container').style.display = 'block';
+  _hideAllLessonAreas();
+  document.getElementById('mech-content-area').style.display = 'block';
+  _activeHub = 'mech';
+  _activeMechIdx = (typeof startIdx === 'number') ? startIdx : 0;
+  if (typeof renderMechTOC === 'function') renderMechTOC();
+  if (typeof renderMechLesson === 'function') renderMechLesson(_activeMechIdx);
+  document.getElementById('lesson-view-container').scrollTop = 0;
+  try { history.replaceState(null, '', '?subject=mechanical-mobility'); } catch(e){}
 }
 
 var _activeAiIdx = 0;
@@ -9534,6 +9567,165 @@ var BIO_LESSONS = [
     ]
   }
 ];
+
+var MECH_LESSONS = [
+  { unit: "Unit 1 · Thermodynamics", icon: "🌡️",
+    title: "The Four Laws of Thermodynamics",
+    lead: "Thermodynamics is the branch of physics that governs how heat and energy move — and its four laws, though simple to state, set absolute limits on every engine, refrigerator and power plant humanity has ever built.",
+    points: [
+      "<strong>Zeroth Law:</strong> if two systems are each in thermal equilibrium with a third, they are in equilibrium with each other — this is what makes the very idea of \"temperature\" well-defined and lets a thermometer work at all.",
+      "<strong>First Law (conservation of energy):</strong> energy can't be created or destroyed, only converted — a system's internal energy change equals heat added minus work done by the system (&Delta;U = Q &minus; W).",
+      "<strong>Second Law (direction of change):</strong> heat flows spontaneously from hot to cold, never the reverse, and the total entropy of an isolated system can only stay the same or increase — this is why some processes are one-way streets.",
+      "<strong>Third Law:</strong> as a system's temperature approaches absolute zero (0 K, &minus;273.15&deg;C), its entropy approaches a minimum constant value, and absolute zero itself can never actually be reached.",
+      "<strong>Why no engine is 100% efficient:</strong> the second law guarantees that some portion of any engine's heat input must always be rejected to a colder reservoir rather than converted to work — this is a hard physical ceiling, not an engineering shortfall.",
+      "<strong>Everyday reach:</strong> these four laws quietly govern car engines, power-plant turbines, refrigerators, air conditioners, and even why a hot cup of coffee always cools to room temperature and never spontaneously heats up further."
+    ],
+    analogy: "Think of energy like water and the universe like a giant landscape of connected tanks. The First Law says the total amount of water never changes, only moves between tanks. The Second Law says water only flows downhill on its own — from a full, high tank (hot) to an empty, low one (cold) — never the reverse, unless something (a pump, i.e. work) forces it back uphill.",
+    qa: [
+      { q: "If the First Law says energy is always conserved, why do we say cars and power plants \"waste\" energy?", a: "The First Law only guarantees that total energy is conserved — it says nothing about whether that energy stays useful. A car engine converts the chemical energy in fuel into heat, and only a fraction of that heat gets converted into useful work turning the wheels; the rest is conserved perfectly, but it escapes as exhaust heat and radiator heat that can no longer do useful work. This is where the Second Law comes in: it says that whenever energy moves or transforms, some of it inevitably becomes lower-quality, more disordered energy (heat spread into the environment) that is far harder to convert back into useful work. So \"wasted\" energy isn't destroyed, it's degraded — it still exists, obeying the First Law, but it has been converted into a form (diffuse low-temperature heat) that the Second Law says cannot be fully recovered, which is exactly why a typical gasoline engine is only about 20-30% efficient even though not a single joule of energy actually vanished." },
+      { q: "Why is it fundamentally impossible to build a 100% efficient heat engine, no matter how good the engineering gets?", a: "A heat engine works by taking in heat from a hot reservoir, converting part of it into mechanical work, and rejecting the remainder into a cold reservoir — this rejection step is not an engineering imperfection but a structural requirement imposed by the Second Law of Thermodynamics. If an engine could convert 100% of input heat into work with zero heat rejected to a cold sink, it would decrease the entropy of the universe with no compensating increase elsewhere, which the Second Law forbids for any real, ongoing process. The theoretical best case, the Carnot cycle, defines the maximum possible efficiency for any heat engine operating between a hot temperature Th and a cold temperature Tc as 1 minus Tc/Th (both in absolute Kelvin), which is always less than 100% as long as Tc is above absolute zero. This is why engineers focus on getting as close to the Carnot limit as economically possible — using higher combustion temperatures, better insulation, and waste-heat recovery — rather than chasing an impossible 100% target; it's a physical wall, not a research gap." }
+    ]
+  },
+  { unit: "Unit 1 · Thermodynamics", icon: "🔥",
+    title: "Heat Transfer — Conduction, Convection &amp; Radiation",
+    lead: "Heat always moves from a hotter object to a cooler one, but it does so through three fundamentally different physical mechanisms — conduction, convection and radiation — and most real-world heating or cooling problems involve all three acting at once.",
+    points: [
+      "<strong>Conduction:</strong> heat transfer through direct molecular contact within a solid (or still fluid) — fast-vibrating hot molecules bump their slower neighbors, passing energy along; metals conduct fast, materials like wood or foam conduct slowly, which is why they make good insulators.",
+      "<strong>Fourier's Law:</strong> the rate of conductive heat flow is proportional to the material's thermal conductivity, the cross-sectional area, and the temperature difference, and inversely proportional to the material's thickness.",
+      "<strong>Convection:</strong> heat carried by the bulk movement of a fluid (liquid or gas) — natural convection happens when heated fluid becomes less dense and rises on its own (like warm air near a radiator), while forced convection uses a fan or pump to actively move the fluid.",
+      "<strong>Radiation:</strong> heat transferred as electromagnetic waves, requiring no medium at all — this is the only mechanism that works through the vacuum of space, which is how the Sun's heat reaches Earth across 150 million km of empty space.",
+      "<strong>Stefan-Boltzmann Law:</strong> the power radiated by an object rises with the fourth power of its absolute temperature, which is why a red-hot object radiates dramatically more heat than one only slightly warm.",
+      "<strong>Real-world overlap:</strong> a hot cup of coffee loses heat by all three at once — conduction into the mug, convection into the surrounding air, and radiation outward — which is why insulated, lidded cups (blocking convection and conduction) stay hot far longer."
+    ],
+    analogy: "Conduction is like a line of people passing a hot potato hand to hand without moving from their spots. Convection is like a delivery truck physically driving the hot potato across town. Radiation is like broadcasting the potato's warmth as an invisible signal that needs no truck, no hands, and no road at all — it can even cross empty space.",
+    qa: [
+      { q: "Why do metals feel colder to the touch than wood, even when both are sitting at the exact same room temperature?", a: "Both objects genuinely are at the same temperature, so the sensation has nothing to do with actual temperature and everything to do with thermal conductivity — the rate at which each material can conduct heat away from your skin. Metal has a very high thermal conductivity, so the instant your hand touches it, heat rapidly conducts away from your skin into the metal and spreads through it, continuously pulling more heat from your fingertips and creating a strong, sustained sensation of cold. Wood has a much lower thermal conductivity, so it conducts heat away from your skin far more slowly; the small patch of wood touching your hand quickly warms up close to skin temperature and then heat transfer nearly stops, so it never feels as cold. This is precisely why thermal conductivity, not temperature, is what your nerve endings for touch actually respond to, and it's also why cooking pans use metal (to conduct heat fast into food) while pan handles use plastic or wood (to conduct heat away from your hand slowly)." },
+      { q: "How does heat from the Sun reach Earth if space is a vacuum with no air or matter to conduct or convect through?", a: "Conduction and convection both require a physical medium — molecules that can bump into each other or bulk fluid that can physically move — and the vacuum of space contains essentially no such medium between the Sun and Earth. Radiation is fundamentally different because it does not transfer heat through molecular collisions at all; instead, any object above absolute zero emits electromagnetic radiation directly from the vibration and acceleration of its charged particles, and this radiation propagates as electromagnetic waves that require no medium whatsoever, the same way radio waves or light travel through empty space. The Sun, at a surface temperature of about 5,500&deg;C, radiates enormous power predominantly as visible and infrared light, and a tiny fraction of that radiated energy travels roughly 150 million kilometers through vacuum in about 8 minutes before striking Earth's atmosphere and surface, where it is absorbed and converted back into heat. This is also why radiation is the dominant heat-loss mechanism for satellites and spacecraft in orbit — with no air for conduction or convection, radiating heat away into the coldness of space is the only cooling option they have." }
+    ]
+  },
+  { unit: "Unit 1 · Thermodynamics", icon: "⚙️",
+    title: "Thermodynamic Cycles &amp; Heat Engines",
+    lead: "Nearly every engine that has ever powered civilization — steam turbines, car engines, jet turbines, refrigerators — is built around a repeating thermodynamic cycle, a closed loop of compression, heating, expansion and cooling that converts heat into mechanical work.",
+    points: [
+      "<strong>The Carnot cycle:</strong> a theoretical, idealized cycle of two isothermal and two adiabatic steps that defines the absolute maximum possible efficiency for any heat engine working between two temperatures — no real engine can beat it, only approach it.",
+      "<strong>Otto cycle:</strong> the idealized cycle behind gasoline engines — intake, compression, spark-ignited combustion at roughly constant volume, power expansion, and exhaust — repeated thousands of times per minute.",
+      "<strong>Diesel cycle:</strong> similar to Otto but ignites fuel through compression heat alone (no spark plug) and adds fuel at roughly constant pressure, allowing higher compression ratios and generally better efficiency than gasoline engines.",
+      "<strong>Rankine cycle:</strong> the cycle behind most of the world's electricity — water is boiled into high-pressure steam, the steam expands through a turbine generating work, then it's condensed back to water and pumped around again; this powers coal, nuclear and gas-combined-cycle power plants alike.",
+      "<strong>Reversed cycles = refrigeration:</strong> running a heat engine's cycle backward, using work input to pump heat from a cold space to a hotter one, is exactly how refrigerators and air conditioners work — they don't \"create cold\", they move heat against its natural direction.",
+      "<strong>Efficiency ceiling:</strong> the Carnot efficiency formula, &eta; = 1 &minus; Tc/Th (temperatures in Kelvin), shows why raising the hot-side operating temperature is one of the most effective ways engineers improve real engine efficiency."
+    ],
+    analogy: "A thermodynamic cycle is like a water wheel that must return to its exact starting position every rotation to keep working continuously. It doesn't matter how the wheel got its push (steam, burning fuel, exhaust gas) — what matters is that after every full turn, the wheel (and the working fluid inside the engine) is back where it started, ready to be pushed again, cycle after cycle.",
+    qa: [
+      { q: "Why can real engines never actually reach Carnot efficiency, even in principle?", a: "The Carnot cycle achieves its ideal efficiency by using processes that are perfectly reversible — isothermal steps where heat is added or removed with zero temperature difference between the working fluid and the reservoir, and adiabatic steps with absolutely no friction or heat loss. Both requirements are physically unreachable in a real machine: transferring heat with zero temperature difference would require infinitely slow heat exchange, producing zero power output, which defeats the purpose of a practical engine that needs to generate work at a usable rate. Real engines also suffer unavoidable friction between moving parts, turbulence in the working fluid, and some heat leaking away through engine walls, all of which are irreversible processes that generate extra entropy beyond the Carnot ideal. Because of this, the Carnot efficiency serves as a theoretical upper bound that no real engine reaches, but it remains extremely useful as a benchmark — engineers routinely compare a real engine's actual efficiency to its theoretical Carnot limit (given its actual hot and cold operating temperatures) to judge how much room for improvement still exists." },
+      { q: "How does a refrigerator make its interior colder than the surrounding kitchen, when heat should naturally flow the other way?", a: "The Second Law says heat only flows spontaneously from hot to cold, so a refrigerator cannot simply let heat flow from its cold interior to the warmer kitchen air on its own — instead, it uses electrical work input to forcibly pump heat in the \"wrong\" direction. Inside the fridge, a refrigerant fluid is deliberately kept colder than the food compartment by first expanding it through a valve, which drops both its pressure and temperature so much that it becomes colder than the fridge interior; heat then flows spontaneously (the normal direction) from the warmer food into this now-colder refrigerant, cooling the interior. A compressor, powered by electricity, then does work to squeeze the refrigerant back into a hot, high-pressure gas — hot enough that it is now warmer than the kitchen air outside, so heat flows spontaneously (again, the normal direction) out of the coils at the back of the fridge into the kitchen. So heat still only ever flows from hot to cold at each individual step, obeying the Second Law perfectly; the compressor's work input is what keeps re-creating the temperature difference in the right place, which is exactly why refrigerators consume electricity continuously rather than just cooling something once and stopping." }
+    ]
+  },
+  { unit: "Unit 1 · Thermodynamics", icon: "📉",
+    title: "Entropy &amp; the Second Law",
+    lead: "Entropy is one of the most misunderstood ideas in physics — often loosely described as \"disorder\", it is more precisely a measure of how many equivalent microscopic arrangements correspond to a system's observable state, and the Second Law's insistence that it always increases is what gives time its one-way arrow.",
+    points: [
+      "<strong>Macrostates vs. microstates:</strong> a \"macrostate\" is what you can observe (a gas at a given pressure and temperature); a \"microstate\" is one exact arrangement of every individual molecule's position and velocity — vastly many microstates can produce the same macrostate.",
+      "<strong>Boltzmann's entropy formula:</strong> S = k ln W, where W is the number of microstates consistent with a given macrostate — a higher-entropy macrostate simply has overwhelmingly more microstates available to it, which is why systems drift toward it.",
+      "<strong>Why processes are irreversible:</strong> a low-entropy state (like all gas molecules bunched in one corner of a room) has very few possible microstates, while the high-entropy state (gas spread evenly) has astronomically more — random molecular motion will overwhelmingly land in the high-entropy state simply by probability, not by any active force.",
+      "<strong>Entropy and the arrow of time:</strong> the fundamental laws of motion for individual particles work the same forwards or backwards in time, but the Second Law's steady rise in entropy is what makes some processes (an egg cracking) look obviously \"forward\" while their reverse (a cracked egg reassembling) looks bizarre and never actually happens.",
+      "<strong>Local decreases are allowed:</strong> entropy can decrease in one part of a system (a refrigerator, a living organism, a growing crystal) as long as it increases by at least as much somewhere else — the Second Law governs the total, isolated-system entropy, not every sub-region individually.",
+      "<strong>Practical consequence:</strong> entropy is why perpetual motion machines are impossible, why information can be permanently \"lost\" as heat, and why any energy conversion process inevitably generates some amount of unusable, dispersed heat."
+    ],
+    analogy: "Imagine dropping a deck of cards down a staircase versus perfectly reassembling them into new-deck order at the bottom. There are trillions of ways the cards could land scattered, and only one way they could land in perfect order — so scattering isn't a mysterious force pulling the cards apart, it's simply the overwhelmingly more likely outcome out of all the ways gravity and chance could arrange them. Entropy increasing is exactly this: not a force, but a matter of probability at an astronomical scale.",
+    qa: [
+      { q: "If entropy always increases, how do living organisms — and even refrigerators — manage to become more ordered rather than less?", a: "The Second Law of Thermodynamics applies strictly to isolated systems that exchange nothing, not even energy, with their surroundings — but living organisms and refrigerators are emphatically not isolated systems; they constantly exchange energy and matter with their environment. A living cell builds highly ordered structures like proteins and DNA, decreasing its own local entropy, but it does so by consuming food and expelling heat and waste into its surroundings, and the entropy increase in that surrounding environment (from digesting complex food into simpler, more disordered waste molecules, and from radiating body heat) is always larger than the entropy decrease inside the organism. The same logic applies to a refrigerator: its interior becomes colder and more ordered (colder means less random molecular motion, hence lower entropy), but the compressor generates heat that is dumped into the kitchen, increasing the kitchen's entropy by more than the fridge's interior entropy decreased. In every real case ever measured, the total entropy of the organism-plus-environment or fridge-plus-kitchen system increases, exactly as the Second Law requires — local order is always purchased at the cost of greater disorder somewhere else." },
+      { q: "Why does entropy give time a direction, when the basic laws of physics for individual particles work equally well forwards or backwards?", a: "At the level of a single particle collision, Newton's laws (and their quantum equivalents) are indeed time-symmetric — if you filmed two billiard balls colliding and played the footage backward, the reversed motion would still obey the same laws of physics perfectly, so nothing in the microscopic rules forbids it. The asymmetry appears only at the statistical level of very large numbers of particles: there are vastly more disordered microstate arrangements than ordered ones, so while any individual reversed collision is physically legal, the reverse of a whole macroscopic process (like scattered gas molecules spontaneously gathering into one corner) would require an almost inconceivably improbable coordinated reversal of trillions of individual particle trajectories simultaneously. Because entropy measures exactly this count of available microstates, and macroscopic systems evolve toward whichever macrostate has overwhelmingly more of them, we observe eggs cracking but never un-cracking, and ice melting but never spontaneously re-forming from room-temperature water — not because backward motion is against the laws of physics, but because it is statistically so wildly improbable that it is never observed in the age of the universe. This statistical, probability-driven increase in entropy is what physicists mean when they say entropy defines the \"arrow of time\"." }
+    ]
+  },
+  { unit: "Unit 1 · Thermodynamics", icon: "🧊",
+    title: "Phase Change &amp; Thermal Properties of Matter",
+    lead: "Matter doesn't just get hotter or colder smoothly — at specific temperatures it undergoes phase changes, where energy goes entirely into rearranging molecular structure rather than raising temperature, a quirk of physics that powers everything from sweating to steam engines.",
+    points: [
+      "<strong>Specific heat capacity:</strong> the amount of energy needed to raise a given mass of a substance by 1&deg;C — water has an unusually high specific heat capacity, which is why oceans and lakes moderate nearby climates and why water is so effective as a coolant.",
+      "<strong>Latent heat:</strong> the energy absorbed or released during a phase change (melting, freezing, boiling, condensing) at constant temperature — the latent heat of vaporization for water (about 2,260 kJ/kg) is roughly 5&times; larger than the energy needed to heat that same water from freezing to boiling.",
+      "<strong>Why temperature plateaus during a phase change:</strong> added heat during melting or boiling goes entirely into breaking intermolecular bonds and rearranging molecular structure, not into increasing average molecular kinetic energy (temperature), which is why boiling water stays at exactly 100&deg;C (at sea level) no matter how hard you keep boiling it.",
+      "<strong>Phase diagrams:</strong> a plot of pressure vs. temperature showing exactly which phase (solid, liquid, gas) is stable under any given condition, including the triple point (where all three phases coexist) and the critical point (beyond which liquid and gas become indistinguishable as a \"supercritical fluid\").",
+      "<strong>Pressure changes phase behavior:</strong> water boils at a lower temperature at high altitude (lower atmospheric pressure) and can be made to boil at room temperature under a strong enough vacuum, which is exploited in freeze-drying food and coffee.",
+      "<strong>Real-world payoff:</strong> sweat cools the body by absorbing large amounts of latent heat as it evaporates from skin, and steam burns are far more dangerous than boiling-water burns because condensing steam releases its huge latent heat of vaporization directly into skin."
+    ],
+    analogy: "Heating a substance is like filling a bucket with water while also trying to raise its height on a shelf. Adding energy while the substance stays in one phase is like raising the shelf smoothly (temperature rises steadily). But during a phase change, all the energy you add goes into the labor of moving the bucket to an entirely new, higher shelf (a phase transition) — until that move is fully complete, the bucket's height (temperature) doesn't rise at all, no matter how much more water (energy) you pour in.",
+    qa: [
+      { q: "Why does a burn from steam hurt so much more than a burn from boiling water at the exact same 100&deg;C?", a: "Both steam and boiling water are indeed at the same 100&deg;C at sea-level atmospheric pressure, so temperature alone doesn't explain the difference — the extra damage from steam comes from latent heat of condensation. When steam touches skin, it doesn't just sit there at 100&deg;C transferring heat the way boiling water does; it condenses back into liquid water on contact, and this phase change releases an enormous additional amount of energy — about 2,260 joules per gram — that boiling water simply doesn't carry, because boiling water is already in the liquid phase and has no further phase change left to release. This means a given mass of steam delivers vastly more total thermal energy to the skin than the same mass of 100&deg;C liquid water, causing deeper and more severe tissue damage in the same contact time. This is precisely why industrial steam pipes and steam-based cooking equipment carry much stronger safety warnings than equipment handling boiling water alone, even though the temperature reading is identical." },
+      { q: "Why does water's unusually high specific heat capacity matter for climate, beyond just \"water heats up slowly\"?", a: "Water's specific heat capacity, at about 4.18 joules per gram per degree Celsius, is far higher than that of common land materials like rock, sand or soil, meaning water requires roughly 4-5 times as much energy input to raise its temperature by the same amount. Because oceans and large lakes hold enormous masses of water, they can absorb huge quantities of solar energy during the day or summer while warming only modestly, and then release that stored energy back slowly during the night or winter as they cool — acting as a massive thermal buffer. This is the physical reason coastal regions typically have milder, more stable seasonal and daily temperature swings than inland regions at the same latitude, which instead heat up and cool down rapidly because land has much lower heat capacity. At a planetary scale, the oceans' huge total heat capacity is also why they absorb the large majority of the extra heat trapped by rising greenhouse gas concentrations, acting as the dominant buffer that has so far kept atmospheric temperature rise smaller than it would otherwise be, while also storing that heat for a very long time before it re-equilibrates." }
+    ]
+  }
+];
+
+function renderMechTOC() {
+  var list = document.getElementById('mech-toc-list');
+  if (!list) return;
+  var html = '';
+  var currentUnit = '';
+  MECH_LESSONS.forEach(function(lesson, i) {
+    if (lesson.unit !== currentUnit) {
+      currentUnit = lesson.unit;
+      html += '<div class="fin-toc-unit">' + esc(lesson.unit) + '</div>';
+    }
+    html += '<div class="fin-toc-item' + (i === _activeMechIdx ? ' active' : '') + '" onclick="renderMechLesson(' + i + ')" id="mech-toc-' + i + '">'
+          + '<span style="margin-right:7px;">' + lesson.icon + '</span>' + esc(lesson.title)
+          + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderMechLesson(idx) {
+  _activeMechIdx = idx;
+  var lesson = MECH_LESSONS[idx];
+  if (!lesson) return;
+
+  var pct = ((idx + 1) / MECH_LESSONS.length) * 100;
+  var pfill = document.getElementById('mech-progress-fill');
+  if (pfill) pfill.style.width = pct + '%';
+
+  renderMechTOC();
+  var act = document.getElementById('mech-toc-' + idx);
+  if (act && act.scrollIntoView) act.scrollIntoView({ behavior:'smooth', block:'center' });
+
+  var html = '<div class="fin-lesson-num">LESSON ' + (idx+1) + ' OF ' + MECH_LESSONS.length + '</div>';
+  html += '<h1 class="fin-lesson-title">' + esc(lesson.title) + '</h1>';
+  if (lesson.lead) html += '<div class="fin-lesson-lead">' + lesson.lead + '</div>';
+
+  if (lesson.points && lesson.points.length > 0) {
+    html += '<div class="fin-section-title">Key Concepts</div><ul class="fin-key-points">';
+    lesson.points.forEach(function(pt) { html += '<li>' + pt + '</li>'; });
+    html += '</ul>';
+  }
+
+  if (lesson.analogy) {
+    html += '<div class="fin-analogy-box"><div class="fin-analogy-title">💡 The Intuition</div><div class="fin-analogy-text">' + esc(lesson.analogy) + '</div></div>';
+  }
+
+  if (lesson.qa && lesson.qa.length > 0) {
+    html += '<div class="fin-qa-section"><div class="fin-section-title">Common Questions</div>';
+    lesson.qa.forEach(function(item, qidx) {
+      var uniq = 'mech-q-' + idx + '-' + qidx;
+      html += '<div class="fin-qa-item" id="' + uniq + '">'
+            + '<div class="fin-qa-q" onclick="document.getElementById(\'' + uniq + '\').classList.toggle(\'open\')">'
+            + '<span>' + esc(item.q) + '</span>'
+            + '<svg class="fin-qa-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'
+            + '</div><div class="fin-qa-a">' + item.a + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  var prevDisabled = (idx === 0) ? ' disabled' : '';
+  var nextDisabled = (idx === MECH_LESSONS.length - 1) ? ' disabled' : '';
+  html += '<div class="fin-nav-row">'
+        + '<button class="fin-nav-btn"' + prevDisabled + ' onclick="renderMechLesson(' + (idx-1) + ')">&#8592; Previous</button>'
+        + '<button class="fin-nav-btn primary"' + nextDisabled + ' onclick="renderMechLesson(' + (idx+1) + ')">Next &#8594;</button>'
+        + '</div>';
+
+  var contentDiv = document.getElementById('mech-lesson-content');
+  if (contentDiv) contentDiv.innerHTML = html;
+  var mainDiv = document.getElementById('mech-main');
+  if (mainDiv) mainDiv.scrollTop = 0;
+}
+
 
 function renderBioTOC() {
   var list = document.getElementById('bio-toc-list');

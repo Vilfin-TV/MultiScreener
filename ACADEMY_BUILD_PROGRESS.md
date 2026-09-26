@@ -50,10 +50,10 @@ Daily automated build of empty Academy topics in `education.html`.
 ### Life Sciences & Biotechnology (new hub: BIO_LESSONS)
 - [x] Genetic Engineering
 - [x] Bioinformatics
-- [ ] Molecular Biology
+- [x] Molecular Biology
 
 ### Mechanical & Mobility (new hub: MECH_LESSONS)
-- [ ] Thermodynamics
+- [x] Thermodynamics
 - [ ] Electric Vehicle (EV) Technology
 - [ ] Drone Technology
 
@@ -75,3 +75,4 @@ Daily automated build of empty Academy topics in `education.html`.
 - 2026-07-04 — Reinforcement Learning + Generative AI & LLMs (AI_LESSONS units 9-10, idx 36 & 41) — jsdom pass, preview render pass (both lessons + TOC verified via openAiLesson(36)/openAiLesson(41)), 0 console errors
 - 2026-07-26 — retro-sync: found Life Skills, Computer Science, Emerging Technologies and Aerospace Engineering hubs were already fully built and wired in earlier feature commits (0f8776fd, 240fe98b, 1ad24347, 311beb5c) before this queue file existed — ticked all 16 topics to match actual code state, no code changes needed for those
 - 2026-07-26 — Genetic Engineering + Bioinformatics (new hub BIO_LESSONS, idx 0 & 1) — jsdom pass, preview render pass (both lessons + TOC verified via openBioLesson(0)/openBioLesson(1), plus a real click on the Bioinformatics index link), 0 console errors
+- 2026-09-26 — Molecular Biology (found already fully built in BIO_LESSONS idx 2-6, unit 2, and already wired to `openBioLesson(2)` in the index — just unticked; verified and ticked, no code change needed) + Thermodynamics (new hub MECH_LESSONS, idx 0, wired to `openMechLesson(0)`) — jsdom pass (validate_jsdom.js + targeted script asserting both lessons render, TOC headings present, 2 QA items each, area show/hide correct), 0 console errors. Browser preview could not be started in this unattended scheduled-task session (dev-server launch requires interactive approval), so verification relied on jsdom DOM assertions instead of a live browser check.
