@@ -1,0 +1,76 @@
+name: ETF Momentum Mode Data
+
+# Builds data/etf_momentum.json (weekly relative-rotation modes for every
+# NSE ETF) used by etf_momentum.html. New ETFs listed in
+# data/master_symbols.json / NSE's ETF list are picked up automatically.
+on:
+  schedule:
+    - cron: '17 11 * * 1-5'   # 16:47 IST, after NSE close
+    - cron: '43 14 * * 1-5'   # 20:13 IST, late-print safety run
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/build_etf_momentum.py'
+      - 'scripts/verify_etf_momentum.js'
+      - '.github/workflows/etf_momentum.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: etf-momentum-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build & verify data/etf_momentum.json
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install --upgrade pip yfinance pandas requests
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build ETF momentum data
+        run: python scripts/build_etf_momentum.py
+
+      - name: Verify (page engine vs reference, structure checks)
+        run: node scripts/verify_etf_momentum.js
+
+      - name: Commit (with rebase-and-retry)
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/etf_momentum.json
+          if git diff --staged --quiet; then
+            echo "No changes to ETF momentum data."
+            exit 0
+          fi
+          git commit -m "chore(data): refresh ETF momentum modes [skip ci]"
+          for attempt in 1 2 3 4; do
+            if git push origin HEAD:"$BRANCH"; then
+              echo "Pushed."
+              exit 0
+            fi
+            echo "Push rejected (attempt $attempt). Rebasing..."
+            git pull --rebase --autostash origin "$BRANCH" || git rebase --abort
+            sleep $((attempt * 5))
+          done
+          echo "All push attempts failed."
+          exit 1

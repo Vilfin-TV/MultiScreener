@@ -29,6 +29,7 @@ STATIC_PAGES = [
     (f'{SITE}/stock_research.html', '0.8', 'daily'),
     (f'{SITE}/mutual_fund_analyser.html', '0.8', 'daily'),
     (f'{SITE}/mf_live_screener.html', '0.8', 'daily'),
+    (f'{SITE}/etf_momentum.html', '0.8', 'daily'),
     (f'{SITE}/pre_market_briefing.html', '0.8', 'daily'),
     (f'{SITE}/sip_calc.html', '0.7', 'monthly'),
     (f'{SITE}/lumpsum_calc.html', '0.7', 'monthly'),
