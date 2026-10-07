@@ -126,7 +126,12 @@ _CAT_RULES = [
 
 
 def categorise(symbol: str, name: str, underlying: str) -> str:
-    """Underlying index text is the most reliable signal; symbol/name is the fallback."""
+    """Asset class (debt/gold/silver/international) from symbol or underlying first,
+    then the underlying index text, then symbol/name as the fallback."""
+    both = f"{symbol} {underlying}".upper()
+    for cat, pat in _CAT_RULES[:4]:
+        if re.search(pat, both):
+            return cat
     for hay in (underlying.upper(), f"{symbol} {name} {underlying}".upper()):
         if not hay.strip():
             continue
@@ -218,12 +223,22 @@ def nice_name(sym: str, master: dict, nse: dict, prev_names: dict) -> tuple[str,
         amc = amc_of(full) or prev.get("a", "")
     cu = clean_underlying(und)
     if cu:
-        full = f"{amc} {cu}".strip()
+        full = cu if (_has_amc(cu) or not amc) else f"{amc} {cu}"
         if not re.search(r"\bETF\b", full, re.I):
             full += " ETF"
     elif not full or " " not in full:   # NSE security names are often run-together codes
         full = f"{amc} ETF · {sym}" if amc else sym
     return full, amc, und
+
+
+_AMC_WORDS = ("ADITYA", "BIRLA", "ICICI", "MIRAE", "HDFC", "AXIS", "NIPPON", "SBI", "KOTAK", "MOTILAL", "UTI",
+              "DSP", "GROWW", "EDELWEISS", "INVESCO", "TATA", "BANDHAN", "LIC ", "ZERODHA", "ANGEL", "BAJAJ",
+              "BARODA", "HSBC", "360 ONE", "SHRIRAM", "UNION", "QUANTUM", "NAVI", "JIO", "CHOICE", "WHITEOAK")
+
+
+def _has_amc(text: str) -> bool:
+    t = f"{text.upper()} "
+    return any(w in t for w in _AMC_WORDS)
 
 
 def clean_underlying(u: str) -> str:
@@ -234,6 +249,7 @@ def clean_underlying(u: str) -> str:
     u = re.sub(r"^domestic price of\s+", "", u, flags=re.I)
     u = re.sub(r"\s*\((?:TRI|PRI)\)\s*$", "", u, flags=re.I)
     u = re.sub(r"\s+(Total Returns? Index|TRI|Index)\s*$", "", u, flags=re.I)
+    u = re.sub(r"\bIndex\b", "", u, flags=re.I)
     u = re.sub(r"\s{2,}", " ", u).strip(" -")
     if u.isupper():
         keep = {"CPSE", "PSU", "ETF", "BSE", "NSE", "MSCI", "IT", "FMCG", "ESG", "PSE", "MNC", "TRI", "US", "EV"}
@@ -319,6 +335,7 @@ def clean_series(dates: list, closes: list[float]) -> tuple[list, list[float], l
             continue
         i += 1
     # 2. persistent drops matching a split ratio → scale older history
+    cut = 0
     for i in range(1, len(c)):
         if c[i] <= 0:
             continue
@@ -330,6 +347,11 @@ def clean_series(dates: list, closes: list[float]) -> tuple[list, list[float], l
                         c[j] /= k
                     flags.append(f"split-1:{k}")
                     break
+            else:
+                cut = i                      # unexplained break → keep only the consistent recent segment
+    if cut:
+        d, c = d[cut:], c[cut:]
+        flags.append("reset")
     # 3. a wild final print (no next bar to confirm it) is dropped
     while len(c) >= 6:
         ref = sorted(c[-6:-1])[2]
@@ -524,7 +546,11 @@ def main() -> int:
         tv = [px * vv for px, vv in zip(c[-20:], v[-20:])]
         rec["tv"] = round(sum(tv) / len(tv) / 1e7, 3) if tv else 0.0   # ₹ crore / day
         zero_days = sum(1 for vv in v[-20:] if vv <= 0)
-        valid_weeks = sum(1 for x in weekly if x is not None)
+        valid_weeks = 0                       # contiguous recent history (RRG needs unbroken windows)
+        for x in reversed(weekly):
+            if x is None:
+                break
+            valid_weeks += 1
         q = "ok"
         if (stale_cut - last_dt).days > 7:
             q = "stale"

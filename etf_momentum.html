@@ -719,7 +719,7 @@ function compute(benchId){
     var r = {e:e, mode:null, rsr:null, rsm:null, trail:[], hist:[], reason:''};
     if (e.q === 'nodata' || !e.c || !e.c.length) r.reason = 'No recent trading data';
     else if (e.q === 'stale') r.reason = 'No trades in the latest week';
-    else if (e.q === 'short') r.reason = 'Listed recently: not enough history yet';
+    else if (e.q === 'short') r.reason = 'Not enough continuous trading history yet (20 weeks needed)';
     else if (b && b.c) {
       var s = RRG.series(e.c, b.c, P.nRatio, P.nMom), L = e.c.length;
       r.rsr = s.rsr[L - 1]; r.rsm = s.rsm[L - 1];
@@ -957,6 +957,7 @@ function renderResult(){
   var notes = [];
   if (e.q === 'thin') notes.push('Low trading activity: prices may not fully reflect the underlying index.');
   if (e.f && e.f.some(function(f){ return f.indexOf('split') === 0; })) notes.push('Price history adjusted for a unit split.');
+  if (e.f && e.f.indexOf('reset') >= 0) notes.push('Older prices excluded after a break in the price series.');
   if (b && b.proxy) notes.push(b.name + ' is tracked through its benchmark ETF.');
   if (notes.length) h += '<div class="note"><span>ℹ️</span><span>' + notes.map(esc).join(' ') + '</span></div>';
   h += '<div class="res-actions"><button class="btn pri" id="shareBtn" type="button">🔗 Copy link</button><button class="btn" id="viewList" type="button">View ' + (M ? M.name : 'list') + ' ETFs</button></div>';
