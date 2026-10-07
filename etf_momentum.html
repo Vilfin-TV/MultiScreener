@@ -929,7 +929,7 @@ function renderResult(){
   if (!r) return;
   var e = r.e, rr = e.r || {}, b = compute(state.bench).bench, M = r.mode ? MODES[r.mode] : null;
   var h = '<div class="etf-head"><div style="min-width:0"><div class="etf-sym">NSE: ' + esc(e.s) + '</div><div class="etf-name">' + esc(e.n) + '</div>' +
-    '<div class="etf-meta">' + [e.a, e.k, e.u].filter(Boolean).map(esc).join(' · ') + '</div></div>' +
+    '<div class="etf-meta">' + [e.a, e.k, e.u].filter(function(x, i, arr){ return x && arr.findIndex(function(y){ return String(y || '').toLowerCase() === String(x).toLowerCase(); }) === i; }).map(esc).join(' · ') + '</div></div>' +
     '<div class="etf-px"><b>' + fmtPx(e.p) + '</b><small>Close ' + fmtDate(e.d) + '</small></div></div>';
   if (M){
     h += '<div class="mode-badge ' + M.cls + '"><div class="mb-ico">' + M.ico + '</div><div><div class="mb-k">Mode vs ' + esc(b.name) + '</div><div class="mb-v">' + M.name + '</div><div class="mb-d">' + M.desc + '</div></div></div>';
