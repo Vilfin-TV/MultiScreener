@@ -77,7 +77,7 @@ if (bench) {
       if (ref[e.s]) { mismatch++; fail(`${e.s} unclassifiable but present in reference`); }
       continue;
     }
-    const s = RRG.series(e.c, bench.c, P.nRatio, P.nMom);
+    const s = RRG.series(e.c, bench.c, P.nRatio, P.nMom, P.floorRatio, P.floorMom);
     const L = e.c.length, r = s.rsr[L - 1], mo = s.rsm[L - 1], md = RRG.mode(r, mo);
     const x = ref[e.s];
     if (!md && !x) continue;

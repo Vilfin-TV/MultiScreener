@@ -16,8 +16,8 @@ Benchmarks : several Indian indices (with ETF proxies as a fallback). The page
 Modes      : relative-rotation quadrants, computed identically here and in
              the page (see rrg() below and RRG() in etf_momentum.html):
                RS            = 100 * ETF / Benchmark
-               RS-Ratio      = 100 + zscore(RS, 10 weeks)
-               RS-Momentum   = 100 + zscore(RS-Ratio, 10 weeks)
+               RS-Ratio      = 100 + zscore(RS, 10 weeks)        (sd floored at 1% of RS)
+               RS-Momentum   = 100 + zscore(RS-Ratio, 10 weeks)  (sd floored at 1.0)
              Accelerating   : RS-Ratio >= 100 and RS-Momentum >= 100
              Decelerating   : RS-Ratio >= 100 and RS-Momentum <  100
              Recovering     : RS-Ratio <  100 and RS-Momentum >= 100
@@ -51,6 +51,8 @@ N_MOM = 10             # RS-Momentum z-score window (weeks)
 TRAIL = 8              # trail points used by the page
 MIN_WEEKS = N_RATIO + N_MOM          # minimum valid weeks to classify (first RS-Momentum point)
 FFILL_LIMIT = 2        # max consecutive missing weeks bridged
+FLOOR_RATIO = 0.01     # RS moves under 1% of its level are noise (stops index trackers looking "strong")
+FLOOR_MOM = 1.0        # matching floor for RS-Ratio swings
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger("etf_momentum")
@@ -247,12 +249,14 @@ def clean_underlying(u: str) -> str:
         return ""
     u = re.split(r"\s*-\s*based|\s+based on", u, flags=re.I)[0]
     u = re.sub(r"^domestic price of\s+", "", u, flags=re.I)
+    u = re.sub(r"^commodity\s*-\s*", "", u, flags=re.I)
     u = re.sub(r"\s*\((?:TRI|PRI)\)\s*$", "", u, flags=re.I)
     u = re.sub(r"\s+(Total Returns? Index|TRI|Index)\s*$", "", u, flags=re.I)
     u = re.sub(r"\bIndex\b", "", u, flags=re.I)
     u = re.sub(r"\s{2,}", " ", u).strip(" -")
     if u.isupper():
-        keep = {"CPSE", "PSU", "ETF", "BSE", "NSE", "MSCI", "IT", "FMCG", "ESG", "PSE", "MNC", "TRI", "US", "EV"}
+        keep = {"CPSE", "PSU", "ETF", "BSE", "NSE", "MSCI", "IT", "FMCG", "ESG", "PSE", "MNC", "TRI", "US", "EV",
+                "HDFC", "ICICI", "UTI", "DSP", "SBI", "LIC", "HSBC", "CRISIL", "BHARAT", "S&P"}
         u = " ".join(w if (w in keep or len(w) < 4) else w.title() for w in u.split())
     return u[:60]
 
@@ -386,16 +390,18 @@ def to_rounded(x: float | None) -> float | None:
 
 
 # ── RRG maths (mirrored 1:1 in the page's JavaScript) ─────────────────────────
-def _z(win: list[float]) -> float | None:
+def _z(win: list[float], rel_floor: float = 0.0, abs_floor: float = 0.0) -> float | None:
     n = len(win)
     m = sum(win) / n
     var = sum((v - m) ** 2 for v in win) / n
     if var <= 1e-18:
         return None
-    return (win[-1] - m) / math.sqrt(var)
+    sd = max(math.sqrt(var), abs(m) * rel_floor, abs_floor)
+    return (win[-1] - m) / sd
 
 
-def rrg(etf: list, bench: list, n_ratio: int = N_RATIO, n_mom: int = N_MOM) -> tuple[list, list]:
+def rrg(etf: list, bench: list, n_ratio: int = N_RATIO, n_mom: int = N_MOM,
+        f_ratio: float = FLOOR_RATIO, f_mom: float = FLOOR_MOM) -> tuple[list, list]:
     L = len(etf)
     rs = [None] * L
     for i in range(L):
@@ -406,13 +412,13 @@ def rrg(etf: list, bench: list, n_ratio: int = N_RATIO, n_mom: int = N_MOM) -> t
     for i in range(n_ratio - 1, L):
         win = rs[i - n_ratio + 1:i + 1]
         if all(v is not None for v in win):
-            z = _z(win)
+            z = _z(win, rel_floor=f_ratio)
             rsr[i] = None if z is None else 100.0 + z
     rsm = [None] * L
     for i in range(n_mom - 1, L):
         win = rsr[i - n_mom + 1:i + 1]
         if all(v is not None for v in win):
-            z = _z(win)
+            z = _z(win, abs_floor=f_mom)
             rsm[i] = None if z is None else 100.0 + z
     return rsr, rsm
 
@@ -601,6 +607,7 @@ def main() -> int:
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "asOf": last_trade,
         "params": {"interval": "1wk", "nRatio": N_RATIO, "nMom": N_MOM, "trail": TRAIL,
+                   "floorRatio": FLOOR_RATIO, "floorMom": FLOOR_MOM,
                    "minWeeks": MIN_WEEKS, "defaultBench": DEFAULT_BENCH},
         "weeks": week_dates,
         "benchmarks": bench_out,
