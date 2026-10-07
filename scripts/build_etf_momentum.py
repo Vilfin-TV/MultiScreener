@@ -49,7 +49,7 @@ WEEKS = 104            # weekly bars kept per series
 N_RATIO = 10           # RS-Ratio z-score window (weeks)
 N_MOM = 10             # RS-Momentum z-score window (weeks)
 TRAIL = 8              # trail points used by the page
-MIN_WEEKS = N_RATIO + N_MOM + TRAIL   # minimum valid weeks to classify
+MIN_WEEKS = N_RATIO + N_MOM          # minimum valid weeks to classify (first RS-Momentum point)
 FFILL_LIMIT = 2        # max consecutive missing weeks bridged
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -101,7 +101,7 @@ _AMC_PREFIX = [
 def amc_of(raw: str) -> str:
     if not raw:
         return ""
-    code = re.split(r"\s*-\s*", raw)[0].strip().upper()
+    code = re.split(r"\s*-\s*", raw)[0].strip().upper().replace(" ", "")
     if code in AMC_NAMES:
         return AMC_NAMES[code]
     for pre, name in _AMC_PREFIX:
@@ -214,13 +214,31 @@ def nice_name(sym: str, master: dict, nse: dict, prev_names: dict) -> tuple[str,
     if not und and prev.get("u"):          # NSE list unavailable this run → reuse last good metadata
         und = prev.get("u", "")
         full = full or prev.get("n", "")
-    if not full and und:
-        full = f"{amc} {und}".strip()
-        if "ETF" not in full.upper() and "BEES" not in full.upper():
+    if not amc:
+        amc = amc_of(full) or prev.get("a", "")
+    cu = clean_underlying(und)
+    if cu:
+        full = f"{amc} {cu}".strip()
+        if not re.search(r"\bETF\b", full, re.I):
             full += " ETF"
-    if not full:
+    elif not full or " " not in full:   # NSE security names are often run-together codes
         full = f"{amc} ETF · {sym}" if amc else sym
-    return full, amc or prev.get("a", ""), und
+    return full, amc, und
+
+
+def clean_underlying(u: str) -> str:
+    u = (u or "").strip()
+    if not u or u.lower() == "nan":
+        return ""
+    u = re.split(r"\s*-\s*based|\s+based on", u, flags=re.I)[0]
+    u = re.sub(r"^domestic price of\s+", "", u, flags=re.I)
+    u = re.sub(r"\s*\((?:TRI|PRI)\)\s*$", "", u, flags=re.I)
+    u = re.sub(r"\s+(Total Returns? Index|TRI|Index)\s*$", "", u, flags=re.I)
+    u = re.sub(r"\s{2,}", " ", u).strip(" -")
+    if u.isupper():
+        keep = {"CPSE", "PSU", "ETF", "BSE", "NSE", "MSCI", "IT", "FMCG", "ESG", "PSE", "MNC", "TRI", "US", "EV"}
+        u = " ".join(w if (w in keep or len(w) < 4) else w.title() for w in u.split())
+    return u[:60]
 
 
 # ── Price download ────────────────────────────────────────────────────────────
@@ -262,7 +280,22 @@ def download(tickers: list[str], period: str = "2y", chunk: int = 60) -> dict:
         for i in range(0, len(pending), size):
             _one_batch(pending[i:i + size])
             time.sleep(1.0)
-    log.info(f"downloaded {len(result)}/{len(todo)} tickers")
+    # Batch downloads occasionally truncate a ticker's history; refetch short ones singly.
+    short = [t for t in todo if t in result and len(result[t]) < 300]
+    fixed = 0
+    for t in short:
+        try:
+            h = yf.Ticker(t).history(period=period, interval="1d", auto_adjust=True)
+            if h is not None and len(h) > len(result[t]) + 5:
+                h = h[["Close", "Volume"]].copy()
+                h = h[pd.to_numeric(h["Close"], errors="coerce") > 0].dropna(subset=["Close"])
+                if len(h) > len(result[t]):
+                    result[t] = h
+                    fixed += 1
+        except Exception:  # noqa: BLE001
+            pass
+        time.sleep(0.3)
+    log.info(f"downloaded {len(result)}/{len(todo)} tickers; short re-fetched {len(short)}, extended {fixed}")
     return result
 
 
@@ -292,11 +325,20 @@ def clean_series(dates: list, closes: list[float]) -> tuple[list, list[float], l
         ratio = c[i - 1] / c[i]
         if ratio > 1.8:
             for k in SPLIT_FACTORS:
-                if abs(ratio / k - 1) < 0.06:
+                if abs(ratio / k - 1) < (0.06 if k < 5 else 0.12):
                     for j in range(i):
                         c[j] /= k
                     flags.append(f"split-1:{k}")
                     break
+    # 3. a wild final print (no next bar to confirm it) is dropped
+    while len(c) >= 6:
+        ref = sorted(c[-6:-1])[2]
+        if c[-1] / ref > 1.8 or c[-1] / ref < 1 / 1.8:
+            d.pop(); c.pop()
+            if "bad-last" not in flags:
+                flags.append("bad-last")
+            continue
+        break
     return d, c, flags
 
 
