@@ -3,7 +3,17 @@ name: ETF Momentum Mode Data
 # Builds data/etf_momentum.json (weekly relative-rotation modes for every
 # NSE ETF) used by etf_momentum.html. New ETFs listed in
 # data/master_symbols.json / NSE's ETF list are picked up automatically.
+#
+# Reliability: GitHub delays or skips low-frequency crons in this repo (see
+# market_report_watchdog.yml), so the schedule below is only a first try.
+# The workflow also wakes after every "Update Market Sentiment" run (every
+# 30 min, reliable) and the cheap "due" gate starts a build only when the
+# published data is behind the latest completed NSE session — so the page
+# refreshes every trading day within ~30 min of data being available.
 on:
+  workflow_run:
+    workflows: ["Update Market Sentiment"]
+    types: [completed]
   schedule:
     - cron: '17 11 * * 1-5'   # 16:47 IST, after NSE close
     - cron: '47 12 * * 1-5'   # 18:17 IST, retry if the first run was delayed/skipped
@@ -24,8 +34,64 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  due:
+    name: Is a refresh due?
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - name: Checkout data file
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          sparse-checkout: data/etf_momentum.json
+          sparse-checkout-cone-mode: false
+
+      - name: Compare published session with the latest NSE session
+        id: check
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          python3 - <<'PY'
+          import json, os, datetime as dt
+          event = os.environ["EVENT"]
+          now_utc = dt.datetime.now(dt.timezone.utc)
+          ist = now_utc + dt.timedelta(hours=5, minutes=30)
+          def prev_weekday(d):
+              d -= dt.timedelta(days=1)
+              while d.weekday() > 4:
+                  d -= dt.timedelta(days=1)
+              return d
+          today = ist.date()
+          after_close = today.weekday() < 5 and (ist.hour, ist.minute) >= (16, 15)
+          expected = today if after_close else prev_weekday(today)
+          run, why = True, "manual/scheduled/push trigger"
+          if event == "workflow_run":
+              try:
+                  d = json.load(open("data/etf_momentum.json"))
+                  as_of = dt.date.fromisoformat(d["asOf"])
+                  gen = dt.datetime.fromisoformat(d["generated"].replace("Z", "+00:00"))
+              except Exception as exc:
+                  as_of, gen = None, None
+                  why = f"no readable data ({exc})"
+              if as_of is not None:
+                  age_min = (now_utc - gen).total_seconds() / 60
+                  if as_of >= expected:
+                      run, why = False, f"up to date (asOf {as_of}, expected {expected})"
+                  elif age_min < 90:
+                      run, why = False, f"behind ({as_of} < {expected}) but last attempt {age_min:.0f} min ago (holiday or source not ready)"
+                  else:
+                      why = f"behind ({as_of} < {expected}), last attempt {age_min:.0f} min ago"
+          print(f"run={run}: {why}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"run={'true' if run else 'false'}\n")
+          PY
+
   build:
     name: Build & verify data/etf_momentum.json
+    needs: due
+    if: needs.due.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

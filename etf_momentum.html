@@ -220,7 +220,7 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .met{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;min-width:0}
 .met-k{font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .met-v{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.met-v.sm{font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:700}
+.met-v.sm{font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:700;white-space:normal;line-height:1.3}
 .pos{color:var(--pos)}.neg{color:var(--neg)}
 .rets{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;margin-top:14px;border:1px solid var(--border);border-radius:10px;overflow:hidden}
 .ret{padding:9px 6px;text-align:center;background:var(--surface2)}
@@ -343,6 +343,10 @@ footer a{color:var(--text2)}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* ═══════════════ RESPONSIVE ═══════════════ */
+@media (max-width:1100px){
+  .tile-name{font-size:11px;letter-spacing:.5px;gap:6px}
+  .tile{padding:14px 12px 12px}
+}
 @media (max-width:1020px){
   .res-grid{grid-template-columns:1fr}
   .info-grid{grid-template-columns:1fr}
@@ -388,6 +392,8 @@ footer a{color:var(--text2)}
 }
 @media (max-width:420px){
   .vt-brand-name{display:none}
+  .tile-name{font-size:10.5px;letter-spacing:.3px}
+  .tile-ico{width:20px;height:20px;font-size:11px}
   .vt-hwrap{gap:8px;padding:0 10px}
   .vt-hnav{gap:6px}
   .vt-hbtn{padding:0 8px;height:34px}
@@ -395,6 +401,10 @@ footer a{color:var(--text2)}
   .vt-ptitle{min-width:0;flex:1}
   .rets{grid-template-columns:repeat(5,minmax(0,1fr))}
   .ret-v{font-size:12px}
+}
+@media (max-width:370px){
+  .tile-ico{display:none}
+  .tile{padding:12px 10px 10px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -994,7 +1004,7 @@ function renderResult(){
   h += '<div class="res-actions"><button class="btn pri" id="shareBtn" type="button">🔗 Copy link</button><button class="btn" id="viewList" type="button">View ' + (M ? M.name : 'list') + ' ETFs</button></div>';
   $('resCard').innerHTML = h;
   $('result').classList.add('show');
-  $('chartSub').textContent = 'Last ' + P.trail + ' weeks vs ' + (b ? b.name : '') + ' · hover points for details';
+  $('chartSub').textContent = 'Last ' + P.trail + ' weeks vs ' + (b ? b.name : '') + ' · ' + (matchMedia('(hover:none)').matches ? 'tap' : 'hover') + ' points for details';
   drawChart();
 }
 
@@ -1031,7 +1041,8 @@ function drawChart(){
   s += '<line x1="' + cx + '" y1="' + pt + '" x2="' + cx + '" y2="' + (pt + ih) + '" stroke="' + v('--text3') + '" stroke-width="1.2" stroke-dasharray="4 4"/>';
   s += '<line x1="' + pl + '" y1="' + cy + '" x2="' + (pl + iw) + '" y2="' + cy + '" stroke="' + v('--text3') + '" stroke-width="1.2" stroke-dasharray="4 4"/>';
   var ql = [['RECOVERING', pl + 8, pt + 18, 'start', 'R'], ['ACCELERATING', pl + iw - 8, pt + 18, 'end', 'A'], ['UNDERPERFORMING', pl + 8, pt + ih - 10, 'start', 'U'], ['DECELERATING', pl + iw - 8, pt + ih - 10, 'end', 'D']];
-  ql.forEach(function(q){ s += '<text class="q-lbl" x="' + q[1] + '" y="' + q[2] + '" text-anchor="' + q[3] + '" fill="' + v('--m' + q[4]) + '">' + q[0] + '</text>'; });
+  var qStyle = narrow ? ' style="font-size:' + (W < 340 ? 8.5 : 9.5) + 'px;letter-spacing:.2px"' : '';
+  ql.forEach(function(q){ s += '<text class="q-lbl"' + qStyle + ' x="' + q[1] + '" y="' + q[2] + '" text-anchor="' + q[3] + '" fill="' + v('--m' + q[4]) + '">' + q[0] + '</text>'; });
   if (narrow) s += '<text class="ax-l" x="' + (pl + iw / 2) + '" y="' + (H - 6) + '" text-anchor="middle">RS-Ratio → · RS-Momentum ↑</text>';
   else {
     s += '<text class="ax-l" x="' + (pl + iw / 2) + '" y="' + (H - 6) + '" text-anchor="middle">RS-Ratio → (relative strength)</text>';
@@ -1066,18 +1077,28 @@ function drawChart(){
     if (ty + tip.offsetHeight > br.height) ty = evt.clientY - br.top - tip.offsetHeight - 14;
     tip.style.left = Math.max(0, tx) + 'px'; tip.style.top = Math.max(0, ty) + 'px';
   }
-  svg.addEventListener('mousemove', function(evt){
+  function onPoint(evt){
     var t = evt.target;
     if (t.classList.contains('hit')){
       var p = pts[+t.getAttribute('data-i')], M = MODES[p.m];
       showTip(evt, '<b>' + esc(state.sel) + ' · week of ' + fmtDate(p.d) + '</b><div class="r"><span>Mode</span><span class="' + M.cls + '" style="color:var(--mc);font-family:DM Sans">' + M.name + '</span></div><div class="r"><span>RS-Ratio</span><span>' + fmt(p.x) + '</span></div><div class="r"><span>RS-Momentum</span><span>' + fmt(p.y) + '</span></div>');
     } else if (t.classList.contains('od')){
       var o = C.rows[t.getAttribute('data-s')];
-      showTip(evt, '<b>' + esc(o.e.s) + '</b><div style="color:var(--text3);font-size:11.5px;margin-bottom:4px;max-width:220px">' + esc(o.e.n) + '</div><div class="r"><span>Mode</span><span class="' + MODES[o.mode].cls + '" style="color:var(--mc);font-family:DM Sans">' + MODES[o.mode].name + '</span></div><div class="r"><span>RS-Ratio</span><span>' + fmt(o.rsr) + '</span></div><div class="r"><span>RS-Momentum</span><span>' + fmt(o.rsm) + '</span></div>');
+      showTip(evt, '<b>' + esc(o.e.s) + '</b><div style="color:var(--text3);font-size:11.5px;margin-bottom:4px;max-width:220px">' + esc(o.e.n) + '</div><div class="r"><span>Mode</span><span class="' + MODES[o.mode].cls + '" style="color:var(--mc);font-family:DM Sans">' + MODES[o.mode].name + '</span></div><div class="r"><span>RS-Ratio</span><span>' + fmt(o.rsr) + '</span></div><div class="r"><span>RS-Momentum</span><span>' + fmt(o.rsm) + '</span></div><div style="margin-top:5px;font-size:11px;color:var(--text3)">' + (matchMedia('(hover:none)').matches ? 'Tap again to open' : 'Click to open') + '</div>');
     } else tip.classList.remove('on');
+  }
+  svg.addEventListener('mousemove', onPoint);
+  svg.addEventListener('mouseleave', function(){ if (!matchMedia('(hover:none)').matches) tip.classList.remove('on'); });
+  svg.addEventListener('click', function(evt){
+    var t = evt.target;
+    if (t.classList.contains('hit')) { onPoint(evt); return; }          // tap shows details on touch screens
+    if (t.classList.contains('od')) {
+      var sym = t.getAttribute('data-s');
+      if (matchMedia('(hover:none)').matches && drawChart._tapped !== sym) { drawChart._tapped = sym; onPoint(evt); return; }  // 1st tap: details, 2nd tap: open
+      drawChart._tapped = null; select(sym, {scroll:false});
+    }
+    else tip.classList.remove('on');
   });
-  svg.addEventListener('mouseleave', function(){ tip.classList.remove('on'); });
-  svg.addEventListener('click', function(evt){ var t = evt.target; if (t.classList.contains('od')) select(t.getAttribute('data-s'), {scroll:false}); });
 }
 
 /* ─────────── URL state ─────────── */
@@ -1156,6 +1177,7 @@ function bind(){
       var el = document.querySelector('.tbl-card'); window.scrollTo({top:el.getBoundingClientRect().top + window.pageYOffset - (document.querySelector('.vt-header').offsetHeight + 12), behavior:'smooth'});
     }
   });
+  document.addEventListener('click', function(e){ if (!e.target.closest('#chartBox')) $('tip').classList.remove('on'); });
   var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(function(){ if (state.sel) drawChart(); }, 150); });
 }
 
