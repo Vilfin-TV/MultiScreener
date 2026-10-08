@@ -117,6 +117,8 @@ html[data-theme="silver"] .vt-brand-name span{color:#7cc0ff}
 .vt-hbtn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px;border-radius:9px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:var(--hdr-text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
 .vt-hbtn:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.3)}
 .vt-hbtn svg{width:16px;height:16px;flex-shrink:0}
+.vt-home{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.vt-home:hover{background:var(--accent2);border-color:var(--accent2)}
 .theme-wrap{position:relative}
 .theme-menu{position:absolute;right:0;top:44px;width:220px;background:var(--surface);color:var(--text);border:1px solid var(--border2);border-radius:12px;box-shadow:var(--shadow);padding:6px;display:none;z-index:300}
 .theme-menu.open{display:block}
@@ -394,7 +396,7 @@ footer a{color:var(--text2)}
 <!-- ═══════════════ VILFINTV HEADER ═══════════════ -->
 <header class="vt-header">
   <div class="vt-hwrap">
-    <a class="vt-brand" href="index.html" title="VilfinTV Multiscreener">
+    <a class="vt-brand" href="https://vilfintv.com/" title="VilfinTV Home">
       <img src="images/vilfintv-logo.jpg" alt="VilfinTV" width="32" height="32"/>
       <span class="vt-brand-name">VILFIN<span>TV</span></span>
     </a>
@@ -404,9 +406,9 @@ footer a{color:var(--text2)}
       <small>VilfinTV Screeners · Relative Rotation</small>
     </div>
     <nav class="vt-hnav" aria-label="Page navigation">
-      <a class="vt-hbtn" href="index.html" title="Multiscreener home">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-        <span class="t">Multiscreener</span>
+      <a class="vt-hbtn vt-home" href="https://vilfintv.com/" title="VilfinTV Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>
+        <span>Home</span>
       </a>
       <a class="vt-hbtn" href="mf_live_screener.html" title="MF Live Screener">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
@@ -425,7 +427,7 @@ footer a{color:var(--text2)}
 
 <main class="wrap">
   <div class="crumbs" aria-label="Breadcrumb">
-    <a href="index.html">Home</a><span>›</span><span>Market &amp; Trade</span><span>›</span><span>VilfinTV Screeners</span><span>›</span><span style="color:var(--text)">ETF Momentum Mode</span>
+    <a href="https://vilfintv.com/">Home</a><span>›</span><span>Market &amp; Trade</span><span>›</span><span>VilfinTV Screeners</span><span>›</span><span style="color:var(--text)">ETF Momentum Mode</span>
   </div>
 
   <section class="hero">
@@ -566,7 +568,7 @@ footer a{color:var(--text2)}
 <footer>
   <div class="wrap">
     <span>© <span id="yr"></span> VilfinTV · ETF Momentum Mode</span>
-    <span><a href="index.html">Multiscreener</a> · <a href="mf_live_screener.html">MF Live Screener</a> · <a href="market_sentiment_score.html">Market Sentiment</a> · <a href="legal.html">Legal</a></span>
+    <span><a href="https://vilfintv.com/">Home</a> · <a href="mf_live_screener.html">MF Live Screener</a> · <a href="market_sentiment_score.html">Market Sentiment</a> · <a href="legal.html">Legal</a></span>
   </div>
 </footer>
 <div class="toast" id="toast"></div>
@@ -776,7 +778,10 @@ function verify(){
 function renderChips(v){
   var st = D.stats || {}, days = Math.round((Date.now() - new Date(D.asOf + 'T16:00:00+05:30').getTime()) / 86400000);
   var fresh = days <= 4 ? '' : (days <= 10 ? ' warn' : ' bad');
-  var h = '<span class="chip' + fresh + '"><span class="dot"></span>Prices as of ' + fmtDate(D.asOf) + '</span>';
+  var upd = '';
+  try { upd = new Date(D.generated).toLocaleString('en-IN', {timeZone:'Asia/Kolkata', day:'numeric', month:'short', hour:'numeric', minute:'2-digit'}) + ' IST'; } catch(e){}
+  var h = '<span class="chip' + fresh + '" title="Last refreshed ' + esc(upd) + '"><span class="dot"></span>Prices as of ' + fmtDate(D.asOf) + '</span>';
+  if (upd) h += '<span class="chip">Updated ' + esc(upd) + '</span>';
   h += '<span class="chip">' + (st.withData || D.etfs.length) + ' NSE ETFs</span>';
   h += '<span class="chip">Weekly · ' + P.nRatio + '-week lookback</span>';
   if (v) h += '<span class="chip' + (v.bad ? ' warn' : '') + '" title="Mode calculations cross-checked against the reference dataset"><span class="dot"></span>' + (v.bad ? 'Verified ' + (v.n - v.bad) + '/' + v.n : 'Data verified') + '</span>';

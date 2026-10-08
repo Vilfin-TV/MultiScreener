@@ -39,6 +39,7 @@ import os
 import re
 import sys
 import time
+from collections import Counter
 from datetime import datetime, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -319,6 +320,27 @@ def download(tickers: list[str], period: str = "2y", chunk: int = 60) -> dict:
     return result
 
 
+def refresh_latest(raw: dict, tk: str) -> None:
+    """Re-query one ticker's last month and append sessions missing from the batch result."""
+    try:
+        import pandas as pd
+        import yfinance as yf
+        h = yf.Ticker(tk).history(period="1mo", interval="1d", auto_adjust=True)
+        if h is None or h.empty:
+            return
+        h = h[["Close", "Volume"]]
+        h = h[pd.to_numeric(h["Close"], errors="coerce") > 0].dropna(subset=["Close"])
+        cur = raw[tk]
+        last = cur.index[-1].date()
+        newer = h[[ts.date() > last for ts in h.index]]
+        if len(newer):
+            newer.index = newer.index.tz_convert(cur.index.tz) if cur.index.tz is not None and newer.index.tz is not None else newer.index
+            raw[tk] = pd.concat([cur, newer])
+            log.info(f"refreshed {tk}: +{len(newer)} session(s) to {raw[tk].index[-1].date()}")
+    except Exception as exc:  # noqa: BLE001
+        log.warning(f"refresh {tk} failed: {exc}")
+
+
 # ── Cleaning ──────────────────────────────────────────────────────────────────
 SPLIT_FACTORS = (2, 3, 4, 5, 10, 20, 25, 50, 100)
 
@@ -459,6 +481,29 @@ def main() -> int:
     etf_syms = [f"{s}.NS" for s in universe]
     raw = download(bench_syms + etf_syms)
 
+    # ── as-of date: the latest session most ETFs have traded; indices must reach it ──
+    def last_day(tk: str):
+        df = raw.get(tk)
+        return df.index[-1].date() if df is not None and len(df) else None
+
+    etf_last = Counter(d for d in (last_day(t) for t in etf_syms) if d)
+    if not etf_last:
+        log.error("no ETF prices downloaded — keeping previous file")
+        return 1
+    market_last = max(d for d, n in etf_last.items() if n >= 0.2 * sum(etf_last.values()))
+    for tk in bench_syms:
+        if tk in raw and last_day(tk) and last_day(tk) < market_last:
+            refresh_latest(raw, tk)              # batch feeds sometimes omit the latest index print
+    bench_last = last_day(BENCHMARKS[0][3][0]) or last_day(BENCHMARKS[0][3][-1])
+    as_of = min(market_last, bench_last) if bench_last else market_last
+    if bench_last and bench_last < market_last:
+        log.warning(f"Nifty 50 last print {bench_last} behind ETFs {market_last}; aligning all series to {as_of}")
+    log.info(f"as-of session       : {as_of}")
+    prev_asof = prev.get("asOf")
+    if prev_asof and str(as_of) < prev_asof:
+        log.warning(f"source data ({as_of}) is older than published data ({prev_asof}) — keeping previous file")
+        return 0
+
     # ── benchmarks (Nifty 50 defines the trading calendar) ──
     series: dict[str, tuple[list, list, list]] = {}
 
@@ -467,6 +512,9 @@ def main() -> int:
             return series[tk]
         df = raw.get(tk)
         if df is None:
+            return None
+        df = df[[ts.date() <= as_of for ts in df.index]]   # one common session for every series
+        if not len(df):
             return None
         dates = [ts.to_pydatetime().replace(tzinfo=None) for ts in df.index]
         closes = [float(x) for x in df["Close"].tolist()]
