@@ -42,6 +42,7 @@ STATIC_PAGES = [
     (f'{SITE}/allocation_calc.html', '0.7', 'monthly'),
     (f'{SITE}/manage_subscription.html', '0.6', 'monthly'),
     (f'{SITE}/legal.html', '0.3', 'yearly'),
+    (f'{SITE}/privacy.html', '0.3', 'yearly'),
 ]
 
 # Sections that get a higher priority in the sitemap

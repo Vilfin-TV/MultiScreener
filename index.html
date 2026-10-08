@@ -4862,7 +4862,7 @@ html.iptv-cinema #rb-panel-iptv.iptv-guide-open #iptv-epg-bar{
         <li><a href="user_manual.html" target="_blank">📖 User Manual</a></li>
         <li><a href="user-setup-guide.html" target="_blank">🔌 AI Worker Setup</a></li>
         <li><a href="legal.html" target="_blank">⚖️ Legal &amp; Copyright Disclosure</a></li>
-        <li><a href="user_manual.html" target="_blank">🔒 Privacy Policy</a></li>
+        <li><a href="privacy.html" target="_blank">🔒 Privacy Policy</a></li>
         <li><a href="user_manual.html" target="_blank">📋 Terms of Service</a></li>
       </ul>
     </div>
@@ -22828,6 +22828,9 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
 
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeFeedbackModal(); });
 })();
+
+// Deep link: vilfintv.com/#feedback opens the feedback form (used by privacy.html).
+window.addEventListener('load', function(){ if (location.hash === '#feedback' && typeof window.openFeedbackModal === 'function') window.openFeedbackModal('feedback'); });
 </script>
 
 </body>
