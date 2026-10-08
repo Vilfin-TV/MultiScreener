@@ -299,6 +299,10 @@ tbody tr.sel-row{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--ac
 tbody tr:last-child td{border-bottom:none}
 td.num{text-align:right;font-family:'JetBrains Mono',monospace;white-space:nowrap}
 .t-sym{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:13px}
+.xl{color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:4px;border-bottom:1px dashed transparent;transition:color .15s,border-color .15s}
+.xl svg{width:11px;height:11px;opacity:.45;flex-shrink:0;transition:opacity .15s}
+.xl:hover,.xl:focus-visible{color:var(--accent2);border-bottom-color:var(--accent2)}
+.xl:hover svg,.xl:focus-visible svg{opacity:1}
 .t-name{font-size:12px;color:var(--text3);max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .t-cat{font-size:11.5px;color:var(--text2);white-space:nowrap}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--ms);color:var(--mc);white-space:nowrap}
@@ -697,6 +701,11 @@ function fmtTv(cr){
   if (cr >= 1) return '₹' + (cr >= 100 ? Math.round(cr) : cr.toFixed(1)) + ' Cr';
   var l = cr * 100; return '₹' + (l >= 10 ? Math.round(l) : l.toFixed(1)) + ' L';
 }
+function nseUrl(sym){ return 'https://www.nseindia.com/get-quotes/equity?symbol=' + encodeURIComponent(sym); }
+function nseLink(sym, label){
+  return '<a class="xl" href="' + nseUrl(sym) + '" target="_blank" rel="noopener noreferrer" title="Open ' + esc(sym) + ' on NSE India">' + esc(label || sym) +
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></a>';
+}
 function liqLevel(cr){ if (cr == null) return 0; if (cr >= 10) return 4; if (cr >= 1) return 3; if (cr >= 0.1) return 2; if (cr >= 0.01) return 1; return 0; }
 function liqBars(cr){ var l = liqLevel(cr), h = '<span class="liq" aria-hidden="true">'; for (var i = 1; i <= 4; i++) h += '<i class="' + (i <= l ? 'f' : '') + '"></i>'; return h + '</span>'; }
 function toast(msg){ var t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(function(){ t.classList.remove('on'); }, 1800); }
@@ -887,7 +896,7 @@ function renderTable(){
   $('tbody').innerHTML = show.map(function(r){
     var e = r.e, rr = e.r || {};
     return '<tr data-s="' + esc(e.s) + '" class="' + (sel === e.s ? 'sel-row' : '') + '" tabindex="0">' +
-      '<td><div class="t-sym">' + esc(e.s) + '</div><div class="t-name" title="' + esc(e.n) + '">' + esc(e.n) + '</div></td>' +
+      '<td><div class="t-sym">' + nseLink(e.s) + '</div><div class="t-name" title="' + esc(e.n) + '">' + esc(e.n) + '</div></td>' +
       '<td class="t-cat">' + esc(e.k || '–') + '</td><td>' + pill(r) + '</td>' +
       '<td class="num">' + fmt(r.rsr) + '</td><td class="num">' + fmt(r.rsm) + '</td>' +
       '<td class="num">' + fmtPct(rr['1m']) + '</td><td class="num">' + fmtPct(rr['3m']) + '</td><td class="num">' + fmtPct(rr['1y']) + '</td>' +
@@ -895,7 +904,7 @@ function renderTable(){
   }).join('');
   $('cardsM').innerHTML = show.map(function(r){
     var e = r.e, rr = e.r || {};
-    return '<div class="mc' + (sel === e.s ? ' sel-row' : '') + '" data-s="' + esc(e.s) + '" tabindex="0"><div class="mc-top"><span class="t-sym">' + esc(e.s) + '</span>' + pill(r) + '</div>' +
+    return '<div class="mc' + (sel === e.s ? ' sel-row' : '') + '" data-s="' + esc(e.s) + '" tabindex="0"><div class="mc-top"><span class="t-sym">' + nseLink(e.s) + '</span>' + pill(r) + '</div>' +
       '<div class="mc-name">' + esc(e.n) + '</div><div class="mc-row"><div>RS-Ratio<b>' + fmt(r.rsr) + '</b></div><div>RS-Mom.<b>' + fmt(r.rsm) + '</b></div><div>3M<b>' + fmtPct(rr['3m']) + '</b></div><div>1Y<b>' + fmtPct(rr['1y']) + '</b></div></div></div>';
   }).join('');
   $('moreBtn').style.display = list.length > state.shown ? '' : 'none';
@@ -967,7 +976,7 @@ function renderResult(){
   var r = compute(state.bench).rows[state.sel];
   if (!r) return;
   var e = r.e, rr = e.r || {}, b = compute(state.bench).bench, M = r.mode ? MODES[r.mode] : null;
-  var h = '<div class="etf-head"><div style="min-width:0"><div class="etf-sym">NSE: ' + esc(e.s) + '</div><div class="etf-name">' + esc(e.n) + '</div>' +
+  var h = '<div class="etf-head"><div style="min-width:0"><div class="etf-sym">' + nseLink(e.s, 'NSE: ' + e.s) + '</div><div class="etf-name">' + esc(e.n) + '</div>' +
     '<div class="etf-meta">' + [e.a, e.k, e.u].filter(function(x, i, arr){ return x && arr.findIndex(function(y){ return String(y || '').toLowerCase() === String(x).toLowerCase(); }) === i; }).map(esc).join(' · ') + '</div></div>' +
     '<div class="etf-px"><b>' + fmtPx(e.p) + '</b><small>Close ' + fmtDate(e.d) + '</small></div></div>';
   if (M){
@@ -1001,7 +1010,7 @@ function renderResult(){
   if (e.f && e.f.indexOf('reset') >= 0) notes.push('Older prices excluded after a break in the price series.');
   if (b && b.proxy) notes.push(b.name + ' is tracked through its benchmark ETF.');
   if (notes.length) h += '<div class="note"><span>ℹ️</span><span>' + notes.map(esc).join(' ') + '</span></div>';
-  h += '<div class="res-actions"><button class="btn pri" id="shareBtn" type="button">🔗 Copy link</button><button class="btn" id="viewList" type="button">View ' + (M ? M.name : 'list') + ' ETFs</button></div>';
+  h += '<div class="res-actions"><button class="btn pri" id="shareBtn" type="button">🔗 Copy link</button><a class="btn" href="' + nseUrl(e.s) + '" target="_blank" rel="noopener noreferrer">View on NSE ↗</a><button class="btn" id="viewList" type="button">View ' + (M ? M.name : 'list') + ' ETFs</button></div>';
   $('resCard').innerHTML = h;
   $('result').classList.add('show');
   $('chartSub').textContent = 'Last ' + P.trail + ' weeks vs ' + (b ? b.name : '') + ' · ' + (matchMedia('(hover:none)').matches ? 'tap' : 'hover') + ' points for details';
@@ -1161,7 +1170,7 @@ function bind(){
     var o = $('tSort').querySelector('option[value="' + k + '"]'); $('tSort').value = o ? k : '';
     renderTable();
   });
-  function rowSel(e){ var tr = e.target.closest('[data-s]'); if (tr) select(tr.getAttribute('data-s')); }
+  function rowSel(e){ if (e.target.closest('a')) return; var tr = e.target.closest('[data-s]'); if (tr) select(tr.getAttribute('data-s')); }
   $('tbody').addEventListener('click', rowSel);
   $('cardsM').addEventListener('click', rowSel);
   [$('tbody'), $('cardsM')].forEach(function(el){ el.addEventListener('keydown', function(e){ if (e.key === 'Enter') rowSel(e); }); });
