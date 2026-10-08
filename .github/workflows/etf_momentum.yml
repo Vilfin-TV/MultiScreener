@@ -6,7 +6,9 @@ name: ETF Momentum Mode Data
 on:
   schedule:
     - cron: '17 11 * * 1-5'   # 16:47 IST, after NSE close
+    - cron: '47 12 * * 1-5'   # 18:17 IST, retry if the first run was delayed/skipped
     - cron: '43 14 * * 1-5'   # 20:13 IST, late-print safety run
+    - cron: '23 2 * * 2-6'    # 07:53 IST next morning, catch-up before market open
   workflow_dispatch:
   push:
     paths:
