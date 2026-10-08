@@ -13,12 +13,13 @@
 </script>
 
 <meta charset="UTF-8"/>
-    <meta name="robots" content="noindex, nofollow"/>/>
 <link rel="icon" type="image/jpeg" href="images/vilfintv-logo.jpg">
 <link rel="apple-touch-icon" href="images/vilfintv-logo.jpg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <script>(function(){var t=localStorage.getItem('viltv_theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
-<title>Pre-Market Briefing — Vilfin George</title>
+<title>Pre-Market Briefing — VilfinTV</title>
+<meta name="description" content="VilfinTV Pre-Market Briefing: a structured morning outlook for Indian and global markets before the opening bell."/>
+<link rel="canonical" href="https://vilfintv.com/pre_market_briefing.html"/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -420,7 +421,7 @@ html[data-theme="gemini"]{
   <a href="index.html" style="position:absolute;top:14px;left:16px;z-index:20;display:inline-flex;align-items:center;gap:5px;padding:5px 14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.22);border-radius:20px;color:#fff;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.5px;backdrop-filter:blur(6px);transition:background .2s" onmouseover="this.style.background='rgba(0,0,0,.55)'" onmouseout="this.style.background='rgba(0,0,0,.35)'">← Home</a>
   <h1>📰 India Morning Market Briefing</h1>
   <div class="sub">Holy Grail Pre-Market Report — Live Data Sourced</div>
-  <div class="version-badge">AI-Powered via Cloudflare Worker</div>
+  <div class="version-badge">Market Assistant</div>
 </div>
 
 <div class="layout">
@@ -534,10 +535,10 @@ html[data-theme="gemini"]{
 
 <div class="cf-modal-overlay" id="cf-modal-overlay" onclick="cfModalOverlayClick(event)">
   <div class="cf-modal">
-    <div class="cf-modal-title">🔗 Cloudflare Worker Required</div>
-    <div class="cf-modal-sub">Enter your Cloudflare Workers URL to use AI analysis. The URL is saved in your browser only — never uploaded to GitHub.<br/><a href="user_manual.html#cloudflare" target="_blank" style="color:#ffd166;font-size:11px;display:inline-block;margin-top:6px">📖 How to set up Cloudflare Worker? Step-by-step guide →</a></div>
-    <label for="cf-url-input">Cloudflare Workers URL</label>
-    <input type="url" id="cf-url-input" placeholder="https://your-worker.workers.dev" autocomplete="off" spellcheck="false"/>
+    <div class="cf-modal-title">🔗 Connect Market Assistant</div>
+    <div class="cf-modal-sub">Enter your Market Assistant connection URL to run the analysis. It is saved in this browser only.<br/><a href="user_manual.html#cloudflare" target="_blank" style="color:#ffd166;font-size:11px;display:inline-block;margin-top:6px">📖 How to connect? Step-by-step guide →</a></div>
+    <label for="cf-url-input">Connection URL</label>
+    <input type="url" id="cf-url-input" placeholder="https://your-connection-url" autocomplete="off" spellcheck="false"/>
     <div class="cf-modal-btns">
       <button class="cf-connect-btn" onclick="cfDoConnect()">🔗 Connect & Generate</button>
       <button class="cf-cancel-btn" onclick="cfCloseModal()">Cancel</button>
@@ -609,7 +610,7 @@ UNIVERSAL DATA RULES — APPLY TO EVERYTHING
 ═══════════════════════════════════════════════════════
 
 NUMBER FETCHING PROTOCOL:
-STEP 1 — WEB SEARCH FIRST: For EVERY number, run live web search. Sources: NSE India (nseindia.com), BSE India, Google Finance, Yahoo Finance, Moneycontrol.
+STEP 1 — WEB SEARCH FIRST: For EVERY number, verify against current market sources. Sources: NSE India (nseindia.com), BSE India, Google Finance, Yahoo Finance, Moneycontrol.
 STEP 2 — CROSS-CHECK: Verify against at least one more source. If sources agree → show number marked [Live]. If they differ → show range.
 STEP 3 — IF WEB SEARCH FAILS: Search for previous close. Mark as [Prev Close: DD MMM YYYY].
 STEP 4 — LAST RESORT: Write "N/A — check [source] directly"
@@ -786,7 +787,7 @@ async function runAnalysis() {
   _pmPbSec=0; clearInterval(_pmPbEl);
   content.innerHTML = `<div id="ai-pb-wrap" style="padding:32px 24px 24px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div id="ai-pb-stage" style="font-size:13px;font-weight:700;color:#f5a623">🔌 Connecting to Worker…</div>
+      <div id="ai-pb-stage" style="font-size:13px;font-weight:700;color:#f5a623">🔌 Connecting to Market Assistant…</div>
       <div style="display:flex;gap:10px;align-items:center">
         <span id="ai-pb-elapsed" style="font-size:11px;color:#888;font-family:monospace">0s</span>
         <span id="ai-pb-pct" style="font-size:13px;font-weight:700;color:#16a34a">5%</span>
