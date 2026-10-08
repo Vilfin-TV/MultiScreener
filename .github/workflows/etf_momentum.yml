@@ -21,6 +21,7 @@ on:
     - cron: '23 2 * * 2-6'    # 07:53 IST next morning, catch-up before market open
   workflow_dispatch:
   push:
+    branches: [main]          # data is published from main only (avoids data commits on PR branches)
     paths:
       - 'scripts/build_etf_momentum.py'
       - 'scripts/verify_etf_momentum.js'
