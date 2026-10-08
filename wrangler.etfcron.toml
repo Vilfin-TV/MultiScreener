@@ -1,0 +1,14 @@
+# Cloudflare Worker: exact-time refresh trigger for ETF Momentum Mode data.
+# Deployed automatically by .github/workflows/deploy_etf_cron.yml.
+# Secret: GH_TOKEN (GitHub token with actions:write / workflow scope).
+
+name = "etf-cron-trigger"
+main = "etf_cron_worker.js"
+compatibility_date = "2026-01-01"
+workers_dev = false
+
+[triggers]
+# UTC. IST = UTC+5:30. Weekdays 16:20, 16:50, 17:50, 18:50, 19:50 IST
+# (after NSE close; the worker only dispatches when data is behind), plus a
+# 08:10 IST catch-up Tue–Sat for the previous session.
+crons = ["50 10 * * 1-5", "20,50 11 * * 1-5", "20 12,13,14 * * 1-5", "40 2 * * 2-6"]
