@@ -1,0 +1,80 @@
+name: Purge Cloudflare cache for changed pages
+
+# After a human/PR push to main changes HTML pages, wait for GitHub Pages to
+# deploy, then purge just those URLs (plus the home page) from Cloudflare so
+# visitors see the update immediately. Bot data commits use [skip ci] and do
+# not trigger this. Full purge remains available in purge_cache.yml.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.html'
+      - '.github/workflows/purge_changed_pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: purge-changed-pages
+  cancel-in-progress: false
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Collect changed page URLs
+        id: urls
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          files=""
+          if [ -n "${BEFORE:-}" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            files=$(git diff --name-only "$BEFORE" "$AFTER" -- '*.html' || true)
+          fi
+          python3 - "$files" <<'PY'
+          import json, os, sys
+          site = "https://vilfintv.com"
+          files = [f for f in sys.argv[1].split() if f.endswith(".html")]
+          # always refresh the entry points and the legal pages linked from them
+          base = ["", "index.html", "privacy.html", "terms.html"]
+          urls = []
+          for f in base + files:
+              u = f"{site}/{f}"
+              if u not in urls:
+                  urls.append(u)
+          urls = urls[:100]   # Cloudflare per-request limit is 100 (free plan: 30 per call, batched below)
+          print("\n".join(urls))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write("urls=" + json.dumps(urls) + "\n")
+          PY
+
+      - name: Wait for GitHub Pages deployment
+        run: sleep 90
+
+      - name: Purge URLs from Cloudflare
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          URLS: ${{ steps.urls.outputs.urls }}
+        run: |
+          set -euo pipefail
+          ZID=$(curl -s -H "Authorization: Bearer $TOKEN" "https://api.cloudflare.com/client/v4/zones?name=vilfintv.com" \
+                | python3 -c "import json,sys;d=json.load(sys.stdin);r=d.get('result') or [];print(r[0]['id'] if r else '')")
+          if [ -z "$ZID" ]; then echo "::warning::vilfintv.com zone not found for this token — nothing purged"; exit 0; fi
+          echo "$URLS" | python3 -c "
+          import json,sys
+          u=json.load(sys.stdin)
+          for i in range(0,len(u),30): print(json.dumps({'files':u[i:i+30]}))
+          " | while read -r body; do
+            code=$(curl -s -o out.json -w "%{http_code}" -X POST \
+              -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+              --data "$body" "https://api.cloudflare.com/client/v4/zones/$ZID/purge_cache")
+            echo "purge HTTP $code: $(cat out.json | head -c 200)"
+          done
