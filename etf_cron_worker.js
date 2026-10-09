@@ -70,7 +70,10 @@ async function dispatch(env) {
 async function run(env, now = new Date()) {
   const expected = expectedSession(now);
   const state = await publishedState().catch(() => null);
-  if (state && state.asOf >= expected) {
+  // A build made before that session's close (10:15 UTC = 15:45 IST) holds intraday prices.
+  const final = state ? new Date(`${state.asOf}T10:15:00Z`) : null;
+  const complete = state && state.generated && new Date(state.generated) >= final;
+  if (state && state.asOf >= expected && complete) {
     console.log(`Up to date: asOf ${state.asOf} (expected ${expected}).`);
     return 'up-to-date';
   }
@@ -86,7 +89,8 @@ async function run(env, now = new Date()) {
     return 'in-progress';
   }
   const status = await dispatch(env);
-  console.log(`Behind (${state ? state.asOf : 'unknown'} < ${expected}) — dispatched ${WORKFLOW}: HTTP ${status}.`);
+  const why = state && state.asOf >= expected ? `${state.asOf} was built before the close` : `behind (${state ? state.asOf : 'unknown'} < ${expected})`;
+  console.log(`${why} — dispatched ${WORKFLOW}: HTTP ${status}.`);
   return status === 204 ? 'dispatched' : `dispatch-failed-${status}`;
 }
 

@@ -78,8 +78,12 @@ jobs:
                   why = f"no readable data ({exc})"
               if as_of is not None:
                   age_min = (now_utc - gen).total_seconds() / 60
-                  if as_of >= expected:
+                  # A build made before that session's close (10:15 UTC = 15:45 IST) holds intraday prices.
+                  final = dt.datetime.combine(as_of, dt.time(10, 15), dt.timezone.utc)
+                  if as_of >= expected and gen >= final:
                       run, why = False, f"up to date (asOf {as_of}, expected {expected})"
+                  elif as_of >= expected and age_min >= 90:
+                      why = f"asOf {as_of} was built before the close ({gen:%H:%M} UTC) — rebuilding"
                   elif age_min < 90:
                       run, why = False, f"behind ({as_of} < {expected}) but last attempt {age_min:.0f} min ago (holiday or source not ready)"
                   else:

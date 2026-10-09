@@ -40,7 +40,7 @@ import re
 import sys
 import time
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MASTER = os.path.join(ROOT, "data", "master_symbols.json")
@@ -460,6 +460,8 @@ def pct(a: float | None, b: float | None) -> float | None:
     return round((a / b - 1) * 100, 2)
 
 
+SESSION_FINAL_IST = (15, 45)   # NSE closes 15:30 IST; closing prices settle by ~15:40
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=DEFAULT_OUT)
@@ -496,6 +498,12 @@ def main() -> int:
             refresh_latest(raw, tk)              # batch feeds sometimes omit the latest index print
     bench_last = last_day(BENCHMARKS[0][3][0]) or last_day(BENCHMARKS[0][3][-1])
     as_of = min(market_last, bench_last) if bench_last else market_last
+    # Never publish an in-progress session: before NSE's close (15:30 IST, plus
+    # a margin for the closing print) today's bar is intraday, so cap at yesterday.
+    ist_now = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
+    if as_of >= ist_now.date() and (ist_now.hour, ist_now.minute) < SESSION_FINAL_IST:
+        as_of = ist_now.date() - timedelta(days=1)
+        log.warning(f"today's session is still open ({ist_now:%H:%M} IST) — using completed sessions up to {as_of}")
     if bench_last and bench_last < market_last:
         log.warning(f"Nifty 50 last print {bench_last} behind ETFs {market_last}; aligning all series to {as_of}")
     log.info(f"as-of session       : {as_of}")
