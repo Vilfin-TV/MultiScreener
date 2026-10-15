@@ -57,7 +57,8 @@ jobs:
       - name: Build holdings
         run: |
           mkdir -p .mfcache/holdings
-          python scripts/build_mf_holdings.py ${{ github.event.inputs.force == 'true' && '--force' || '' }}
+          # a virtual display lets the browser run headed — some fund-house sites refuse headless clients
+          xvfb-run -a python scripts/build_mf_holdings.py ${{ github.event.inputs.force == 'true' && '--force' || '' }}
 
       - name: Verify holdings
         run: node scripts/verify_mf_screener.js --holdings

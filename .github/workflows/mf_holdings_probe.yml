@@ -2,7 +2,7 @@ name: MF Holdings Probe (temporary)
 on:
   push:
     branches: [claude/festive-bell-an714y]
-    paths: ['scripts/build_mf_holdings.py', 'scripts/mf_holdings_probe2.py', '.github/workflows/mf_holdings_probe.yml']
+    paths: ['scripts/build_mf_holdings.py', '.github/workflows/mf_holdings_probe.yml']
 permissions:
   contents: write
 concurrency:
@@ -20,8 +20,7 @@ jobs:
       - run: |
           set -o pipefail
           mkdir -p .mfcache/holdings .probe
-          xvfb-run -a python scripts/mf_holdings_probe2.py 2>&1 | tee .probe/holdings_probe2.log || true
-          python scripts/build_mf_holdings.py --force 2>&1 | tee .probe/holdings_build.log || true
+          xvfb-run -a python scripts/build_mf_holdings.py --force 2>&1 | tee .probe/holdings_build.log || true
           cp .mfcache/holdings/report.json .probe/holdings_report.json || true
       - run: |
           git config user.name "github-actions[bot]"; git config user.email "github-actions[bot]@users.noreply.github.com"

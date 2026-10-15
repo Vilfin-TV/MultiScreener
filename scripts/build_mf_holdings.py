@@ -60,6 +60,8 @@ SOURCES = {
               "pick": r"Statutory(?:%20| )Disclosure/Portfolio/.*Monthly(?:%20| )?Portfolio", "multi": True},
     "ICICI Prudential": {"page": "https://www.icicipruamc.com/media-center/downloads?currentTabFilter=OtherSchemeDisclosures&&subCatTabFilter=Monthly%20Portfolio%20Disclosures",
                          "mode": "click", "click": r"monthly\s+portfolio\s+disclosure\s+{month}\s+{year}"},
+    "HDFC": {"page": "https://www.hdfcfund.com/statutory-disclosure/portfolio/monthly-portfolio",
+             "pick": r"hdfcfund\.com/.*Monthly", "skip": r"fortnight|overlap|half", "multi": True},
     "PPFAS": {"page": "https://amc.ppfas.com/downloads/portfolio-disclosure/",
               "pick": r"PPFAS_Monthly_Portfolio_Report_[A-Za-z]+_\d+_\d{4}\.xls|_PPFAS_Monthly_Portfolio_Report_", "multi": True},
 }
@@ -198,13 +200,44 @@ def click_download(ctx, cfg) -> dict | None:
     return None
 
 
+def browser(pw):
+    """A real (headed) browser when a display is available — some fund-house sites refuse headless clients."""
+    import os
+    b = pw.chromium.launch(headless=not os.environ.get("DISPLAY"), args=["--disable-blink-features=AutomationControlled"])
+    ctx = b.new_context(user_agent=UA, locale="en-IN", viewport={"width": 1366, "height": 900}, accept_downloads=True)
+    ctx.add_init_script("Object.defineProperty(navigator,'webdriver',{get:()=>undefined})")
+    return b, ctx
+
+
+def browser_fetch(items: list[tuple[str, str]]) -> dict[str, bytes]:
+    """Download files through the browser (after visiting the referring page) when plain requests are refused."""
+    from playwright.sync_api import sync_playwright
+    out = {}
+    with sync_playwright() as pw:
+        b, ctx = browser(pw)
+        seen = set()
+        for url, ref in items:
+            try:
+                if ref not in seen:
+                    seen.add(ref)
+                    pg = ctx.new_page()
+                    pg.goto(ref, wait_until="domcontentloaded", timeout=90000)
+                    pg.wait_for_timeout(4000)
+                    pg.close()
+                r = ctx.request.get(url, headers={"Referer": ref}, timeout=120000)
+                if r.ok and r.body().startswith((b"PK", b"\xd0\xcf\x11\xe0")):
+                    out[url] = r.body()
+            except Exception as e:  # noqa: BLE001
+                log.warning("browser download failed %s (%s)", url[:100], str(e)[:100])
+        b.close()
+    return out
+
+
 def discover(sources: dict) -> dict[str, list[str]]:
     from playwright.sync_api import sync_playwright
     found = {}
     with sync_playwright() as pw:
-        b = pw.chromium.launch(args=["--disable-blink-features=AutomationControlled"])
-        ctx = b.new_context(user_agent=UA, locale="en-IN", viewport={"width": 1366, "height": 900}, accept_downloads=True)
-        ctx.add_init_script("Object.defineProperty(navigator,'webdriver',{get:()=>undefined})")
+        b, ctx = browser(pw)
         for amc, cfg in sources.items():
             if cfg.get("mode") in ("invesco", "click"):
                 try:
@@ -479,22 +512,38 @@ def main():
             log.info("%s: %s already processed", amc, info["month"])
             continue
         blocks = []
+        contents, retry = {}, []
         for url in info["files"]:
+            clean = re.sub(r"[?&]_scheme=[^&]*$", "", url)
+            try:
+                if clean.startswith("file://"):
+                    contents[url] = Path(requests.utils.unquote(clean[7:])).read_bytes()
+                else:
+                    r = S.get(clean, timeout=120, headers={"Referer": SOURCES[amc]["page"]})
+                    r.raise_for_status()
+                    if not r.content.startswith((b"PK", b"\xd0\xcf\x11\xe0")):
+                        raise ValueError("not a spreadsheet (likely a bot-check page)")
+                    contents[url] = r.content
+            except Exception as e:  # noqa: BLE001
+                log.info("%s: plain download refused for %s (%s) — retrying in browser", amc, clean[:90], str(e)[:60])
+                retry.append((url, clean))
+            time.sleep(0.3)
+        if retry:
+            got = browser_fetch([(c, SOURCES[amc]["page"]) for _, c in retry])
+            for url, c in retry:
+                if c in got:
+                    contents[url] = got[c]
+                else:
+                    log.warning("%s: download failed %s", amc, c[:100])
+        for url in info["files"]:
+            if url not in contents:
+                continue
+            content = contents[url]
             scheme_hint = ""
             m_h = re.search(r"[?&]_scheme=([^&]*)", url)
             if m_h:
                 scheme_hint = requests.utils.unquote(m_h.group(1))
                 url = re.sub(r"[?&]_scheme=[^&]*$", "", url)
-            try:
-                if url.startswith("file://"):
-                    content = Path(requests.utils.unquote(url[7:])).read_bytes()
-                else:
-                    r = S.get(url, timeout=120, headers={"Referer": SOURCES[amc]["page"]})
-                    r.raise_for_status()
-                    content = r.content
-            except Exception as e:  # noqa: BLE001
-                log.warning("%s: download failed %s (%s)", amc, url[:100], e)
-                continue
             payloads = []
             if content[:2] == b"PK" and re.search(r"\.zip$", url.lower().split("?")[0]):
                 with zipfile.ZipFile(io.BytesIO(content)) as z:
