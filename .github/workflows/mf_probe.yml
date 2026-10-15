@@ -26,6 +26,7 @@ jobs:
                   print(j, "::", js[max(0, m.start()-700):m.end()+700].replace("\n", " ")); print("-----")
           PY
           mkdir -p .probe && head -c 60000 .probe_ter.txt > .probe/ter_probe.txt
+      - uses: actions/cache/restore@v4
 
         with: {path: .mfcache, key: 'mf-dev-${{ github.run_id }}', restore-keys: 'mf-dev-'}
       - uses: actions/setup-python@v5
