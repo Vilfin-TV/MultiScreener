@@ -451,8 +451,10 @@ def load_official_ter(universe, args):
     out = {}
     for r in universe:
         hit = rows.get(_norm_name(r["name"]))
-        if hit:
+        if hit and 0 <= hit[1] <= 2.6:          # SEBI caps Direct-plan TER well below this; anything above is a typo
             out[r["code"]] = {"ter": hit[1], "date": hit[0]}
+        elif hit:
+            log.warning("Ignoring implausible official TER %.2f%% for %s", hit[1], r["name"])
     log.info("Official TER: %s · state %s · %d schemes known, matched %d/%d funds",
              dict(stat), st, len(rows), len(out), len(universe))
     return out
