@@ -170,6 +170,10 @@ RX_DEBTNAME = re.compile(
     r"\b(sdl|g-?sec|gilt|crisil|ibx|bond|t-?bill|liquid|money market|corporate|aaa|debt|psu|bharat bond|"
     r"target maturity|income|treasury|state development|g sec|government securities|nifty .*index .*20\d\d|apr 20\d\d|"
     r"20[2-4]\d index)\b", re.I)
+# debt words that never appear in equity index names ("PSU" alone does: PSU Bank, Railways PSU)
+RX_DEBT_STRICT = re.compile(
+    r"\b(sdl|g-?sec|gilt|crisil|ibx|bond|t-?bill|liquid|money market|corporate|aaa|debt|bharat bond|target maturity|"
+    r"treasury|state development|g sec|government securities|20[2-4]\d)\b", re.I)
 RX_HYBNAME = re.compile(r"multi.?asset|asset allocat|hybrid|balanced|dynamic|allocator|equity savings|aggressive|"
                         r"conservative|arbitrage|life ?cycle|retirement", re.I)
 RX_FACTOR = re.compile(r"momentum|low vol|quality|value|alpha|equal weight|dividend|high beta|enhanced esg|"
@@ -242,7 +246,7 @@ def classify(name: str, cat: str) -> str | None:
             return _commodity_sub(n)
         if RX_HYBNAME.search(n):
             return "hybridfof"
-        if RX_DEBTNAME.search(n):
+        if RX_DEBT_STRICT.search(n):
             return "target" if re.search(r"ibx|sdl|g-?sec|gilt|bharat bond|target|20[2-4]\d|crisil", n, re.I) else "debtfof"
         return "eqfof"
     if "index fund" in low:
@@ -250,7 +254,7 @@ def classify(name: str, cat: str) -> str | None:
             return _global_sub(n)
         if RX_GOLD.search(n) or RX_SILVER.search(n):
             return _commodity_sub(n)
-        if "debt" in low or RX_DEBTNAME.search(n):
+        if "debt" in low or RX_DEBT_STRICT.search(n):
             if not re.search(r"nifty ?50\b|sensex|midcap|smallcap|momentum|quality", n, re.I) or "debt" in low:
                 return "target"
         if "hybrid" in low or RX_HYBNAME.search(n):
@@ -728,3 +732,73 @@ def iso(o: int) -> str:
 def today_ist() -> datetime:
     from datetime import timedelta, timezone
     return datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
+
+
+# ═════════════════════════════ SCORECARD ═══════════════════════════════════
+STATUS = ["In form", "On track", "Underperforming", "Out of track"]
+
+
+def status_of(rec: float | None, ltp: float | None) -> str | None:
+    """Recency score (0-100) and long-term percentile (0-100) → status label.
+    In form: recent performance in the top 30% of the category.
+    On track: recent performance mid-pack (40th–70th percentile).
+    Underperforming: recent performance in the bottom 40% but long-term record in the top half.
+    Out of track: both recent and long-term performance in the bottom half / bottom 40%."""
+    if rec is None:
+        return None
+    if rec >= 70:
+        return "In form"
+    if rec >= 40:
+        return "On track"
+    if ltp is not None and ltp >= 50:
+        return "Underperforming"
+    return "Out of track"
+
+
+def scorecard(group: list[dict]) -> dict:
+    """group: funds of one sub-category, each {code, tr:{3m,6m,1y,3y}, roll12: [1Y return at each of the last
+    36 month-ends or None], std}. Returns code → {rec, cons, consTop, consN, vol, ltp, status}."""
+    out = {c["code"]: {} for c in group}
+    if len(group) < 5:
+        return out
+    # recency: weighted percentile of 3M / 6M / 1Y returns
+    p3 = percentile_ranks([g["tr"].get("3m") if g["tr"].get("1y") is not None else None for g in group])
+    p6 = percentile_ranks([g["tr"].get("6m") if g["tr"].get("1y") is not None else None for g in group])
+    p12 = percentile_ranks([g["tr"].get("1y") for g in group])
+    for i, g in enumerate(group):
+        if p12[i] is not None and p3[i] is not None and p6[i] is not None:
+            out[g["code"]]["rec"] = round((0.2 * p3[i] + 0.3 * p6[i] + 0.5 * p12[i]) * 100, 1)
+    # long-term percentile: 3Y return where available, else 1Y
+    l3 = percentile_ranks([g["tr"].get("3y") for g in group])
+    for i, g in enumerate(group):
+        v = l3[i] if l3[i] is not None else p12[i]
+        if v is not None:
+            out[g["code"]]["ltp"] = round(v * 100, 1)
+    # consistency: share of month-ends in the top half of the category on rolling 1-year return
+    months = max((len(g["roll12"]) for g in group), default=0)
+    top = {g["code"]: 0 for g in group}
+    seen = {g["code"]: 0 for g in group}
+    for k in range(months):
+        vals = [(g["code"], g["roll12"][k]) for g in group if k < len(g["roll12"]) and g["roll12"][k] is not None]
+        if len(vals) < 4:
+            continue
+        vals.sort(key=lambda x: -x[1])
+        half = (len(vals) + 1) // 2
+        for rank, (code, _) in enumerate(vals):
+            seen[code] += 1
+            if rank < half:
+                top[code] += 1
+    for g in group:
+        if seen[g["code"]] >= 12:
+            o = out[g["code"]]
+            o["cons"] = round(top[g["code"]] / seen[g["code"]] * 100, 1)
+            o["consTop"], o["consN"] = top[g["code"]], seen[g["code"]]
+    # volatility score: 100 = calmest in category (3Y std dev, lower is better)
+    pv = percentile_ranks([g.get("std") for g in group], higher_better=False)
+    for i, g in enumerate(group):
+        if pv[i] is not None:
+            out[g["code"]]["vol"] = round(pv[i] * 100, 1)
+    for g in group:
+        o = out[g["code"]]
+        o["status"] = status_of(o.get("rec"), o.get("ltp"))
+    return out

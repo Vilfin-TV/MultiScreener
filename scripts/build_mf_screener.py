@@ -40,6 +40,7 @@ import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mf_common as C  # noqa: E402
+import mf_enrich as E  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "mf"
@@ -96,6 +97,8 @@ GROWTH_ASSETS = {"Equity", "Index", "Global", "Commodity", "Hybrid", "Solution"}
 RECON = {}
 SNAPS = {}
 TER = {}
+ENRICH = {}
+SCORES = {}
 RISKOMETER = ["Low", "Low to Moderate", "Moderate", "Moderately High", "High", "Very High"]
 
 
@@ -632,6 +635,7 @@ def main():
     ap.add_argument("--only", help="comma-separated scheme codes (validation runs)")
     ap.add_argument("--no-write", action="store_true")
     ap.add_argument("--facts-budget", type=int, default=1200, help="max scheme-fact refreshes per run")
+    ap.add_argument("--enrich-seconds", type=int, default=900, help="time budget for official scheme details")
     ap.add_argument("--ter-seconds", type=int, default=420, help="time budget for the official TER disclosure")
     ap.add_argument("--amfi-budget", type=int, default=60, help="max official history windows fetched per run")
     args = ap.parse_args()
@@ -654,8 +658,13 @@ def main():
     universe = [r for r in universe if r["code"] in series]
     facts = load_facts(universe, args)
     universe = dedupe(universe, facts, series)
-    global TER
+    global TER, ENRICH
     TER = load_official_ter(universe, args)
+    try:
+        ENRICH = E.Enricher(S, CACHE / "enrich.json.gz", budget_s=args.enrich_seconds).run(universe)
+    except Exception as e:  # noqa: BLE001 — enrichment must never block the NAV refresh
+        log.warning("Official scheme enrichment failed: %s", e)
+        ENRICH = {}
 
     # official AMFI NAVs on every date the analytics depend on (return base dates first, then month-ends)
     asof0 = navdate
@@ -822,6 +831,26 @@ def main():
         for r, st in zip(lst, C.stars_from_scores(scores)):
             rating[r["code"]] = st
 
+    # ── scorecard: recency, consistency, volatility, status (within each sub-category)
+    me48 = [C.month_end(C.shift_months(risk_asof, -k).year, C.shift_months(risk_asof, -k).month) for k in range(47, -1, -1)]
+    groups = defaultdict(list)
+    for r in work:
+        if C.SUBS[r["sub"]][0] == "Index":
+            continue
+        res = results[r["code"]]
+        vals = C.month_end_values(series[r["code"]].upto(risk_asof.toordinal()), me48)
+        roll12 = []
+        for k in range(12, len(me48)):
+            a, b = vals[k - 12], vals[k]
+            roll12.append(float(b / a - 1) if np.isfinite(a) and np.isfinite(b) and a > 0 else None)
+        groups[r["sub"]].append({"code": r["code"], "tr": res["tr"], "roll12": roll12,
+                                 "std": (res.get("risk") or {}).get("std")})
+    global SCORES
+    SCORES = {}
+    for sub, grp in groups.items():
+        SCORES.update(C.scorecard(grp))
+    log.info("Scorecard: %s", dict(Counter(v.get("status") for v in SCORES.values())))
+
     if args.no_write:
         dump_validation(universe, work, results, facts, bench, asof, risk_asof, series, month_ends, rf_vals, bench_me)
         return
@@ -848,35 +877,113 @@ def _f(x, nd=2):
     return None if not math.isfinite(x) else round(x, nd)
 
 
+def _num(x):
+    try:
+        v = float(str(x).replace(",", "").strip())
+        return v if math.isfinite(v) else None
+    except (TypeError, ValueError):
+        return None
+
+
+def merged_facts(r, f):
+    """Combine AMFI official scheme data (preferred) with scheme facts (fallback)."""
+    e = ENRICH.get(r["code"]) or {}
+    det, ssd, aum = e.get("details") or {}, e.get("ssd") or {}, e.get("aum") or {}
+    m = {}
+    # fund size: AMFI quarterly average AUM summed over all plans (₹ lakh → ₹ crore)
+    if aum.get("totalLakh"):
+        m["aum"], m["aumAsOf"], m["aumSrc"] = round(aum["totalLakh"] / 100, 1), aum.get("quarter"), "Quarterly average AUM (all plans)"
+    elif _num(f.get("aum")) is not None:
+        m["aum"], m["aumAsOf"], m["aumSrc"] = round(_num(f.get("aum")) / 10, 1), None, "Fund size"
+    else:
+        m["aum"] = None
+    rk = (ssd.get("riskometer") or (f.get("crisil_rating") or "").replace(" Risk", "")).strip()
+    rk = re.sub(r"\s+risk$", "", rk, flags=re.I).strip().title().replace(" To ", " to ")
+    m["risk"] = RISKOMETER.index(rk) if rk in RISKOMETER else None
+    m["sipMin"] = _num(f.get("sip_min"))
+    if m["sipMin"] is None:
+        mm = re.search(r"monthly\s*[-:]?\s*(?:rs\.?|₹)?\s*([\d,]+(?:\.\d+)?)", ssd.get("sipMin") or "", re.I)
+        m["sipMin"] = _num(mm.group(1)) if mm else None
+    m["lumpMin"] = _num(f.get("lump_min"))
+    if m["lumpMin"] is None:
+        m["lumpMin"] = _num(ssd.get("minApp"))
+    lock = f.get("lock_in_period")
+    if not lock:
+        lock = 3 if r["sub"] == "elss" else (5 if r["sub"] in ("retire", "child") else 0)
+    m["lock"] = lock
+    lines = E.parse_exit_load(det.get("load")) or E.parse_exit_load(ssd.get("exitLoadSsd"))
+    m["exitLoad"] = lines
+    m["exitNil"] = E.is_nil_load(lines) if lines else None
+    m["managers"] = ssd.get("managers") or [{"name": x.strip(), "since": "", "role": ""}
+                                            for x in re.split(r";|,(?![^()]*\))", f.get("fund_manager") or "") if x.strip()]
+    m["objective"] = ssd.get("objective") or det.get("objective") or (f.get("investment_objective") or "").strip()
+    m["benchmark"] = ssd.get("benchmark") or ""
+    m["alloc"] = ssd.get("alloc") or []
+    m["tax"] = E.tax_class(r["sub"], m["alloc"], r["name"])
+    sid = e.get("sid")
+    m["docs"] = {"sid": f"{E.PORTAL}/spages/{sid}.pdf" if sid else (f.get("detail_info") or None),
+                 "ssd": f"{E.PORTAL}/spages/SSD_{sid}.pdf" if sid else None,
+                 "website": det.get("website") or None}
+    m["extra"] = {k: ssd.get(k) for k in ("faceValue", "allotment", "prc", "custodian", "registrar", "maxTer", "listing",
+                                          "category", "type") if ssd.get(k)}
+    if det.get("launch"):
+        m["extra"]["launch"] = det["launch"]
+    if det.get("minAmt"):
+        m["extra"]["minText"] = det["minAmt"]
+    return m
+
+
+def rebucket_portfolios(sub_of: dict) -> None:
+    """Portfolio files (data/mf/p/<sub>.json, built monthly) follow each fund's current category."""
+    pdir = OUT / "p"
+    if not pdir.exists():
+        return
+    by_sub, files = defaultdict(dict), [f for f in pdir.glob("*.json") if not f.name.startswith("_")]
+    for f in files:
+        for code, v in json.loads(f.read_text()).items():
+            if int(code) in sub_of:
+                by_sub[sub_of[int(code)]][code] = v
+    for f in files:
+        if f.stem not in by_sub:
+            f.unlink()
+    for sub, d in by_sub.items():
+        new = json.dumps(d, separators=(",", ":"), ensure_ascii=False)
+        path = pdir / f"{sub}.json"
+        if not path.exists() or path.read_text() != new:
+            path.write_text(new)
+
+
 def write_outputs(universe, work, results, facts, bench, asof, risk_asof, series, rating, stale, fac_keys):
     OUT.mkdir(parents=True, exist_ok=True)
+    rebucket_portfolios({r["code"]: r["sub"] for r in work})
     amcs = sorted({r["amcName"] for r in work})
     amc_i = {a: i for i, a in enumerate(amcs)}
     subs_used = sorted({r["sub"] for r in work}, key=lambda k: list(C.SUBS).index(k))
     cols = ["code", "name", "amc", "sub", "nav", "navDate", "r1d", "r1w", "r1m", "r3m", "r6m", "ytd", "r1y", "r3y",
             "r5y", "r10y", "si", "inc", "sip1", "sip3", "sip5", "ter", "aum", "risk", "rating", "std", "sharpe",
             "sortino", "beta", "alpha", "mdd", "style", "size", "roll3", "beat3", "pos1", "sipMin", "lumpMin",
-            "lock", "bench", "isin"]
+            "lock", "bench", "isin", "cons", "rec", "vols", "ltp", "status", "tax", "exitNil"]
     rows = []
+    MF = {}
     for r in sorted(work, key=lambda r: (r["sub"], r["disp"].lower())):
         res, f = results[r["code"]], facts.get(r["isin"]) or {}
         tr, rk, ro = res["tr"], res.get("risk") or {}, res.get("roll") or {}
         s = series[r["code"]]
-        risk_lbl = (f.get("crisil_rating") or "").replace(" Risk", "").strip()
         fac = res.get("factor") or {}
-        aum = _f(f.get("aum"))
+        m = MF[r["code"]] = merged_facts(r, f)
+        sc = SCORES.get(r["code"]) or {}
         rows.append([
             r["code"], r["disp"], amc_i[r["amcName"]], r["sub"], round(float(s.v[-1]), 4), C.iso(s.d[-1]),
             tr.get("1d"), tr.get("1w"), tr.get("1m"), tr.get("3m"), tr.get("6m"), tr.get("ytd"), tr.get("1y"),
             tr.get("3y"), tr.get("5y"), tr.get("10y"), tr.get("si"), res["inc"],
             (res["sip"].get("1") or {}).get("xirr"), (res["sip"].get("3") or {}).get("xirr"),
             (res["sip"].get("5") or {}).get("xirr"),
-            _f(ter_of(r, f)[0]), round(aum / 10, 1) if aum is not None else None,
-            RISKOMETER.index(risk_lbl) if risk_lbl in RISKOMETER else None, rating.get(r["code"]),
+            _f(ter_of(r, f)[0]), m["aum"], m["risk"], rating.get(r["code"]),
             rk.get("std"), rk.get("sharpe"), rk.get("sortino"), rk.get("beta"), rk.get("alpha"),
             (res.get("mdd3") or {}).get("mdd"), fac.get("primary"), fac.get("size"),
             (ro.get("3") or {}).get("avg"), (ro.get("3") or {}).get("beat"), (ro.get("1") or {}).get("pos"),
-            _f(f.get("sip_min"), 0), _f(f.get("lump_min"), 0), f.get("lock_in_period") or 0, res["bench"], r["isin"],
+            m["sipMin"], m["lumpMin"], m["lock"], res["bench"], r["isin"],
+            sc.get("cons"), sc.get("rec"), sc.get("vol"), sc.get("ltp"), sc.get("status"), m["tax"], m["exitNil"],
         ])
     # round all floats to 2 dp in the screener (returns in %, ratios) — 4 dp for NAV / ratios
     for row in rows:
@@ -894,7 +1001,8 @@ def write_outputs(universe, work, results, facts, bench, asof, risk_asof, series
         "v": 1, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "asOf": asof.isoformat(), "riskAsOf": risk_asof.isoformat(),
         "assets": C.ASSETS, "subs": {k: list(C.SUBS[k]) for k in subs_used}, "amcs": amcs,
-        "riskometer": RISKOMETER, "bench": bench_out, "factors": fac_keys,
+        "riskometer": RISKOMETER, "bench": bench_out, "factors": fac_keys, "statuses": C.STATUS,
+        "tax": {"asOf": E.TAX_RULES_AS_OF, "rules": E.TAX},
         "count": len(rows), "cols": cols, "rows": rows,
     }
     write_json(OUT / "screener.json", screener)
@@ -912,11 +1020,15 @@ def write_outputs(universe, work, results, facts, bench, asof, risk_asof, series
                 "mdd3": res.get("mdd3"), "mddAll": res.get("mddAll"), "factor": res.get("factor"),
                 "trM": {k: v for k, v in (res.get("trM") or {}).items() if k in ("1y", "3y", "5y", "10y", "si")},
                 "info": {
-                    "amfiName": r["name"], "cat": r["cat"], "objective": (f.get("investment_objective") or "").strip(),
-                    "managers": [m.strip() for m in re.split(r";|,(?![^()]*\))", f.get("fund_manager") or "") if m.strip()],
-                    "sid": f.get("detail_info"), "turnover": _f(f.get("portfolio_turnover")),
+                    "amfiName": r["name"], "cat": r["cat"], "objective": MF[r["code"]]["objective"],
+                    "managers": MF[r["code"]]["managers"], "benchmark": MF[r["code"]]["benchmark"],
+                    "exitLoad": MF[r["code"]]["exitLoad"], "alloc": MF[r["code"]]["alloc"],
+                    "docs": MF[r["code"]]["docs"], "extra": MF[r["code"]]["extra"],
+                    "aumAsOf": MF[r["code"]].get("aumAsOf"), "aumSrc": MF[r["code"]].get("aumSrc"),
+                    "sid": MF[r["code"]]["docs"]["sid"], "turnover": _f(f.get("portfolio_turnover")),
                     "terDate": ter_of(r, f)[1], "start": f.get("start_date"),
                 },
+                "score": {k: v for k, v in (SCORES.get(r["code"]) or {}).items() if k in ("consTop", "consN")},
             }
             s = series[r["code"]]
             i0 = int(np.searchsorted(s.d, risk_asof.toordinal(), side="right"))
@@ -1045,7 +1157,11 @@ def dump_validation(universe, work, results, facts, bench, asof, risk_asof, seri
         by_sub[r["sub"]].append(r["code"])
     for sub in sorted(by_sub):
         pick.extend(by_sub[sub][:1])
-    pick = list(dict.fromkeys(pick))[:60]
+    import random
+    rnd = random.Random(asof.toordinal())          # a different random sample every day
+    pool = [r["code"] for r in work]
+    pick += rnd.sample(pool, min(120, len(pool)))
+    pick = list(dict.fromkeys(pick))[:200]
     sample = {"monthEnds": [m.isoformat() for m in month_ends], "rf": [None if not np.isfinite(x) else x for x in rf_vals],
               "riskAsOf": risk_asof.isoformat(), "bench": {k: [None if not np.isfinite(x) else x for x in v] for k, v in bench_me.items()},
               "benchCodes": {k: b["code"] for k, b in bench.items()}, "funds": []}

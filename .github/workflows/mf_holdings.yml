@@ -1,0 +1,88 @@
+name: India MF Holdings Data
+
+# Builds data/mf/p/ (portfolio holdings, sector allocation and market-cap split) for
+# india_mf_screener.html from each fund house's statutory monthly portfolio
+# disclosure. Fund houses publish within 10 days of month-end, so this runs daily
+# during the first half of each month (plus a weekly catch-up). Fund houses whose
+# latest month is already processed are skipped, so most runs finish quickly.
+on:
+  schedule:
+    - cron: '20 3 1-16 * *'   # 08:50 IST, 1st–16th of each month
+    - cron: '40 4 * * 1'      # 10:10 IST every Monday (catch-up)
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Re-process the latest month for every fund house'
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/build_mf_holdings.py'
+      - '.github/workflows/mf_holdings.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mf-holdings-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build & verify data/mf/p
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip requests openpyxl xlrd playwright==1.48.0
+          python -m playwright install --with-deps chromium
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build holdings
+        run: |
+          mkdir -p .mfcache/holdings
+          # a virtual display lets the browser run headed — some fund-house sites refuse headless clients
+          xvfb-run -a python scripts/build_mf_holdings.py ${{ github.event.inputs.force == 'true' && '--force' || '' }}
+
+      - name: Verify holdings
+        run: node scripts/verify_mf_screener.js --holdings
+
+      - name: Commit (with rebase-and-retry)
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A data/mf/p
+          if git diff --staged --quiet; then
+            echo "No changes to holdings data."
+            exit 0
+          fi
+          git commit -m "chore(data): refresh India MF holdings [skip ci]"
+          for attempt in 1 2 3 4; do
+            if git push origin HEAD:"$BRANCH"; then
+              echo "Pushed."
+              exit 0
+            fi
+            echo "Push rejected (attempt $attempt). Rebasing..."
+            git pull --rebase --autostash origin "$BRANCH" || git rebase --abort
+            sleep $((attempt * 5))
+          done
+          echo "All push attempts failed."
+          exit 1

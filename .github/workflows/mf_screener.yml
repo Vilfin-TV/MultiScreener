@@ -31,6 +31,8 @@ on:
     paths:
       - 'scripts/build_mf_screener.py'
       - 'scripts/mf_common.py'
+      - 'scripts/mf_enrich.py'
+      - 'scripts/audit_mf_live.py'
       - 'scripts/verify_mf_screener.js'
       - '.github/workflows/mf_screener.yml'
 
@@ -49,55 +51,32 @@ jobs:
     outputs:
       run: ${{ steps.check.outputs.run }}
     steps:
-      - name: Checkout published data
+      - name: Checkout published data and audit script
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
-          sparse-checkout: data/mf/screener.json
+          sparse-checkout: |
+            data/mf/screener.json
+            scripts/audit_mf_live.py
           sparse-checkout-cone-mode: false
 
-      - name: Compare published NAV date with AMFI
+      - name: Live audit — freshness, NAVs and returns vs AMFI official data
         id: check
         env:
           EVENT: ${{ github.event_name }}
           FORCE: ${{ github.event.inputs.force }}
         run: |
-          python3 - <<'PY'
-          import collections, datetime as dt, json, os, re, urllib.request
-          event, force = os.environ["EVENT"], os.environ.get("FORCE") == "true"
-          run, why = True, f"{event} trigger"
-          if event in ("schedule", "workflow_dispatch", "workflow_run") and not force:
-              try:
-                  pub = dt.date.fromisoformat(json.load(open("data/mf/screener.json"))["asOf"])
-              except Exception as exc:
-                  pub, why = None, f"no published data ({exc})"
-              if pub:
-                  latest = None
-                  for u in ("https://www.amfiindia.com/spages/NAVAll.txt", "https://portal.amfiindia.com/spages/NAVAll.txt"):
-                      try:
-                          req = urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"})
-                          txt = urllib.request.urlopen(req, timeout=60).read().decode("utf-8", "replace")
-                          dates = re.findall(r";(\d{2}-[A-Za-z]{3}-\d{4})\s*$", txt, re.M)
-                          top = collections.Counter(dates).most_common(1)[0][0]
-                          latest = dt.datetime.strptime(top, "%d-%b-%Y").date()
-                          break
-                      except Exception as exc:
-                          why = f"AMFI check failed ({exc})"
-                  if latest and latest <= pub:
-                      run, why = False, f"up to date (published {pub}, AMFI {latest})"
-                  elif latest:
-                      why = f"new NAV date {latest} (published {pub})"
-          print(f"run={run}: {why}")
-          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
-              fh.write(f"run={'true' if run else 'false'}\n")
-          PY
+          # deep return audit three times a day (07:00, 13:00, 19:00 IST wake-ups)
+          H=$(TZ=Asia/Kolkata date +%H); M=$(TZ=Asia/Kolkata date +%M)
+          if { [ "$H" = "07" ] || [ "$H" = "13" ] || [ "$H" = "19" ]; } && [ "$M" -lt 30 ]; then export DEEP=true; fi
+          python3 scripts/audit_mf_live.py
 
   build:
     name: Build & verify data/mf
     needs: due
     if: needs.due.outputs.run == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -124,6 +103,9 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Keep the previously published data for the day-over-day audit
+        run: cp data/mf/screener.json "$RUNNER_TEMP/prev_screener.json" 2>/dev/null || true
+
       - name: Build India MF screener data
         run: python scripts/build_mf_screener.py --workers 10
 
@@ -134,7 +116,9 @@ jobs:
           path: .mfcache
           key: mf-cache-${{ github.run_id }}
 
-      - name: Verify (independent JS re-computation + structure checks)
+      - name: Verify (independent JS re-computation, structure and day-over-day checks)
+        env:
+          MF_PREV: ${{ runner.temp }}/prev_screener.json
         run: node scripts/verify_mf_screener.js
 
       - name: Validation summary
