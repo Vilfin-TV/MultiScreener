@@ -358,6 +358,43 @@ function verifyAgainstPrevious(J, C) {
   console.log(`Day-over-day audit vs ${P.asOf}: ${n} funds compared · NAV jumps ${navJumps} · TER jumps ${terJumps} · AUM jumps ${aumJumps} · category moves ${subMoves}`);
 }
 
+// portfolio holdings (data/mf/p/<sub>.json) — built monthly from fund-house disclosures
+function verifyHoldings() {
+  const dir = path.join(OUT, 'p');
+  if (!fs.existsSync(dir)) return;
+  const J = JSON.parse(fs.readFileSync(path.join(OUT, 'screener.json'), 'utf8'));
+  const C = Object.fromEntries(J.cols.map((c, i) => [c, i]));
+  const subOf = Object.fromEntries(J.rows.map(r => [String(r[C.code]), r[C.sub]]));
+  const now = new Date(J.asOf + 'T00:00:00Z');
+  let funds = 0;
+  for (const f of fs.readdirSync(dir).filter(n => n.endsWith('.json') && !n.startsWith('_'))) {
+    const sub = f.slice(0, -5), P = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+    for (const [code, h] of Object.entries(P)) {
+      funds++;
+      const id = `holdings ${sub}/${code}`;
+      ok(subOf[code] === sub, `${id}: fund not in this category file`);
+      ok(/^\d{4}-\d{2}$/.test(h.asOf || ''), `${id}: bad month ${h.asOf}`);
+      const age = (now.getUTCFullYear() - +h.asOf.slice(0, 4)) * 12 + now.getUTCMonth() + 1 - +h.asOf.slice(5, 7);
+      ok(age >= 0 && age <= 4, `${id}: portfolio month ${h.asOf} is ${age} months old`);
+      const listed = Object.entries(h.mix || {}).filter(([k]) => k !== 'cashOther').reduce((a, [, v]) => a + v, 0);
+      ok(listed >= 40 && listed <= 130, `${id}: holdings add up to ${listed.toFixed(1)}%`);
+      ok(Array.isArray(h.top) && h.top.length >= 1, `${id}: no holdings`);
+      for (let i = 1; i < h.top.length; i++) ok(h.top[i][2] <= h.top[i - 1][2] + 1e-9, `${id}: holdings not sorted`);
+      for (const t of h.top) ok(/^[A-Z]{2}[A-Z0-9]{9}\d$/.test(t[3]) && t[2] > -50 && t[2] <= 100, `${id}: bad holding ${t[0]} ${t[2]}`);
+      const sec = (h.sectors || []).reduce((a, x) => a + x[1], 0);
+      ok(sec <= (h.mix.equity || 0) + 0.05, `${id}: sectors ${sec.toFixed(2)}% exceed equity ${h.mix.equity}%`);
+      if (h.cap) {
+        const capT = h.cap.large + h.cap.mid + h.cap.small;
+        ok(Math.abs(capT - (h.mix.equity || 0)) < 0.1, `${id}: market-cap split ${capT.toFixed(2)}% vs equity ${h.mix.equity}%`);
+      }
+      ok(h.top10 <= (h.mix.equity || 0) + 0.05, `${id}: top-10 weight exceeds equity`);
+    }
+  }
+  AUDIT.holdingsFunds = funds;
+  console.log(`Holdings: ${funds} fund portfolios checked`);
+}
+
+if (process.argv.includes('--holdings')) { verifyHoldings(); console.log(`${checks} checks, ${failures} failure(s).`); process.exit(failures ? 1 : 0); }
 verifySample();
 verifyFiles();
 // publish a compact audit record next to the data (shown on the page as a verification note)
@@ -367,7 +404,7 @@ try {
   try { official = JSON.parse(fs.readFileSync(path.join(ROOT, '.mfcache', 'validation.json'), 'utf8')).vsOfficial || null; } catch (e) { /* optional */ }
   fs.writeFileSync(path.join(OUT, 'audit.json'), JSON.stringify({
     asOf: J.asOf, generated: J.generated, funds: J.rows.length, checks, failures,
-    recomputedFunds: AUDIT.recomputedFunds || 0, dayOverDay: AUDIT.dayOverDay || null, officialNav: official,
+    recomputedFunds: AUDIT.recomputedFunds || 0, holdingsFunds: AUDIT.holdingsFunds || 0, dayOverDay: AUDIT.dayOverDay || null, officialNav: official,
   }));
 } catch (e) { console.error('could not write audit.json', e.message); }
 console.log(`${checks} checks, ${failures} failure(s).`);

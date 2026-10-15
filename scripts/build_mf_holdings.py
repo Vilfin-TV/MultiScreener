@@ -150,29 +150,32 @@ def _s(v):
 
 
 def parse_sheet(name: str, rows: list[list]) -> list[dict]:
-    """A sheet may hold one or several schemes. Returns [{title, holdings:[{name,isin,ind,pct}]}]."""
+    """A sheet may hold one or several schemes. Returns [{title, ctx, holdings:[{name,isin,ind,pct}]}].
+    `ctx` keeps the lines just above each table header (scheme name banners), plus the sheet name."""
     out, cur, hdr = [], None, None
-    titles = []
-    for i, row in enumerate(rows):
+    recent: list[str] = []
+    for row in rows:
         cells = [_s(c) for c in row]
         line = " ".join(c for c in cells if c)
         if not line:
             continue
-        # header row?
         if any(re.search(r"\bisin\b", c, re.I) for c in cells) and any(PCT_HDR.search(c) for c in cells):
             isin_c = next(j for j, c in enumerate(cells) if re.search(r"\bisin\b", c, re.I))
             pct_c = next(j for j, c in enumerate(cells) if PCT_HDR.search(c))
             name_c = next((j for j, c in enumerate(cells) if NAME_HDR.search(c) and j != isin_c), max(0, isin_c - 1))
             ind_c = next((j for j, c in enumerate(cells) if IND_HDR.search(c)), None)
             hdr = (name_c, isin_c, ind_c, pct_c)
-            title = next((t for t in reversed(titles[-6:]) if re.search(r"fund|scheme|plan|etf|fof", t, re.I)), name)
-            cur = {"title": title, "holdings": []}
+            ctx = [l for l in reversed(recent[-10:])] + [name]
+            title = next((t for t in ctx if re.search(r"fund|scheme|plan|etf|fof", t, re.I)
+                          and not re.match(r"\W*an\s+open", t, re.I)), name)
+            cur = {"title": title, "ctx": ctx, "holdings": []}
             out.append(cur)
-            titles = []
+            recent = []
             continue
-        # title-like line (scheme name banners appear above each header)
-        if len(line) < 220 and re.search(r"fund|scheme|plan|portfolio|etf", line, re.I) and not any(ISIN.match(c) for c in cells):
-            titles.append(re.sub(r"(?i)^(scheme\s*name|name of the scheme)\s*[:\-]\s*", "", next(c for c in cells if c)))
+        if not any(ISIN.match(c.upper()) for c in cells):
+            if len(line) < 400:
+                recent.append(line)
+            continue
         if not hdr or not cur:
             continue
         name_c, isin_c, ind_c, pct_c = hdr
@@ -236,7 +239,9 @@ def summarise(blk: dict, large: set, mid: set) -> dict:
     eq = [h for h in hs if h["kind"] == "equity"]
     sectors = defaultdict(float)
     for h in eq:
-        sec = re.sub(r"\s+", " ", h["ind"] or "Others").strip().title() or "Others"
+        sec = re.sub(r"\s+", " ", h["ind"] or "").strip() or "Others"
+        if sec.isupper() and len(sec) > 4:
+            sec = sec.title().replace("It ", "IT ").replace("Fmcg", "FMCG")
         sectors[sec] += h["pct"]
     cap = {"large": 0.0, "mid": 0.0, "small": 0.0}
     if large or mid:
@@ -253,33 +258,60 @@ def summarise(blk: dict, large: set, mid: set) -> dict:
     }
 
 
+STOP = {"fund", "the", "plan", "scheme", "of", "an", "open", "ended", "direct", "growth", "regular", "option",
+        "portfolio", "monthly", "statement", "as", "on", "mutual", "formerly", "known", "erstwhile", "name",
+        "and", "for", "in", "at", "to", "mf", "ltd", "limited", "sep", "september", "month", "end"}
+SYN = [(r"\bmid\s*cap\b", " midcap "), (r"\bsmall\s*cap\b", " smallcap "), (r"\blarge\s*cap\b", " largecap "),
+       (r"\bmulti\s*cap\b", " multicap "), (r"\bflexi\s*cap\b", " flexicap "), (r"\bfocus(ed)?\b", " focused "),
+       (r"\btax\s*saver\b|\belss\b|\btax\s*saving\b", " elss "), (r"\bfund\s*of\s*funds?\b|\bfof\b", " fof "),
+       (r"\bpsu\b", " psu "), (r"\bs\s*&\s*p\b", " sp "), (r"\bbse\b|\bnifty\b|\bnse\b", " "), (r"&", " and ")]
+
+
 def tokens(n: str) -> set:
-    n = re.sub(r"\(.*?\)", " ", n.lower()).replace("&", " and ")
-    stop = {"fund", "the", "plan", "scheme", "of", "an", "open", "ended", "direct", "growth", "regular", "option",
-            "portfolio", "monthly", "statement", "as", "on", "mutual", "india", "formerly", "known", "erstwhile"}
-    return {t for t in re.findall(r"[a-z0-9]+", n) if t not in stop and not re.fullmatch(r"\d{1,2}|20\d\d|19\d\d", t)}
+    n = n.lower()
+    n = re.sub(r"\((?:formerly|erstwhile|earlier).*?(\)|$)", " ", n)
+    n = re.sub(r"\(\s*an?\s+open.*", " ", n)          # "(An open ended … scheme …)" descriptions
+    n = re.sub(r"\(.*?\)", " ", n)
+    for a, b in SYN:
+        n = re.sub(a, b, n)
+    return {t for t in re.findall(r"[a-z0-9]+", n) if t not in STOP and not re.fullmatch(r"20\d\d|19\d\d", t)}
 
 
 def match_blocks(blocks: list[dict], funds: list[dict]) -> dict[int, dict]:
-    """Map parsed blocks to fund codes by token overlap with the AMFI scheme name."""
-    out = {}
+    """Map parsed blocks to fund codes: the fund whose name tokens are best covered by one of the
+    banner lines above the table (fewest extra words breaks ties). Ambiguous matches are dropped."""
     ft = [(f, tokens(f["amfi"])) for f in funds]
+    ft = [(f, t) for f, t in ft if t]
+    out, score_of = {}, {}
     for blk in blocks:
-        bt = tokens(blk["title"])
-        if not bt:
-            continue
-        best, best_s, second = None, 0.0, 0.0
-        for f, t in ft:
-            if not t:
+        best = None
+        for dist, line in enumerate(blk.get("ctx") or [blk["title"]]):
+            if re.match(r"\W*an?\s+open", line, re.I):
                 continue
-            s = len(bt & t) / len(bt | t)
-            if s > best_s:
-                best, best_s, second = f, s, best_s
-            elif s > second:
-                second = s
-        if best and best_s >= 0.6 and best_s - second >= 0.08:
-            # the first (largest) block wins if a scheme appears twice
-            out.setdefault(best["code"], blk)
+            lt = tokens(line)
+            if not lt:
+                continue
+            cands = []
+            for f, t in ft:
+                cov = len(lt & t) / len(t)
+                if cov >= 0.99 or (cov >= 0.8 and len(t) >= 5):
+                    cands.append((cov, -len(lt - t), f))
+            if not cands:
+                continue
+            cands.sort(key=lambda x: (x[0], x[1]), reverse=True)
+            top = cands[0]
+            if len(cands) > 1 and cands[1][:2] == top[:2]:
+                continue                                  # two funds fit equally well → ambiguous
+            sc = (top[0], top[1], -dist)
+            if best is None or sc > best[0]:
+                best = (sc, top[2])
+        if best:
+            code = best[1]["code"]
+            # the same fund can appear twice (e.g. a combined file and a per-scheme file): keep the better fit,
+            # or the larger table on a tie
+            prev = score_of.get(code)
+            if prev is None or best[0][:2] > prev[0][:2] or (best[0][:2] == prev[0][:2] and len(blk["holdings"]) > len(out[code]["holdings"])):
+                out[code], score_of[code] = blk, best
     return out
 
 
@@ -337,7 +369,7 @@ def main():
         matched = match_blocks(blocks, funds_by_amc[amc])
         hit = {id(b) for b in matched.values()}
         report[amc] = {"files": [u.split("?")[0].rsplit("/", 1)[-1] for u in info["files"]],
-                       "unmatched": sorted({b["title"][:90] for b in blocks if id(b) not in hit})[:60],
+                       "unmatched": [{"sheet": b["ctx"][-1], "ctx": [c[:110] for c in b["ctx"][:6]]} for b in blocks if id(b) not in hit][:40],
                        "matched": {str(c): b["title"][:90] for c, b in matched.items()}}
         bad = 0
         for code, blk in matched.items():
@@ -358,7 +390,8 @@ def main():
         if p.name.startswith("_"):
             continue
         for code, v in json.load(open(p)).items():
-            if int(code) in sub_of:
+            y, m = map(int, v["asOf"].split("-"))
+            if int(code) in sub_of and (date.today().year - y) * 12 + date.today().month - m <= 4:
                 by_sub[sub_of[int(code)]][code] = v
     for code, v in results.items():
         by_sub[sub_of[code]][str(code)] = v
