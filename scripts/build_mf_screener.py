@@ -391,7 +391,7 @@ def _norm_name(n):
 def load_official_ter(universe, args):
     """Official Direct-plan TER disclosed daily to AMFI (latest date per scheme)."""
     cache = load_gz(CACHE / "ter.json.gz", {})
-    if cache.get("_date") == date.today().isoformat() and cache.get("rows"):
+    if cache.get("_date") == date.today().isoformat() and cache.get("_v") == 2 and cache.get("rows"):
         rows = cache["rows"]
     else:
         rows = {}
@@ -422,7 +422,7 @@ def load_official_ter(universe, args):
             time.sleep(0.3)
         log.info("Official TER feed: %s", dict(stat))
         if rows:
-            save_gz(CACHE / "ter.json.gz", {"_date": date.today().isoformat(), "rows": rows})
+            save_gz(CACHE / "ter.json.gz", {"_date": date.today().isoformat(), "_v": 2, "rows": rows})
         else:
             rows = cache.get("rows", {})
     out = {}
