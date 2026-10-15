@@ -418,7 +418,7 @@ def load_official_ter(universe, args):
                 stat[type(e).__name__] += 1
         log.info("TER months available: %s", [m.get("MonthYear") for m in months][:14] if months else "none")
         cands = [m.get("MonthNumber") for m in months if isinstance(m, dict) and m.get("MonthNumber")]
-        cands = (cands[-1:] + cands[:1] if cands else []) + [str(today_.month), f"{today_.month:02d}"]
+        cands = cands[:2]  # newest month first (the list is newest → oldest)
         for mon in dict.fromkeys(cands):
             page, got, ps = 1, 0, None
             while page <= 600:
