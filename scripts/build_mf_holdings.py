@@ -166,6 +166,10 @@ def parse_sheet(name: str, rows: list[list]) -> list[dict]:
             ind_c = next((j for j, c in enumerate(cells) if IND_HDR.search(c)), None)
             hdr = (name_c, isin_c, ind_c, pct_c)
             ctx = [l for l in reversed(recent[-10:])] + [name]
+            if cur is not None and not any(re.search(r"fund|scheme|etf|fof|plan", l, re.I) for l in recent):
+                # a second table (e.g. unlisted / debt section) of the same scheme: keep adding to it
+                recent = []
+                continue
             title = next((t for t in ctx if re.search(r"fund|scheme|plan|etf|fof", t, re.I)
                           and not re.match(r"\W*an\s+open", t, re.I)), name)
             cur = {"title": title, "ctx": ctx, "holdings": []}
@@ -285,7 +289,13 @@ def match_blocks(blocks: list[dict], funds: list[dict]) -> dict[int, dict]:
     out, score_of = {}, {}
     for blk in blocks:
         best = None
+        lines = []
         for dist, line in enumerate(blk.get("ctx") or [blk["title"]]):
+            lines.append((dist, line))
+            # a renamed scheme may still carry its former name in AMFI's records
+            for old in re.findall(r"\(\s*(?:formerly|erstwhile|earlier|ex)\b(?:\s+known)?(?:\s+as)?\s*:?\s*([^)]+)\)", line, re.I):
+                lines.append((dist, old))
+        for dist, line in lines:
             if re.match(r"\W*an?\s+open", line, re.I):
                 continue
             lt = tokens(line)
