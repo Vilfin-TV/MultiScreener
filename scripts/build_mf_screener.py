@@ -52,6 +52,7 @@ UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chr
 NAVALL_URLS = ["https://www.amfiindia.com/spages/NAVAll.txt", "https://portal.amfiindia.com/spages/NAVAll.txt"]
 HIST_URL = "https://api.mfapi.in/mf/{code}"
 FACTS_URL = "https://mf.captnemo.in/kuvera/{isin}"
+AMFI_HIST = "https://portal.amfiindia.com/DownloadNAVHistoryReport_Po.aspx?tp=1&frmdt={f}&todt={t}"
 NSE_HOME = "https://www.nseindia.com/reports-indices-historical-index-data"
 NSE_HIST = "https://www.nseindia.com/api/historicalOR/indicesHistory?indexType={name}&from={f}&to={t}"
 
@@ -89,6 +90,7 @@ ALPHA_ASSETS = {"Equity", "Index"}          # alpha / TE / IR / capture only whe
 FACTOR_ASSETS = {"Equity", "Index"}
 GROWTH_ASSETS = {"Equity", "Index", "Global", "Commodity", "Hybrid", "Solution"}
 
+RECON = {}
 RISKOMETER = ["Low", "Low to Moderate", "Moderate", "Moderately High", "High", "Very High"]
 
 
@@ -194,10 +196,28 @@ def fetch_history(code):
     return pts, j.get("meta", {})
 
 
+def fix_face_value(pts):
+    """Undo unit face-value changes (NAV jumps ×10 / ×100 / ÷10 overnight and stays there)."""
+    pts = [list(p) for p in pts]
+    fixes = 0
+    for i in range(len(pts) - 1, 0, -1):
+        r = pts[i][1] / pts[i - 1][1]
+        k = round(math.log10(r)) if r > 0 else 0
+        if k != 0 and abs(math.log10(r) - k) < 0.03:
+            f = 10 ** k
+            for j in range(i):
+                pts[j][1] *= f
+            fixes += 1
+    return pts, fixes
+
+
 def clean_points(pts):
-    """Drop isolated spikes (a one-day jump that fully reverses) and duplicates."""
+    """Drop isolated spikes (a one-day jump that fully reverses), duplicates and face-value breaks."""
     out, dropped = [], 0
     pts = sorted({p[0]: p for p in pts}.values())
+    pts, fv = fix_face_value(pts)
+    if fv:
+        log.info("  face-value change adjusted (%d) at %s", fv, C.iso(pts[-1][0]))
     for i, p in enumerate(pts):
         if 0 < i < len(pts) - 1:
             a, b, c = pts[i - 1][1], p[1], pts[i + 1][1]
@@ -241,6 +261,8 @@ def load_histories(universe, navdate, args):
         if not h or h[-1][0] < o:
             h.append([o, r["nav"]])
             appended += 1
+        elif h[-1][0] == o and abs(h[-1][1] / r["nav"] - 1) > 1e-6:
+            h[-1][1] = r["nav"]
     log.info("Appended latest official NAV to %d histories", appended)
     cleaned = {}
     for code, h in hist.items():
@@ -249,6 +271,114 @@ def load_histories(universe, navdate, args):
             log.info("  %s: dropped %d spike point(s)", code, dropped)
     save_gz(CACHE / "hist.json.gz", {str(k): v for k, v in cleaned.items()})
     return cleaned, meta, fail
+
+
+def dedupe(universe, facts, series):
+    """AMFI occasionally lists several 'Direct / Growth' codes under one scheme name (legacy plans,
+    IDCW plans mis-tagged as growth). Keep the genuine one."""
+    groups = defaultdict(list)
+    for r in universe:
+        groups[(r["amc"], r["name"].lower())].append(r)
+    drop = set()
+    for key, lst in groups.items():
+        if len(lst) < 2:
+            continue
+        def bad(r):
+            f = facts.get(r["isin"]) or {}
+            nm = f.get("name") or ""
+            return bool(r.get("isin2")) or bool(re.search(r"idcw|dividend|bonus|unclaimed|payout|segregat", nm, re.I))
+        good = [r for r in lst if not bad(r)]
+        if not good:
+            good = lst
+        with_facts = [r for r in good if facts.get(r["isin"])]
+        if with_facts:
+            good = with_facts
+        distinct = {((facts.get(r["isin"]) or {}).get("name") or "").lower() for r in good}
+        if len(good) > 1 and len(distinct) < len(good):
+            # same scheme listed twice: keep the longest-running series
+            good = [min(good, key=lambda r: (series[r["code"]].d[0] if r["code"] in series else 10 ** 9, r["code"]))]
+        keep = {r["code"] for r in good}
+        for r in lst:
+            if r["code"] not in keep:
+                drop.add(r["code"])
+                log.info("Dropped duplicate listing %s %s (kept %s)", r["code"], r["name"], sorted(keep))
+    return [r for r in universe if r["code"] not in drop]
+
+
+def amfi_snapshots(days_needed, codes, budget):
+    """Official AMFI NAVs for the given 4-day windows (ending on each target day). Cached per day."""
+    cache = load_gz(CACHE / "amfi_days.json.gz", {})
+    fetched = 0
+    for end in days_needed:
+        win = [end - timedelta(days=k) for k in range(3, -1, -1)]
+        if all(d.isoformat() in cache for d in win):
+            continue
+        if fetched >= budget:
+            continue
+        url = AMFI_HIST.format(f=win[0].strftime("%d-%b-%Y"), t=win[-1].strftime("%d-%b-%Y"))
+        try:
+            r = get(url, tries=3, timeout=180)
+        except Exception as e:  # noqa: BLE001
+            log.warning("AMFI history %s: %s", url, e)
+            continue
+        fetched += 1
+        got = {d.isoformat(): {} for d in win}
+        for line in r.text.splitlines():
+            p = line.strip().split(";")
+            if len(p) < 8 or not p[0].isdigit():
+                continue
+            c = int(p[0])
+            if c not in codes:
+                continue
+            d = C.parse_amfi_date(p[7])
+            try:
+                v = float(p[6])
+            except ValueError:
+                continue
+            if d and d.isoformat() in got and v > 0:
+                got[d.isoformat()][str(c)] = v
+        if sum(len(v) for v in got.values()) == 0:
+            log.warning("AMFI history window %s–%s returned no rows (%d bytes)", win[0], win[-1], len(r.text))
+            continue
+        cache.update(got)
+    keep_from = (min(days_needed) - timedelta(days=10)).isoformat() if days_needed else "0"
+    cache = {k: v for k, v in cache.items() if k >= keep_from}
+    save_gz(CACHE / "amfi_days.json.gz", cache)
+    log.info("AMFI official snapshots: %d day(s) cached, %d window(s) fetched this run", len(cache), fetched)
+    return cache
+
+
+def reconcile_with_amfi(hist_pts, snaps):
+    """Make the history agree with AMFI's official NAV on every snapshot day."""
+    stats = {"checked": 0, "fixed": 0, "inserted": 0, "funds": 0}
+    examples = []
+    for code, pts in hist_pts.items():
+        idx = {p[0]: i for i, p in enumerate(pts)}
+        changed = False
+        for day, vals in snaps.items():
+            v = vals.get(str(code))
+            if v is None:
+                continue
+            o = date.fromisoformat(day).toordinal()
+            if pts and o < pts[0][0]:
+                continue
+            stats["checked"] += 1
+            i = idx.get(o)
+            if i is None:
+                pts.append([o, v])
+                stats["inserted"] += 1
+                changed = True
+            elif abs(pts[i][1] / v - 1) > 1e-6:
+                if len(examples) < 40:
+                    examples.append({"code": code, "day": day, "mirror": pts[i][1], "official": v})
+                pts[i][1] = v
+                stats["fixed"] += 1
+                changed = True
+        if changed:
+            pts.sort()
+            stats["funds"] += 1
+    log.info("AMFI reconciliation: %s", stats)
+    return stats, examples
 
 
 def load_facts(universe, args):
@@ -383,6 +513,7 @@ def main():
     ap.add_argument("--workers", type=int, default=10)
     ap.add_argument("--only", help="comma-separated scheme codes (validation runs)")
     ap.add_argument("--no-write", action="store_true")
+    ap.add_argument("--amfi-budget", type=int, default=60, help="max official history windows fetched per run")
     args = ap.parse_args()
     CACHE.mkdir(exist_ok=True)
 
@@ -397,12 +528,31 @@ def main():
     for r in universe:
         r["disp"] = C.nice_name(r["name"])
         r["amcName"] = C.amc_short(r["amc"])
-    dup = Counter((r["disp"].lower()) for r in universe)
 
     hist_pts, meta, failed = load_histories(universe, navdate, args)
     series = {c: C.Series(p) for c, p in hist_pts.items() if len(p) >= 2}
     universe = [r for r in universe if r["code"] in series]
     facts = load_facts(universe, args)
+    universe = dedupe(universe, facts, series)
+
+    # official AMFI NAVs on every date the analytics depend on (return base dates first, then month-ends)
+    asof0 = navdate
+    targets = [asof0 - timedelta(days=7), date(asof0.year - 1, 12, 31)]
+    targets += [C.shift_months(asof0, -m) for m in (1, 3, 6, 12, 24, 36, 60, 84, 120)]
+    me = C.month_end(asof0.year, asof0.month)
+    if me > asof0:
+        pm = C.shift_months(date(asof0.year, asof0.month, 1), -1)
+        me = C.month_end(pm.year, pm.month)
+    targets += [C.month_end(C.shift_months(me, -k).year, C.shift_months(me, -k).month) for k in range(0, 37)]
+    snaps = amfi_snapshots(targets, {r["code"] for r in universe}, budget=args.amfi_budget)
+    recon, recon_ex = reconcile_with_amfi({r["code"]: hist_pts[r["code"]] for r in universe}, snaps)
+    for r in universe:
+        hist_pts[r["code"]], _ = clean_points(hist_pts[r["code"]])
+        series[r["code"]] = C.Series(hist_pts[r["code"]])
+    save_gz(CACHE / "hist.json.gz", {str(k): v for k, v in hist_pts.items()})
+    global RECON
+    RECON = {"stats": recon, "examples": recon_ex}
+    dup = Counter((r["disp"].lower()) for r in universe)
     for r in universe:
         if dup[r["disp"].lower()] > 1:
             f = facts.get(r["isin"]) or {}
@@ -701,7 +851,7 @@ def dump_validation(universe, work, results, facts, bench, asof, risk_asof, seri
                     "ter": f.get("expense_ratio"), "aum_cr": round(float(f["aum"]) / 10, 1) if f.get("aum") else None,
                     "managers": f.get("fund_manager"), "riskometer": f.get("crisil_rating")})
     sub_counts = Counter(C.SUBS[r["sub"]][1] + " | " + C.SUBS[r["sub"]][0] for r in work)
-    report = {"asOf": asof.isoformat(), "riskAsOf": risk_asof.isoformat(), "universe": len(universe),
+    report = {"asOf": asof.isoformat(), "riskAsOf": risk_asof.isoformat(), "universe": len(universe), "amfiReconciliation": RECON,
               "analysed": len(work), "vsIndependent": summ, "worst": worst, "reference": ref,
               "benchmarks": bench, "subCounts": dict(sorted(sub_counts.items())),
               "global": sorted(r["disp"] for r in work if C.SUBS[r["sub"]][0] == "Global"),

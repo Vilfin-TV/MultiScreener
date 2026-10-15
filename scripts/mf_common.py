@@ -83,6 +83,7 @@ def parse_navall(text: str) -> list[dict]:
             navf = None
         rows.append({
             "code": int(code), "isin": isin1 if isin1 not in ("-", "") else (isin2 if isin2 not in ("-", "") else ""),
+            "isin2": isin2 if isin2 not in ("-", "") and isin1 not in ("-", "") else "",
             "name": clean_text(name), "plan": plan, "opt": opt, "nav": navf,
             "date": parse_amfi_date(dt), "cat": cat or "", "amc": amc or "",
         })
@@ -129,6 +130,7 @@ SUBS = {  # key: (asset, label)
     "arbitrage": ("Hybrid", "Arbitrage"), "hybridfof": ("Hybrid", "Hybrid FoF / Index"),
     "gold": ("Commodity", "Gold"), "silver": ("Commodity", "Silver"), "multicomm": ("Commodity", "Gold & Silver"),
     "us": ("Global", "US Equity"), "global": ("Global", "Global / Developed"), "asia": ("Global", "Asia & Emerging"),
+    "globaldebt": ("Global", "International Bonds"),
     "idx_large": ("Index", "Large Cap Index"), "idx_midsmall": ("Index", "Mid & Small Cap Index"),
     "idx_broad": ("Index", "Broad Market Index"), "idx_factor": ("Index", "Smart Beta / Factor"),
     "idx_sector": ("Index", "Sectoral / Thematic Index"),
@@ -193,7 +195,13 @@ def _commodity_sub(name):
     return "silver" if s else "gold"
 
 
+RX_GDEBT = re.compile(r"treasury|\bbond|\bdebt\b|fixed income", re.I)
+RX_DOMESTIC = re.compile(r"\bdomestic\b|india (consumption|opportunit)", re.I)
+
+
 def _global_sub(name):
+    if RX_GDEBT.search(name):
+        return "globaldebt"
     if RX_US.search(name):
         return "us"
     if RX_ASIA.search(name):
@@ -228,7 +236,7 @@ def classify(name: str, cat: str) -> str | None:
     if re.search(r"overseas|investing overseas|fof overseas", low):
         return _global_sub(n)
     if re.search(r"fund of funds scheme \(domestic\)|fof domestic", low):
-        if RX_GLOBAL.search(n):
+        if RX_GLOBAL.search(n) and not RX_DOMESTIC.search(n):
             return _global_sub(n)
         if RX_GOLD.search(n) or RX_SILVER.search(n) or RX_PRECIOUS.search(n):
             return _commodity_sub(n)
@@ -238,7 +246,7 @@ def classify(name: str, cat: str) -> str | None:
             return "target" if re.search(r"ibx|sdl|g-?sec|gilt|bharat bond|target|20[2-4]\d|crisil", n, re.I) else "debtfof"
         return "eqfof"
     if "index fund" in low:
-        if RX_GLOBAL.search(n):
+        if RX_GLOBAL.search(n) and not RX_DOMESTIC.search(n):
             return _global_sub(n)
         if RX_GOLD.search(n) or RX_SILVER.search(n):
             return _commodity_sub(n)

@@ -19,7 +19,7 @@ jobs:
       - run: pip install numpy scipy requests
       - uses: actions/setup-node@v4
         with: {node-version: '20'}
-      - run: python scripts/build_mf_screener.py --workers 10 2>&1 | tee .mfcache/build.log
+      - run: mkdir -p .mfcache && python scripts/build_mf_screener.py --workers 10 2>&1 | tee .mfcache/build.log; test ${PIPESTATUS[0]} -eq 0
       - uses: actions/cache/save@v4
         if: always()
         with: {path: .mfcache, key: 'mf-dev-${{ github.run_id }}'}
