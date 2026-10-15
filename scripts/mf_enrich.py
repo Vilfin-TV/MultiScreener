@@ -152,15 +152,15 @@ def parse_ssd(xml_text: str) -> dict:
         n = re.sub(r"\(.*?(\)|$)", " ", n)                                  # (Equity portion), (Fund manager ...
         n = re.sub(r"\bFM\s*-?\s*\d+\b\s*[-:]?", " ", n, flags=re.I)
         n = re.sub(r"(?i)^\s*for\s+[\w ]{2,30}?\s*[:\-]\s*", "", n)          # "For Equity : ..."
-        n = n.strip(" -:.,")
+        n = n.strip(" -–—:.,")
         n = re.sub(r"^\s*(mr|ms|mrs|dr|shri|smt)\.?\s*(?=[A-Z])", "", n, flags=re.I)
         return re.sub(r"\s+", " ", n).strip(" -:.")
 
     raw_names = html.unescape(html.unescape(g("Fund_Manager_Name")))
     raw_names = re.sub(r"\([^)]*(\)|$)", " ", raw_names)                    # (Equity portion), (Fund manager & Analyst)
-    raw_names = re.sub(r"(?:(?<=[a-z])|\b)FM\s*-?\s*\d+\b", ",", raw_names, flags=re.I)
+    raw_names = re.sub(r"(?:(?<=[a-z])|\b)FM\s*[-–]?\s*\d*\b", ",", raw_names, flags=re.I)
     raw_names = re.sub(r"(?<=[a-z])\s*(?=\b(?:Mr|Ms|Mrs|Dr)\.?\s*[A-Z])", ",", raw_names)   # "Prateek Jain Mr. Anoop V"
-    names = [clean_name(n) for n in re.split(r",|;|\band\b|&|/|\n", raw_names)]
+    names = [clean_name(n) for n in re.split(r",|;|\band\b|&|/|\n|\s[–—-]\s", raw_names)]
     names = [n for n in names if 2 < len(n) <= 40 and not re.search(r"\d|portion|manager|fund|scheme|equity|debt|income", n, re.I)]
     names = list(dict.fromkeys(names))
     since_txt = re.sub(r"\bFM\s*-?\s*\d+\b\s*[-:]?", " ", g("Fund_Manager_From_Date"), flags=re.I)
