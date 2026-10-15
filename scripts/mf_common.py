@@ -170,6 +170,10 @@ RX_DEBTNAME = re.compile(
     r"\b(sdl|g-?sec|gilt|crisil|ibx|bond|t-?bill|liquid|money market|corporate|aaa|debt|psu|bharat bond|"
     r"target maturity|income|treasury|state development|g sec|government securities|nifty .*index .*20\d\d|apr 20\d\d|"
     r"20[2-4]\d index)\b", re.I)
+# debt words that never appear in equity index names ("PSU" alone does: PSU Bank, Railways PSU)
+RX_DEBT_STRICT = re.compile(
+    r"\b(sdl|g-?sec|gilt|crisil|ibx|bond|t-?bill|liquid|money market|corporate|aaa|debt|bharat bond|target maturity|"
+    r"treasury|state development|g sec|government securities|20[2-4]\d)\b", re.I)
 RX_HYBNAME = re.compile(r"multi.?asset|asset allocat|hybrid|balanced|dynamic|allocator|equity savings|aggressive|"
                         r"conservative|arbitrage|life ?cycle|retirement", re.I)
 RX_FACTOR = re.compile(r"momentum|low vol|quality|value|alpha|equal weight|dividend|high beta|enhanced esg|"
@@ -242,7 +246,7 @@ def classify(name: str, cat: str) -> str | None:
             return _commodity_sub(n)
         if RX_HYBNAME.search(n):
             return "hybridfof"
-        if RX_DEBTNAME.search(n):
+        if RX_DEBT_STRICT.search(n):
             return "target" if re.search(r"ibx|sdl|g-?sec|gilt|bharat bond|target|20[2-4]\d|crisil", n, re.I) else "debtfof"
         return "eqfof"
     if "index fund" in low:
@@ -250,7 +254,7 @@ def classify(name: str, cat: str) -> str | None:
             return _global_sub(n)
         if RX_GOLD.search(n) or RX_SILVER.search(n):
             return _commodity_sub(n)
-        if "debt" in low or RX_DEBTNAME.search(n):
+        if "debt" in low or RX_DEBT_STRICT.search(n):
             if not re.search(r"nifty ?50\b|sensex|midcap|smallcap|momentum|quality", n, re.I) or "debt" in low:
                 return "target"
         if "hybrid" in low or RX_HYBNAME.search(n):

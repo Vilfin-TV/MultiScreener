@@ -933,8 +933,29 @@ def merged_facts(r, f):
     return m
 
 
+def rebucket_portfolios(sub_of: dict) -> None:
+    """Portfolio files (data/mf/p/<sub>.json, built monthly) follow each fund's current category."""
+    pdir = OUT / "p"
+    if not pdir.exists():
+        return
+    by_sub, files = defaultdict(dict), [f for f in pdir.glob("*.json") if not f.name.startswith("_")]
+    for f in files:
+        for code, v in json.loads(f.read_text()).items():
+            if int(code) in sub_of:
+                by_sub[sub_of[int(code)]][code] = v
+    for f in files:
+        if f.stem not in by_sub:
+            f.unlink()
+    for sub, d in by_sub.items():
+        new = json.dumps(d, separators=(",", ":"), ensure_ascii=False)
+        path = pdir / f"{sub}.json"
+        if not path.exists() or path.read_text() != new:
+            path.write_text(new)
+
+
 def write_outputs(universe, work, results, facts, bench, asof, risk_asof, series, rating, stale, fac_keys):
     OUT.mkdir(parents=True, exist_ok=True)
+    rebucket_portfolios({r["code"]: r["sub"] for r in work})
     amcs = sorted({r["amcName"] for r in work})
     amc_i = {a: i for i, a in enumerate(amcs)}
     subs_used = sorted({r["sub"] for r in work}, key=lambda k: list(C.SUBS).index(k))

@@ -103,7 +103,8 @@ def harvest(ctx, url: str) -> list[str]:
             if FILE_RX.search(r.url):
                 found.append(r.url)
             if "json" in r.headers.get("content-type", ""):
-                found.extend(urljoin(r.url, m) for m in FILE_RX.findall(r.text()))
+                body = r.text().replace("\\/", "/")
+                found.extend(m for m in FILE_RX.findall(body) if m.startswith("http"))
         except Exception:  # noqa: BLE001
             pass
     p.on("response", on_resp)
@@ -368,8 +369,8 @@ def classify_holding(h: dict) -> str:
         return "fund"
     if not i.startswith("IN"):
         return "overseas"
-    if (re.search(r"\breit\b|\binvit\b|real\s*estate\s*investment|infrastructure\s*investment\s*trust|infra\s*trust|\breit\b", h["name"], re.I)
-            and not re.search(r"securiti[sz]ation|\bptc\b|pass\s*through|bank|finance", h["name"], re.I)):
+    if (re.search(r"reit\b|invit\b|real\s*estate|infrastructure\s*investment|infra(structure)?\s*trust|\btrust\b", h["name"], re.I)
+            and not re.search(r"securiti[sz]ation|\bptc\b|pass\s*through|series|bank|financ|\d{1,2}\.\d+\s*%", h["name"], re.I)):
         return "reit"
     return "debt"
 

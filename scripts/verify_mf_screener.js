@@ -359,6 +359,10 @@ function verifyAgainstPrevious(J, C) {
 }
 
 // portfolio holdings (data/mf/p/<sub>.json) — built monthly from fund-house disclosures
+const EQUITY_DIRECT = new Set(['large', 'largemid', 'mid', 'small', 'multi', 'flexi', 'focused', 'value', 'contra', 'elss', 'dividend',
+  'idx_large', 'idx_midsmall', 'idx_broad', 'idx_factor', 'idx_sector']);
+const DEBT_DIRECT = new Set(['overnight', 'liquid', 'money', 'ultrashort', 'lowdur', 'shortdur', 'meddur', 'medlong', 'longdur', 'dynbond',
+  'corpbond', 'credit', 'bankpsu', 'gilt', 'gilt10', 'floater', 'target']);
 function verifyHoldings() {
   const dir = path.join(OUT, 'p');
   if (!fs.existsSync(dir)) return;
@@ -388,6 +392,10 @@ function verifyHoldings() {
         ok(Math.abs(capT - (h.mix.equity || 0)) < 0.1, `${id}: market-cap split ${capT.toFixed(2)}% vs equity ${h.mix.equity}%`);
       }
       ok(h.top10 <= (h.mix.equity || 0) + 0.05, `${id}: top-10 weight exceeds equity`);
+      // the portfolio must fit the fund's category (guards against a sheet being matched to the wrong fund)
+      const eq = (h.mix.equity || 0) + (h.mix.overseas || 0) + (h.mix.reit || 0);
+      if (EQUITY_DIRECT.has(sub)) ok(eq >= 60, `${id}: equity fund holds only ${eq.toFixed(1)}% equity`);
+      if (DEBT_DIRECT.has(sub)) ok((h.mix.equity || 0) <= 5, `${id}: debt fund holds ${h.mix.equity}% equity`);
     }
   }
   AUDIT.holdingsFunds = funds;
