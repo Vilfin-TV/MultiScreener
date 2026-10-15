@@ -393,7 +393,12 @@ def _norm_name(n):
 def load_official_ter(universe, args):
     """Official Direct-plan TER disclosed daily to AMFI (latest date per scheme)."""
     cache = load_gz(CACHE / "ter.json.gz", {})
-    if cache.get("_date") == date.today().isoformat() and cache.get("_v") == 3 and cache.get("rows"):
+    fresh = False
+    try:
+        fresh = (date.today() - date.fromisoformat(cache.get("_date", ""))).days < 7
+    except ValueError:
+        pass
+    if fresh and cache.get("_v") == 4 and len(cache.get("rows", {})) > 500:
         rows = cache["rows"]
     else:
         rows = {}
@@ -415,17 +420,22 @@ def load_official_ter(universe, args):
         cands = [m.get("MonthNumber") for m in months if isinstance(m, dict) and m.get("MonthNumber")]
         cands = (cands[-1:] + cands[:1] if cands else []) + [str(today_.month), f"{today_.month:02d}"]
         for mon in dict.fromkeys(cands):
-            page, got = 1, 0
-            while page <= 40:
-                try:
-                    r = S.get(AMFI_TER.format(month=mon, page=page), timeout=90)
-                    j = r.json()
-                except Exception as e:  # noqa: BLE001
-                    stat[type(e).__name__] += 1
+            page, got, ps = 1, 0, None
+            while page <= 600:
+                data = None
+                for k in range(3):
+                    try:
+                        r = S.get(AMFI_TER.format(month=mon, page=page), timeout=90)
+                        j = r.json()
+                        d = j.get("data") if isinstance(j, dict) else None
+                        data = (d.get("data") if isinstance(d, dict) else (d if isinstance(d, list) else [])) or []
+                        break
+                    except Exception as e:  # noqa: BLE001
+                        stat[type(e).__name__] += 1
+                        time.sleep(3 * (k + 1))
+                if not data:
                     break
-                d = j.get("data") if isinstance(j, dict) else None
-                data = d.get("data") if isinstance(d, dict) else (d if isinstance(d, list) else [])
-                data = data or []
+                ps = ps or len(data)
                 for x in data:
                     try:
                         dd, ter = x["TER_Date"][:10], float(x["D_TER"])
@@ -435,16 +445,16 @@ def load_official_ter(universe, args):
                     if k and (k not in rows or dd >= rows[k][0]):
                         rows[k] = [dd, ter, x.get("Scheme_Name")]
                 got += len(data)
-                if len(data) < 1000:
+                if len(data) < ps:
                     break
                 page += 1
-                time.sleep(0.5)
+                time.sleep(0.25)
             stat[f"month {mon}"] = got
             if len(rows) > 500:
                 break
         log.info("Official TER feed: %s", dict(stat))
         if rows:
-            save_gz(CACHE / "ter.json.gz", {"_date": date.today().isoformat(), "_v": 3, "rows": rows})
+            save_gz(CACHE / "ter.json.gz", {"_date": date.today().isoformat(), "_v": 4, "rows": rows})
         else:
             rows = cache.get("rows", {})
     out = {}
