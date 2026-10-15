@@ -19,6 +19,7 @@ from __future__ import annotations
 import gzip
 import json
 import logging
+import html
 import re
 import time
 import xml.etree.ElementTree as ET
@@ -76,14 +77,16 @@ def parse_exit_load(t: str | None) -> list[str]:
     t = _clean(t)
     if not t:
         return []
-    t = re.sub(r"(?i)entry\s*load\s*[:\-]?\s*(not applicable|nil|n\.?a\.?)\s*[,;.]?", "", t)
+    t = re.sub(r"(?i)entry\s*load\s*[:\-–]?\s*(not applicable|nil|n\.?a\.?)\s*[,;.]?", "", t)
     t = re.sub(r"(?i)^\s*exit\s*load\s*[:\-]?\s*", "", t.strip())
-    t = re.sub(r"(?i)\bexit\s*load\s*[:\-]\s*", "\n", t)
+    t = re.sub(r"(?i)\bexit\s*load\s*[:\-–]?\s*", "\n", t)
     t = re.sub(r"(?<=[a-z)])\.(?=\s*(?:\d|No |Nil|If |For |In ))", ".\n", t)    # run-together sentences
-    parts = re.split(r"\n|•|;\s+(?=[A-Z])|(?<=\.)\s+(?=[A-Z(])", t)
+    parts = re.split(r"\n|•|;\s+(?=[A-Z])|(?<=\.)\s+(?=[A-Z(])|\s(?=\((?:i{1,3}|iv|v|vi|[a-f])\)\s)", t)
     out = []
     for p in parts:
         p = p.strip(" -–;,")
+        if re.fullmatch(r"(?i)(entry\s*(load)?\s*(&|and)?|exit\s*load|entry\s*load\s*[-–:]?\s*(nil|na|n\.a\.|not applicable)|load\s*structure)\W*", p):
+            continue
         if len(p) > 1:
             out.append(re.sub(r"\s+", " ", p))
     # merge continuation fragments (lines that start lowercase)
@@ -143,12 +146,19 @@ def parse_ssd(xml_text: str) -> dict:
         return "" if v in ("-", "N/A", "NA", "n/a") else v
 
     def clean_name(n):
+        n = re.sub(r"\(.*?(\)|$)", " ", n)                                  # (Equity portion), (Fund manager ...
         n = re.sub(r"\bFM\s*-?\s*\d+\b\s*[-:]?", " ", n, flags=re.I)
-        n = re.sub(r"^\s*(mr|ms|mrs|dr|shri|smt)\.?\s+", "", n, flags=re.I)
-        return re.sub(r"\s+", " ", n).strip(" -:")
+        n = re.sub(r"(?i)^\s*for\s+[\w ]{2,30}?\s*[:\-]\s*", "", n)          # "For Equity : ..."
+        n = re.sub(r"^\s*(mr|ms|mrs|dr|shri|smt)\.?\s*(?=[A-Z])", "", n, flags=re.I)
+        return re.sub(r"\s+", " ", n).strip(" -:.")
 
-    names = [clean_name(n) for n in re.split(r",|;|\band\b|&", g("Fund_Manager_Name"))]
-    names = [n for n in names if len(n) > 2]
+    raw_names = html.unescape(html.unescape(g("Fund_Manager_Name")))
+    raw_names = re.sub(r"\([^)]*(\)|$)", " ", raw_names)                    # (Equity portion), (Fund manager & Analyst)
+    raw_names = re.sub(r"(?:(?<=[a-z])|\b)FM\s*-?\s*\d+\b", ",", raw_names, flags=re.I)
+    raw_names = re.sub(r"(?<=[a-z])\s*(?=\b(?:Mr|Ms|Mrs|Dr)\.?\s*[A-Z])", ",", raw_names)   # "Prateek Jain Mr. Anoop V"
+    names = [clean_name(n) for n in re.split(r",|;|\band\b|&|/|\n", raw_names)]
+    names = [n for n in names if 2 < len(n) <= 40 and not re.search(r"\d|portion|manager|fund|scheme|equity|debt|income", n, re.I)]
+    names = list(dict.fromkeys(names))
     since_txt = re.sub(r"\bFM\s*-?\s*\d+\b\s*[-:]?", " ", g("Fund_Manager_From_Date"), flags=re.I)
     role_txt = g("Fund_Manager_Type_PrimaryComanageDescription")
     date_rx = (r"(?:since\s+)?(?:\d{1,2}(?:st|nd|rd|th)?[-/ .](?:[A-Za-z]{3,9}|\d{1,2})[-/ .,]*\d{2,4}"
