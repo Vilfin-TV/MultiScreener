@@ -2,21 +2,28 @@ name: MF Holdings Probe (temporary)
 on:
   push:
     branches: [claude/festive-bell-an714y]
-    paths: ['scripts/mf_holdings_probe.js', '.github/workflows/mf_holdings_probe.yml']
+    paths: ['scripts/build_mf_holdings.py', '.github/workflows/mf_holdings_probe.yml']
 permissions:
   contents: write
+concurrency:
+  group: mf-holdings-probe
+  cancel-in-progress: true
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: {node-version: '20'}
-      - run: npm i --no-save playwright@1.48.2 && npx playwright install --with-deps chromium
-      - run: node scripts/mf_holdings_probe.js 2>&1 | tee holdings_probe.log || true
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install requests openpyxl xlrd playwright==1.48.0 && python -m playwright install --with-deps chromium
       - run: |
-          mkdir -p .probe && cp holdings_probe.log .probe/ || true
+          set -o pipefail
+          mkdir -p .mfcache/holdings .probe
+          python scripts/build_mf_holdings.py --force 2>&1 | tee .probe/holdings_build.log || true
+          cp .mfcache/holdings/report.json .probe/holdings_report.json || true
+      - run: |
           git config user.name "github-actions[bot]"; git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f .probe/holdings_probe.json .probe/holdings_probe.log; git commit -qm "chore(probe): holdings pages [skip ci]" || exit 0
+          git add -f .probe/holdings_build.log .probe/holdings_report.json data/mf/p || true
+          git commit -qm "chore(probe): holdings build [skip ci]" || exit 0
           for i in 1 2 3; do git pull --rebase -q -X theirs origin ${{ github.ref_name }} && git push origin HEAD:${{ github.ref_name }} && break; sleep 5; done
