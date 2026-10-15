@@ -52,7 +52,9 @@ UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chr
 NAVALL_URLS = ["https://www.amfiindia.com/spages/NAVAll.txt", "https://portal.amfiindia.com/spages/NAVAll.txt"]
 HIST_URL = "https://api.mfapi.in/mf/{code}"
 FACTS_URL = "https://mf.captnemo.in/kuvera/{isin}"
-AMFI_TER = "https://www.amfiindia.com/api/populate-te-rdata-revised?MF_ID={id}"
+AMFI_TER = ("https://www.amfiindia.com/api/populate-te-rdata-revised?MF_ID=All&Month={month}"
+            "&strCat=-1&strType=-1&page={page}&pageSize=1000")
+AMFI_TER_MONTHS = "https://www.amfiindia.com/api/populate-ter-month?year={year}"
 AMFI_HIST = "https://portal.amfiindia.com/DownloadNAVHistoryReport_Po.aspx?tp=1&frmdt={f}&todt={t}"
 NSE_HOME = "https://www.nseindia.com/reports-indices-historical-index-data"
 NSE_HIST = "https://www.nseindia.com/api/historicalOR/indicesHistory?indexType={name}&from={f}&to={t}"
@@ -391,38 +393,58 @@ def _norm_name(n):
 def load_official_ter(universe, args):
     """Official Direct-plan TER disclosed daily to AMFI (latest date per scheme)."""
     cache = load_gz(CACHE / "ter.json.gz", {})
-    if cache.get("_date") == date.today().isoformat() and cache.get("_v") == 2 and cache.get("rows"):
+    if cache.get("_date") == date.today().isoformat() and cache.get("_v") == 3 and cache.get("rows"):
         rows = cache["rows"]
     else:
         rows = {}
 
         stat = Counter()
-        for mid in range(1, 121):
-            data = []
-            for k in range(2):
+        today_ = date.today()
+        fy = f"{today_.year}-{today_.year + 1}" if today_.month >= 4 else f"{today_.year - 1}-{today_.year}"
+        months = []
+        for yr in (fy, str(today_.year)):
+            try:
+                j = S.get(AMFI_TER_MONTHS.format(year=yr), timeout=60).json()
+                lst = j.get("data", j) if isinstance(j, dict) else j
+                if isinstance(lst, list) and lst:
+                    months = lst
+                    break
+            except Exception as e:  # noqa: BLE001
+                stat[type(e).__name__] += 1
+        log.info("TER months available: %s", [m.get("MonthYear") for m in months][:14] if months else "none")
+        cands = [m.get("MonthNumber") for m in months if isinstance(m, dict) and m.get("MonthNumber")]
+        cands = (cands[-1:] + cands[:1] if cands else []) + [str(today_.month), f"{today_.month:02d}"]
+        for mon in dict.fromkeys(cands):
+            page, got = 1, 0
+            while page <= 40:
                 try:
-                    r = S.get(AMFI_TER.format(id=mid), timeout=60)
-                    stat[r.status_code] += 1
-                    if r.status_code == 200:
-                        data = r.json().get("data", []) or []
-                        break
+                    r = S.get(AMFI_TER.format(month=mon, page=page), timeout=90)
+                    j = r.json()
                 except Exception as e:  # noqa: BLE001
                     stat[type(e).__name__] += 1
-                time.sleep(1.5)
-            if data:
-                stat["amcs"] += 1
-            for x in data:
-                try:
-                    d, ter = x["TER_Date"][:10], float(x["D_TER"])
-                except (KeyError, TypeError, ValueError):
-                    continue
-                k = _norm_name(x.get("Scheme_Name", ""))
-                if k and (k not in rows or d >= rows[k][0]):
-                    rows[k] = [d, ter, x.get("Scheme_Name")]
-            time.sleep(0.3)
+                    break
+                d = j.get("data") if isinstance(j, dict) else None
+                data = d.get("data") if isinstance(d, dict) else (d if isinstance(d, list) else [])
+                data = data or []
+                for x in data:
+                    try:
+                        dd, ter = x["TER_Date"][:10], float(x["D_TER"])
+                    except (KeyError, TypeError, ValueError):
+                        continue
+                    k = _norm_name(x.get("Scheme_Name", ""))
+                    if k and (k not in rows or dd >= rows[k][0]):
+                        rows[k] = [dd, ter, x.get("Scheme_Name")]
+                got += len(data)
+                if len(data) < 1000:
+                    break
+                page += 1
+                time.sleep(0.5)
+            stat[f"month {mon}"] = got
+            if len(rows) > 500:
+                break
         log.info("Official TER feed: %s", dict(stat))
         if rows:
-            save_gz(CACHE / "ter.json.gz", {"_date": date.today().isoformat(), "_v": 2, "rows": rows})
+            save_gz(CACHE / "ter.json.gz", {"_date": date.today().isoformat(), "_v": 3, "rows": rows})
         else:
             rows = cache.get("rows", {})
     out = {}
