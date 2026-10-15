@@ -2,7 +2,7 @@ name: MF Holdings Probe (temporary)
 on:
   push:
     branches: [claude/festive-bell-an714y]
-    paths: ['scripts/build_mf_holdings.py', '.github/workflows/mf_holdings_probe.yml']
+    paths: ['scripts/build_mf_holdings.py', 'scripts/mf_holdings_probe2.py', '.github/workflows/mf_holdings_probe.yml']
 permissions:
   contents: write
 concurrency:
@@ -20,10 +20,11 @@ jobs:
       - run: |
           set -o pipefail
           mkdir -p .mfcache/holdings .probe
+          python scripts/mf_holdings_probe2.py 2>&1 | tee .probe/holdings_probe2.log || true
           python scripts/build_mf_holdings.py --force 2>&1 | tee .probe/holdings_build.log || true
           cp .mfcache/holdings/report.json .probe/holdings_report.json || true
       - run: |
           git config user.name "github-actions[bot]"; git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f .probe/holdings_build.log .probe/holdings_report.json data/mf/p || true
+          git add -f .probe/holdings_probe2.json .probe/holdings_probe2.log .probe/holdings_build.log .probe/holdings_report.json data/mf/p || true
           git commit -qm "chore(probe): holdings build [skip ci]" || exit 0
           for i in 1 2 3; do git pull --rebase -q -X theirs origin ${{ github.ref_name }} && git push origin HEAD:${{ github.ref_name }} && break; sleep 5; done
