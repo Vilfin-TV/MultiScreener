@@ -1,22 +1,785 @@
-23:02:25 INFO    SBI: 2026-09 · 1 file(s)
-23:02:33 INFO    Nippon India: 2026-09 · 1 file(s)
-23:02:47 INFO    Aditya Birla Sun Life: 2026-09 · 1 file(s)
-23:02:55 INFO    Mirae Asset: 2026-09 · 10 file(s)
-23:03:06 INFO    DSP: 2026-09 · 1 file(s)
-23:03:16 INFO    Tata: 2026-09 · 1 file(s)
-23:03:23 INFO    Invesco: 2026-09 · 36 file(s)
-23:03:33 INFO    Groww: 2026-09 · 1 file(s)
-23:04:57 INFO    ICICI Prudential: 2026-09 · 1 file(s)
-23:05:05 INFO    PPFAS: 2026-09 · 8 file(s)
-23:05:06 INFO    Market-cap lists: 100 large, 150 mid
-23:05:13 INFO    SBI: 116 sheet blocks parsed, 76 funds matched, 1 rejected by sanity checks
-23:05:15 INFO    Nippon India: 103 sheet blocks parsed, 65 funds matched, 1 rejected by sanity checks
-23:05:25 INFO    Aditya Birla Sun Life: 104 sheet blocks parsed, 77 funds matched, 1 rejected by sanity checks
-23:05:31 INFO    Mirae Asset: 10 sheet blocks parsed, 7 funds matched, 0 rejected by sanity checks
-23:05:32 INFO    DSP: 94 sheet blocks parsed, 61 funds matched, 0 rejected by sanity checks
-23:05:34 INFO    Tata: 66 sheet blocks parsed, 47 funds matched, 1 rejected by sanity checks
-23:05:55 INFO    Invesco: 36 sheet blocks parsed, 33 funds matched, 1 rejected by sanity checks
-23:05:59 INFO    Groww: 62 sheet blocks parsed, 36 funds matched, 1 rejected by sanity checks
-23:06:01 INFO    ICICI Prudential: 146 sheet blocks parsed, 101 funds matched, 1 rejected by sanity checks
-23:06:08 INFO    PPFAS: 14 sheet blocks parsed, 7 funds matched, 0 rejected by sanity checks
-23:06:08 INFO    Holdings available for 513 funds
+23:08:10 INFO    SBI: 2026-09 · 1 file(s)
+23:08:18 INFO    Nippon India: 2026-09 · 1 file(s)
+23:08:34 INFO    Aditya Birla Sun Life: 2026-09 · 1 file(s)
+23:08:42 INFO    Mirae Asset: 2026-09 · 10 file(s)
+23:08:55 INFO    DSP: 2026-09 · 1 file(s)
+23:09:22 INFO    Tata: 2026-09 · 1 file(s)
+23:09:28 INFO    Invesco: 2026-09 · 36 file(s)
+23:09:38 INFO    Groww: 2026-09 · 1 file(s)
+23:10:57 INFO    ICICI Prudential: 2026-09 · 1 file(s)
+23:11:08 INFO    HDFC: 2026-09 · 222 file(s)
+23:11:16 INFO    PPFAS: 2026-09 · 8 file(s)
+23:11:17 INFO    Market-cap lists: 100 large, 150 mid
+23:11:24 INFO    SBI: 116 sheet blocks parsed, 76 funds matched, 1 rejected by sanity checks
+23:11:26 INFO    Nippon India: 103 sheet blocks parsed, 65 funds matched, 1 rejected by sanity checks
+23:11:46 INFO    Aditya Birla Sun Life: 104 sheet blocks parsed, 77 funds matched, 1 rejected by sanity checks
+23:12:03 INFO    Mirae Asset: 10 sheet blocks parsed, 7 funds matched, 0 rejected by sanity checks
+23:12:05 INFO    DSP: 94 sheet blocks parsed, 61 funds matched, 0 rejected by sanity checks
+23:12:07 INFO    Tata: 66 sheet blocks parsed, 47 funds matched, 1 rejected by sanity checks
+23:12:57 INFO    Invesco: 36 sheet blocks parsed, 33 funds matched, 1 rejected by sanity checks
+23:13:01 INFO    Groww: 62 sheet blocks parsed, 36 funds matched, 1 rejected by sanity checks
+23:13:04 INFO    ICICI Prudential: 146 sheet blocks parsed, 101 funds matched, 1 rejected by sanity checks
+23:15:13 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Retirement%20Fund%20-%20Equity%20Plan%20-%2030%2 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:14 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Value%20Fund%20-%2030%20September%202026_0.xlsx? (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:15 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Transportation%20and%20Logistics%20Fund%20-%2030 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:16 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Technology%20Fund%20-%2030%20September%202026_0. (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:17 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Small%20Cap%20Fund%20-%2030%20September%202026_0 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:18 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Silver%20ETF%20Fund%20of%20Fund%20-%2030%20Septe (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:18 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20SILVER%20ETF%20-%2030%20September%202026_0.xlsx? (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:19 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Retirement%20Fund%20-%20Hybrid-Equity%20Plan%20- (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:20 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Pharma%20and%20Healthcare%20Fund%20-%2030%20Sept (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:21 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty500%20Multicap%2050.25.25%20Index%20Fund%20 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:21 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty50%20Value%2020%20ETF%20-%2030%20September% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:22 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY50%20Equal%20weight%20Index%20Fund%20-%2030 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:23 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY200%20MOMENTUM%2030%20INDEX%20FUND%20-%2030 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:23 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY200%20MOMENTUM%2030%20ETF%20-%2030%20Septem (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:24 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty100%20Quality%2030%20Index%20Fund%20-%2030% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:24 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty100%20Quality%2030%20ETF%20-%2030%20Septemb (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:25 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY100%20Low%20Volatility%2030%20Index%20Fund% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:26 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY100%20LOW%20VOLATILITY%2030%20ETF%20-%2030% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:27 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20Top%2020%20Equal%20Weight%20Index%20Fund (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:28 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20SMALLCAP%20250%20INDEX%20FUND%20-%2030%2 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:29 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20SMALLCAP%20250%20ETF%20-%2030%20Septembe (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:30 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20REALTY%20INDEX%20FUND%20-%2030%20Septemb (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:31 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20PSU%20BANK%20ETF%20-%2030%20September%20 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:32 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20Private%20Bank%20ETF%20-%2030%20Septembe (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:32 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20Next%2050%20Index%20Fund%20-%2030%20Sept (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:33 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20NEXT%2050%20ETF%20-%2030%20September%202 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:33 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20MIDCAP%20150%20INDEX%20FUND%20-%2030%20S (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:35 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20MIDCAP%20150%20ETF%20-%2030%20September% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:36 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20Metal%20ETF%20FOF%20-%2030%20September%2 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:36 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20Metal%20ETF%20-%2030%20September%202026_ (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:37 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20LargeMidcap%20250%20Index%20Fund%20-%203 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:37 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20IT%20ETF%20-%2030%20September%202026_0.x (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:38 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20India%20Digital%20Index%20Fund%20-%2030% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:39 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20India%20Consumption%20Index%20Fund%20-%2 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:39 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20Growth%20Sectors%2015%20ETF%20-%2030%20S (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:40 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20BANK%20ETF%20-%2030%20September%202026_0 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:41 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20Auto%20Index%20Fund%20-%2030%20September (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:42 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%2050%20Index%20Fund%20-%2030%20September%2 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:43 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%2050%20ETF%20-%2030%20September%202026_0.x (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:44 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20100%20Index%20Fund%20-%2030%20September% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:45 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20100%20ETF%20-%2030%20September%202026_0. (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:45 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20100%20Equal%20Weight%20Index%20Fund%20-% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:46 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Multi%20Cap%20Fund%20-%2030%20September%202026_0 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:47 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Multi%20Asset%20Allocation%20Fund%20-%2030%20Sep (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:47 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20MNC%20Fund%20-%2030%20September%202026_0.xlsx?Ve (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:49 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Mid%20Cap%20Fund%20-%2030%20September%202026_0.x (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:49 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Manufacturing%20Fund%20-%2030%20September%202026 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:50 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Large%20Cap%20Fund%20-%2030%20September%202026_0 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:51 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Large%20%20Mid%20Cap%20Fund%20-%2030%20September (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:52 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Innovation%20Fund%20-%2030%20September%202026_0. (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:53 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Infrastructure%20Fund%20-%2030%20September%20202 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:53 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Housing%20Opportunities%20Fund%20-%2030%20Septem (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:54 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Gold%20Silver%20Passive%20FOF%20-%2030%20Septemb (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:55 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Gold%20ETF%20Fund%20of%20Fund%20-%2030%20Septemb (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:56 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Gold%20ETF%20-%2030%20September%202026_0.xlsx?Ve (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:57 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Focused%20Fund%20-%2030%20September%202026_0.xls (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:58 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Flexi%20Cap%20Fund%20-%2030%20September%202026_0 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:59 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Equity%20Savings%20Fund%20-%2030%20September%202 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:15:59 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20ELSS%20-%20Tax%20Saver%20Fund%20-%2030%20Septemb (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:00 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Dividend%20Yield%20Fund%20-%2030%20September%202 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:01 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Developed%20World%20Overseas%20Equity%20Passive% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:02 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Defence%20Fund%20-%2030%20September%202026_0.xls (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:03 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Consumption%20Fund%20-%2030%20September%202026_0 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:04 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Childrens%20Fund%20-%2030%20September%202026_0.x (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:04 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Business%20Cycle%20Fund%20-%2030%20September%202 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:05 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20BSE%20Sensex%20Index%20Fund%20-%2030%20September (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:06 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20BSE%20SENSEX%20ETF%20-%2030%20September%202026_0 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:07 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20BSE%20REITS%20and%20Commercial%20Real%20Estate%2 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:08 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20BSE%20India%20Sector%20Leaders%20Index%20Fund%20 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:09 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20BSE%20500%20INDEX%20FUND%20-%2030%20September%20 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:09 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20BSE%20500%20ETF%20-%2030%20September%202026_0.xl (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:10 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Banking%20%20Financial%20Services%20Fund%20-%203 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:11 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Balanced%20Advantage%20Fund%20-%2030%20September (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:11 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Arbitrage%20Fund%20-%2030%20September%202026_0.x (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:12 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Aggressive%20Hybrid%20Fund%20-%2030%20September% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:12 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Ultra%20Short%20to%20Short%20Term%20Fund%20-%203 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:13 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Ultra%20Short%20Term%20Fund%20-%2030%20September (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:14 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Short%20Term%20Fund%20-%2030%20September%202026. (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:14 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Retirement%20Fund%20-%20Hybrid-Debt%20Plan%20-%2 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:15 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Overnight%20Fund%20-%2030%20September%202026.xls (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:16 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20SDL%20Plus%20G-Sec%20Jun%202027%2040.60% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:17 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20SDL%20Oct%202026%20Index%20Fund%20-%2030 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:17 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20G-Sec%20Sep%202032%20Index%20Fund%20-%20 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:18 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20G-Sec%20Jun%202036%20Index%20Fund%20-%20 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:19 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20G-Sec%20Jun%202027%20Index%20Fund%20-%20 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:19 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20G-Sec%20July%202031%20Index%20Fund%20-%2 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:20 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20G-Sec%20Dec%202026%20Index%20Fund%20-%20 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:20 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20G-Sec%20Apr%202029%20Index%20Fund%20-%20 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:21 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%201D%20RATE%20LIQUID%20ETF%20-%2030%20Sept (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:22 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Multi-Asset%20Active%20FOF%20-%2030%20September% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:22 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Money%20Market%20Fund%20-%2030%20September%20202 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:23 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Medium%20to%20Long%20Term%20Fund%20-%2030%20Sept (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:24 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Medium%20Term%20Fund%20-%2030%20September%202026 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:25 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Long%20Term%20Fund%20-%2030%20September%202026.x (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:26 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Liquid%20Fund%20-%2030%20September%202026.xlsx?V (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:26 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Income%20Plus%20Arbitrage%20Omni%20FOF%20-%2030% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:27 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Income%20Plus%20Arbitrage%20Active%20FOF%20-%203 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:27 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Gilt%20Fund%20-%2030%20September%202026.xlsx?Ver (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:28 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20FMP%202638D%20February%202023%20-%2030%20Septemb (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:29 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20FMP%201876D%20March%202022%20-%2030%20September% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:29 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20FMP%201861D%20March%202022%20-%2030%20September% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:30 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Floating%20Interest%20Rates%20Fund%20-%2030%20Se (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:30 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Dynamic%20Term%20Fund%20-%2030%20September%20202 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:31 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Diversified%20Equity%20All%20Cap%20Active%20FOF% (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:32 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20CRISIL-IBX%20Financial%20Services%209-12%20Month (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:32 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20CRISIL-IBX%20Financial%20Services%203-6%20Months (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:33 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Credit%20Risk%20Fund%20-%2030%20September%202026 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:34 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Corporate%20Bond%20Fund%20-%2030%20September%202 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:34 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Conservative%20Hybrid%20Fund%20-%2030%20Septembe (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:35 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Charity%20Fund%20for%20Cancer%20Cure%20-%2030%20 (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:16:35 INFO    HDFC: plain download refused for https://cms.hdfcfund.com/Monthly%20HDFC%20Banking%20and%20PSU%20Debt%20Fund%20-%2030%20Sep (404 Client Error: Not Found for url: https://cms.hdfcfund.co) — retrying in browser
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Retirement%20Fund%20-%20Equity%20Plan%20-%2030%20September
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Value%20Fund%20-%2030%20September%202026_0.xlsx?VersionId=
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Transportation%20and%20Logistics%20Fund%20-%2030%20Septemb
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Technology%20Fund%20-%2030%20September%202026_0.xlsx?Versi
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Small%20Cap%20Fund%20-%2030%20September%202026_0.xlsx?Vers
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Silver%20ETF%20Fund%20of%20Fund%20-%2030%20September%20202
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20SILVER%20ETF%20-%2030%20September%202026_0.xlsx?VersionId=
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Retirement%20Fund%20-%20Hybrid-Equity%20Plan%20-%2030%20Se
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Pharma%20and%20Healthcare%20Fund%20-%2030%20September%2020
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty500%20Multicap%2050.25.25%20Index%20Fund%20-%2030%20S
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty50%20Value%2020%20ETF%20-%2030%20September%202026_0.x
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY50%20Equal%20weight%20Index%20Fund%20-%2030%20Septemb
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY200%20MOMENTUM%2030%20INDEX%20FUND%20-%2030%20Septemb
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY200%20MOMENTUM%2030%20ETF%20-%2030%20September%202026
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty100%20Quality%2030%20Index%20Fund%20-%2030%20Septembe
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty100%20Quality%2030%20ETF%20-%2030%20September%202026_
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY100%20Low%20Volatility%2030%20Index%20Fund%20-%2030%2
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY100%20LOW%20VOLATILITY%2030%20ETF%20-%2030%20Septembe
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20Top%2020%20Equal%20Weight%20Index%20Fund%20-%2030%
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20SMALLCAP%20250%20INDEX%20FUND%20-%2030%20September
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20SMALLCAP%20250%20ETF%20-%2030%20September%202026_0
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20REALTY%20INDEX%20FUND%20-%2030%20September%202026_
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20PSU%20BANK%20ETF%20-%2030%20September%202026_0.xls
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20Private%20Bank%20ETF%20-%2030%20September%202026_0
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20Next%2050%20Index%20Fund%20-%2030%20September%2020
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20NEXT%2050%20ETF%20-%2030%20September%202026_0.xlsx
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20MIDCAP%20150%20INDEX%20FUND%20-%2030%20September%2
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20MIDCAP%20150%20ETF%20-%2030%20September%202026_0.x
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20Metal%20ETF%20FOF%20-%2030%20September%202026_0.xl
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20Metal%20ETF%20-%2030%20September%202026_0.xlsx?Ver
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20LargeMidcap%20250%20Index%20Fund%20-%2030%20Septem
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20IT%20ETF%20-%2030%20September%202026_0.xlsx?Versio
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20India%20Digital%20Index%20Fund%20-%2030%20Septembe
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20India%20Consumption%20Index%20Fund%20-%2030%20Sept
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20Growth%20Sectors%2015%20ETF%20-%2030%20September%2
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20BANK%20ETF%20-%2030%20September%202026_0.xlsx?Vers
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20Auto%20Index%20Fund%20-%2030%20September%202026_0.
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%2050%20Index%20Fund%20-%2030%20September%202026_0.xl
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%2050%20ETF%20-%2030%20September%202026_0.xlsx?Versio
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20100%20Index%20Fund%20-%2030%20September%202026_0.x
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20100%20ETF%20-%2030%20September%202026_0.xlsx?Versi
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20100%20Equal%20Weight%20Index%20Fund%20-%2030%20Sep
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Multi%20Cap%20Fund%20-%2030%20September%202026_0.xlsx?Vers
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Multi%20Asset%20Allocation%20Fund%20-%2030%20September%202
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20MNC%20Fund%20-%2030%20September%202026_0.xlsx?VersionId=uf
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Mid%20Cap%20Fund%20-%2030%20September%202026_0.xlsx?Versio
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Manufacturing%20Fund%20-%2030%20September%202026_0.xlsx?Ve
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Large%20Cap%20Fund%20-%2030%20September%202026_0.xlsx?Vers
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Large%20%20Mid%20Cap%20Fund%20-%2030%20September%202026_0.
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Innovation%20Fund%20-%2030%20September%202026_0.xlsx?Versi
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Infrastructure%20Fund%20-%2030%20September%202026_0.xlsx?V
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Housing%20Opportunities%20Fund%20-%2030%20September%202026
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Gold%20Silver%20Passive%20FOF%20-%2030%20September%202026_
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Gold%20ETF%20Fund%20of%20Fund%20-%2030%20September%202026_
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Gold%20ETF%20-%2030%20September%202026_0.xlsx?VersionId=cU
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Focused%20Fund%20-%2030%20September%202026_0.xlsx?VersionI
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Flexi%20Cap%20Fund%20-%2030%20September%202026_0.xlsx?Vers
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Equity%20Savings%20Fund%20-%2030%20September%202026_0.xlsx
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20ELSS%20-%20Tax%20Saver%20Fund%20-%2030%20September%202026_
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Dividend%20Yield%20Fund%20-%2030%20September%202026_0.xlsx
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Developed%20World%20Overseas%20Equity%20Passive%20FOF%20-%
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Defence%20Fund%20-%2030%20September%202026_0.xlsx?VersionI
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Consumption%20Fund%20-%2030%20September%202026_0.xlsx?Vers
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Childrens%20Fund%20-%2030%20September%202026_0.xlsx?Versio
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Business%20Cycle%20Fund%20-%2030%20September%202026_0.xlsx
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20BSE%20Sensex%20Index%20Fund%20-%2030%20September%202026_0.
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20BSE%20SENSEX%20ETF%20-%2030%20September%202026_0.xlsx?Vers
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20BSE%20REITS%20and%20Commercial%20Real%20Estate%20Index%20F
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20BSE%20India%20Sector%20Leaders%20Index%20Fund%20-%2030%20S
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20BSE%20500%20INDEX%20FUND%20-%2030%20September%202026_0.xls
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20BSE%20500%20ETF%20-%2030%20September%202026_0.xlsx?Version
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Banking%20%20Financial%20Services%20Fund%20-%2030%20Septem
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Balanced%20Advantage%20Fund%20-%2030%20September%202026_0.
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Arbitrage%20Fund%20-%2030%20September%202026_0.xlsx?Versio
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Aggressive%20Hybrid%20Fund%20-%2030%20September%202026_0.x
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Ultra%20Short%20to%20Short%20Term%20Fund%20-%2030%20Septem
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Ultra%20Short%20Term%20Fund%20-%2030%20September%202026.xl
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Short%20Term%20Fund%20-%2030%20September%202026.xlsx?Versi
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Retirement%20Fund%20-%20Hybrid-Debt%20Plan%20-%2030%20Sept
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Overnight%20Fund%20-%2030%20September%202026.xlsx?VersionI
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20SDL%20Plus%20G-Sec%20Jun%202027%2040.60%20Index%20
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20SDL%20Oct%202026%20Index%20Fund%20-%2030%20Septemb
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20G-Sec%20Sep%202032%20Index%20Fund%20-%2030%20Septe
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20G-Sec%20Jun%202036%20Index%20Fund%20-%2030%20Septe
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20G-Sec%20Jun%202027%20Index%20Fund%20-%2030%20Septe
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20G-Sec%20July%202031%20Index%20Fund%20-%2030%20Sept
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Nifty%20G-Sec%20Dec%202026%20Index%20Fund%20-%2030%20Septe
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%20G-Sec%20Apr%202029%20Index%20Fund%20-%2030%20Septe
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20NIFTY%201D%20RATE%20LIQUID%20ETF%20-%2030%20September%2020
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Multi-Asset%20Active%20FOF%20-%2030%20September%202026.xls
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Money%20Market%20Fund%20-%2030%20September%202026.xlsx?Ver
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Medium%20to%20Long%20Term%20Fund%20-%2030%20September%2020
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Medium%20Term%20Fund%20-%2030%20September%202026.xlsx?Vers
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Long%20Term%20Fund%20-%2030%20September%202026.xlsx?Versio
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Liquid%20Fund%20-%2030%20September%202026.xlsx?VersionId=Z
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Income%20Plus%20Arbitrage%20Omni%20FOF%20-%2030%20Septembe
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Income%20Plus%20Arbitrage%20Active%20FOF%20-%2030%20Septem
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Gilt%20Fund%20-%2030%20September%202026.xlsx?VersionId=Zrg
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20FMP%202638D%20February%202023%20-%2030%20September%202026.
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20FMP%201876D%20March%202022%20-%2030%20September%202026.xls
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20FMP%201861D%20March%202022%20-%2030%20September%202026.xls
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Floating%20Interest%20Rates%20Fund%20-%2030%20September%20
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Dynamic%20Term%20Fund%20-%2030%20September%202026.xlsx?Ver
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Diversified%20Equity%20All%20Cap%20Active%20FOF%20-%2030%2
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20CRISIL-IBX%20Financial%20Services%209-12%20Months%20Debt%2
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20CRISIL-IBX%20Financial%20Services%203-6%20Months%20Debt%20
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Credit%20Risk%20Fund%20-%2030%20September%202026.xlsx?Vers
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Corporate%20Bond%20Fund%20-%2030%20September%202026.xlsx?V
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Conservative%20Hybrid%20Fund%20-%2030%20September%202026.x
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Charity%20Fund%20for%20Cancer%20Cure%20-%2030%20September%
+23:17:26 WARNING HDFC: download failed https://cms.hdfcfund.com/Monthly%20HDFC%20Banking%20and%20PSU%20Debt%20Fund%20-%2030%20September%202
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:25523:18:25 INFO    HDFC: 108 sheet blocks parsed, 78 funds matched, 2 rejected by sanity checks
+23:18:34 INFO    PPFAS: 14 sheet blocks parsed, 7 funds matched, 0 rejected by sanity checks
+23:18:34 INFO    Holdings available for 591 funds
+
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
+*** formula/tFuncVar unknown FuncID:255
