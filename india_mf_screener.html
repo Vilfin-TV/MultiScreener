@@ -1546,7 +1546,7 @@ function pPortfolio(f, pf){
   var mx = pf.mix || {}, kinds = [['equity','Equity'],['debt','Debt & money market'],['fund','Mutual fund units'],['overseas','Overseas securities'],['reit','REITs & InvITs'],['cashOther','Cash & others']];
   var k = function(lbl, v){ return '<div class="pf-kpi"><small>' + lbl + '</small><b>' + v + '</b></div>'; };
   var kp = '<div class="pf-kpis">' + k('Equity', fmt(mx.equity || 0, 1) + '%') + k('Debt', fmt(mx.debt || 0, 1) + '%') + k('Cash & others', fmt(mx.cashOther || 0, 1) + '%') +
-    k('Stocks held', pf.n || '–') + k('Top 10 weight', pf.n ? fmt(pf.top10, 1) + '%' : '–') + '</div>';
+    (pf.n ? k('Stocks held', pf.n) + k('Top 10 weight', fmt(pf.top10, 1) + '%') : k('Securities held', pf.nAll || '–') + k('Top 10 weight', isNum(pf.top10All) ? fmt(pf.top10All, 1) + '%' : '–')) + '</div>';
   var capCols = [['large','Large cap',cssv('--c1')],['mid','Mid cap',cssv('--c3')],['small','Small cap',cssv('--c2')]];
   var capH = '';
   if (pf.cap && pf.n) {
@@ -1567,8 +1567,11 @@ function pPortfolio(f, pf){
   var sec = (pf.sectors || []).length ? '<div class="pf-h" style="margin-top:18px">Sector allocation <span class="mut" style="font-weight:400">· % of fund</span></div><div class="bars">' + pf.sectors.map(function(x){
     return '<div class="bar-row" style="grid-template-columns:150px minmax(0,1fr)"><div class="bar-k" style="font-family:\'DM Sans\',sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(x[0]) + '">' + esc(x[0]) + '</div><div class="bar-line"><div class="bar-track"><div class="bar-fill" style="left:0;width:' + (x[1] / smx * 100).toFixed(1) + '%;background:' + cssv('--cB') + '"></div></div><div class="bar-v">' + fmt(x[1], 1) + '%</div></div></div>';
   }).join('') + '</div>' : '';
+  var crd = (pf.credit || []).length && (mx.debt || 0) >= 5 ? '<div class="pf-h" style="margin-top:18px">Credit quality <span class="mut" style="font-weight:400">· % of fund</span></div><div class="bars">' + pf.credit.map(function(x){
+    return '<div class="bar-row" style="grid-template-columns:150px minmax(0,1fr)"><div class="bar-k" style="font-family:\'DM Sans\',sans-serif">' + esc(x[0]) + '</div><div class="bar-line"><div class="bar-track"><div class="bar-fill" style="left:0;width:' + Math.min(100, Math.max(0, x[1])).toFixed(1) + '%;background:' + cssv('--c3') + '"></div></div><div class="bar-v">' + fmt(x[1], 1) + '%</div></div></div>';
+  }).join('') + '</div>' : '';
   return '<div class="card pcard" id="pfBox"><div class="pc-head"><div><div class="sec-title">Portfolio</div><div class="sec-sub">As of ' + monthTxt(pf.asOf) + ' month-end · ' + (pf.nAll || 0) + ' securities</div></div></div>' +
-    kp + '<div class="pf-grid">' + hold + '<div>' + capH + mixH + sec + '</div></div>' +
+    kp + '<div class="pf-grid">' + hold + '<div>' + capH + mixH + crd + sec + '</div></div>' +
     '<div class="note">From the fund house\'s statutory monthly portfolio disclosure. Market-cap buckets follow SEBI\'s ranking: Nifty 100 constituents as large cap, Nifty Midcap 150 as mid cap, all other listed stocks as small cap. Cash & others includes TREPS, net receivables and derivatives margin.</div></div>';
 }
 

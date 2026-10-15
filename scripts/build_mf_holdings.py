@@ -394,8 +394,29 @@ def cap_sets(session) -> tuple[set, set]:
     return large, mid
 
 
+NOTE_MARKS = re.compile(r"[\s\^£$#*@~†‡]+$")
+
+
+def credit_bucket(rating: str) -> str:
+    r = rating.upper()
+    if re.search(r"SOV|GOVERNMENT|G-?SEC|T-?BILL|SDL|GOI", r):
+        return "Sovereign"
+    if re.search(r"A1\+|A1 ?\+", r):
+        return "A1+ (money market)"
+    if re.search(r"\bAAA", r):
+        return "AAA & equivalent"
+    if re.search(r"\bAA[+-]?\b|\bAA[+-]?\(", r):
+        return "AA"
+    if re.search(r"\bA[+-]?\b|\bBBB|\bBB|\bD\b|\bA2|\bA3", r):
+        return "A & below"
+    return "Unrated / others"
+
+
 def summarise(blk: dict, large: set, mid: set) -> dict:
     hs = [h for h in blk["holdings"] if h["pct"] > -50]
+    for h in hs:
+        h["name"] = NOTE_MARKS.sub("", h["name"])
+        h["ind"] = NOTE_MARKS.sub("", h["ind"])
     kinds = defaultdict(float)
     for h in hs:
         h["kind"] = classify_holding(h)
@@ -412,6 +433,10 @@ def summarise(blk: dict, large: set, mid: set) -> dict:
     if large or mid:
         for h in eq:
             cap["large" if h["isin"] in large else "mid" if h["isin"] in mid else "small"] += h["pct"]
+    credit = defaultdict(float)
+    for h in hs:
+        if h["kind"] == "debt":
+            credit[credit_bucket(h["ind"] + " " + h["name"])] += h["pct"]
     top = sorted(hs, key=lambda h: -h["pct"])[:15]
     return {
         "n": len(eq), "nAll": len(hs),
@@ -420,6 +445,8 @@ def summarise(blk: dict, large: set, mid: set) -> dict:
         "top10": round(sum(h["pct"] for h in sorted(eq, key=lambda h: -h["pct"])[:10]), 2),
         "sectors": sorted([[k, round(v, 2)] for k, v in sectors.items()], key=lambda x: -x[1])[:14],
         "cap": {k: round(v, 2) for k, v in cap.items()} if (large or mid) and eq else None,
+        "top10All": round(sum(h["pct"] for h in sorted(hs, key=lambda h: -h["pct"])[:10]), 2),
+        "credit": sorted([[k, round(v, 2)] for k, v in credit.items() if v >= 0.05], key=lambda x: -x[1]) or None,
     }
 
 

@@ -392,6 +392,7 @@ function verifyHoldings() {
         ok(Math.abs(capT - (h.mix.equity || 0)) < 0.1, `${id}: market-cap split ${capT.toFixed(2)}% vs equity ${h.mix.equity}%`);
       }
       ok(h.top10 <= (h.mix.equity || 0) + 0.05, `${id}: top-10 weight exceeds equity`);
+      if (h.credit) ok(h.credit.reduce((a, x) => a + x[1], 0) <= (h.mix.debt || 0) + 0.1, `${id}: credit split exceeds debt share`);
       // the portfolio must fit the fund's category (guards against a sheet being matched to the wrong fund)
       const eq = (h.mix.equity || 0) + (h.mix.overseas || 0) + (h.mix.reit || 0);
       if (EQUITY_DIRECT.has(sub)) ok(eq >= 60, `${id}: equity fund holds only ${eq.toFixed(1)}% equity`);
