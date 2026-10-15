@@ -1424,7 +1424,7 @@ function pFactor(f, det){
   }[fc.primary];
   return '<div class="card pcard"><div class="pc-head"><div><div class="sec-title">Factor DNA</div><div class="sec-sub">' + fc.weeks + ' weekly returns to ' + fmtDate(D.riskAsOf) + ' · fit (R²) ' + fmt(fc.r2, 1) + '%</div></div></div>' +
     '<div class="fac-wrap"><div class="radar">' + radar + '</div><div>' +
-      '<div class="fac-badge"><div class="ic">' + ic + '</div><div><b>' + esc(fc.primary) + (fc.primary !== 'Blend' ? ' style' : '') + '</b><small>' + (fc.size ? esc(fc.size) + '-cap tilt' : '') + (fc.secondary && fc.secondary.length ? ' · also ' + esc(fc.secondary.join(', ')) : '') + '</small></div></div>' +
+      '<div class="fac-badge"><div class="ic">' + ic + '</div><div><b>' + esc(fc.primary) + (fc.primary === 'Market' ? '-like' : fc.primary !== 'Blend' ? ' style' : '') + '</b><small>' + (fc.size ? esc(fc.size) + '-cap tilt' : '') + (fc.secondary && fc.secondary.length ? ' · also ' + esc(fc.secondary.join(', ')) : '') + '</small></div></div>' +
       '<p class="objective" style="margin-bottom:14px">' + desc + '</p>' + bars + '</div></div>' +
     '<div class="note">Style weights come from matching the fund\'s weekly returns against NSE factor and size indices. They describe how the fund has behaved, not its exact holdings.' + (fc.r2 < 60 ? ' The fit is weak for this fund, so treat the style reading with caution.' : '') + '</div></div>';
 }
