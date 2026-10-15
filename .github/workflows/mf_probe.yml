@@ -1,25 +1,36 @@
-name: MF Data Probe (temporary)
+name: MF Screener Dev Validation (temporary)
 on:
   push:
     branches: [claude/festive-bell-an714y]
-    paths: ['scripts/mf_probe.py', '.github/workflows/mf_probe.yml']
+    paths: ['scripts/build_mf_screener.py', 'scripts/mf_common.py', 'scripts/verify_mf_screener.js', '.github/workflows/mf_probe.yml']
   workflow_dispatch:
 permissions:
   contents: write
 jobs:
-  probe:
+  dev:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/cache/restore@v4
+        with: {path: .mfcache, key: 'mf-dev-${{ github.run_id }}', restore-keys: 'mf-dev-'}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - run: pip install requests yfinance pandas
-      - run: python scripts/mf_probe.py
-      - name: Commit probe samples
+      - run: pip install numpy scipy requests
+      - uses: actions/setup-node@v4
+        with: {node-version: '20'}
+      - run: python scripts/build_mf_screener.py --workers 10 2>&1 | tee .mfcache/build.log
+      - uses: actions/cache/save@v4
+        if: always()
+        with: {path: .mfcache, key: 'mf-dev-${{ github.run_id }}'}
+      - run: node scripts/verify_mf_screener.js 2>&1 | tee .mfcache/verify.log || true
+      - name: Commit data + validation report to dev branch
+        if: always()
         run: |
+          mkdir -p .probe && cp .mfcache/validation.json .mfcache/build.log .mfcache/verify.log .probe/ 2>/dev/null || true
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f .probe
-          git commit -m "chore(probe): MF data source samples [skip ci]" || exit 0
+          git add -A data/mf .probe
+          git commit -qm "chore(dev): MF screener build + validation [skip ci]" || exit 0
+          git pull --rebase -q origin ${{ github.ref_name }} || true
           git push origin HEAD:${{ github.ref_name }}
