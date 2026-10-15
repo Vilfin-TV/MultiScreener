@@ -8,7 +8,7 @@ name: India MF Screener Data
 # (Cloudflare, exact-minute cron) dispatches this workflow at 05:35 and
 # 06:35 IST as the primary trigger; the schedules below are the fallback.
 # The cheap "due" gate only builds when AMFI has a newer NAV date than the
-# published data, so repeated triggers cost seconds.
+# published data, so repeated triggers cost seconds. Push events always build.
 on:
   schedule:
     - cron: '0 0 * * *'      # 05:30 IST
