@@ -630,7 +630,7 @@ def main():
     ap.add_argument("--only", help="comma-separated scheme codes (validation runs)")
     ap.add_argument("--no-write", action="store_true")
     ap.add_argument("--facts-budget", type=int, default=1200, help="max scheme-fact refreshes per run")
-    ap.add_argument("--ter-seconds", type=int, default=240, help="time budget for the official TER disclosure")
+    ap.add_argument("--ter-seconds", type=int, default=420, help="time budget for the official TER disclosure")
     ap.add_argument("--amfi-budget", type=int, default=60, help="max official history windows fetched per run")
     args = ap.parse_args()
     CACHE.mkdir(exist_ok=True)

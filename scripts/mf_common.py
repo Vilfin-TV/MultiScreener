@@ -665,6 +665,8 @@ def factor_label(w: dict, r2: float) -> dict:
         primary = "Blend"
     elif style[top] >= 0.30:
         primary = STYLE_LABEL[top]
+    elif w["core"] >= 0.70:
+        primary = "Market"
     else:
         primary = "Blend"
     secondary = [STYLE_LABEL[k] for k in sorted(style, key=style.get, reverse=True)

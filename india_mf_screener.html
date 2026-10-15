@@ -1109,7 +1109,7 @@ function renderSnap(f, det){
   $('snap').innerHTML =
     '<div class="snap-top"><div style="min-width:0">' +
       '<div class="snap-tags"><span class="tag f">' + esc(f.asset) + '</span><span class="tag">' + esc(f.subLabel) + '</span>' +
-        (f.style ? '<span class="tag f" title="Factor DNA">' + esc(f.style === 'Blend' ? 'Blend style' : f.style + ' style') + '</span>' : '') +
+        (f.style ? '<span class="tag f" title="Factor DNA">' + esc(f.style === 'Blend' ? 'Blend style' : f.style === 'Market' ? 'Market-like' : f.style + ' style') + '</span>' : '') +
         (f.size ? '<span class="tag">' + esc(f.size) + ' cap tilt</span>' : '') + '</div>' +
       '<h2 class="snap-name">' + esc(f.name) + '</h2>' +
       '<div class="snap-meta">' + esc(f.amcName) + ' Mutual Fund · Direct Plan · Growth · ' + stars(f.rating) + '</div>' +
@@ -1413,13 +1413,14 @@ function pFactor(f, det){
     var v = w[k[0]] || 0;
     return '<div class="bar-row" style="grid-template-columns:112px minmax(0,1fr)"><div class="bar-k" style="font-family:\'DM Sans\',sans-serif">' + k[1] + '</div><div class="bar-line"><div class="bar-track"><div class="bar-fill" style="left:0;width:' + Math.min(100, v).toFixed(1) + '%;background:' + (['mom','val','qual','lowvol'].indexOf(k[0]) >= 0 ? cssv('--c1') : cssv('--cB')) + '"></div></div><div class="bar-v">' + fmt(v, 1) + '%</div></div></div>';
   }).join('') + '</div>';
-  var ic = {Momentum:'↗', Value:'◆', Quality:'✦', 'Low Volatility':'≈', Blend:'◎'}[fc.primary] || '◎';
+  var ic = {Momentum:'↗', Value:'◆', Quality:'✦', 'Low Volatility':'≈', Blend:'◎', Market:'▣'}[fc.primary] || '◎';
   var desc = {
     Momentum:'Behaves most like stocks with strong recent price trends — tends to lead in rallies and can lag at turning points.',
     Value:'Behaves most like attractively priced stocks (low P/E, P/B) — tends to shine in recoveries and broad re-ratings.',
     Quality:'Behaves most like high-ROE, low-debt, steady-earnings companies — tends to hold up well in uncertain markets.',
     'Low Volatility':'Behaves most like the least volatile large companies — tends to fall less in sell-offs and lag in sharp rallies.',
-    Blend:'No single style dominates — returns are explained by a mix of the broad market and several styles.'
+    Blend:'No single style dominates — returns are explained by a mix of the broad market and several styles.',
+    Market:'Moves almost exactly like the broad large-cap market, with no meaningful style tilt — typical of index-like portfolios.'
   }[fc.primary];
   return '<div class="card pcard"><div class="pc-head"><div><div class="sec-title">Factor DNA</div><div class="sec-sub">' + fc.weeks + ' weekly returns to ' + fmtDate(D.riskAsOf) + ' · fit (R²) ' + fmt(fc.r2, 1) + '%</div></div></div>' +
     '<div class="fac-wrap"><div class="radar">' + radar + '</div><div>' +
