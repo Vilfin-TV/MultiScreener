@@ -482,6 +482,8 @@ footer a{color:var(--text2)}
   .cmp-slots{grid-template-columns:1fr}
   .info-row{grid-template-columns:120px minmax(0,1fr)}
   .calc{grid-template-columns:1fr}
+  .hide-m{display:none}
+  .dtbl td,.dtbl th{padding:9px 8px}
 }
 @media (max-width:420px){
   .vt-brand-name{display:none}
@@ -1310,16 +1312,16 @@ function barLine(v, mx, col){
 /* ── SIP ── */
 function pSip(f, det, tail){
   var sip = tail.sip || {}, ss = SUBSTAT[f.sub].avg;
-  var rows = [['1','1 year',ss.sip1],['3','3 years',ss.sip3],['5','5 years',ss.sip5],['10','10 years',null]].map(function(r){
+  var rows = [['1','1Y',ss.sip1],['3','3Y',ss.sip3],['5','5Y',ss.sip5],['10','10Y',null]].map(function(r){
     var s = sip[r[0]];
     if (!s) return '<tr><td>' + r[1] + '</td><td class="num" colspan="4"><span class="mut">Not enough history</span></td></tr>';
     var gain = s.val - s.inv;
-    return '<tr><td>' + r[1] + '</td><td class="num sip-inv" data-inv="' + s.inv + '">' + inr(s.inv) + '</td><td class="num sip-val" data-val="' + s.val + '">' + inr(s.val) + '</td><td class="num sip-gain ' + (gain >= 0 ? 'pos' : 'neg') + '" data-g="' + gain + '">' + (gain >= 0 ? '+' : '−') + inr(Math.abs(gain)) + '</td><td class="num">' + fmtPct(s.xirr) + (isNum(r[2]) ? '<div class="mut" style="font-size:11px">Cat ' + pctTxt(r[2]) + '</div>' : '') + '</td></tr>';
+    return '<tr><td>' + r[1] + '</td><td class="num sip-inv" data-inv="' + s.inv + '">' + inr(s.inv) + '</td><td class="num sip-val" data-val="' + s.val + '">' + inr(s.val) + '</td><td class="num hide-m sip-gain ' + (gain >= 0 ? 'pos' : 'neg') + '" data-g="' + gain + '">' + (gain >= 0 ? '+' : '−') + inr(Math.abs(gain)) + '</td><td class="num">' + fmtPct(s.xirr) + (isNum(r[2]) ? '<div class="mut" style="font-size:11px">Cat ' + pctTxt(r[2]) + '</div>' : '') + '</td></tr>';
   }).join('');
   return '<div class="card pcard"><div class="pc-head"><div><div class="sec-title">SIP returns</div><div class="sec-sub">Monthly SIP on the same date each month, valued at the NAV of ' + fmtDate(f.navDate) + '</div></div></div>' +
     '<div class="calc"><div class="fld"><label for="sipAmt">Monthly SIP amount (₹)</label><input class="tin" id="sipAmt" type="number" inputmode="numeric" min="100" step="500" value="' + S.sipAmt + '"/></div>' +
     '<div class="seg" id="sipQuick">' + [1000,5000,10000,25000].map(function(a){ return '<button data-a="' + a + '"' + (S.sipAmt === a ? ' class="on"' : '') + '>₹' + (a >= 1000 ? a / 1000 + 'k' : a) + '</button>'; }).join('') + '</div></div>' +
-    '<div class="tbl-scroll" style="display:block"><table class="dtbl"><thead><tr><th>Period</th><th class="num">Invested</th><th class="num">Current value</th><th class="num">Gain</th><th class="num">XIRR</th></tr></thead><tbody id="sipBody">' + rows + '</tbody></table></div>' +
+    '<div class="tbl-scroll" style="display:block"><table class="dtbl"><thead><tr><th>Period</th><th class="num">Invested</th><th class="num">Value</th><th class="num hide-m">Gain</th><th class="num">XIRR</th></tr></thead><tbody id="sipBody">' + rows + '</tbody></table></div>' +
     '<div class="note">XIRR is the annualised return on all instalments, accounting for when each was invested. Values scale exactly with the SIP amount.</div></div>';
 }
 function bindSipCalc(f, tail){
