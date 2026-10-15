@@ -91,6 +91,7 @@ FACTOR_ASSETS = {"Equity", "Index"}
 GROWTH_ASSETS = {"Equity", "Index", "Global", "Commodity", "Hybrid", "Solution"}
 
 RECON = {}
+SNAPS = {}
 RISKOMETER = ["Low", "Low to Moderate", "Moderate", "Moderately High", "High", "Very High"]
 
 
@@ -197,9 +198,10 @@ def fetch_history(code):
 
 
 def fix_face_value(pts):
-    """Undo unit face-value changes (NAV jumps ×10 / ×100 / ÷10 overnight and stays there)."""
+    """Undo unit face-value changes (NAV jumps ×10 / ×100 / ÷10 overnight and stays there).
+    Earlier NAVs are restated in today's units so returns stay continuous."""
     pts = [list(p) for p in pts]
-    fixes = 0
+    fixes = []
     for i in range(len(pts) - 1, 0, -1):
         r = pts[i][1] / pts[i - 1][1]
         k = round(math.log10(r)) if r > 0 else 0
@@ -207,7 +209,7 @@ def fix_face_value(pts):
             f = 10 ** k
             for j in range(i):
                 pts[j][1] *= f
-            fixes += 1
+            fixes.append(C.iso(pts[i][0]))
     return pts, fixes
 
 
@@ -217,7 +219,7 @@ def clean_points(pts):
     pts = sorted({p[0]: p for p in pts}.values())
     pts, fv = fix_face_value(pts)
     if fv:
-        log.info("  face-value change adjusted (%d) at %s", fv, C.iso(pts[-1][0]))
+        log.info("  unit face-value change restated on %s", ", ".join(fv[:4]))
     for i, p in enumerate(pts):
         if 0 < i < len(pts) - 1:
             a, b, c = pts[i - 1][1], p[1], pts[i + 1][1]
@@ -264,13 +266,10 @@ def load_histories(universe, navdate, args):
         elif h[-1][0] == o and abs(h[-1][1] / r["nav"] - 1) > 1e-6:
             h[-1][1] = r["nav"]
     log.info("Appended latest official NAV to %d histories", appended)
-    cleaned = {}
-    for code, h in hist.items():
-        cleaned[code], dropped = clean_points(h)
-        if dropped:
-            log.info("  %s: dropped %d spike point(s)", code, dropped)
-    save_gz(CACHE / "hist.json.gz", {str(k): v for k, v in cleaned.items()})
-    return cleaned, meta, fail
+    # raw (as published) — reconciled with AMFI before face-value / spike cleaning
+    raw = {code: sorted({p[0]: [p[0], p[1]] for p in h}.values()) for code, h in hist.items()}
+    save_gz(CACHE / "hist.json.gz", {str(k): v for k, v in raw.items()})
+    return raw, meta, fail
 
 
 def dedupe(universe, facts, series):
@@ -384,28 +383,43 @@ def reconcile_with_amfi(hist_pts, snaps):
 def load_facts(universe, args):
     cache = load_gz(CACHE / "facts.json.gz", {})
     isins = sorted({r["isin"] for r in universe if r["isin"]})
-    out, ok = dict(cache), 0
+    out, ok, errs = dict(cache), 0, Counter()
 
     def job(isin):
         try:
-            r = get(FACTS_URL.format(isin=isin), tries=2, timeout=30)
+            r = S.get(FACTS_URL.format(isin=isin), timeout=30)
+            if r.status_code != 200:
+                return isin, None, f"HTTP {r.status_code}"
             j = r.json()
-            return isin, (j[0] if isinstance(j, list) and j else None)
-        except Exception:  # noqa: BLE001
-            return isin, None
+            return isin, (j[0] if isinstance(j, list) and j else None), ("empty" if not j else None)
+        except Exception as e:  # noqa: BLE001
+            return isin, None, type(e).__name__
 
-    with ThreadPoolExecutor(max_workers=args.workers) as ex:
-        for fut in as_completed([ex.submit(job, i) for i in isins]):
-            isin, rec = fut.result()
-            if rec:
-                keep = {k: rec.get(k) for k in (
-                    "name", "short_name", "lump_min", "sip_min", "lock_in_period", "detail_info", "start_date",
-                    "expense_ratio", "expense_ratio_date", "fund_manager", "crisil_rating", "investment_objective",
-                    "portfolio_turnover", "aum", "fund_category", "fund_type", "returns", "nav")}
-                keep["_ts"] = date.today().isoformat()
-                out[isin] = keep
-                ok += 1
-    log.info("Facts: %d/%d refreshed (%d available incl. cache)", ok, len(isins), sum(1 for i in isins if i in out))
+    todo = isins
+    for attempt, workers in enumerate((args.workers, 4, 2)):
+        missing = []
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            for fut in as_completed([ex.submit(job, i) for i in todo]):
+                isin, rec, err = fut.result()
+                if rec:
+                    keep = {k: rec.get(k) for k in (
+                        "name", "short_name", "lump_min", "sip_min", "lock_in_period", "detail_info", "start_date",
+                        "expense_ratio", "expense_ratio_date", "fund_manager", "crisil_rating", "investment_objective",
+                        "portfolio_turnover", "aum", "fund_category", "fund_type", "returns", "nav")}
+                    keep["_ts"] = date.today().isoformat()
+                    out[isin] = keep
+                    ok += 1
+                elif err == "empty" or (err or "").startswith("HTTP 404"):
+                    errs[err] += 1
+                else:
+                    errs[err] += 1
+                    missing.append(isin)
+        if not missing:
+            break
+        todo = missing
+        time.sleep(5)
+    log.info("Facts: %d/%d refreshed (%d available incl. cache); misses %s", ok, len(isins),
+             sum(1 for i in isins if i in out), dict(errs))
     save_gz(CACHE / "facts.json.gz", out)
     return out
 
@@ -424,13 +438,18 @@ def fetch_nse_indices(start: date, end: date):
         f0 = start if not have or min(have) > start.toordinal() + 7 else date.fromordinal(last) - timedelta(days=10)
         cur, got = f0, 0
         while cur <= end:
-            to = min(cur + timedelta(days=360), end)
+            to = min(cur + timedelta(days=330), end)
             url = NSE_HIST.format(name=requests.utils.quote(name), f=cur.strftime("%d-%m-%Y"), t=to.strftime("%d-%m-%Y"))
             for k in range(3):
                 try:
                     r = s.get(url, timeout=40)
                     data = r.json().get("data", []) if r.status_code == 200 and r.text.lstrip().startswith("{") else None
+                    if data is None:
+                        log.info("  NSE %s %s→%s: HTTP %s %s", key, cur, to, r.status_code, r.text[:80].replace("\n", " "))
                     if data is not None:
+                        if data:
+                            ds = [x.get("EOD_TIMESTAMP") for x in data]
+                            log.info("  NSE %s %s→%s: %d rows (%s … %s)", key, cur, to, len(data), ds[-1], ds[0])
                         for x in data:
                             d = C.parse_amfi_date(x.get("EOD_TIMESTAMP", "").title())
                             v = x.get("EOD_CLOSE_INDEX_VAL")
@@ -492,7 +511,7 @@ def chart_points(s: C.Series, upto_ord: int):
     i_end = int(np.searchsorted(s.d, upto_ord, side="right"))
     d, v = s.d[:i_end], s.v[:i_end]
     if not len(d):
-        return None
+        return {"s": C.iso(s.d[0]), "p": []}
     cut = upto_ord - 400
     pts, last_week = [], None
     for k in range(len(d)):
@@ -546,12 +565,15 @@ def main():
     targets += [C.month_end(C.shift_months(me, -k).year, C.shift_months(me, -k).month) for k in range(0, 37)]
     snaps = amfi_snapshots(targets, {r["code"] for r in universe}, budget=args.amfi_budget)
     recon, recon_ex = reconcile_with_amfi({r["code"]: hist_pts[r["code"]] for r in universe}, snaps)
-    for r in universe:
-        hist_pts[r["code"]], _ = clean_points(hist_pts[r["code"]])
-        series[r["code"]] = C.Series(hist_pts[r["code"]])
     save_gz(CACHE / "hist.json.gz", {str(k): v for k, v in hist_pts.items()})
-    global RECON
+    for r in universe:
+        cleaned, dropped = clean_points(hist_pts[r["code"]])
+        if dropped:
+            log.info("  %s: dropped %d isolated spike point(s)", r["code"], dropped)
+        series[r["code"]] = C.Series(cleaned)
+    global RECON, SNAPS
     RECON = {"stats": recon, "examples": recon_ex}
+    SNAPS = snaps
     dup = Counter((r["disp"].lower()) for r in universe)
     for r in universe:
         if dup[r["disp"].lower()] > 1:
@@ -833,6 +855,34 @@ def dump_validation(universe, work, results, facts, bench, asof, risk_asof, seri
                        "within_0.25pp": round(float(np.mean(d <= 0.25)) * 100, 2),
                        "median": round(float(np.median(d)), 4), "max": round(float(np.max(d)), 4)}
     worst = sorted(cmp_rows, key=lambda x: -max((abs(v[0] - v[1]) for kk, v in x.items() if kk in kmap), default=0))[:25]
+    # returns recomputed purely from AMFI's official NAVs (latest NAV file + official history on the base date)
+    off = {"1w": [], "1m": [], "3m": [], "6m": [], "1y": [], "3y": [], "5y": [], "10y": []}
+    off_bad = []
+    per = {"1w": ("d", 7), "1m": ("m", 1), "3m": ("m", 3), "6m": ("m", 6), "1y": ("m", 12), "3y": ("m", 36), "5y": ("m", 60), "10y": ("m", 120)}
+    for r in work:
+        s = series[r["code"]]
+        if C.iso(s.d[-1]) != r["date"].isoformat():
+            continue
+        for k, (kind, n) in per.items():
+            t = r["date"] - timedelta(days=n) if kind == "d" else C.shift_months(r["date"], -n)
+            base = None
+            for back in range(0, 4):
+                v = SNAPS.get((t - timedelta(days=back)).isoformat(), {}).get(str(r["code"]))
+                if v:
+                    base = v
+                    break
+            ours = results[r["code"]]["tr"].get(k)
+            if base is None or ours is None:
+                continue
+            x = r["nav"] / base
+            o = (x - 1 if (kind == "d" or n <= 12) else x ** (12.0 / n) - 1) * 100
+            d = abs(o - ours)
+            off[k].append(d)
+            if d > 0.01 and len(off_bad) < 30:
+                off_bad.append({"code": r["code"], "name": r["disp"], "period": k, "ours": ours, "official": round(o, 4)})
+    vs_official = {k: {"n": len(v), "exact_0.01pp": round(float(np.mean(np.array(v) <= 0.01)) * 100, 2)}
+                   for k, v in off.items() if v}
+    log.info("Validation vs AMFI official NAVs: %s", json.dumps(vs_official))
     REF = [r"Parag Parikh Flexi Cap", r"ICICI Prudential Large Cap", r"Nippon India Small Cap Fund$",
            r"Mirae Asset ELSS", r"SBI Liquid", r"ICICI Prudential Gilt Fund$", r"HDFC Balanced Advantage",
            r"Nippon India Gold Savings", r"Motilal Oswal Nasdaq 100 Fund of Fund", r"UTI Nifty 50 Index Fund$"]
@@ -852,7 +902,7 @@ def dump_validation(universe, work, results, facts, bench, asof, risk_asof, seri
                     "managers": f.get("fund_manager"), "riskometer": f.get("crisil_rating")})
     sub_counts = Counter(C.SUBS[r["sub"]][1] + " | " + C.SUBS[r["sub"]][0] for r in work)
     report = {"asOf": asof.isoformat(), "riskAsOf": risk_asof.isoformat(), "universe": len(universe), "amfiReconciliation": RECON,
-              "analysed": len(work), "vsIndependent": summ, "worst": worst, "reference": ref,
+              "analysed": len(work), "vsOfficial": vs_official, "officialMismatches": off_bad, "vsIndependent": summ, "worst": worst, "reference": ref,
               "benchmarks": bench, "subCounts": dict(sorted(sub_counts.items())),
               "global": sorted(r["disp"] for r in work if C.SUBS[r["sub"]][0] == "Global"),
               "commodity": sorted(r["disp"] for r in work if C.SUBS[r["sub"]][0] == "Commodity"),
