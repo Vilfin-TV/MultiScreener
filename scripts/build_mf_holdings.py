@@ -55,6 +55,11 @@ SOURCES = {
             "pick": r"month[-_]?end[-_]portfolio|monthly[-_]portfolio", "skip": r"isin-debt|fortnight|half-yearly"},
     "Tata": {"page": "https://www.tatamutualfund.com/schemes-related/portfolio",
              "pick": r"Monthly%20Portfolio|monthly-portfolio"},
+    "Invesco": {"page": "https://www.invescomutualfund.com/literature-forms/monthly-holdings/equity", "mode": "invesco", "multi": True},
+    "Groww": {"page": "https://www.growwmf.in/statutory-disclosure/portfolio",
+              "pick": r"Statutory(?:%20| )Disclosure/Portfolio/.*Monthly(?:%20| )?Portfolio", "multi": True},
+    "ICICI Prudential": {"page": "https://www.icicipruamc.com/media-center/downloads?currentTabFilter=OtherSchemeDisclosures&&subCatTabFilter=Monthly%20Portfolio%20Disclosures",
+                         "mode": "click", "click": r"monthly\s+portfolio\s+disclosure\s+{month}\s+{year}"},
     "PPFAS": {"page": "https://amc.ppfas.com/downloads/portfolio-disclosure/",
               "pick": r"PPFAS_Monthly_Portfolio_Report_[A-Za-z]+_\d+_\d{4}\.xls|_PPFAS_Monthly_Portfolio_Report_", "multi": True},
 }
@@ -82,35 +87,155 @@ def link_month(url: str) -> tuple[int, int] | None:
     return None
 
 
+FILE_RX = re.compile(r"""(?:https?://[^\s"'<>\\]+?|/[^\s"'<>\\]+?)\.(?:xlsx|xls|zip|xlsm)(?:\?[^\s"'<>\\]*)?""", re.I)
+
+
+def harvest(ctx, url: str) -> list[str]:
+    """Render a page and collect every spreadsheet/zip URL from links, page source and data responses."""
+    from urllib.parse import urljoin
+    found = []
+    p = ctx.new_page()
+
+    def on_resp(r):
+        try:
+            if FILE_RX.search(r.url):
+                found.append(r.url)
+            if "json" in r.headers.get("content-type", ""):
+                found.extend(urljoin(r.url, m) for m in FILE_RX.findall(r.text()))
+        except Exception:  # noqa: BLE001
+            pass
+    p.on("response", on_resp)
+    try:
+        p.goto(url, wait_until="domcontentloaded", timeout=90000)
+        try:
+            p.wait_for_load_state("networkidle", timeout=20000)
+        except Exception:  # noqa: BLE001
+            pass
+        p.wait_for_timeout(3000)
+        for _ in range(3):
+            p.mouse.wheel(0, 2500)
+            p.wait_for_timeout(500)
+        found.extend(p.eval_on_selector_all("a", "as => as.map(a => a.href)"))
+        found.extend(urljoin(p.url, m) for m in FILE_RX.findall(p.content()))
+    finally:
+        p.close()
+    return [f.replace("&amp;", "&") for f in found]
+
+
+MONTH_NAMES = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october",
+               "november", "december"]
+
+
+def recent_months(n: int = 3) -> list[tuple[int, int]]:
+    t = date.today()
+    y, m = t.year, t.month
+    out = []
+    for _ in range(n):
+        m -= 1
+        if m == 0:
+            y, m = y - 1, 12
+        out.append((y, m))
+    return out
+
+
+def invesco_files(ctx, cfg) -> dict | None:
+    """Invesco lists each scheme's complete monthly holdings per calendar month in a JSON feed."""
+    p = ctx.new_page()
+    try:
+        p.goto(cfg["page"], wait_until="domcontentloaded", timeout=90000)
+        p.wait_for_timeout(4000)
+        for y, m in recent_months(3):
+            key = MONTH_NAMES[m - 1][:3].title() + "Url"
+            files = []
+            for cls in ("equity", "hybrid", "debt", "fixed-income", "others", "fof", "index"):
+                r = ctx.request.get(f"https://www.invescomutualfund.com/api/CompleteMonthlyHoldings?year={y}&classification={cls}",
+                                    headers={"Referer": cfg["page"]}, timeout=60000)
+                if not r.ok:
+                    continue
+                try:
+                    rows = r.json()
+                except Exception:  # noqa: BLE001
+                    continue
+                for row in rows if isinstance(rows, list) else []:
+                    u = (row.get(key) or "").strip()
+                    if u:
+                        # the scheme name travels with the URL so the parser can match opaque file names
+                        files.append(u + ("&" if "?" in u else "?") + "_scheme=" + requests.utils.quote(str(row.get("Name", "")).strip()))
+            if files:
+                return {"month": f"{y}-{m:02d}", "files": list(dict.fromkeys(files))}
+    finally:
+        p.close()
+    return None
+
+
+def click_download(ctx, cfg) -> dict | None:
+    """Some fund houses serve the monthly file only through a click-triggered download."""
+    p = ctx.new_page()
+    try:
+        p.goto(cfg["page"], wait_until="domcontentloaded", timeout=90000)
+        try:
+            p.wait_for_load_state("networkidle", timeout=20000)
+        except Exception:  # noqa: BLE001
+            pass
+        p.wait_for_timeout(4000)
+        for y, m in recent_months(3):
+            rx = re.compile(cfg["click"].format(month=MONTH_NAMES[m - 1], year=y), re.I)
+            loc = p.get_by_text(rx)
+            if not loc.count():
+                continue
+            for el in loc.all()[:3]:
+                try:
+                    with p.expect_download(timeout=90000) as dl:
+                        el.click(force=True, timeout=8000)
+                    d = dl.value
+                    path = CACHE / f"dl_{y}{m:02d}_{re.sub(r'[^A-Za-z0-9._-]', '_', d.suggested_filename)}"
+                    d.save_as(str(path))
+                    return {"month": f"{y}-{m:02d}", "files": [path.as_uri()]}
+                except Exception as e:  # noqa: BLE001
+                    log.info("click download attempt failed: %s", str(e)[:120])
+    finally:
+        p.close()
+    return None
+
+
 def discover(sources: dict) -> dict[str, list[str]]:
     from playwright.sync_api import sync_playwright
     found = {}
     with sync_playwright() as pw:
-        b = pw.chromium.launch()
-        ctx = b.new_context(user_agent=UA, locale="en-IN", accept_downloads=True)
+        b = pw.chromium.launch(args=["--disable-blink-features=AutomationControlled"])
+        ctx = b.new_context(user_agent=UA, locale="en-IN", viewport={"width": 1366, "height": 900}, accept_downloads=True)
+        ctx.add_init_script("Object.defineProperty(navigator,'webdriver',{get:()=>undefined})")
         for amc, cfg in sources.items():
-            links = []
-            try:
-                p = ctx.new_page()
-                p.goto(cfg["page"], wait_until="networkidle", timeout=90000)
-                p.wait_for_timeout(2500)
-                links = p.eval_on_selector_all("a", "as => as.map(a => a.href)")
-                p.close()
-            except Exception as e:  # noqa: BLE001
-                log.warning("%s: page not reachable (%s)", amc, str(e)[:120])
+            if cfg.get("mode") in ("invesco", "click"):
+                try:
+                    got = (invesco_files if cfg["mode"] == "invesco" else click_download)(ctx, cfg)
+                except Exception as e:  # noqa: BLE001
+                    got = None
+                    log.warning("%s: discovery failed (%s)", amc, str(e)[:160])
+                if got:
+                    found[amc] = got
+                    log.info("%s: %s · %d file(s)", amc, got["month"], len(got["files"]))
+                else:
+                    log.warning("%s: no portfolio files found", amc)
                 continue
+            links = []
+            for page in cfg.get("pages") or [cfg["page"]]:
+                try:
+                    links += harvest(ctx, page)
+                except Exception as e:  # noqa: BLE001
+                    log.warning("%s: page not reachable (%s)", amc, str(e)[:120])
             allx = [l for l in dict.fromkeys(links) if re.search(r"\.(xlsx?|zip|xlsm)(\?|#|$)", l, re.I)]
             links = [l for l in allx if re.search(cfg["pick"], l, re.I)
                      and not re.search(cfg.get("skip", SKIP_DEFAULT), l, re.I)]
-            dated = [(link_month(l), l) for l in dict.fromkeys(links)]
+            dated = [(link_month(l), l) for l in links]
             dated = [(d, l) for d, l in dated if d]
             if not dated:
-                log.warning("%s: no dated portfolio files found (%d candidate links)", amc, len(links))
+                log.warning("%s: no dated portfolio files found (%d spreadsheet links)", amc, len(allx))
                 for l in allx[:15]:
                     log.warning("    %s", l[:160])
                 continue
             latest = max(d for d, _ in dated)
-            pick = [l for d, l in dated if d == latest]
+            pick = list({l.split("?")[0].lower(): l for d, l in dated if d == latest}.values())
             if not cfg.get("multi"):
                 pick = pick[:1]
             found[amc] = {"month": f"{latest[0]}-{latest[1]:02d}", "files": pick}
@@ -353,25 +478,37 @@ def main():
             continue
         blocks = []
         for url in info["files"]:
+            scheme_hint = ""
+            m_h = re.search(r"[?&]_scheme=([^&]*)", url)
+            if m_h:
+                scheme_hint = requests.utils.unquote(m_h.group(1))
+                url = re.sub(r"[?&]_scheme=[^&]*$", "", url)
             try:
-                r = S.get(url, timeout=120, headers={"Referer": SOURCES[amc]["page"]})
-                r.raise_for_status()
+                if url.startswith("file://"):
+                    content = Path(requests.utils.unquote(url[7:])).read_bytes()
+                else:
+                    r = S.get(url, timeout=120, headers={"Referer": SOURCES[amc]["page"]})
+                    r.raise_for_status()
+                    content = r.content
             except Exception as e:  # noqa: BLE001
                 log.warning("%s: download failed %s (%s)", amc, url[:100], e)
                 continue
             payloads = []
-            if r.content[:2] == b"PK" and url.lower().split("?")[0].endswith(".zip"):
-                with zipfile.ZipFile(io.BytesIO(r.content)) as z:
+            if content[:2] == b"PK" and re.search(r"\.zip$", url.lower().split("?")[0]):
+                with zipfile.ZipFile(io.BytesIO(content)) as z:
                     for n in z.namelist():
                         if re.search(r"\.(xlsx?|xlsm)$", n, re.I) and not re.search(SKIP_DEFAULT, n, re.I):
                             payloads.append((n, z.read(n)))
             else:
-                payloads.append((url.split("?")[0].rsplit("/", 1)[-1], r.content))
+                payloads.append((url.split("?")[0].rsplit("/", 1)[-1], content))
             for fname, blob in payloads:
                 try:
                     for sname, rows in read_book(blob, fname):
                         for blk in parse_sheet(sname, rows):
                             blk["file"] = fname
+                            # the file name often carries the scheme name (per-scheme files)
+                            stem = re.sub(r"[_-]+", " ", requests.utils.unquote(fname).rsplit(".", 1)[0])
+                            blk["ctx"] = blk["ctx"] + [stem] + ([scheme_hint] if scheme_hint else [])
                             blocks.append(blk)
                 except Exception as e:  # noqa: BLE001
                     log.warning("%s: could not read %s (%s)", amc, fname, str(e)[:120])
