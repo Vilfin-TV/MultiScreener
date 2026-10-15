@@ -1,0 +1,18 @@
+name: MF Probe (temporary)
+on:
+  push:
+    branches: [claude/festive-bell-an714y]
+    paths: ['scripts/mf_probe2.py', '.github/workflows/mf_probe.yml']
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install requests
+      - run: mkdir -p .probe && python scripts/mf_probe2.py 2>&1 | tee .probe/probe2.log || true
+      - run: |
+          git config user.name "github-actions[bot]"; git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f .probe; git commit -qm "chore(probe): samples [skip ci]" || exit 0
+          git push origin HEAD:${{ github.ref_name }}
