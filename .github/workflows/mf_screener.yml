@@ -1,0 +1,166 @@
+name: India MF Screener Data
+
+# Builds data/mf/ (every open-ended Direct-Growth mutual fund in India) used by
+# india_mf_screener.html. Runs every morning after fund houses publish the
+# previous day's NAV (AMFI deadline 11 pm IST; overseas FoFs the next morning).
+#
+# Reliability: GitHub delays low-frequency crons, so mf_cron_worker.js
+# (Cloudflare, exact-minute cron) dispatches this workflow at 05:35 and
+# 06:35 IST as the primary trigger; the schedules below are the fallback.
+# The cheap "due" gate only builds when AMFI has a newer NAV date than the
+# published data, so repeated triggers cost seconds.
+on:
+  schedule:
+    - cron: '0 0 * * *'      # 05:30 IST
+    - cron: '0 1 * * *'      # 06:30 IST retry
+    - cron: '30 2 * * *'     # 08:00 IST retry
+    - cron: '0 5 * * *'      # 10:30 IST (late overseas FoF NAVs)
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Rebuild even if data is current'
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/build_mf_screener.py'
+      - 'scripts/mf_common.py'
+      - 'scripts/verify_mf_screener.js'
+      - '.github/workflows/mf_screener.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mf-screener-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  due:
+    name: Is a refresh due?
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - name: Checkout published data
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          sparse-checkout: data/mf/screener.json
+          sparse-checkout-cone-mode: false
+
+      - name: Compare published NAV date with AMFI
+        id: check
+        env:
+          EVENT: ${{ github.event_name }}
+          FORCE: ${{ github.event.inputs.force }}
+        run: |
+          python3 - <<'PY'
+          import collections, datetime as dt, json, os, re, urllib.request
+          event, force = os.environ["EVENT"], os.environ.get("FORCE") == "true"
+          run, why = True, f"{event} trigger"
+          if event in ("schedule", "workflow_dispatch") and not force:
+              try:
+                  pub = dt.date.fromisoformat(json.load(open("data/mf/screener.json"))["asOf"])
+              except Exception as exc:
+                  pub, why = None, f"no published data ({exc})"
+              if pub:
+                  latest = None
+                  for u in ("https://www.amfiindia.com/spages/NAVAll.txt", "https://portal.amfiindia.com/spages/NAVAll.txt"):
+                      try:
+                          req = urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"})
+                          txt = urllib.request.urlopen(req, timeout=60).read().decode("utf-8", "replace")
+                          dates = re.findall(r";(\d{2}-[A-Za-z]{3}-\d{4})\s*$", txt, re.M)
+                          top = collections.Counter(dates).most_common(1)[0][0]
+                          latest = dt.datetime.strptime(top, "%d-%b-%Y").date()
+                          break
+                      except Exception as exc:
+                          why = f"AMFI check failed ({exc})"
+                  if latest and latest <= pub:
+                      run, why = False, f"up to date (published {pub}, AMFI {latest})"
+                  elif latest:
+                      why = f"new NAV date {latest} (published {pub})"
+          print(f"run={run}: {why}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"run={'true' if run else 'false'}\n")
+          PY
+
+  build:
+    name: Build & verify data/mf
+    needs: due
+    if: needs.due.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Restore NAV-history cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .mfcache
+          key: mf-cache-${{ github.run_id }}
+          restore-keys: mf-cache-
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install --upgrade pip numpy scipy requests
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build India MF screener data
+        run: python scripts/build_mf_screener.py --workers 10
+
+      - name: Save NAV-history cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .mfcache
+          key: mf-cache-${{ github.run_id }}
+
+      - name: Verify (independent JS re-computation + structure checks)
+        run: node scripts/verify_mf_screener.js
+
+      - name: Validation summary
+        run: |
+          python3 - <<'PY'
+          import json
+          v = json.load(open(".mfcache/validation.json"))
+          print("NAV as of", v["asOf"], "· risk as of", v["riskAsOf"], "· funds", v["analysed"])
+          print("Agreement with independently published returns:", json.dumps(v["vsIndependent"], indent=1))
+          PY
+
+      - name: Commit (with rebase-and-retry)
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A data/mf
+          if git diff --staged --quiet; then
+            echo "No changes to MF screener data."
+            exit 0
+          fi
+          git commit -m "chore(data): refresh India MF screener [skip ci]"
+          for attempt in 1 2 3 4; do
+            if git push origin HEAD:"$BRANCH"; then
+              echo "Pushed."
+              exit 0
+            fi
+            echo "Push rejected (attempt $attempt). Rebasing..."
+            git pull --rebase --autostash origin "$BRANCH" || git rebase --abort
+            sleep $((attempt * 5))
+          done
+          echo "All push attempts failed."
+          exit 1

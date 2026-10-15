@@ -125,3 +125,11 @@ For English stories, use this exact HTML snippet:
   <strong>Disclaimer:</strong> Mutual fund and stock market investments are subject to market risks. Please read all scheme-related documents carefully before investing. The information provided in this article is strictly for educational and informational purposes only. We are not SEBI registered investment advisors. Please conduct your own research or consult with a certified financial advisor before making any investment decisions based on your personal risk tolerance and financial goals.
 </p>
 ```
+
+## India Mutual Fund Screener (`india_mf_screener.html`)
+- **Universe:** every open-ended Direct-plan Growth-option scheme in AMFI's daily NAV file (ETFs, closed-ended, interval, segregated and duplicate/IDCW-mislabelled listings excluded). Categories = SEBI category + name rules in `scripts/mf_common.py::classify()`; the build **fails** if any fund is unclassified.
+- **Pipeline:** `.github/workflows/mf_screener.yml` → `scripts/build_mf_screener.py` (uses `scripts/mf_common.py`) → `scripts/verify_mf_screener.js` (independent JS re-computation + structure checks; publish is blocked on any failure). Caches live in the Actions cache (`.mfcache/`), never in git.
+- **Accuracy rules:** every return base date and every risk month-end is reconciled against AMFI's official NAV history; unit face-value changes are restated; isolated one-day spikes are dropped. Do not remove these steps.
+- **Schedule:** Cloudflare cron `mf_cron_worker.js` (`wrangler.mfcron.toml`, auto-deployed by `deploy_mf_cron.yml`) dispatches the workflow at 23:35 IST and 05:35–11:05 IST; the workflow's "due" gate only builds when AMFI has a newer NAV date.
+- **Outputs (same-origin static JSON only):** `data/mf/screener.json` (daily, loaded at page start), `data/mf/t/<sub>.json` (daily tail), `data/mf/d/<sub>.json` and `data/mf/h/<code>.json` (as of last month-end, change monthly — keeps git growth small).
+- **Copy rules:** the page must not name data vendors, APIs or backend mechanics; the verify script enforces this.
