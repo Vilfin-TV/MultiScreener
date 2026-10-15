@@ -52,6 +52,7 @@ UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chr
 NAVALL_URLS = ["https://www.amfiindia.com/spages/NAVAll.txt", "https://portal.amfiindia.com/spages/NAVAll.txt"]
 HIST_URL = "https://api.mfapi.in/mf/{code}"
 FACTS_URL = "https://mf.captnemo.in/kuvera/{isin}"
+AMFI_TER = "https://www.amfiindia.com/api/populate-te-rdata-revised?MF_ID={id}"
 AMFI_HIST = "https://portal.amfiindia.com/DownloadNAVHistoryReport_Po.aspx?tp=1&frmdt={f}&todt={t}"
 NSE_HOME = "https://www.nseindia.com/reports-indices-historical-index-data"
 NSE_HIST = "https://www.nseindia.com/api/historicalOR/indicesHistory?indexType={name}&from={f}&to={t}"
@@ -92,6 +93,7 @@ GROWTH_ASSETS = {"Equity", "Index", "Global", "Commodity", "Hybrid", "Solution"}
 
 RECON = {}
 SNAPS = {}
+TER = {}
 RISKOMETER = ["Low", "Low to Moderate", "Moderate", "Moderately High", "High", "Very High"]
 
 
@@ -380,6 +382,50 @@ def reconcile_with_amfi(hist_pts, snaps):
     return stats, examples
 
 
+def _norm_name(n):
+    n = re.sub(r"\(.*?\)", " ", n.lower())
+    n = re.sub(r"\b(fund|scheme|plan|the|direct|growth|option|an?|open ended)\b", " ", n)
+    return re.sub(r"[^a-z0-9]+", "", n)
+
+
+def load_official_ter(universe, args):
+    """Official Direct-plan TER disclosed daily to AMFI (latest date per scheme)."""
+    cache = load_gz(CACHE / "ter.json.gz", {})
+    if cache.get("_date") == date.today().isoformat() and cache.get("rows"):
+        rows = cache["rows"]
+    else:
+        rows = {}
+
+        def job(mid):
+            try:
+                r = S.get(AMFI_TER.format(id=mid), timeout=60)
+                return r.json().get("data", []) if r.status_code == 200 else []
+            except Exception:  # noqa: BLE001
+                return []
+
+        with ThreadPoolExecutor(max_workers=6) as ex:
+            for data in ex.map(job, range(1, 101)):
+                for x in data:
+                    try:
+                        d, ter = x["TER_Date"][:10], float(x["D_TER"])
+                    except (KeyError, TypeError, ValueError):
+                        continue
+                    k = _norm_name(x.get("Scheme_Name", ""))
+                    if k and (k not in rows or d >= rows[k][0]):
+                        rows[k] = [d, ter, x.get("Scheme_Name")]
+        if rows:
+            save_gz(CACHE / "ter.json.gz", {"_date": date.today().isoformat(), "rows": rows})
+        else:
+            rows = cache.get("rows", {})
+    out = {}
+    for r in universe:
+        hit = rows.get(_norm_name(r["name"]))
+        if hit:
+            out[r["code"]] = {"ter": hit[1], "date": hit[0]}
+    log.info("Official TER: %d schemes disclosed, matched %d/%d funds", len(rows), len(out), len(universe))
+    return out
+
+
 def load_facts(universe, args):
     """Scheme facts (TER, AUM, managers, riskometer, minimums). Refreshed weekly per scheme, gently paced;
     schemes the source does not list yet are re-tried after a few days."""
@@ -457,7 +503,7 @@ def fetch_nse_indices(start: date, end: date):
         f0 = start if not have or min(have) > start.toordinal() + 7 or not dense else date.fromordinal(last) - timedelta(days=10)
         cur, got = f0, 0
         while cur <= end:
-            to = min(cur + timedelta(days=330), end)
+            to = min(cur + timedelta(days=90), end)   # the endpoint returns at most ~70 rows per call
             url = NSE_HIST.format(name=requests.utils.quote(name), f=cur.strftime("%d-%m-%Y"), t=to.strftime("%d-%m-%Y"))
             for k in range(3):
                 try:
@@ -573,6 +619,8 @@ def main():
     universe = [r for r in universe if r["code"] in series]
     facts = load_facts(universe, args)
     universe = dedupe(universe, facts, series)
+    global TER
+    TER = load_official_ter(universe, args)
 
     # official AMFI NAVs on every date the analytics depend on (return base dates first, then month-ends)
     asof0 = navdate
@@ -727,7 +775,7 @@ def main():
         ter = []
         for r in lst:
             try:
-                ter.append(float((facts.get(r["isin"]) or {}).get("expense_ratio")))
+                ter.append(ter_of(r, facts.get(r["isin"]) or {})[0])
             except (TypeError, ValueError):
                 ter.append(None)
         te = C.percentile_ranks(ter, higher_better=False)
@@ -744,6 +792,17 @@ def main():
         return
     write_outputs(universe, work, results, facts, bench, asof, risk_asof, series, rating, stale, fac_keys)
     dump_validation(universe, work, results, facts, bench, asof, risk_asof, series, month_ends, rf_vals, bench_me)
+
+
+def ter_of(r, f):
+    """(TER %, as-of date): AMFI's official daily disclosure first, scheme facts otherwise."""
+    o = TER.get(r["code"])
+    if o:
+        return o["ter"], o["date"]
+    try:
+        return float(f.get("expense_ratio")), f.get("expense_ratio_date")
+    except (TypeError, ValueError):
+        return None, None
 
 
 def _f(x, nd=2):
@@ -777,7 +836,7 @@ def write_outputs(universe, work, results, facts, bench, asof, risk_asof, series
             tr.get("3y"), tr.get("5y"), tr.get("10y"), tr.get("si"), res["inc"],
             (res["sip"].get("1") or {}).get("xirr"), (res["sip"].get("3") or {}).get("xirr"),
             (res["sip"].get("5") or {}).get("xirr"),
-            _f(f.get("expense_ratio")), round(aum / 10, 1) if aum is not None else None,
+            _f(ter_of(r, f)[0]), round(aum / 10, 1) if aum is not None else None,
             RISKOMETER.index(risk_lbl) if risk_lbl in RISKOMETER else None, rating.get(r["code"]),
             rk.get("std"), rk.get("sharpe"), rk.get("sortino"), rk.get("beta"), rk.get("alpha"),
             (res.get("mdd3") or {}).get("mdd"), fac.get("primary"), fac.get("size"),
@@ -821,7 +880,7 @@ def write_outputs(universe, work, results, facts, bench, asof, risk_asof, series
                     "amfiName": r["name"], "cat": r["cat"], "objective": (f.get("investment_objective") or "").strip(),
                     "managers": [m.strip() for m in re.split(r";|,(?![^()]*\))", f.get("fund_manager") or "") if m.strip()],
                     "sid": f.get("detail_info"), "turnover": _f(f.get("portfolio_turnover")),
-                    "terDate": f.get("expense_ratio_date"), "start": f.get("start_date"),
+                    "terDate": ter_of(r, f)[1], "start": f.get("start_date"),
                 },
             }
             s = series[r["code"]]
@@ -903,6 +962,16 @@ def dump_validation(universe, work, results, facts, bench, asof, risk_asof, seri
     vs_official = {k: {"n": len(v), "exact_0.01pp": round(float(np.mean(np.array(v) <= 0.01)) * 100, 2)}
                    for k, v in off.items() if v}
     log.info("Validation vs AMFI official NAVs: %s", json.dumps(vs_official))
+    both = []
+    for r in work:
+        o, f = TER.get(r["code"]), facts.get(r["isin"]) or {}
+        try:
+            both.append(abs(o["ter"] - float(f["expense_ratio"])))
+        except (TypeError, ValueError, KeyError):
+            pass
+    ter_cmp = {"official": len(TER), "both": len(both),
+               "within_0.05": round(float(np.mean(np.array(both) <= 0.05)) * 100, 2) if both else None}
+    log.info("TER official vs scheme facts: %s", ter_cmp)
     REF = [r"Parag Parikh Flexi Cap", r"ICICI Prudential Large Cap", r"Nippon India Small Cap Fund$",
            r"Mirae Asset ELSS", r"SBI Liquid", r"ICICI Prudential Gilt Fund$", r"HDFC Balanced Advantage",
            r"Nippon India Gold Savings", r"Motilal Oswal Nasdaq 100 Fund of Fund", r"UTI Nifty 50 Index Fund$"]
@@ -918,11 +987,11 @@ def dump_validation(universe, work, results, facts, bench, asof, risk_asof, seri
                     "ours": {k: res["tr"].get(k) for k in ("1d", "1w", "1m", "3m", "6m", "1y", "3y", "5y", "si")},
                     "independent": f.get("returns"), "sip3": (res["sip"].get("3") or {}).get("xirr"),
                     "risk": res.get("risk"), "factor": res.get("factor"), "bench": res.get("bench"),
-                    "ter": f.get("expense_ratio"), "aum_cr": round(float(f["aum"]) / 10, 1) if f.get("aum") else None,
+                    "ter": ter_of(r, f)[0], "terFacts": f.get("expense_ratio"), "aum_cr": round(float(f["aum"]) / 10, 1) if f.get("aum") else None,
                     "managers": f.get("fund_manager"), "riskometer": f.get("crisil_rating")})
     sub_counts = Counter(C.SUBS[r["sub"]][1] + " | " + C.SUBS[r["sub"]][0] for r in work)
     report = {"asOf": asof.isoformat(), "riskAsOf": risk_asof.isoformat(), "universe": len(universe), "amfiReconciliation": RECON,
-              "analysed": len(work), "vsOfficial": vs_official, "officialMismatches": off_bad, "vsIndependent": summ, "worst": worst, "reference": ref,
+              "analysed": len(work), "terCheck": ter_cmp, "vsOfficial": vs_official, "officialMismatches": off_bad, "vsIndependent": summ, "worst": worst, "reference": ref,
               "benchmarks": bench, "subCounts": dict(sorted(sub_counts.items())),
               "global": sorted(r["disp"] for r in work if C.SUBS[r["sub"]][0] == "Global"),
               "commodity": sorted(r["disp"] for r in work if C.SUBS[r["sub"]][0] == "Commodity"),
