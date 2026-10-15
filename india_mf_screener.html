@@ -1540,7 +1540,7 @@ function pInfo(f, det){
   var taxHtml = T ? '<div class="tag f" style="margin-bottom:6px">' + esc(T.label) + '</div><div class="tax-grid"><div class="tax-cell"><small>Short-term</small><span>' + esc(T.stcg) + '</span></div><div class="tax-cell"><small>Long-term</small><span>' + esc(T.ltcg) + '</span></div></div>' +
       '<div class="note">' + esc(T.note) + ' Rates exclude surcharge and 4% cess. ' + esc(D.tax.asOf) + '. Tax rules change — please confirm with a tax professional.</div>' : '<p class="mut">–</p>';
   var mgHtml = mg.length ? '<div class="mgr2">' + mg.map(function(m){
-      var name = typeof m === 'string' ? m : m.name, since = typeof m === 'string' ? '' : m.since, role = typeof m === 'string' ? '' : m.role;
+      var name = typeof m === 'string' ? m : m.name, since = typeof m === 'string' ? '' : String(m.since || '').replace(/^since\s+/i, ''), role = typeof m === 'string' ? '' : m.role;
       return '<div><i>' + esc(initials(name)) + '</i><span><b>' + esc(name) + '</b><small>' + (since ? 'Managing since ' + esc(since) : '') + (since && role ? ' · ' : '') + esc(role || '') + '</small></span></div>';
     }).join('') + '</div>' : '<p class="mut">Not disclosed.</p>';
   var allocHtml = (info.alloc || []).length ? '<div class="alloc">' + info.alloc.map(function(a){

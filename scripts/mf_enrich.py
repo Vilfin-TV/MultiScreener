@@ -79,7 +79,8 @@ def parse_exit_load(t: str | None) -> list[str]:
     t = re.sub(r"(?i)entry\s*load\s*[:\-]?\s*(not applicable|nil|n\.?a\.?)\s*[,;.]?", "", t)
     t = re.sub(r"(?i)^\s*exit\s*load\s*[:\-]?\s*", "", t.strip())
     t = re.sub(r"(?i)\bexit\s*load\s*[:\-]\s*", "\n", t)
-    parts = re.split(r"\n|•|•|(?<=\.)\s+(?=[A-Z(])", t)
+    t = re.sub(r"(?<=[a-z)])\.(?=\s*(?:\d|No |Nil|If |For |In ))", ".\n", t)    # run-together sentences
+    parts = re.split(r"\n|•|;\s+(?=[A-Z])|(?<=\.)\s+(?=[A-Z(])", t)
     out = []
     for p in parts:
         p = p.strip(" -–;,")
@@ -97,7 +98,7 @@ def parse_exit_load(t: str | None) -> list[str]:
 
 def is_nil_load(lines: list[str]) -> bool:
     j = " ".join(lines).lower()
-    return bool(lines) and bool(re.fullmatch(r"\W*(nil|not applicable|na|n\.a\.|none|0%?)\W*", j))
+    return bool(lines) and bool(re.fullmatch(r"\W*(nil|not applicable|na|n\.a\.|none|no load|0%?|0\.00%?|exit load\W*nil)\W*", j))
 
 
 def parse_alloc(text: str | None) -> list[dict]:
@@ -105,6 +106,8 @@ def parse_alloc(text: str | None) -> list[dict]:
     out = []
     for m in re.finditer(r"([^,;()]+?)\s*[-–:]?\s*\(?\s*(\d+(?:\.\d+)?)\s*%?\s*(?:-|–|to)\s*(\d+(?:\.\d+)?)\s*%\s*\)?", text or ""):
         label = re.sub(r"\s+", " ", m.group(1)).strip(" -–,")
+        if len(label) < 3:
+            continue
         lo, hi = float(m.group(2)), float(m.group(3))
         low = label.lower()
         if re.search(r"debt|money market|bond|g-?sec|government|treasury|tri-?party|repo|cash|fixed income|sdl|t-?bill|cp|cd", low):
@@ -139,23 +142,32 @@ def parse_ssd(xml_text: str) -> dict:
         v = f.get(k, "")
         return "" if v in ("-", "N/A", "NA", "n/a") else v
 
-    names = [n.strip() for n in re.split(r",|;|\band\b", g("Fund_Manager_Name")) if n.strip()]
-    since_txt = g("Fund_Manager_From_Date")
+    def clean_name(n):
+        n = re.sub(r"\bFM\s*-?\s*\d+\b\s*[-:]?", " ", n, flags=re.I)
+        n = re.sub(r"^\s*(mr|ms|mrs|dr|shri|smt)\.?\s+", "", n, flags=re.I)
+        return re.sub(r"\s+", " ", n).strip(" -:")
+
+    names = [clean_name(n) for n in re.split(r",|;|\band\b|&", g("Fund_Manager_Name"))]
+    names = [n for n in names if len(n) > 2]
+    since_txt = re.sub(r"\bFM\s*-?\s*\d+\b\s*[-:]?", " ", g("Fund_Manager_From_Date"), flags=re.I)
     role_txt = g("Fund_Manager_Type_PrimaryComanageDescription")
+    date_rx = (r"(?:since\s+)?(?:\d{1,2}(?:st|nd|rd|th)?[-/ .](?:[A-Za-z]{3,9}|\d{1,2})[-/ .,]*\d{2,4}"
+               r"|[A-Za-z]{3,9}\.?\s*[-,]?\s*\d{4})")
+    dates_in_order = re.findall(date_rx, since_txt, re.I)
     managers = []
-    for n in names:
-        key = re.sub(r"^(mr|ms|mrs|dr|shri|smt)\.?\s+", "", n, flags=re.I).strip()
+    for i, n in enumerate(names):
         since = ""
-        m = re.search(re.escape(key) + r"\s*[-–:]\s*([^,;]+)", since_txt, re.I)
+        m = re.search(re.escape(n) + r"\s*[-–:(]?\s*(" + date_rx + ")", since_txt, re.I)
         if m:
-            since = m.group(1).strip()
-        elif len(names) == 1 and since_txt:
-            since = since_txt
+            since = m.group(1)
+        elif len(dates_in_order) == len(names):
+            since = dates_in_order[i]
+        since = re.sub(r"(?i)^since\s+", "", since.strip())
         role = ""
-        m = re.search(re.escape(key) + r"\s*[-–:]\s*([^,;]+)", role_txt, re.I)
+        m = re.search(re.escape(n) + r"\s*[-–:]\s*([^,;]+)", role_txt, re.I)
         if m:
             role = m.group(1).strip()
-        managers.append({"name": key, "since": since[:40], "role": role[:80]})
+        managers.append({"name": n, "since": since[:40], "role": role[:80]})
     isins = re.findall(r"INF[A-Z0-9]{9}", g("ISINs"))
     return {
         "riskometer": g("Riskometer_as_on_Date"), "riskLaunch": g("Riskometer_At_the_time_of_Launch"),
@@ -178,8 +190,8 @@ class Enricher:
         self.budget = budget_s
         self.workers = workers
         c = _load(cache_path, {})
-        if c.get("_v") != 1:
-            c = {"_v": 1, "amcs": {}, "sd": {}}
+        if c.get("_v") != 2:
+            c = {"_v": 2, "amcs": {}, "sd": {}}
         self.c = c
         self.stat = Counter()
 
@@ -245,7 +257,7 @@ class Enricher:
             rec["aum"] = {"totalLakh": round(tot, 2), "quarter": q, "plans": per}
         x = self._get(f"{PORTAL}/spages/SSD_{sid}.xml", as_json=False)
         if x and "<SchemeSummary" in x:
-            rec["ssd"] = parse_ssd(x)
+            rec["ssdXml"] = x          # kept raw so parsing improvements apply without refetching
         return sid, rec
 
     def run(self, universe: list[dict]) -> dict[int, dict]:
@@ -295,9 +307,8 @@ class Enricher:
                 for fut in as_completed(list(futs)):
                     futs.pop(fut)
                     sid, rec = fut.result()
-                    if rec.get("details") or rec.get("ssd"):
-                        sd[sid] = rec
-                        done += 1
+                    sd[sid] = rec          # stored even when empty, so missing schemes are retried weekly, not daily
+                    done += 1
                     if time.time() - t0 < self.budget:
                         nxt = next(it, None)
                         if nxt:
@@ -305,8 +316,12 @@ class Enricher:
                     break
         _save(self.path, self.c)
         # map to scheme codes: ISIN from the summary document first, exact name second
-        isin2sid = {}
+        isin2sid, parsed = {}, {}
         for sid, rec in sd.items():
+            if rec.get("ssdXml"):
+                rec = dict(rec)
+                rec["ssd"] = parse_ssd(rec["ssdXml"])
+                parsed[sid] = rec
             for i in (rec.get("ssd") or {}).get("isins", []):
                 isin2sid[i] = sid
         out, how = {}, Counter()
@@ -322,8 +337,8 @@ class Enricher:
             if not sid:
                 how["none"] += 1
                 continue
-            rec = sd[sid]
-            out[r["code"]] = {"sid": sid, **rec}
+            rec = parsed.get(sid) or sd[sid]
+            out[r["code"]] = {"sid": sid, **{k: v for k, v in rec.items() if k != "ssdXml"}}
         log.info("Official scheme enrichment: %d fetched this run (%d pending), mapped %s, errors %d, %.0fs",
                  done, max(0, len(todo) - done), dict(how), self.stat["errors"], time.time() - t0)
         return out
