@@ -1,18 +1,31 @@
 import json, re, requests
 S = requests.Session(); S.headers.update({"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36"})
 B = "https://www.amfiindia.com"
-r = S.get(B + "/otherdata/scheme-details", timeout=60)
-for j in sorted(set(re.findall(r'/_next/static/chunks/app/[^"\']+\.js', r.text))):
-    c = S.get(B + j, timeout=60).text
-    for m in re.finditer(r"/api/(populate-scheme|scheme-data|scheme-details|schemes/)", c):
-        print("SNIP", j, c[max(0, m.start() - 500): m.end() + 700].replace("\n", " "))
-        print("-----")
-for u in ["/api/populate-scheme", "/api/populate-scheme?mfId=53", "/api/scheme-data", "/api/scheme-details", "/api/schemes/",
-          "/api/scheme-details?SchemeCode=122639", "/api/scheme-details?schemeCode=122639", "/api/schemes/122639",
-          "/api/scheme-data?mfId=53", "/api/scheme-details?mfId=53"]:
-    try:
-        x = S.get(B + u, timeout=60)
-        print("API", u, x.status_code, x.text[:1500].replace("\n", " "))
-    except Exception as e:
-        print("API", u, "ERR", e)
-    print("-----")
+h = S.get(B + "/otherdata/scheme-details", timeout=60).text
+i = h.find("mfName")
+print("HTML mfName ctx:", h[max(0, i - 600): i + 1200].replace("\n", " ") if i >= 0 else "none")
+ids = re.findall(r'\\?"mfId\\?":\\?"?(\d+)\\?"?,\\?"mfName\\?":\\?"([^"\\]+)', h) or re.findall(r'"mfId":"?(\d+)"?,"mfName":"([^"]+)"', h)
+print("AMC IDS", len(ids), ids[:60])
+mid = ids[0][0] if ids else "53"
+for m in [mid, "53"]:
+    r = S.get(f"{B}/api/populate-scheme?MF_ID={m}", timeout=60)
+    print("POPULATE", m, r.status_code, r.text[:1200].replace("\n", " "))
+r = S.get(f"{B}/api/populate-scheme?MF_ID=53", timeout=60)
+try:
+    lst = r.json()
+    lst = lst.get("data", lst) if isinstance(lst, dict) else lst
+except Exception:
+    lst = []
+print("N schemes axis", len(lst))
+if lst:
+    e = lst[0]; print("FIRST", e)
+    sid = next((v for k, v in e.items() if re.search(r"id", k, re.I)), None)
+    for k, v in e.items(): print("  ", k, v)
+    for u in [f"/api/scheme-details?MF_ID=53&scheme_id={sid}", f"/api/scheme-data?strMFId=53&strSDId={sid}&strOption=AUM",
+              f"/api/scheme-data?strMFId=53&strSDId={sid}&strOption=NAV", f"/api/schemes/{sid}/documents"]:
+        x = S.get(B + u, timeout=60); print("API", u, x.status_code, x.text[:2500].replace("\n", " ")); print("-----")
+    # find a flexi / large fund for richer load text
+    for e in lst:
+        if re.search(r"flexi|large|small", json.dumps(e), re.I):
+            sid = next((v for k, v in e.items() if re.search(r"id", k, re.I)), None)
+            x = S.get(f"{B}/api/scheme-details?MF_ID=53&scheme_id={sid}", timeout=60); print("EQ", e, x.text[:1500]); break
