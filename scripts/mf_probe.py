@@ -69,14 +69,13 @@ def p_refs():
         if not p[0].isdigit(): continue
         rows.append((p, cat, amc))
     for k, rx in REF.items():
-        m = [r for r in rows if re.search(rx, r[0][3], re.I) and not re.search(r"IDCW|Dividend|Bonus", r[0][3], re.I)]
+        m = [r for r in rows if re.search(rx, r[0][3] + " Direct Growth" if r[0][4] == "Direct Plan" and re.search("growth", r[0][5], re.I) else r[0][3], re.I) and not re.search(r"IDCW|Dividend|Bonus", r[0][3] + r[0][5], re.I)]
         if m:
             p, c, a = m[0]
-            refs[k] = {"code": p[0], "isin": p[1], "name": p[3], "nav": p[4], "date": p[5], "cat": c, "amc": a, "n": len(m)}
+            refs[k] = {"code": p[0], "isin": p[1], "name": p[3], "plan": p[4], "opt": p[5], "nav": p[6], "date": p[7], "cat": c, "amc": a, "n": len(m), "all": [x[0][0] for x in m]}
     cats = sorted(set(r[1] for r in rows if r[1]))
     (OUT / "categories.txt").write_text("\n".join(cats))
-    dg = [r for r in rows if re.search(r"direct", r[0][3], re.I) and re.search(r"growth", r[0][3], re.I)
-          and not re.search(r"IDCW|Dividend|Bonus", r[0][3], re.I) and r[1] and r[1].startswith("Open")]
+    dg = [r for r in rows if r[0][4] == "Direct Plan" and re.search(r"growth", r[0][5], re.I) and r[1] and r[1].startswith("Open")]
     (OUT / "refs.json").write_text(json.dumps(refs, indent=1))
     return {"rows": len(rows), "cats": len(cats), "direct_growth_open": len(dg), "refs": {k: v["name"] for k, v in refs.items()}}
 probe("refs", p_refs)
@@ -97,12 +96,12 @@ def p_amfi_hist():
     u = "https://portal.amfiindia.com/DownloadNAVHistoryReport_Po.aspx?mf=53&tp=1&frmdt=01-Sep-2026&todt=10-Sep-2026"
     r = get(u); (OUT / "amfi_hist_sample.txt").write_text(r.text[:20000])
     return [r.status_code, len(r.text), r.text[:300]]
-probe("amfi_hist", p_amfi_hist)
+
 
 # 4. Kuvera via captnemo (ISIN)
 def p_kuvera():
     out = {}
-    for k in ["flexi", "liquid", "gold", "nasdaq", "small"]:
+    for k in list(refs):
         if k not in refs: continue
         r = get(f"https://mf.captnemo.in/kuvera/{refs[k]['isin']}")
         out[k] = [r.status_code, len(r.text)]
@@ -113,14 +112,14 @@ probe("kuvera", p_kuvera)
 # 5. niftyindices TRI
 def p_nifty():
     out = {}
-    hdr = {"Content-Type": "application/json; charset=UTF-8", "Origin": "https://www.niftyindices.com",
+    hdr = {"Content-Type": "application/json; charset=UTF-8", "Accept": "application/json, text/javascript, */*; q=0.01", "Origin": "https://www.niftyindices.com",
            "Referer": "https://www.niftyindices.com/reports/historical-data", "X-Requested-With": "XMLHttpRequest"}
     get("https://www.niftyindices.com/reports/historical-data")
-    for name in ["NIFTY 50", "NIFTY200 MOMENTUM 30", "NIFTY100 LOW VOLATILITY 30", "NIFTY500 VALUE 50", "NIFTY200 QUALITY 30", "NIFTY 500"]:
+    for name in ["NIFTY 50"]:
         cinfo = "{'name':'%s','startDate':'01-Sep-2026','endDate':'14-Oct-2026','indexName':'%s'}" % (name, name)
         r = S.post("https://www.niftyindices.com/Backpage.aspx/getTotalReturnIndexString", json={"cinfo": cinfo}, headers=hdr, timeout=60)
         out[name] = [r.status_code, r.text[:300]]
-        if r.status_code == 200: (OUT / f"tri_{name.replace(' ', '_')}.json").write_text(r.text)
+        if r.status_code == 200 and r.text.lstrip().startswith("{"): (OUT / f"tri_{name.replace(' ', '_')}.json").write_text(r.text)
     return out
 probe("niftyindices", p_nifty)
 
@@ -132,7 +131,7 @@ def p_yf():
         h = yf.Ticker(s).history(period="1mo")
         out[s] = len(h)
     return out
-probe("yfinance", p_yf)
+
 
 # 7. AMFI pages (TER / performance / AUM) – save HTML to discover APIs
 def p_pages():
@@ -145,6 +144,39 @@ def p_pages():
         r = get(u); out[n] = [r.status_code, len(r.text), r.url]
         (OUT / f"page_{n}.html").write_text(r.text[:400000])
     return out
-probe("pages", p_pages)
+
+def p_chunks():
+    out = {}
+    base = "https://www.amfiindia.com"
+    for n, u in {"ter": base + "/ter-of-mf-schemes", "perf": base + "/otherdata/fund-performance",
+                 "aum": base + "/otherdata/aum", "navhist": base + "/net-asset-value/nav-history"}.items():
+        r = get(u); out[n] = [r.status_code]
+        js = sorted(set(re.findall(r'/_next/static/chunks/[^"\']+\.js', r.text)))
+        hits = set()
+        for j in js:
+            if not re.search(r"app/|page", j): continue
+            t = get(base + j).text
+            for m in re.findall(r'["\'`]((?:https?://[^"\'`\s]*)?/?api[^"\'`\s]{2,200})["\'`]', t):
+                hits.add(m)
+            for m in re.findall(r'["\'`](https?://[^"\'`\s]{5,200})["\'`]', t):
+                hits.add(m)
+        out[n].append(sorted(hits)[:80])
+    (OUT / "amfi_api_hits.json").write_text(json.dumps(out, indent=1))
+    return {k: len(v[1]) if len(v) > 1 else v for k, v in out.items()}
+probe("chunks", p_chunks)
+
+def p_nse():
+    out = {}
+    s2 = requests.Session(); s2.headers.update(S.headers)
+    s2.headers.update({"Accept": "application/json, text/plain, */*", "Referer": "https://www.nseindia.com/reports-indices-historical-index-data"})
+    r = s2.get("https://www.nseindia.com/", timeout=30); out["home"] = r.status_code
+    for name in ["NIFTY 50", "NIFTY200 MOMENTUM 30"]:
+        u = "https://www.nseindia.com/api/historicalOR/indicesHistory?indexType=%s&from=01-09-2026&to=14-10-2026" % requests.utils.quote(name)
+        r = s2.get(u, timeout=30); out[name] = [r.status_code, r.text[:400]]
+        u2 = "https://www.nseindia.com/api/historical/indicesHistory?indexType=%s&from=01-09-2026&to=14-10-2026" % requests.utils.quote(name)
+        r = s2.get(u2, timeout=30); out[name + "_v1"] = [r.status_code, r.text[:400]]
+    return out
+probe("nse", p_nse)
+
 
 (OUT / "report.json").write_text(json.dumps(report, indent=1))
