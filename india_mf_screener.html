@@ -229,7 +229,7 @@ li:first-child .sp-rank{background:var(--accent);color:var(--accent-ink)}
 .pre svg{width:15px;height:15px;opacity:.85}
 .pre:hover{border-color:var(--accent);color:var(--text)}
 .pre.on{background:var(--accent-soft);border-color:var(--accent);color:var(--text)}
-.tools{display:grid;grid-template-columns:minmax(0,2fr) repeat(5,minmax(0,1fr));gap:10px;margin-top:12px}
+.tools{display:grid;grid-template-columns:minmax(0,2fr) repeat(6,minmax(0,1fr));gap:10px;margin-top:12px}
 .sel,.tin{width:100%;height:40px;font-size:13px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface2);outline:none;min-width:0}
 .sel{padding:0 34px 0 12px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a9bb3' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;text-overflow:ellipsis}
 .sel option,.sel optgroup{background:var(--surface);color:var(--text)}
@@ -241,7 +241,7 @@ li:first-child .sp-rank{background:var(--accent);color:var(--accent-ink)}
 .seg button.on{background:var(--accent);color:var(--accent-ink)}
 .tbl-scroll{overflow-x:auto;margin-top:10px;border:1px solid var(--border);border-radius:12px;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:13px}
-.ftbl{min-width:980px}
+.ftbl{min-width:1090px}
 thead th{position:sticky;top:0;background:var(--surface2);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);font-weight:700;padding:11px 12px;border-bottom:1px solid var(--border);white-space:nowrap;user-select:none}
 thead th.sortable{cursor:pointer}
 thead th.num{text-align:right}
@@ -362,6 +362,44 @@ td.sorted-col{background:rgba(127,127,127,.05)}
 .calc{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;margin-bottom:12px}
 .calc .tin{height:44px;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600}
 
+/* status + scorecard */
+.st{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;background:var(--sb);color:var(--sc)}
+.st::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--sc)}
+.st-in{--sc:var(--pos);--sb:rgba(34,197,94,.14)}.st-on{--sc:var(--accent2);--sb:var(--accent-soft)}
+.st-un{--sc:var(--warn);--sb:rgba(232,163,23,.15)}.st-out{--sc:var(--neg);--sb:rgba(248,113,113,.15)}
+.st-na{--sc:var(--text3);--sb:var(--surface3)}
+.meters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.meter{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;min-width:0}
+.meter-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.meter-k{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);display:flex;gap:6px;align-items:center}
+.meter-v{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600}
+.meter-v small{font-size:12px;color:var(--text3);font-weight:400}
+.meter-bar{height:8px;border-radius:4px;background:var(--surface3);margin:10px 0 8px;overflow:hidden}
+.meter-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--neg),var(--warn),var(--pos))}
+.meter-d{font-size:12px;color:var(--text2);line-height:1.45}
+.status-box{display:flex;gap:14px;align-items:flex-start;border-radius:12px;padding:14px;margin-bottom:12px;background:var(--sb);border:1px solid var(--sc)}
+.status-box b{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1.2px;color:var(--sc);line-height:1;display:block}
+.status-box p{font-size:13px;color:var(--text2);margin-top:4px;line-height:1.5}
+.load-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+.load-list li{display:flex;gap:10px;font-size:13.5px;line-height:1.5;color:var(--text2)}
+.load-list li::before{content:'';flex-shrink:0;width:6px;height:6px;border-radius:50%;background:var(--accent2);margin-top:8px}
+.tax-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.tax-cell{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;min-width:0}
+.tax-cell small{display:block;font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+.tax-cell span{font-size:13px;line-height:1.5}
+.alloc{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.alloc-row{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:10px;align-items:center;font-size:12.5px}
+.alloc-row .lbl{color:var(--text2);line-height:1.35}
+.alloc-row .rng{font-family:'JetBrains Mono',monospace;text-align:right;white-space:nowrap}
+.alloc-bar{grid-column:1/-1;position:relative;height:6px;background:var(--surface3);border-radius:3px}
+.alloc-bar i{position:absolute;top:0;bottom:0;border-radius:3px;background:var(--accent);opacity:.75}
+.mgr2{display:flex;flex-direction:column;gap:8px}
+.mgr2 div{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:center;padding:8px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)}
+.mgr2 i{width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-style:normal;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.mgr2 b{font-size:13.5px;display:block}
+.mgr2 small{font-size:11.5px;color:var(--text3)}
+.docs{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+
 /* factor */
 .fac-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:center}
 .radar svg{width:100%;max-width:420px;height:auto;display:block;margin:0 auto}
@@ -479,6 +517,8 @@ footer a{color:var(--text2)}
   .quick .qbtn:nth-of-type(n+5){display:none}
   .stats.s4{grid-template-columns:repeat(2,minmax(0,1fr))}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .meters{grid-template-columns:1fr}
+  .tax-grid{grid-template-columns:1fr}
   .cmp-slots{grid-template-columns:1fr}
   .info-row{grid-template-columns:120px minmax(0,1fr)}
   .calc{grid-template-columns:1fr}
@@ -617,6 +657,7 @@ footer a{color:var(--text2)}
           <option value="0">Any expense ratio</option><option value="0.25">≤ 0.25%</option><option value="0.5">≤ 0.50%</option><option value="0.75">≤ 0.75%</option><option value="1">≤ 1.00%</option>
         </select>
         <select class="sel" id="fRisk" aria-label="Riskometer"><option value="">Any risk level</option></select>
+        <select class="sel" id="fStatus" aria-label="Status"><option value="">Any status</option><option>In form</option><option>On track</option><option>Underperforming</option><option>Out of track</option></select>
       </div>
       <div class="tbl-meta"><span id="tblCount">–</span><span id="tblNote"></span></div>
       <div class="tbl-scroll"><table class="ftbl" id="ftbl"><thead id="fthead"></thead><tbody id="ftbody"><tr><td colspan="11"><div class="skel" style="height:220px"></div></td></tr></tbody></table></div>
@@ -661,6 +702,8 @@ footer a{color:var(--text2)}
       <details class="faq"><summary>When is the data updated?</summary><p>Every morning, once fund houses have published the previous business day's NAV. Risk ratios, rolling returns and Factor DNA are computed as of the last month-end, the convention used in fund factsheets.</p></details>
       <details class="faq"><summary>Which benchmark is used?</summary><p>Equity funds are compared with the index matching their category (Nifty 100 for large caps, Nifty Midcap 150, Nifty Smallcap 250, Nifty LargeMidcap 250, otherwise Nifty 500). Benchmark returns include dividends: each index is tracked through its longest-running Direct-plan index fund, so the comparison is like-for-like after costs. Hybrid funds show equity sensitivity against the Nifty 50. Debt, commodity and international funds are compared with their category peers.</p></details>
       <details class="faq"><summary>How is the risk-free rate chosen?</summary><p>Sharpe and Sortino ratios subtract the overnight money-market return for the same months, so they adapt automatically as interest rates change.</p></details>
+      <details class="faq"><summary>What do the scores and status mean?</summary><p><b>Consistency</b> is the share of the last 36 month-ends in which the fund ranked in the top half of its category on rolling 1-year return. <b>Recency</b> blends 3-month, 6-month and 1-year returns (20/30/50) into a category percentile. <b>Volatility</b> ranks 3-year volatility within the category (100 = calmest). <b>Status</b>: <i>In form</i> — recency in the top 30%; <i>On track</i> — recency between the 40th and 70th percentile; <i>Underperforming</i> — recency in the bottom 40% but a top-half long-term record; <i>Out of track</i> — both recent and long-term returns in the bottom half. Index funds are not scored, since they track an index by design.</p></details>
+      <details class="faq"><summary>How is taxation shown?</summary><p>Each fund is mapped to its capital-gains treatment from its SEBI category and stated asset allocation: equity-oriented, specified (debt-oriented), or other. Rates exclude surcharge and cess and may change with each Union Budget — please confirm with a tax professional.</p></details>
       <details class="faq"><summary>How is Factor DNA calculated?</summary><p>Three years of weekly returns are matched against NSE's Momentum, Value, Quality, Low-Volatility and size indices. The best-fitting combination (weights that are positive and add to 100%) shows the fund's style. A fund is labelled with a single style only when that style dominates and the fit is strong; otherwise it is a <b>Blend</b>.</p></details>
     </div>
   </section>
@@ -705,6 +748,8 @@ var PRESETS = [
   {id:'riskadj', n:'Best risk-adjusted', ic:'<path d="M12 3v18M5 7h14M7 7l-3 7h6zM17 7l-3 7h6z"/>'},
   {id:'cost', n:'Lowest cost', ic:'<circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .9-3 2s1.3 1.8 3 2 3 .9 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/>'},
   {id:'large', n:'Largest funds', ic:'<path d="M3 21h18M5 21V10l7-5 7 5v11"/>'},
+  {id:'inform', n:'In form', ic:'<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>'},
+  {id:'steady', n:'Most steady', ic:'<path d="M3 12h4l3-8 4 16 3-8h4"/>'},
   {id:'rated', n:'Highest rated', ic:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>'}
 ];
 var PERIODS = {r1y:'1Y', r3y:'3Y', r5y:'5Y'};
@@ -717,7 +762,7 @@ var PAGE = 50;
 /* ─────────── state ─────────── */
 var D = null, FUNDS = [], BY = {}, SUBSTAT = {}, AMC_AUM = {};
 var S = {view:'explore', asset:'Equity', sub:'', preset:'top', per:'r3y', sort:null, shown:PAGE,
-         f:{text:'', amc:'', rating:0, hist:0, ter:0, risk:''}, sel:null, tab:'overview', range:'3Y', showBench:true,
+         f:{text:'', amc:'', rating:0, hist:0, ter:0, risk:'', status:''}, sel:null, tab:'overview', range:'3Y', showBench:true,
          rollWin:'3', sipAmt:10000, cmp:[], cmpRange:'3Y', peerSort:'r3y'};
 var CACHE = {d:{}, t:{}, h:{}};
 var acIdx = -1, acList = [];
@@ -753,6 +798,16 @@ function load(k){ try { return localStorage.getItem(k); } catch(e){ return null;
 function cssv(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 function initials(n){ return n.split(/\s+/).filter(Boolean).slice(0, 2).map(function(w){ return w[0]; }).join('').toUpperCase(); }
 function debounce(fn, ms){ var t; return function(){ var a = arguments, s = this; clearTimeout(t); t = setTimeout(function(){ fn.apply(s, a); }, ms); }; }
+var ST_CLS = {'In form':'st-in', 'On track':'st-on', 'Underperforming':'st-un', 'Out of track':'st-out'};
+var ST_DESC = {
+  'In form':'Recent returns (3M, 6M, 1Y) rank in the top 30% of the category.',
+  'On track':'Recent returns sit in the middle of the category (40th–70th percentile).',
+  'Underperforming':'Recent returns are in the bottom 40% of the category, but the long-term record is in the top half — a lag worth monitoring.',
+  'Out of track':'Both recent and long-term returns are in the bottom half of the category — a persistent lag.'
+};
+function statusPill(st, title){ if (!st) return '<span class="st st-na" title="Status needs a 1-year record in a category of five or more funds">—</span>'; return '<span class="st ' + ST_CLS[st] + '" title="' + esc(title || ST_DESC[st]) + '">' + esc(st) + '</span>'; }
+function scoreTxt(v){ return isNum(v) ? Math.round(v) + '<small>/100</small>' : '–'; }
+var TAX_SHORT = {equity:'Equity', elss:'Equity (ELSS)', debt:'Debt (slab)', other:'Non-equity'};
 function hint(t){ return '<span class="hint" title="' + esc(t) + '" aria-label="' + esc(t) + '">?</span>'; }
 
 /* ─────────── theme ─────────── */
@@ -814,7 +869,7 @@ function boot(){
     D = j; index(); renderMeta(); buildFilters(); bindUI(); readURL(); render();
     $('q').disabled = false;
   }).catch(function(e){
-    $('ftbody').innerHTML = '<tr><td colspan="11"><div class="err"><b>Fund data is temporarily unavailable</b>Please refresh in a few minutes.</div></td></tr>';
+    $('ftbody').innerHTML = '<tr><td colspan="12"><div class="err"><b>Fund data is temporarily unavailable</b>Please refresh in a few minutes.</div></td></tr>';
     $('metaChips').innerHTML = '<span class="chip"><span class="dot" style="background:var(--neg)"></span>Data unavailable</span>';
   });
 }
@@ -854,6 +909,11 @@ function renderMeta(){
     '<span class="chip"><span class="dot"></span>NAV as of ' + fmtDate(D.asOf) + '</span>' +
     '<span class="chip">' + D.count.toLocaleString('en-IN') + ' Direct-Growth funds</span>' +
     '<span class="chip" title="Data refreshed ' + fmtDate(ist.toISOString().slice(0, 10)) + ' ' + hh + ' IST">Updated ' + fmtDate(ist.toISOString().slice(0, 10), false) + ', ' + hh + ' IST</span>';
+  fetch(BASE + 'audit.json?v=' + bust(), {cache:'no-cache'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(a){
+    if (!a || a.failures !== 0) return;
+    var t = a.checks.toLocaleString('en-IN') + ' automated accuracy checks passed for ' + fmtDate(a.asOf) + (a.recomputedFunds ? ' · ' + a.recomputedFunds + ' funds independently recomputed' : '') + ' · NAVs re-checked against official AMFI data through the day';
+    $('metaChips').insertAdjacentHTML('beforeend', '<span class="chip" title="' + esc(t) + '"><span class="dot"></span>Verified data</span>');
+  }).catch(function(){});
   var big = FUNDS.filter(function(f){ return isNum(f.aum); }).sort(function(a, b){ return b.aum - a.aum; });
   var picks = [], seenSub = {};
   for (var i = 0; i < big.length && picks.length < 7; i++){ if (!seenSub[big[i].sub] && big[i].asset !== 'Debt') { seenSub[big[i].sub] = 1; picks.push(big[i]); } }
@@ -944,6 +1004,8 @@ function presetSort(){
     case 'cost': return {k:'ter', dir:1};
     case 'large': return {k:'aum', dir:-1};
     case 'rated': return {k:'rating', dir:-1, alt:'sharpe'};
+    case 'inform': return {k:'rec', dir:-1};
+    case 'steady': return {k:'cons', dir:-1, alt:'vols'};
     default: return {k:S.per, dir:-1};
   }
 }
@@ -955,12 +1017,13 @@ function filtered(){
     if (f.hist && !(x.ageY >= f.hist)) return false;
     if (f.ter && !(isNum(x.ter) && x.ter <= f.ter)) return false;
     if (f.risk !== '' && x.risk !== +f.risk) return false;
+    if (f.status && x.status !== f.status) return false;
     for (var i = 0; i < txt.length; i++) if (x.search.indexOf(txt[i]) < 0) return false;
     return true;
   });
 }
 var TCOLS = [
-  {k:'name', n:'Fund', cls:'t-fund'}, {k:'rating', n:'Rating'}, {k:'r1y', n:'1Y', num:1, pct:1}, {k:'r3y', n:'3Y', num:1, pct:1},
+  {k:'name', n:'Fund', cls:'t-fund'}, {k:'rating', n:'Rating'}, {k:'rec', n:'Status'}, {k:'r1y', n:'1Y', num:1, pct:1}, {k:'r3y', n:'3Y', num:1, pct:1},
   {k:'r5y', n:'5Y', num:1, pct:1}, {k:'sip3', n:'SIP 3Y', num:1, pct:1}, {k:'sharpe', n:'Sharpe', num:1}, {k:'ter', n:'TER', num:1},
   {k:'aum', n:'AUM', num:1}, {k:'risk', n:'Risk'}
 ];
@@ -990,13 +1053,14 @@ function renderTable(){
   }).join('') + '</tr>';
   var show = list.slice(0, S.shown);
   if (!show.length) {
-    $('ftbody').innerHTML = '<tr><td colspan="11"><div class="empty">No funds match these filters.</div></td></tr>';
+    $('ftbody').innerHTML = '<tr><td colspan="12"><div class="empty">No funds match these filters.</div></td></tr>';
     $('fcards').innerHTML = '<div class="empty">No funds match these filters.</div>';
   } else {
     $('ftbody').innerHTML = show.map(function(f, i){
       return '<tr class="clk" data-code="' + f.code + '"><td class="mut">' + (i + 1) + '</td>' +
         '<td class="t-fund"><div class="t-name">' + esc(f.name) + '</div><div class="t-meta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + (f.style && f.style !== 'Blend' ? ' · ' + esc(f.style) : '') + '</div></td>' +
         '<td>' + stars(f.rating) + '</td>' +
+        '<td>' + statusPill(f.status) + '</td>' +
         ['r1y','r3y','r5y','sip3'].map(function(k){ return '<td class="num' + (s.k === k ? ' sorted-col' : '') + '">' + fmtPct(f[k]) + '</td>'; }).join('') +
         '<td class="num' + (s.k === 'sharpe' ? ' sorted-col' : '') + '">' + fmt(f.sharpe) + '</td>' +
         '<td class="num' + (s.k === 'ter' ? ' sorted-col' : '') + '">' + (isNum(f.ter) ? fmt(f.ter) + '%' : '–') + '</td>' +
@@ -1005,7 +1069,7 @@ function renderTable(){
     }).join('');
     $('fcards').innerHTML = show.map(function(f){
       var sk = s.k, extra = sk === 'sharpe' ? ['Sharpe', fmt(f.sharpe)] : sk === 'ter' ? ['TER', isNum(f.ter) ? fmt(f.ter) + '%' : '–'] : sk === 'aum' ? ['AUM', fmtAum(f.aum)] : sk === 'sip3' ? ['SIP 3Y', pctTxt(f.sip3)] : ['TER', isNum(f.ter) ? fmt(f.ter) + '%' : '–'];
-      return '<div class="mc" data-code="' + f.code + '"><div class="mc-top"><div style="min-width:0"><div class="mc-name">' + esc(f.name) + '</div><div class="mc-meta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + '</div></div>' + stars(f.rating) + '</div>' +
+      return '<div class="mc" data-code="' + f.code + '"><div class="mc-top"><div style="min-width:0"><div class="mc-name">' + esc(f.name) + '</div><div class="mc-meta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + '</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">' + stars(f.rating) + (f.status ? statusPill(f.status) : '') + '</div></div>' +
         '<div class="mc-row"><div>1Y<b>' + fmtPct(f.r1y) + '</b></div><div>3Y<b>' + fmtPct(f.r3y) + '</b></div><div>5Y<b>' + fmtPct(f.r5y) + '</b></div><div>' + extra[0] + '<b>' + extra[1] + '</b></div></div></div>';
     }).join('');
   }
@@ -1112,6 +1176,7 @@ function renderSnap(f, det){
         (f.style ? '<span class="tag f" title="Factor DNA">' + esc(f.style === 'Blend' ? 'Blend style' : f.style === 'Market' ? 'Market-like' : f.style + ' style') + '</span>' : '') +
         (f.size ? '<span class="tag">' + esc(f.size) + ' cap tilt</span>' : '') + '</div>' +
       '<h2 class="snap-name">' + esc(f.name) + '</h2>' +
+      (f.status ? '<div style="margin-top:6px">' + statusPill(f.status) + '</div>' : '') +
       '<div class="snap-meta">' + esc(f.amcName) + ' Mutual Fund · Direct Plan · Growth · ' + stars(f.rating) + '</div>' +
     '</div><div class="snap-nav"><b>' + fmtNav(f.nav) + '</b><span class="chg">' + fmtPct(f.r1d) + ' <span class="mut" style="font-size:11.5px">1D</span></span><small>NAV as of ' + fmtDate(f.navDate) + '</small></div></div>' +
     '<div class="snap-body"><div class="kpis">' +
@@ -1161,7 +1226,25 @@ function pOverview(f, det, tail){
       '<div class="legend" id="navLegend"></div></div>' +
     '<div class="card pcard"><div class="pc-head"><div><div class="sec-title">Trailing returns</div><div class="sec-sub">Fund vs ' + esc(f.subLabel) + ' category average · 3Y+ annualised</div></div></div><div class="rgrid">' + cells + '</div>' +
       (bn && D.bench[bk] ? '<div class="note">Benchmark (' + esc(bn) + ' total return): 1Y ' + pctTxt(D.bench[bk].r['1y']) + ' · 3Y ' + pctTxt(D.bench[bk].r['3y']) + ' · 5Y ' + pctTxt(D.bench[bk].r['5y']) + '</div>' : '') + '</div>' +
+    scorecardCard(f, det) +
     quickRisk(f, det);
+}
+function scorecardCard(f, det){
+  if (f.asset === 'Index') return '';
+  var sc = det.score || {}, ss = SUBSTAT[f.sub].avg;
+  var st = f.status;
+  var box = st ? '<div class="status-box ' + ST_CLS[st] + '"><div><b>' + esc(st) + '</b><p>' + ST_DESC[st] + '</p></div></div>'
+               : '<div class="note" style="margin-top:0;margin-bottom:12px">A status is assigned once the fund has a 1-year record in a category of five or more funds.</div>';
+  function meter(k, v, d, tip){ return '<div class="meter"><div class="meter-top"><span class="meter-k">' + k + ' ' + hint(tip) + '</span><span class="meter-v">' + scoreTxt(v) + '</span></div><div class="meter-bar"><i style="width:' + (isNum(v) ? Math.max(2, v) : 0) + '%"></i></div><div class="meter-d">' + d + '</div></div>'; }
+  var consD = isNum(f.cons) && sc.consN ? 'Top half of the category in <b>' + sc.consTop + ' of ' + sc.consN + '</b> month-ends (rolling 1-year return).' : 'Needs 12 month-ends of history.';
+  var recD = isNum(f.rec) ? 'Recent returns beat <b>' + Math.round(f.rec) + '%</b> of ' + esc(f.subLabel) + ' peers (3M · 6M · 1Y blend).' : 'Needs a 1-year record.';
+  var volD = isNum(f.vols) ? (f.vols >= 67 ? 'Calmer than most peers' : f.vols >= 34 ? 'Typical volatility for its category' : 'More volatile than most peers') + ' (3Y std. dev. ' + (isNum(f.std) ? fmt(f.std) + '%' : '–') + ', category ' + (isNum(ss.std) ? fmt(ss.std) + '%' : '–') + ').' : 'Needs 12 months of history.';
+  return '<div class="card pcard"><div class="pc-head"><div><div class="sec-title">VilfinTV Scorecard</div><div class="sec-sub">Relative to ' + esc(f.subLabel) + ' funds · 100 = best in category</div></div></div>' + box +
+    '<div class="meters">' +
+      meter('Consistency', f.cons, consD, 'Share of the last 36 month-ends in which the fund ranked in the top half of its category on rolling 1-year return.') +
+      meter('Recency', f.rec, recD, 'Weighted percentile of 3-month (20%), 6-month (30%) and 1-year (50%) returns within the category.') +
+      meter('Volatility', f.vols, volD, 'Percentile of 3-year volatility within the category, inverted so that 100 = calmest.') +
+    '</div></div>';
 }
 function quickRisk(f, det){
   var rk = det.risk || {}, ss = SUBSTAT[f.sub].avg;
@@ -1447,32 +1530,58 @@ function pPeers(f){
 
 /* ── info ── */
 function pInfo(f, det){
-  var info = det.info || {}, mg = info.managers || [];
+  var info = det.info || {}, mg = info.managers || [], ex = info.extra || {}, docs = info.docs || {};
   var amcFunds = FUNDS.filter(function(x){ return x.amc === f.amc; });
   var bn = benchName(f.bench);
+  var T = (D.tax && D.tax.rules && D.tax.rules[f.tax]) || null;
+  var load = info.exitLoad || [];
+  var loadHtml = load.length ? (f.exitNil ? '<p class="objective"><b>Nil</b> — no exit load on redemption.</p>' : '<ul class="load-list">' + load.map(function(l){ return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>')
+                             : '<p class="mut">Refer to the scheme information document.</p>';
+  var taxHtml = T ? '<div class="tag f" style="margin-bottom:6px">' + esc(T.label) + '</div><div class="tax-grid"><div class="tax-cell"><small>Short-term</small><span>' + esc(T.stcg) + '</span></div><div class="tax-cell"><small>Long-term</small><span>' + esc(T.ltcg) + '</span></div></div>' +
+      '<div class="note">' + esc(T.note) + ' Rates exclude surcharge and 4% cess. ' + esc(D.tax.asOf) + '. Tax rules change — please confirm with a tax professional.</div>' : '<p class="mut">–</p>';
+  var mgHtml = mg.length ? '<div class="mgr2">' + mg.map(function(m){
+      var name = typeof m === 'string' ? m : m.name, since = typeof m === 'string' ? '' : m.since, role = typeof m === 'string' ? '' : m.role;
+      return '<div><i>' + esc(initials(name)) + '</i><span><b>' + esc(name) + '</b><small>' + (since ? 'Managing since ' + esc(since) : '') + (since && role ? ' · ' : '') + esc(role || '') + '</small></span></div>';
+    }).join('') + '</div>' : '<p class="mut">Not disclosed.</p>';
+  var allocHtml = (info.alloc || []).length ? '<div class="alloc">' + info.alloc.map(function(a){
+      return '<div class="alloc-row"><span class="lbl">' + esc(a.label) + '</span><span class="rng">' + a.min + '–' + a.max + '%</span><div class="alloc-bar"><i style="left:' + a.min + '%;width:' + Math.max(1.5, a.max - a.min) + '%"></i></div></div>';
+    }).join('') + '</div>' : '<p class="mut">Refer to the scheme information document.</p>';
   var rows = [
     ['Fund house', esc(f.amcName) + ' Mutual Fund'],
     ['Category', esc(f.asset) + ' · ' + esc(f.subLabel)],
-    ['SEBI category', esc((info.cat || '').replace(/^.*?\(/, '').replace(/\)$/, ''))],
+    ['SEBI category', esc(ex.category || (info.cat || '').replace(/^.*?\(/, '').replace(/\)$/, ''))],
+    ['Scheme type', esc(ex.type || 'Open ended')],
     ['Plan / option', 'Direct Plan · Growth'],
-    ['Launch of plan', fmtDate(f.inc)],
+    ['Allotment date', esc(ex.allotment || '') || fmtDate(f.inc)],
+    ['Direct plan since', fmtDate(f.inc)],
+    ['Benchmark (scheme)', esc(info.benchmark || '') || '–'],
+    ['Comparison index (here)', bn ? esc(bn) + ' (total return)' : 'Category peers'],
     ['Riskometer', isNum(f.risk) ? esc(D.riskometer[f.risk]) + ' Risk' : '–'],
+    ['Potential risk class', esc(ex.prc || '') || '–'],
     ['Expense ratio', (isNum(f.ter) ? fmt(f.ter) + '%' : '–') + (info.terDate ? ' <span class="mut">(as of ' + fmtDate(info.terDate) + ')</span>' : '')],
-    ['Fund size', fmtAum(f.aum)],
+    ['Maximum TER (stated)', esc(ex.maxTer || '') || '–'],
+    ['Fund size', fmtAum(f.aum) + (info.aumAsOf ? ' <span class="mut">(avg. ' + esc(info.aumAsOf.replace('-', ' ')) + ' quarter)</span>' : '')],
     ['Minimum SIP', isNum(f.sipMin) ? inr(f.sipMin) : '–'],
-    ['Minimum lump sum', isNum(f.lumpMin) ? inr(f.lumpMin) : '–'],
+    ['Minimum lump sum', isNum(f.lumpMin) ? inr(f.lumpMin) : (esc(ex.minText || '') || '–')],
     ['Lock-in', f.lock ? f.lock + ' year' + (f.lock > 1 ? 's' : '') : 'None'],
+    ['Face value', ex.faceValue ? '₹' + esc(ex.faceValue) : '–'],
     ['Portfolio turnover', isNum(info.turnover) ? fmt(info.turnover) + '×' : '–'],
-    ['Comparison index', bn ? esc(bn) + ' (total return)' : 'Category peers'],
+    ['Custodian', esc(ex.custodian || '') || '–'],
+    ['Registrar', esc(ex.registrar || '') || '–'],
     ['ISIN', '<span class="mono">' + esc(f.isin || '–') + '</span>'],
     ['AMFI scheme code', '<span class="mono">' + f.code + '</span>'],
     ['Scheme name (AMFI)', esc(info.amfiName || f.name)]
   ];
-  return '<div class="grid2e"><div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Investment objective</div><p class="objective">' + (info.objective ? esc(info.objective) : 'Refer to the scheme information document.') + '</p>' +
-      '<div class="sec-title" style="margin:18px 0 10px">Fund managers</div>' + (mg.length ? '<div class="mgr">' + mg.map(function(m){ return '<span><i>' + esc(initials(m)) + '</i>' + esc(m) + '</span>'; }).join('') + '</div>' : '<p class="mut">Not disclosed.</p>') + '</div>' +
-    '<div class="card pcard"><div class="sec-title" style="margin-bottom:10px">' + esc(f.amcName) + ' Mutual Fund</div>' +
+  var docLinks = [[docs.sid, 'Scheme Information Document'], [docs.ssd, 'Scheme Summary'], [docs.website, esc(f.amcName) + ' website']].filter(function(d){ return d[0]; })
+    .map(function(d){ return '<a class="btn" href="' + esc(d[0]) + '" target="_blank" rel="noopener noreferrer">' + d[1] + ' ↗</a>'; }).join('');
+  return '<div class="grid2e"><div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Exit load</div>' + loadHtml + '</div>' +
+      '<div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Taxation</div>' + taxHtml + '</div></div>' +
+    '<div class="grid2e"><div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Investment objective</div><p class="objective">' + (info.objective ? esc(info.objective) : 'Refer to the scheme information document.') + '</p>' +
+      '<div class="sec-title" style="margin:18px 0 10px">Stated asset allocation</div>' + allocHtml + '</div>' +
+      '<div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Fund managers</div>' + mgHtml +
+      '<div class="sec-title" style="margin:18px 0 10px">' + esc(f.amcName) + ' Mutual Fund</div>' +
       '<div class="stats" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div class="stat"><div class="stat-k">Direct-Growth funds</div><div class="stat-v">' + amcFunds.length + '</div></div><div class="stat"><div class="stat-k">Combined AUM</div><div class="stat-v" style="font-size:16px">' + fmtAum(AMC_AUM[f.amcName]) + '</div></div></div>' +
-      '<div class="snap-acts">' + (info.sid ? '<a class="btn" href="' + esc(info.sid) + '" target="_blank" rel="noopener noreferrer">Scheme documents (SID / KIM) ↗</a>' : '') + '<button class="btn" type="button" data-amc="' + f.amc + '">All ' + esc(f.amcName) + ' funds</button></div></div></div>' +
+      '<div class="docs">' + docLinks + '<button class="btn" type="button" data-amc="' + f.amc + '">All ' + esc(f.amcName) + ' funds</button></div></div></div>' +
     '<div class="card pcard"><div class="sec-title" style="margin-bottom:6px">Scheme facts</div><div class="info-list">' + rows.map(function(r){ return '<div class="info-row"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>'; }).join('') + '</div></div>';
 }
 
@@ -1502,13 +1611,18 @@ function renderCompare(){
   var fs = S.cmp.map(function(c){ return BY[c]; });
   var M = [
     ['Category', function(f){ return esc(f.subLabel); }], ['VilfinTV rating', function(f){ return stars(f.rating); }],
+    ['Status', function(f){ return statusPill(f.status); }],
+    ['Consistency score', 'cons', 1], ['Recency score', 'rec', 1], ['Volatility score (100 = calmest)', 'vols', 1],
     ['NAV', function(f){ return fmtNav(f.nav); }],
     ['1Y return', 'r1y', 1], ['3Y return (CAGR)', 'r3y', 1], ['5Y return (CAGR)', 'r5y', 1], ['10Y return (CAGR)', 'r10y', 1],
     ['SIP 3Y (XIRR)', 'sip3', 1], ['SIP 5Y (XIRR)', 'sip5', 1],
     ['Volatility', 'std', -1, '%'], ['Sharpe ratio', 'sharpe', 1], ['Sortino ratio', 'sortino', 1], ['Alpha', 'alpha', 1], ['Beta', 'beta', 0],
     ['Max drawdown (3Y)', 'mdd', 1], ['3Y rolling avg', 'roll3', 1], ['Beat benchmark (3Y rolling)', 'beat3', 1, '%'],
     ['Expense ratio', 'ter', -1, '%'], ['AUM', 'aum', 0], ['Factor style', function(f){ return f.style ? esc(f.style) + (f.size ? ' · ' + esc(f.size) : '') : '–'; }],
-    ['Riskometer', function(f){ return isNum(f.risk) ? esc(D.riskometer[f.risk]) : '–'; }], ['Launched', function(f){ return fmtDate(f.inc); }]
+    ['Riskometer', function(f){ return isNum(f.risk) ? esc(D.riskometer[f.risk]) : '–'; }],
+    ['Exit load', function(f){ return f.exitNil === true ? 'Nil' : f.exitNil === false ? 'Applicable' : '–'; }],
+    ['Taxation', function(f){ return esc(TAX_SHORT[f.tax] || '–'); }],
+    ['Launched', function(f){ return fmtDate(f.inc); }]
   ];
   var rows = M.map(function(m){
     var cells;
@@ -1517,7 +1631,7 @@ function renderCompare(){
       var k = m[1], dir = m[2], vals = fs.map(function(f){ return f[k]; }), ok = vals.filter(isNum);
       var best = dir && ok.length > 1 ? (dir > 0 ? Math.max.apply(null, ok) : Math.min.apply(null, ok)) : null;
       cells = fs.map(function(f){
-        var v = f[k], txt = k === 'aum' ? fmtAum(v) : (m[3] === '%' ? (isNum(v) ? fmt(v) + '%' : '–') : (['sharpe','sortino','beta'].indexOf(k) >= 0 ? fmt(v) : fmtPct(v)));
+        var v = f[k], txt = k === 'aum' ? fmtAum(v) : (m[3] === '%' ? (isNum(v) ? fmt(v) + '%' : '–') : (['sharpe','sortino','beta'].indexOf(k) >= 0 ? fmt(v) : (['cons','rec','vols'].indexOf(k) >= 0 ? (isNum(v) ? Math.round(v) + ' / 100' : '–') : fmtPct(v))));
         return '<td class="num' + (best != null && v === best ? ' best' : '') + '">' + txt + '</td>';
       });
     }
@@ -1555,7 +1669,7 @@ function bindUI(){
   ['ftbody','fcards','spot'].forEach(function(id){ $(id).addEventListener('click', openRow); $(id).addEventListener('mouseover', pre); $(id).addEventListener('touchstart', pre, {passive:true}); });
   $('moreBtn').addEventListener('click', function(){ S.shown += PAGE; renderTable(); });
   $('fText').addEventListener('input', debounce(function(){ S.f.text = this.value; S.shown = PAGE; renderTable(); }, 120));
-  [['fAmc','amc',String],['fRating','rating',Number],['fHist','hist',Number],['fTer','ter',Number],['fRisk','risk',String]].forEach(function(x){
+  [['fAmc','amc',String],['fRating','rating',Number],['fHist','hist',Number],['fTer','ter',Number],['fRisk','risk',String],['fStatus','status',String]].forEach(function(x){
     $(x[0]).addEventListener('change', function(){ S.f[x[1]] = x[2](this.value); S.shown = PAGE; renderTable(); });
   });
   // detail

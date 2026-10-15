@@ -21,6 +21,7 @@ const OUT = path.join(ROOT, 'data', 'mf');
 const SAMPLE = path.join(ROOT, '.mfcache', 'verify_sample.json.gz');
 
 let failures = 0, checks = 0;
+const AUDIT = {};
 const fail = (msg) => { failures++; if (failures <= 80) console.error('✗ ' + msg); };
 const ok = (cond, msg) => { checks++; if (!cond) fail(msg); };
 
@@ -247,6 +248,7 @@ function verifySample() {
       ok(j && j.trough === o.mdd3.trough, `${L} drawdown trough date`);
     }
   }
+  AUDIT.recomputedFunds = S.funds.length;
   console.log(`Cross-language check: ${S.funds.length} funds re-computed.`);
 }
 
@@ -280,7 +282,21 @@ function verifyFiles() {
     ok(r[C.sharpe] == null || Math.abs(r[C.sharpe]) < 50, `${code} sharpe ${r[C.sharpe]}`);
     for (const f of [`d/${r[C.sub]}.json`, `t/${r[C.sub]}.json`, `h/${code}.json`])
       ok(fs.existsSync(path.join(OUT, f)), `${code} missing ${f}`);
+    // scorecard + taxation
+    if ('status' in C) {
+      for (const k of ['cons', 'rec', 'vols', 'ltp']) ok(r[C[k]] == null || (r[C[k]] >= 0 && r[C[k]] <= 100), `${code} ${k}=${r[C[k]]}`);
+      const st = r[C.status];
+      ok(st == null || (J.statuses || []).includes(st), `${code} status ${st}`);
+      ok(st === statusOf(r[C.rec], r[C.ltp]), `${code} status ${st} does not follow its scores (rec ${r[C.rec]}, long-term ${r[C.ltp]})`);
+      ok(asset !== 'Index' || st == null, `${code} index fund should not carry a status`);
+      ok(J.tax && J.tax.rules && J.tax.rules[r[C.tax]], `${code} tax class ${r[C.tax]}`);
+      if (r[C.sub] === 'elss') ok(r[C.tax] === 'elss' && r[C.lock] >= 3, `${code} ELSS tax / lock-in`);
+      if (asset === 'Debt') ok(r[C.tax] === 'debt' || r[C.sub] === 'globaldebt', `${code} debt fund tax class ${r[C.tax]}`);
+      ok(r[C.aum] == null || (r[C.aum] >= 0 && r[C.aum] < 500000), `${code} AUM ${r[C.aum]} Cr looks wrong`);
+      ok(r[C.sipMin] == null || (r[C.sipMin] >= 0 && r[C.sipMin] <= 1e6), `${code} SIP minimum ${r[C.sipMin]}`);
+    }
   }
+  verifyAgainstPrevious(J, C);
   for (const a of ['Equity', 'Debt', 'Hybrid', 'Commodity', 'Global', 'Index'])
     ok((perAsset[a] || 0) >= 5, `asset class ${a} has only ${perAsset[a] || 0} funds`);
   // detail + tail files contain every fund of their sub-category
@@ -302,7 +318,57 @@ function verifyFiles() {
   console.log(`Files: ${J.rows.length} funds · ${Object.entries(perAsset).map(([a, n]) => `${a} ${n}`).join(' · ')}`);
 }
 
+// mirrors mf_common.status_of
+function statusOf(rec, ltp) {
+  if (rec == null) return null;
+  if (rec >= 70) return 'In form';
+  if (rec >= 40) return 'On track';
+  if (ltp != null && ltp >= 50) return 'Underperforming';
+  return 'Out of track';
+}
+
+// Day-over-day audit against the previously published file (MF_PREV=<path>)
+function verifyAgainstPrevious(J, C) {
+  const prevPath = process.env.MF_PREV;
+  if (!prevPath || !fs.existsSync(prevPath)) { console.log('Day-over-day audit: no previous file.'); return; }
+  let P;
+  try { P = JSON.parse(fs.readFileSync(prevPath, 'utf8')); } catch (e) { console.log('Day-over-day audit: previous file unreadable.'); return; }
+  const PC = Object.fromEntries(P.cols.map((c, i) => [c, i]));
+  ok(J.asOf >= P.asOf, `NAV date went backwards: ${P.asOf} → ${J.asOf}`);
+  ok(Math.abs(J.rows.length - P.rows.length) <= Math.max(25, P.rows.length * 0.03), `fund count jumped ${P.rows.length} → ${J.rows.length}`);
+  const prev = new Map(P.rows.map(r => [r[PC.code], r]));
+  let navJumps = 0, terJumps = 0, aumJumps = 0, subMoves = 0, n = 0;
+  for (const r of J.rows) {
+    const q = prev.get(r[C.code]); if (!q) continue; n++;
+    const asset = J.subs[r[C.sub]][0];
+    if (q[PC.nav] > 0 && r[C.navDate] > q[PC.navDate]) {
+      const mv = Math.abs(r[C.nav] / q[PC.nav] - 1) * 100;
+      const lim = asset === 'Debt' ? 3 : 15;
+      if (mv > lim) { navJumps++; if (navJumps <= 10) console.error(`! ${r[C.code]} ${r[C.name]} NAV moved ${mv.toFixed(2)}% since last publish`); }
+    }
+    if (q[PC.ter] != null && r[C.ter] != null && Math.abs(r[C.ter] - q[PC.ter]) > 0.75) terJumps++;
+    if ('aum' in PC && q[PC.aum] > 50 && r[C.aum] != null && (r[C.aum] / q[PC.aum] > 3 || r[C.aum] / q[PC.aum] < 0.33)) aumJumps++;
+    if (q[PC.sub] !== r[C.sub]) subMoves++;
+  }
+  ok(navJumps <= Math.max(3, n * 0.005), `${navJumps} funds with implausible NAV moves since the last publish`);
+  ok(terJumps <= Math.max(10, n * 0.02), `${terJumps} expense ratios changed by more than 0.75 points`);
+  ok(aumJumps <= Math.max(15, n * 0.03), `${aumJumps} fund sizes changed more than 3x`);
+  ok(subMoves <= Math.max(5, n * 0.01), `${subMoves} funds changed category`);
+  AUDIT.dayOverDay = {vs: P.asOf, compared: n, navJumps, terJumps, aumJumps, categoryMoves: subMoves};
+  console.log(`Day-over-day audit vs ${P.asOf}: ${n} funds compared · NAV jumps ${navJumps} · TER jumps ${terJumps} · AUM jumps ${aumJumps} · category moves ${subMoves}`);
+}
+
 verifySample();
 verifyFiles();
+// publish a compact audit record next to the data (shown on the page as a verification note)
+try {
+  const J = JSON.parse(fs.readFileSync(path.join(OUT, 'screener.json'), 'utf8'));
+  let official = null;
+  try { official = JSON.parse(fs.readFileSync(path.join(ROOT, '.mfcache', 'validation.json'), 'utf8')).vsOfficial || null; } catch (e) { /* optional */ }
+  fs.writeFileSync(path.join(OUT, 'audit.json'), JSON.stringify({
+    asOf: J.asOf, generated: J.generated, funds: J.rows.length, checks, failures,
+    recomputedFunds: AUDIT.recomputedFunds || 0, dayOverDay: AUDIT.dayOverDay || null, officialNav: official,
+  }));
+} catch (e) { console.error('could not write audit.json', e.message); }
 console.log(`${checks} checks, ${failures} failure(s).`);
 process.exit(failures ? 1 : 0);

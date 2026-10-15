@@ -1,18 +1,40 @@
-name: MF Probe (temporary)
+name: MF Screener Dev Validation (temporary)
 on:
   push:
     branches: [claude/festive-bell-an714y]
-    paths: ['scripts/mf_probe2.py', '.github/workflows/mf_probe.yml']
+    paths: ['scripts/build_mf_screener.py', 'scripts/mf_common.py', 'scripts/mf_enrich.py', 'scripts/verify_mf_screener.js', 'scripts/audit_mf_live.py', '.github/workflows/mf_probe.yml']
 permissions:
   contents: write
+concurrency:
+  group: mf-dev
+  cancel-in-progress: true
 jobs:
-  probe:
+  dev:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - run: pip install requests
-      - run: mkdir -p .probe && python scripts/mf_probe2.py 2>&1 | tee .probe/probe2.log || true
-      - run: |
-          git config user.name "github-actions[bot]"; git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f .probe; git commit -qm "chore(probe): samples [skip ci]" || exit 0
+      - uses: actions/cache/restore@v4
+        with: {path: .mfcache, key: 'mf-dev-${{ github.run_id }}', restore-keys: 'mf-dev-'}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install numpy scipy requests openpyxl xlrd
+      - uses: actions/setup-node@v4
+        with: {node-version: '20'}
+      - run: cp data/mf/screener.json "$RUNNER_TEMP/prev.json" || true
+      - run: mkdir -p .mfcache && python scripts/build_mf_screener.py --workers 10 2>&1 | tee .mfcache/build.log; test ${PIPESTATUS[0]} -eq 0
+      - uses: actions/cache/save@v4
+        if: always()
+        with: {path: .mfcache, key: 'mf-dev-${{ github.run_id }}'}
+      - run: MF_PREV="$RUNNER_TEMP/prev.json" node scripts/verify_mf_screener.js 2>&1 | tee .mfcache/verify.log || true
+      - run: EVENT=workflow_run DEEP=true python3 scripts/audit_mf_live.py 2>&1 | tee .mfcache/audit.log || true
+      - name: Commit data + validation report to dev branch
+        if: always()
+        run: |
+          mkdir -p .probe && cp .mfcache/validation.json .mfcache/build.log .mfcache/verify.log .mfcache/audit.log .probe/ 2>/dev/null || true
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A data/mf .probe
+          git commit -qm "chore(dev): MF screener build + validation [skip ci]" || exit 0
+          git pull --rebase -q -X theirs origin ${{ github.ref_name }} || true
           git push origin HEAD:${{ github.ref_name }}
