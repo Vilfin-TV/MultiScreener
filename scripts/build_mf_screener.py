@@ -391,78 +391,70 @@ def _norm_name(n):
 
 
 def load_official_ter(universe, args):
-    """Official Direct-plan TER disclosed daily to AMFI (latest date per scheme)."""
+    """Official Direct-plan TER disclosed daily to AMFI (latest date per scheme).
+    The disclosure is paged (100 rows per call), so it is collected under a time budget and resumed on the
+    next run; a complete month is refreshed weekly."""
     cache = load_gz(CACHE / "ter.json.gz", {})
-    fresh = False
+    if cache.get("_v") != 5:
+        cache = {"_v": 5}
+    rows = cache.get("rows", {})
+    st = cache.get("state", {})
+    today_ = date.today()
+    stale = True
     try:
-        fresh = (date.today() - date.fromisoformat(cache.get("_date", ""))).days < 7
+        stale = (today_ - date.fromisoformat(st.get("done", ""))).days >= 7
     except ValueError:
         pass
-    if fresh and cache.get("_v") == 4 and len(cache.get("rows", {})) > 500:
-        rows = cache["rows"]
-    else:
-        rows = {}
-
-        stat = Counter()
-        today_ = date.today()
-        fy = f"{today_.year}-{today_.year + 1}" if today_.month >= 4 else f"{today_.year - 1}-{today_.year}"
-        months = []
-        for yr in (fy, str(today_.year)):
+    stat = Counter()
+    if stale:
+        if not st.get("month") or st.get("done"):
+            fy = f"{today_.year}-{today_.year + 1}" if today_.month >= 4 else f"{today_.year - 1}-{today_.year}"
             try:
-                j = S.get(AMFI_TER_MONTHS.format(year=yr), timeout=60).json()
+                j = S.get(AMFI_TER_MONTHS.format(year=fy), timeout=60).json()
                 lst = j.get("data", j) if isinstance(j, dict) else j
-                if isinstance(lst, list) and lst:
-                    months = lst
-                    break
+                mon = next((m.get("MonthNumber") for m in lst if isinstance(m, dict) and m.get("MonthNumber")), None)
             except Exception as e:  # noqa: BLE001
+                mon = None
                 stat[type(e).__name__] += 1
-        log.info("TER months available: %s", [m.get("MonthYear") for m in months][:14] if months else "none")
-        cands = [m.get("MonthNumber") for m in months if isinstance(m, dict) and m.get("MonthNumber")]
-        cands = cands[:2]  # newest month first (the list is newest → oldest)
-        for mon in dict.fromkeys(cands):
-            page, got, ps = 1, 0, None
-            while page <= 600:
-                data = None
-                for k in range(3):
-                    try:
-                        r = S.get(AMFI_TER.format(month=mon, page=page), timeout=90)
-                        j = r.json()
-                        d = j.get("data") if isinstance(j, dict) else None
-                        data = (d.get("data") if isinstance(d, dict) else (d if isinstance(d, list) else [])) or []
-                        break
-                    except Exception as e:  # noqa: BLE001
-                        stat[type(e).__name__] += 1
-                        time.sleep(3 * (k + 1))
-                if not data:
+            if mon:
+                st = {"month": mon, "page": 1, "done": ""}
+        t0 = time.time()
+        while st.get("month") and not st.get("done") and time.time() - t0 < args.ter_seconds:
+            data = None
+            for k in range(3):
+                try:
+                    r = S.get(AMFI_TER.format(month=st["month"], page=st["page"]), timeout=60)
+                    j = r.json()
+                    d = j.get("data") if isinstance(j, dict) else None
+                    data = (d.get("data") if isinstance(d, dict) else (d if isinstance(d, list) else [])) or []
                     break
-                ps = ps or len(data)
-                for x in data:
-                    try:
-                        dd, ter = x["TER_Date"][:10], float(x["D_TER"])
-                    except (KeyError, TypeError, ValueError):
-                        continue
-                    k = _norm_name(x.get("Scheme_Name", ""))
-                    if k and (k not in rows or dd >= rows[k][0]):
-                        rows[k] = [dd, ter, x.get("Scheme_Name")]
-                got += len(data)
-                if len(data) < ps:
-                    break
-                page += 1
-                time.sleep(0.25)
-            stat[f"month {mon}"] = got
-            if len(rows) > 500:
+                except Exception as e:  # noqa: BLE001
+                    stat[type(e).__name__] += 1
+                    time.sleep(3 * (k + 1))
+            if data is None:
                 break
-        log.info("Official TER feed: %s", dict(stat))
-        if rows:
-            save_gz(CACHE / "ter.json.gz", {"_date": date.today().isoformat(), "_v": 4, "rows": rows})
-        else:
-            rows = cache.get("rows", {})
+            for x in data:
+                try:
+                    dd, ter = x["TER_Date"][:10], float(x["D_TER"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                k = _norm_name(x.get("Scheme_Name", ""))
+                if k and (k not in rows or dd >= rows[k][0]):
+                    rows[k] = [dd, ter, x.get("Scheme_Name")]
+            stat["rows"] += len(data)
+            if len(data) < 100:
+                st["done"] = today_.isoformat()
+                break
+            st["page"] += 1
+        stat["seconds"] = round(time.time() - t0)
+        save_gz(CACHE / "ter.json.gz", {"_v": 5, "rows": rows, "state": st})
     out = {}
     for r in universe:
         hit = rows.get(_norm_name(r["name"]))
         if hit:
             out[r["code"]] = {"ter": hit[1], "date": hit[0]}
-    log.info("Official TER: %d schemes disclosed, matched %d/%d funds", len(rows), len(out), len(universe))
+    log.info("Official TER: %s · state %s · %d schemes known, matched %d/%d funds",
+             dict(stat), st, len(rows), len(out), len(universe))
     return out
 
 
@@ -638,6 +630,7 @@ def main():
     ap.add_argument("--only", help="comma-separated scheme codes (validation runs)")
     ap.add_argument("--no-write", action="store_true")
     ap.add_argument("--facts-budget", type=int, default=1200, help="max scheme-fact refreshes per run")
+    ap.add_argument("--ter-seconds", type=int, default=240, help="time budget for the official TER disclosure")
     ap.add_argument("--amfi-budget", type=int, default=60, help="max official history windows fetched per run")
     args = ap.parse_args()
     CACHE.mkdir(exist_ok=True)
