@@ -20,7 +20,7 @@ jobs:
       - run: |
           set -o pipefail
           mkdir -p .mfcache/holdings .probe
-          python scripts/mf_holdings_probe2.py 2>&1 | tee .probe/holdings_probe2.log || true
+          xvfb-run -a python scripts/mf_holdings_probe2.py 2>&1 | tee .probe/holdings_probe2.log || true
           python scripts/build_mf_holdings.py --force 2>&1 | tee .probe/holdings_build.log || true
           cp .mfcache/holdings/report.json .probe/holdings_report.json || true
       - run: |

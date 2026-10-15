@@ -237,7 +237,8 @@ def discover(sources: dict) -> dict[str, list[str]]:
             latest = max(d for d, _ in dated)
             pick = list({l.split("?")[0].lower(): l for d, l in dated if d == latest}.values())
             if not cfg.get("multi"):
-                pick = pick[:1]
+                host = re.sub(r"^https?://([^/]+).*", r"\1", (cfg.get("pages") or [cfg["page"]])[0])
+                pick = sorted(pick, key=lambda l: host not in l)[:1]      # prefer the fund house's own domain
             found[amc] = {"month": f"{latest[0]}-{latest[1]:02d}", "files": pick}
             log.info("%s: %s · %d file(s)", amc, found[amc]["month"], len(pick))
         b.close()
@@ -334,7 +335,8 @@ def classify_holding(h: dict) -> str:
         return "fund"
     if not i.startswith("IN"):
         return "overseas"
-    if re.search(r"reit|invit|trust", h["name"], re.I) and not re.search(r"bank|finance", h["name"], re.I):
+    if (re.search(r"\breit\b|\binvit\b|real\s*estate\s*investment|infrastructure\s*investment\s*trust|infra\s*trust|\breit\b", h["name"], re.I)
+            and not re.search(r"securiti[sz]ation|\bptc\b|pass\s*through|bank|finance", h["name"], re.I)):
         return "reit"
     return "debt"
 

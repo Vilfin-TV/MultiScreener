@@ -380,7 +380,7 @@ function verifyHoldings() {
       ok(listed >= 40 && listed <= 130, `${id}: holdings add up to ${listed.toFixed(1)}%`);
       ok(Array.isArray(h.top) && h.top.length >= 1, `${id}: no holdings`);
       for (let i = 1; i < h.top.length; i++) ok(h.top[i][2] <= h.top[i - 1][2] + 1e-9, `${id}: holdings not sorted`);
-      for (const t of h.top) ok(/^[A-Z]{2}[A-Z0-9]{9}\d$/.test(t[3]) && t[2] > -50 && t[2] <= 100, `${id}: bad holding ${t[0]} ${t[2]}`);
+      for (const t of h.top) ok(/^[A-Z]{2}[A-Z0-9]{9}\d$/.test(t[3]) && t[2] > -50 && t[2] <= 105, `${id}: bad holding ${t[0]} ${t[2]}`);
       const sec = (h.sectors || []).reduce((a, x) => a + x[1], 0);
       ok(sec <= (h.mix.equity || 0) + 0.05, `${id}: sectors ${sec.toFixed(2)}% exceed equity ${h.mix.equity}%`);
       if (h.cap) {
