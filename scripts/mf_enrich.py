@@ -87,6 +87,9 @@ def parse_exit_load(t: str | None) -> list[str]:
         p = p.strip(" -–;,")
         if re.fullmatch(r"(?i)(entry\s*(load)?\s*(&|and)?|exit\s*load|entry\s*load\s*[-–:]?\s*(nil|na|n\.a\.|not applicable)|load\s*structure)\W*", p):
             continue
+        if re.search(r"(?i)entry\s*load", p) and not re.search(r"(?i)exit", p):
+            continue                                   # entry loads were abolished in 2009; drop the boilerplate
+        p = p.lstrip(". ")
         if len(p) > 1:
             out.append(re.sub(r"\s+", " ", p))
     # merge continuation fragments (lines that start lowercase)
@@ -149,6 +152,7 @@ def parse_ssd(xml_text: str) -> dict:
         n = re.sub(r"\(.*?(\)|$)", " ", n)                                  # (Equity portion), (Fund manager ...
         n = re.sub(r"\bFM\s*-?\s*\d+\b\s*[-:]?", " ", n, flags=re.I)
         n = re.sub(r"(?i)^\s*for\s+[\w ]{2,30}?\s*[:\-]\s*", "", n)          # "For Equity : ..."
+        n = n.strip(" -:.,")
         n = re.sub(r"^\s*(mr|ms|mrs|dr|shri|smt)\.?\s*(?=[A-Z])", "", n, flags=re.I)
         return re.sub(r"\s+", " ", n).strip(" -:.")
 
