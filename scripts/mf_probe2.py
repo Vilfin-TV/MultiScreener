@@ -1,29 +1,44 @@
 import json, re, requests
-S = requests.Session(); S.headers["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) Chrome/126.0"
-out = {}
-def g(name, url, n=2500):
+S = requests.Session(); S.headers.update({"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36", "Accept-Language": "en-US,en;q=0.9"})
+PAGES = {
+ "ppfas": "https://amc.ppfas.com/downloads/portfolio-disclosure/",
+ "sbi": "https://www.sbimf.com/portfolios",
+ "hdfc": "https://www.hdfcfund.com/statutory-disclosure/portfolio/monthly-portfolio",
+ "icici": "https://www.icicipruamc.com/downloads/others/monthly-portfolio-disclosures",
+ "nippon": "https://mf.nipponindiaim.com/investor-service/downloads/factsheet-portfolio-and-other-disclosures",
+ "kotak": "https://www.kotakmf.com/Information/portfolios",
+ "axis": "https://www.axismf.com/statutory-disclosures",
+ "absl": "https://mutualfund.adityabirlacapital.com/forms-and-downloads/portfolio",
+ "uti": "https://www.utimf.com/downloads/consolidate-all-portfolio-disclosure",
+ "mirae": "https://www.miraeassetmf.co.in/downloads/portfolios",
+ "dsp": "https://www.dspim.com/mandatory-disclosures/portfolio-disclosures",
+ "tata": "https://www.tatamutualfund.com/schemes-related/portfolio",
+ "motilal": "https://www.motilaloswalmf.com/download/month-end-portfolio",
+ "bandhan": "https://bandhanmutual.com/downloads/disclosures",
+ "edelweiss": "https://www.edelweissmf.com/statutory-disclosures/portfolio-disclosure",
+ "canara": "https://www.canararobeco.com/documents/statutory-disclosures/scheme-monthly-portfolio",
+ "franklin": "https://www.franklintempletonindia.com/downloads/fund-documents/monthly-portfolio",
+ "hsbc": "https://www.assetmanagement.hsbc.co.in/en/mutual-funds/investor-resources/information-library",
+ "invesco": "https://invescomutualfund.com/literature-and-form?tab=Complete",
+ "quant": "https://quantmutual.com/statutory-disclosures",
+}
+res = {}
+for k, u in PAGES.items():
     try:
-        r = S.get(url, timeout=40)
-        out[name] = [r.status_code, r.headers.get("content-type", ""), r.text[:n]]
+        r = S.get(u, timeout=40)
+        t = r.text
+        links = sorted(set(re.findall(r'(?:href|src|url)=["\']([^"\']+\.(?:xlsx|xls|zip|xlsm)[^"\']*)', t, re.I)))
+        jsonish = sorted(set(re.findall(r'https?://[^"\'\s]+\.(?:xlsx|xls|zip)', t, re.I)))
+        res[k] = {"status": r.status_code, "len": len(t), "links": len(links), "sample": links[:6], "abs": jsonish[:6],
+                  "final": r.url}
     except Exception as e:
-        out[name] = ["ERR", repr(e)]
-    print("=====", name, url); print(json.dumps(out[name])[:n + 200])
-for u in ["https://mfdata.in/api/v1/schemes/122639", "https://mfdata.in/api/v1/schemes/122639/holdings",
-          "https://mfdata.in/api/v1/funds/122639", "https://mfdata.in/api/v1/schemes?q=parag",
-          "https://mfdata.in/docs", "https://mfdata.in/api/v1", "https://mfdata.in/"]:
-    g(u, u, 3000)
-for u in ["https://api.kuvera.in/mf/api/v5/fund_schemes/PP001ZG-GR.json",
-          "https://api.kuvera.in/mf/api/v4/fund_schemes/PP001ZG-GR.json"]:
-    g(u, u, 6000)
-# AMFI site: find aum / portfolio links
-home = S.get("https://www.amfiindia.com/", timeout=40).text
-links = sorted(set(re.findall(r'href="(/[^"]*(?:aum|portfolio|scheme)[^"]*)"', home, re.I)))
-print("AMFI links", links[:80])
-for l in links[:12]:
-    t = S.get("https://www.amfiindia.com" + l, timeout=40).text
-    js = sorted(set(re.findall(r'/_next/static/chunks/app/[^"\']+\.js', t)))
-    for j in js:
-        c = S.get("https://www.amfiindia.com" + j, timeout=40).text
-        apis = sorted(set(re.findall(r'"(/api/[^"]{3,120})"', c))) + sorted(set(re.findall(r"\"(/api/[a-zA-Z0-9\-/]+)\"\.concat", c)))
-        if apis: print("PAGE", l, j, apis[:20])
-json.dump(out, open(".probe/probe2.json", "w"), indent=1)
+        res[k] = {"err": repr(e)[:200]}
+    print(k, json.dumps(res[k])[:900])
+# AMFI sitemap
+try:
+    sm = S.get("https://www.amfiindia.com/sitemap.xml", timeout=40).text
+    locs = re.findall(r"<loc>([^<]+)</loc>", sm)
+    print("AMFI sitemap", len(locs), [l for l in locs if re.search(r"scheme|portfolio|exit|aum|load|fact", l, re.I)][:60])
+except Exception as e:
+    print("sitemap err", e)
+json.dump(res, open(".probe/probe3.json", "w"), indent=1)
