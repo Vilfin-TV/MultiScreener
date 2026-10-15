@@ -396,23 +396,31 @@ def load_official_ter(universe, args):
     else:
         rows = {}
 
-        def job(mid):
-            try:
-                r = S.get(AMFI_TER.format(id=mid), timeout=60)
-                return r.json().get("data", []) if r.status_code == 200 else []
-            except Exception:  # noqa: BLE001
-                return []
-
-        with ThreadPoolExecutor(max_workers=6) as ex:
-            for data in ex.map(job, range(1, 101)):
-                for x in data:
-                    try:
-                        d, ter = x["TER_Date"][:10], float(x["D_TER"])
-                    except (KeyError, TypeError, ValueError):
-                        continue
-                    k = _norm_name(x.get("Scheme_Name", ""))
-                    if k and (k not in rows or d >= rows[k][0]):
-                        rows[k] = [d, ter, x.get("Scheme_Name")]
+        stat = Counter()
+        for mid in range(1, 121):
+            data = []
+            for k in range(2):
+                try:
+                    r = S.get(AMFI_TER.format(id=mid), timeout=60)
+                    stat[r.status_code] += 1
+                    if r.status_code == 200:
+                        data = r.json().get("data", []) or []
+                        break
+                except Exception as e:  # noqa: BLE001
+                    stat[type(e).__name__] += 1
+                time.sleep(1.5)
+            if data:
+                stat["amcs"] += 1
+            for x in data:
+                try:
+                    d, ter = x["TER_Date"][:10], float(x["D_TER"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                k = _norm_name(x.get("Scheme_Name", ""))
+                if k and (k not in rows or d >= rows[k][0]):
+                    rows[k] = [d, ter, x.get("Scheme_Name")]
+            time.sleep(0.3)
+        log.info("Official TER feed: %s", dict(stat))
         if rows:
             save_gz(CACHE / "ter.json.gz", {"_date": date.today().isoformat(), "rows": rows})
         else:
