@@ -12,7 +12,21 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache/restore@v4
+      - name: Probe AMFI TER parameters (diagnostic)
+        continue-on-error: true
+        run: |
+          python3 - <<'PY' > .probe_ter.txt 2>&1 || true
+          import re, requests
+          S = requests.Session(); S.headers["User-Agent"] = "Mozilla/5.0"
+          base = "https://www.amfiindia.com"
+          t = S.get(base + "/ter-of-mf-schemes", timeout=60).text
+          for j in sorted(set(re.findall(r'/_next/static/chunks/[^"\']+\.js', t))):
+              js = S.get(base + j, timeout=60).text
+              for m in re.finditer(r"populate-te-rdata-revised|mfId|MF_ID|populate-amc|amc-list|mfName", js):
+                  print(j, "::", js[max(0, m.start()-700):m.end()+700].replace("\n", " ")); print("-----")
+          PY
+          mkdir -p .probe && head -c 60000 .probe_ter.txt > .probe/ter_probe.txt
+
         with: {path: .mfcache, key: 'mf-dev-${{ github.run_id }}', restore-keys: 'mf-dev-'}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
