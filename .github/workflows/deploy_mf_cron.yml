@@ -2,6 +2,7 @@ name: Deploy India MF Screener Cron Trigger
 
 # Deploys mf_cron_worker.js (Cloudflare cron) which dispatches
 # mf_screener.yml whenever the published NAV date is behind (evening + early morning).
+# Re-runs automatically when the worker or its config changes.
 on:
   push:
     branches: [main]
