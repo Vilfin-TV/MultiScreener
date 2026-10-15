@@ -381,11 +381,27 @@ def reconcile_with_amfi(hist_pts, snaps):
 
 
 def load_facts(universe, args):
+    """Scheme facts (TER, AUM, managers, riskometer, minimums). Refreshed weekly per scheme, gently paced;
+    schemes the source does not list yet are re-tried after a few days."""
     cache = load_gz(CACHE / "facts.json.gz", {})
+    neg = cache.pop("_missing", {})
+    today = date.today()
     isins = sorted({r["isin"] for r in universe if r["isin"]})
-    out, ok, errs = dict(cache), 0, Counter()
+
+    def age(ts):
+        try:
+            return (today - date.fromisoformat(ts)).days
+        except Exception:  # noqa: BLE001
+            return 999
+
+    todo = [i for i in isins if (i in cache and age(cache[i].get("_ts", "")) >= 6)
+            or (i not in cache and age(neg.get(i, "")) >= 3)]
+    todo.sort(key=lambda i: (i in cache, cache.get(i, {}).get("_ts", "")))
+    todo = todo[:args.facts_budget]
+    ok, errs = 0, Counter()
 
     def job(isin):
+        time.sleep(0.25)
         try:
             r = S.get(FACTS_URL.format(isin=isin), timeout=30)
             if r.status_code != 200:
@@ -395,9 +411,11 @@ def load_facts(universe, args):
         except Exception as e:  # noqa: BLE001
             return isin, None, type(e).__name__
 
-    todo = isins
-    for attempt, workers in enumerate((args.workers, 4, 2)):
-        missing = []
+    for workers, pause in ((3, 0), (1, 30), (1, 60)):
+        if not todo:
+            break
+        time.sleep(pause)
+        retry = []
         with ThreadPoolExecutor(max_workers=workers) as ex:
             for fut in as_completed([ex.submit(job, i) for i in todo]):
                 isin, rec, err = fut.result()
@@ -406,22 +424,21 @@ def load_facts(universe, args):
                         "name", "short_name", "lump_min", "sip_min", "lock_in_period", "detail_info", "start_date",
                         "expense_ratio", "expense_ratio_date", "fund_manager", "crisil_rating", "investment_objective",
                         "portfolio_turnover", "aum", "fund_category", "fund_type", "returns", "nav")}
-                    keep["_ts"] = date.today().isoformat()
-                    out[isin] = keep
+                    keep["_ts"] = today.isoformat()
+                    cache[isin] = keep
+                    neg.pop(isin, None)
                     ok += 1
-                elif err == "empty" or (err or "").startswith("HTTP 404"):
+                elif err in ("empty", "HTTP 404"):
                     errs[err] += 1
+                    neg[isin] = today.isoformat()
                 else:
                     errs[err] += 1
-                    missing.append(isin)
-        if not missing:
-            break
-        todo = missing
-        time.sleep(5)
-    log.info("Facts: %d/%d refreshed (%d available incl. cache); misses %s", ok, len(isins),
-             sum(1 for i in isins if i in out), dict(errs))
-    save_gz(CACHE / "facts.json.gz", out)
-    return out
+                    retry.append(isin)
+        todo = retry
+    log.info("Facts: %d refreshed this run, %d/%d schemes covered; misses %s", ok,
+             sum(1 for i in isins if i in cache), len(isins), dict(errs))
+    save_gz(CACHE / "facts.json.gz", {**cache, "_missing": neg})
+    return cache
 
 
 def fetch_nse_indices(start: date, end: date):
@@ -435,7 +452,9 @@ def fetch_nse_indices(start: date, end: date):
     for key, name in NSE_FACTORS.items():
         have = {int(k): v for k, v in cache.get(key, {}).items()}
         last = max(have) if have else None
-        f0 = start if not have or min(have) > start.toordinal() + 7 else date.fromordinal(last) - timedelta(days=10)
+        span = [d for d in have if start.toordinal() <= d <= end.toordinal()]
+        dense = len(span) >= 0.85 * (end - start).days * 5 / 7 * 0.95
+        f0 = start if not have or min(have) > start.toordinal() + 7 or not dense else date.fromordinal(last) - timedelta(days=10)
         cur, got = f0, 0
         while cur <= end:
             to = min(cur + timedelta(days=330), end)
@@ -532,6 +551,7 @@ def main():
     ap.add_argument("--workers", type=int, default=10)
     ap.add_argument("--only", help="comma-separated scheme codes (validation runs)")
     ap.add_argument("--no-write", action="store_true")
+    ap.add_argument("--facts-budget", type=int, default=1200, help="max scheme-fact refreshes per run")
     ap.add_argument("--amfi-budget", type=int, default=60, help="max official history windows fetched per run")
     args = ap.parse_args()
     CACHE.mkdir(exist_ok=True)

@@ -12,6 +12,26 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      - name: Probe AMFI TER / AUM endpoints (diagnostic)
+        continue-on-error: true
+        run: |
+          python3 - <<'PY' > .probe_ter.txt 2>&1 || true
+          import re, requests
+          S = requests.Session(); S.headers["User-Agent"] = "Mozilla/5.0"
+          base = "https://www.amfiindia.com"
+          for page in ["/ter-of-mf-schemes", "/otherdata/aum", "/research-information/aum-data"]:
+              t = S.get(base + page, timeout=60).text
+              for j in sorted(set(re.findall(r'/_next/static/chunks/[^"\']+\.js', t))):
+                  js = S.get(base + j, timeout=60).text
+                  for m in re.finditer(r"populate-te|te-rdata|populate-ter|aum|AUM", js):
+                      if "api" in js[max(0, m.start()-200):m.end()+200]:
+                          print(page, j, "::", js[max(0, m.start()-400):m.end()+600].replace("\n", " "))
+                          print("-----")
+                          break
+          for u in ["/api/populate-ter-month?year=2026", "/api/populate-sub-category?category=", "/api/populate-te-rdata-revised?MF_ID=53"]:
+              r = S.get(base + u, timeout=60); print(u, r.status_code, r.text[:1500]); print("-----")
+          PY
+          mkdir -p .probe && head -c 30000 .probe_ter.txt > .probe/ter_probe.txt; head -c 3000 .probe_ter.txt
       - uses: actions/cache/restore@v4
         with: {path: .mfcache, key: 'mf-dev-${{ github.run_id }}', restore-keys: 'mf-dev-'}
       - uses: actions/setup-python@v5
