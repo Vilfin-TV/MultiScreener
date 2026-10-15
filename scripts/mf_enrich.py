@@ -79,7 +79,7 @@ def parse_exit_load(t: str | None) -> list[str]:
         return []
     t = re.sub(r"(?i)entry\s*load\s*[:\-–]?\s*(not applicable|nil|n\.?a\.?)\s*[,;.]?", "", t)
     t = re.sub(r"(?i)^\s*exit\s*load\s*[:\-]?\s*", "", t.strip())
-    t = re.sub(r"(?i)\bexit\s*load\s*[:\-–]?\s*", "\n", t)
+    t = re.sub(r"(?i)\bexit\s*load\s*(?:[:\-–]\s*|(?=\((?:i|a|1)\)))", "\n", t)     # "Exit load:" / "Exit Load (i)" headings only
     t = re.sub(r"(?<=[a-z)])\.(?=\s*(?:\d|No |Nil|If |For |In ))", ".\n", t)    # run-together sentences
     parts = re.split(r"\n|•|;\s+(?=[A-Z])|(?<=\.)\s+(?=[A-Z(])|\s(?=\((?:i{1,3}|iv|v|vi|[a-f])\)\s)", t)
     out = []
