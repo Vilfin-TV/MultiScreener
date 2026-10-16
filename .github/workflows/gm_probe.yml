@@ -23,7 +23,7 @@ jobs:
           base="https://api.mospi.gov.in/api/cpi/"
           import json, re as _r
           r=s.get("https://api.mospi.gov.in/api-docs/swagger-ui-init.js",timeout=40); t=r.text; print("INIT",r.status_code,len(t))
-          i=t.find("/api/cpi/getCPIIndex"); print(t[i:i+4000])
+          print(t[:6100])
           for m in _r.finditer(r'"(/api/cpi/[A-Za-z]+)"', t): print("  path", m.group(1))
           PY
           git config user.name "github-actions[bot]"; git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
