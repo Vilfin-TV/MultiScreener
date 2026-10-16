@@ -1262,7 +1262,7 @@ function pOverview(f, det, tail){
     quickRisk(f, det);
 }
 /* themed sectoral funds are scored against the whole sectoral / thematic universe */
-function grpLabel(f){ return /^sec_/.test(f.sub) ? 'Sectoral / Thematic' : f.subLabel; }
+function grpLabel(f){ return /^sec_/.test(f.sub) ? 'Sectoral / Thematic' : (f.sub === 'target' || f.sub === 'debtidx') ? 'Target Maturity & Debt Index' : f.subLabel; }
 function scorecardCard(f, det){
   if (f.asset === 'Index') return '';
   var sc = det.score || {}, ss = SUBSTAT[f.sub].avg;

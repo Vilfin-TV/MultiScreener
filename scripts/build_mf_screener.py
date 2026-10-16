@@ -1022,7 +1022,7 @@ def write_outputs(universe, work, results, facts, bench, asof, risk_asof, series
         "v": 1, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "asOf": asof.isoformat(), "riskAsOf": risk_asof.isoformat(),
         "assets": C.ASSETS, "subs": {k: list(C.SUBS[k]) for k in subs_used}, "amcs": amcs,
-        "riskometer": RISKOMETER, "bench": bench_out, "factors": fac_keys, "statuses": C.STATUS,
+        "riskometer": RISKOMETER, "bench": bench_out, "factors": fac_keys, "statuses": C.STATUS, "rules": C.RULES_VERSION,
         "tax": {"asOf": E.TAX_RULES_AS_OF, "rules": E.TAX},
         "count": len(rows), "cols": cols, "rows": rows,
     }
