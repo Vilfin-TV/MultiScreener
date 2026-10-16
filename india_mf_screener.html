@@ -189,6 +189,82 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .vbtn:hover{color:var(--text)}
 .vbtn.on{background:var(--accent);color:var(--accent-ink)}
 .vbtn .n{font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(255,255,255,.22);border-radius:999px;padding:0 6px}
+.vbtn .new{font-size:9.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;background:var(--accent-soft);color:var(--accent2);border-radius:999px;padding:1px 6px}
+.vbtn.on .new{background:rgba(255,255,255,.22);color:inherit}
+.views{overflow-x:auto;scrollbar-width:none}.views::-webkit-scrollbar{display:none}
+
+/* purchase status */
+.buy{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;background:var(--bb);color:var(--bc)}
+.buy::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--bc)}
+.buy-y{--bc:var(--pos);--bb:rgba(34,197,94,.13)}.buy-p{--bc:var(--warn);--bb:rgba(232,163,23,.15)}.buy-x{--bc:var(--neg);--bb:rgba(248,113,113,.14)}
+
+/* ═══════════════ NFO ═══════════════ */
+.nfo-head{padding:18px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center}
+.nfo-stats{display:flex;gap:10px;flex-wrap:wrap}
+.nfo-stat{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;min-width:96px}
+.nfo-stat b{display:block;font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600}
+.nfo-stat span{font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text3)}
+.nfo-tools{display:grid;grid-template-columns:minmax(0,2fr) repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.nfo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.nfo{padding:16px;display:flex;flex-direction:column;gap:10px}
+.nfo-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.nfo-name{font-size:15px;font-weight:700;line-height:1.3}
+.nfo-amc{font-size:12px;color:var(--text3);margin-top:3px}
+.nfo-tags{display:flex;flex-wrap:wrap;gap:6px}
+.nfo-dates{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.nfo-dates div{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;min-width:0}
+.nfo-dates span{display:block;font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text3)}
+.nfo-dates b{display:block;font-size:12.5px;font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nfo-kv{display:grid;grid-template-columns:110px minmax(0,1fr);gap:4px 10px;font-size:12.5px}
+.nfo-kv span:nth-child(odd){color:var(--text3);font-weight:600}
+.nfo-obj{font-size:12.5px;color:var(--text2);line-height:1.55}
+.nfo-obj summary{cursor:pointer;color:var(--accent2);font-weight:600;font-size:12px;margin-top:2px}
+.nfo-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:4px}
+.nfo-acts .btn{height:34px;font-size:12.5px;padding:0 12px}
+.nfo-st{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;background:var(--sb);color:var(--sc);flex-shrink:0}
+.nfo-st::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--sc)}
+.nfo-open{--sc:var(--pos);--sb:rgba(34,197,94,.14)}.nfo-soon{--sc:var(--warn);--sb:rgba(232,163,23,.15)}.nfo-closed{--sc:var(--text3);--sb:var(--surface3)}
+.tips{padding:18px;margin-top:14px}
+.tips ul{margin:10px 0 0;padding-left:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 26px;font-size:13px;color:var(--text2);line-height:1.55}
+
+/* ═══════════════ SMART SIP ═══════════════ */
+.sip-ctl{padding:18px;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr) auto;gap:16px;align-items:end}
+.sip-ctl .fld label{margin-bottom:7px}
+.sip-ctl .seg{display:flex;width:100%;flex-wrap:wrap}
+.sip-ctl .seg button{flex:1 0 auto;padding:8px 6px;font-size:12.5px;white-space:nowrap}
+.amt{position:relative}
+.amt span{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--text3)}
+.amt .tin{padding-left:26px;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600}
+.sip-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:14px 0}
+.sip-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:14px;align-items:start}
+.sip-tbl{width:100%;font-size:13px}
+.sip-tbl td{vertical-align:top}
+.sslot{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);display:flex;align-items:center;gap:7px}
+.sslot i{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.sip-tbl .fname{font-weight:700;font-size:13.5px;line-height:1.3;margin-top:3px;cursor:pointer}
+.sip-tbl .fname:hover{color:var(--accent2)}
+.sip-tbl .fmeta{font-size:11.5px;color:var(--text3);margin-top:2px}
+.sip-why{margin-top:6px}
+.sip-why summary{cursor:pointer;font-size:12px;color:var(--accent2);font-weight:600}
+.sip-why ul{margin:6px 0 0;padding-left:16px;font-size:12px;color:var(--text2);line-height:1.55}
+.sip-amt{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:14px;white-space:nowrap;text-align:right}
+.sip-amt small{display:block;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--text3);font-weight:600}
+.wbar{height:6px;border-radius:3px;background:var(--surface3);margin-top:6px;overflow:hidden}
+.wbar i{display:block;height:100%;border-radius:3px}
+.mixbar{display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px;margin:8px 0 10px}
+.mixbar i{display:block;height:100%}
+.mixleg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--text2)}
+.mixleg span{display:inline-flex;align-items:center;gap:6px}
+.mixleg i{width:10px;height:10px;border-radius:3px}
+.mkt-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.mkt-row:last-child{border-bottom:none}
+.mkt-row span:first-child{color:var(--text3);font-weight:600}
+.mkt-row b{font-family:'JetBrains Mono',monospace;font-weight:600}
+.tilt{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;background:var(--accent-soft);margin-top:10px;font-size:13px;line-height:1.5}
+.tilt b{font-family:'JetBrains Mono',monospace;font-size:18px}
+.rules{margin:8px 0 0;padding-left:18px;font-size:12.5px;color:var(--text2);line-height:1.6}
+.alert{margin-top:12px;font-size:12.5px;display:flex;gap:8px;align-items:flex-start;border-radius:9px;padding:10px 12px;line-height:1.5;background:rgba(232,163,23,.12);border:1px solid rgba(232,163,23,.35);color:var(--text)}
+.sip-m{display:none}
 .quick{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .quick span{font-size:12px;color:var(--text3);font-weight:600;margin-right:2px}
 .qbtn{border:1px solid var(--border);background:var(--surface2);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:600;color:var(--text2);transition:all .15s;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -231,7 +307,7 @@ li:first-child .sp-rank{background:var(--accent);color:var(--accent-ink)}
 .pre svg{width:15px;height:15px;opacity:.85}
 .pre:hover{border-color:var(--accent);color:var(--text)}
 .pre.on{background:var(--accent-soft);border-color:var(--accent);color:var(--text)}
-.tools{display:grid;grid-template-columns:minmax(0,2fr) repeat(6,minmax(0,1fr));gap:10px;margin-top:12px}
+.tools{display:grid;grid-template-columns:minmax(0,2fr) repeat(7,minmax(0,1fr));gap:10px;margin-top:12px}
 .sel,.tin{width:100%;height:40px;font-size:13px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface2);outline:none;min-width:0}
 .sel{padding:0 34px 0 12px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a9bb3' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;text-overflow:ellipsis}
 .sel option,.sel optgroup{background:var(--surface);color:var(--text)}
@@ -510,6 +586,11 @@ footer a{color:var(--text2)}
 
 /* ═══════════════ RESPONSIVE ═══════════════ */
 @media (max-width:1180px){
+  .searchbar{grid-template-columns:1fr}
+  .views{width:100%}
+  .vbtn{flex:1 0 auto;justify-content:center}
+  .sip-ctl{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sip-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
   .assets{grid-template-columns:repeat(4,minmax(0,1fr))}
   .tools{grid-template-columns:repeat(3,minmax(0,1fr))}
   .tools .tin{grid-column:1/-1}
@@ -522,11 +603,16 @@ footer a{color:var(--text2)}
   .spot{grid-template-columns:1fr}
   .fac-wrap{grid-template-columns:1fr}
   .info-list{grid-template-columns:1fr}
+  .sip-grid{grid-template-columns:1fr}
+  .tips ul{grid-template-columns:1fr}
 }
 @media (max-width:860px){
   .searchbar{grid-template-columns:1fr}
   .views{width:100%}
-  .vbtn{flex:1;justify-content:center;padding:0 8px}
+  .vbtn{flex:1 0 auto;justify-content:center;padding:0 10px}
+  .nfo-head{grid-template-columns:1fr}
+  .nfo-tools{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .nfo-tools .tin{grid-column:1/-1}
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width:760px){
@@ -567,6 +653,12 @@ footer a{color:var(--text2)}
   .info-row{grid-template-columns:120px minmax(0,1fr)}
   .calc{grid-template-columns:1fr}
   .hide-m{display:none}
+  .nfo-grid{grid-template-columns:1fr}
+  .nfo,.nfo-head,.tips,.sip-ctl{padding:14px}
+  .sip-ctl{grid-template-columns:1fr}
+  .sip-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sip-tbl-wrap{display:none}
+  .sip-m{display:flex;flex-direction:column;gap:8px}
   .dtbl td,.dtbl th{padding:9px 8px}
 }
 @media (max-width:420px){
@@ -580,8 +672,11 @@ footer a{color:var(--text2)}
   .stats{grid-template-columns:1fr 1fr;gap:8px}
   .stat-v{font-size:16px}
   .tools{grid-template-columns:1fr 1fr}
-  .vbtn svg{display:none}
-  .vbtn{font-size:13px}
+  .vbtn svg,.vbtn .new{display:none}
+  .vbtn{font-size:13px;padding:0 9px}
+  .nfo-dates{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .nfo-tools{grid-template-columns:1fr 1fr}
+  .nfo-kv{grid-template-columns:96px minmax(0,1fr)}
   .mc-row{grid-template-columns:repeat(3,minmax(0,1fr))}
   .mc-row div:nth-child(4){display:none}
   .bar-row{grid-template-columns:48px minmax(0,1fr)}
@@ -667,6 +762,8 @@ footer a{color:var(--text2)}
       <button class="vbtn on" data-view="explore" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="lbl">Explore</span></button>
       <button class="vbtn" data-view="detail" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg><span class="lbl">Fund Detail</span></button>
       <button class="vbtn" data-view="compare" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v18M16 3v18"/><path d="M3 8h5M16 16h5"/></svg><span class="lbl">Compare</span><span class="n" id="cmpN" hidden>0</span></button>
+      <button class="vbtn" data-view="nfo" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg><span class="lbl">NFO</span><span class="n" id="nfoN" hidden>0</span></button>
+      <button class="vbtn" data-view="sip" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12z"/><path d="M15 2.5A10 10 0 0 1 21.5 9H15z"/></svg><span class="lbl">Smart SIP</span><span class="new">New</span></button>
     </div>
     <div class="quick" id="quick"></div>
   </section>
@@ -701,6 +798,7 @@ footer a{color:var(--text2)}
         </select>
         <select class="sel" id="fRisk" aria-label="Riskometer"><option value="">Any risk level</option></select>
         <select class="sel" id="fStatus" aria-label="Status"><option value="">Any status</option><option>In form</option><option>On track</option><option>Underperforming</option><option>Out of track</option></select>
+        <select class="sel" id="fBuy" aria-label="Purchase status"><option value="">Any purchase status</option><option value="open">Open for investment</option><option value="sip">Accepting SIPs</option><option value="paused">Paused for fresh investment</option></select>
       </div>
       <div class="tbl-meta"><span id="tblCount">–</span><span id="tblNote"></span></div>
       <div class="tbl-scroll"><table class="ftbl" id="ftbl"><thead id="fthead"></thead><tbody id="ftbody"><tr><td colspan="11"><div class="skel" style="height:220px"></div></td></tr></tbody></table></div>
@@ -723,6 +821,46 @@ footer a{color:var(--text2)}
   <section class="view" id="v-compare" aria-label="Compare funds">
     <div class="cmp-slots" id="slots"></div>
     <div id="cmpBody"></div>
+  </section>
+
+  <!-- ═════════ NFO ═════════ -->
+  <section class="view" id="v-nfo" aria-label="New fund offers">
+    <div class="card nfo-head">
+      <div>
+        <div class="sec-title">New Fund Offers</div>
+        <div class="sec-sub" id="nfoSub">Mutual fund schemes currently open for subscription in their launch period, with offer dates, minimum investment and scheme documents.</div>
+      </div>
+      <div class="nfo-stats" id="nfoStats"></div>
+    </div>
+    <div class="nfo-tools">
+      <input class="tin" id="nfoText" type="search" placeholder="Filter by fund or fund house…" aria-label="Filter new fund offers"/>
+      <select class="sel" id="nfoAsset" aria-label="Asset class"><option value="">All asset classes</option></select>
+      <select class="sel" id="nfoKind" aria-label="Fund type"><option value="">All fund types</option><option value="active">Actively managed</option><option value="index">Index funds</option><option value="etf">ETFs</option><option value="fof">Fund of funds</option><option value="closed">Close-ended / interval</option></select>
+      <select class="sel" id="nfoStatus" aria-label="Offer status"><option value="live">Open now</option><option value="">Open &amp; recently closed</option><option value="Closed">Recently closed</option></select>
+    </div>
+    <div class="nfo-grid" id="nfoGrid"><div class="card"><div class="skel" style="height:200px"></div></div></div>
+    <div class="card tips">
+      <div class="sec-title">Before you invest in an NFO</div>
+      <ul>
+        <li>A ₹10 offer price does not make a fund cheaper — returns depend on what the fund holds, not its unit price.</li>
+        <li>A new fund has no performance record. Compare it with established funds in the same category in <a href="#" data-goview="explore">Explore</a>.</li>
+        <li>Index funds and ETFs that track an index already offered by other funds add little — prefer the lowest cost and tightest tracking.</li>
+        <li>ETFs trade on the stock exchange after listing and need a demat account; regular mutual fund units do not.</li>
+        <li>Check the exit load, stated asset allocation and riskometer in the scheme documents before applying.</li>
+        <li>Most open-ended funds re-open for regular purchases and SIPs within a few days of allotment — there is rarely a need to rush.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ═════════ SMART SIP ═════════ -->
+  <section class="view" id="v-sip" aria-label="Smart SIP planner">
+    <div class="card sip-ctl">
+      <div class="fld"><label>Investment horizon</label><div class="seg" id="sipHz" role="group" aria-label="Investment horizon"></div></div>
+      <div class="fld"><label>Risk level</label><div class="seg" id="sipRk" role="group" aria-label="Risk level"></div></div>
+      <div class="fld"><label for="sipAmt" id="sipAmtLbl">Amount per month</label><div class="amt"><span>₹</span><input class="tin" id="sipAmt" type="number" inputmode="numeric" min="500" step="500" value="10000" aria-label="SIP amount"/></div></div>
+      <div class="fld"><label>Frequency</label><div class="seg" id="sipFq" role="group" aria-label="SIP frequency"><button data-fq="m" class="on">Monthly</button><button data-fq="w">Weekly</button></div></div>
+    </div>
+    <div id="sipBody"><div class="card"><div class="skel" style="height:260px"></div></div></div>
   </section>
 
   <!-- ═════════ INFO ═════════ -->
@@ -748,6 +886,9 @@ footer a{color:var(--text2)}
       <details class="faq"><summary>What do the scores and status mean?</summary><p><b>Consistency</b> is the share of the last 36 month-ends in which the fund ranked in the top half of its category on rolling 1-year return. <b>Recency</b> blends 3-month, 6-month and 1-year returns (20/30/50) into a category percentile. <b>Volatility</b> ranks 3-year volatility within the category (100 = calmest). <b>Status</b>: <i>In form</i> — recency in the top 30%; <i>On track</i> — recency between the 40th and 70th percentile; <i>Underperforming</i> — recency in the bottom 40% but a top-half long-term record; <i>Out of track</i> — both recent and long-term returns in the bottom half. Index funds are not scored, since they track an index by design.</p></details>
       <details class="faq"><summary>How is taxation shown?</summary><p>Each fund is mapped to its capital-gains treatment from its SEBI category and stated asset allocation: equity-oriented, specified (debt-oriented), or other. Rates exclude surcharge and cess and may change with each Union Budget — please confirm with a tax professional.</p></details>
       <details class="faq"><summary>Where do portfolio holdings come from?</summary><p>From each fund house's statutory monthly portfolio disclosure, published within ten days of every month-end. The Portfolio tab shows the top holdings, sector allocation, asset mix and market-cap split as of that month-end. Market-cap buckets follow SEBI's ranking — Nifty 100 constituents are large cap, Nifty Midcap 150 constituents are mid cap and other listed stocks are small cap. Portfolios are being added fund house by fund house.</p></details>
+      <details class="faq"><summary>How does the Smart SIP planner work?</summary><p>Choose your investment horizon and risk level, and the planner builds a diversified plan of up to eight funds across equity, hybrid, debt and gold — with small thematic and international satellites only for aggressive plans of seven years or more. Funds must have a long record, beat their benchmark in most rolling periods, cost no more than their category median and hold low overlap with each other. Plans are reviewed monthly and stay stable: a fund is replaced only after failing two reviews in a row, and the number of funds never grows. A small market-condition tilt adds equity when prices are well below recent highs and trims it when valuations look stretched.</p></details>
+      <details class="faq"><summary>What does “Fresh investment paused” mean?</summary><p>Some funds — mostly overseas funds when the industry-wide overseas investment limit is reached — temporarily stop accepting new lump-sum purchases or SIPs. Existing investments are unaffected. Use the purchase-status filter in Explore to see which global funds are open for investment today.</p></details>
+      <details class="faq"><summary>Where do new fund offers come from?</summary><p>The NFO tab lists schemes in their official new-fund-offer period, with offer dates, minimum investment, category and links to the offer document and fund house. Recently closed offers stay listed for 45 days.</p></details>
       <details class="faq"><summary>How is Factor DNA calculated?</summary><p>Three years of weekly returns are matched against NSE's Momentum, Value, Quality, Low-Volatility and size indices. The best-fitting combination (weights that are positive and add to 100%) shows the fund's style. A fund is labelled with a single style only when that style dominates and the fit is strong; otherwise it is a <b>Blend</b>.</p></details>
     </div>
   </section>
@@ -806,8 +947,10 @@ var PAGE = 50;
 /* ─────────── state ─────────── */
 var D = null, FUNDS = [], BY = {}, SUBSTAT = {}, AMC_AUM = {};
 var S = {view:'explore', asset:'Equity', sub:'', preset:'top', per:'r3y', sort:null, shown:PAGE,
-         f:{text:'', amc:'', rating:0, hist:0, ter:0, risk:'', status:''}, sel:null, tab:'overview', range:'3Y', showBench:true,
-         rollWin:'3', sipAmt:10000, cmp:[], cmpRange:'3Y', peerSort:'r3y'};
+         f:{text:'', amc:'', rating:0, hist:0, ter:0, risk:'', status:'', buy:''}, sel:null, tab:'overview', range:'3Y', showBench:true,
+         rollWin:'3', sipAmt:10000, cmp:[], cmpRange:'3Y', peerSort:'r3y',
+         nfo:{text:'', asset:'', kind:'', status:'live'}, plan:{hz:'h10', rk:'b', amt:10000, fq:'m'}};
+var NFO = null, SIP = null;
 var CACHE = {d:{}, t:{}, h:{}, p:{}};
 var acIdx = -1, acList = [];
 
@@ -850,6 +993,9 @@ var ST_DESC = {
   'Out of track':'Both recent and long-term returns are in the bottom half of the category — a persistent lag.'
 };
 function statusPill(st, title){ if (!st) return '<span class="st st-na" title="Status needs a 1-year record in a category of five or more funds">—</span>'; return '<span class="st ' + ST_CLS[st] + '" title="' + esc(title || ST_DESC[st]) + '">' + esc(st) + '</span>'; }
+function buyState(f){ if (f.buy == null) return null; if (f.buy === '') return 'paused'; return /L/.test(f.buy) && /S/.test(f.buy) ? 'open' : /S/.test(f.buy) ? 'sip' : 'lump'; }
+var BUY_TXT = {open:['Open for investment','buy-y','Accepting lump-sum and SIP investments'], sip:['SIP only','buy-p','Lump-sum purchases paused; SIPs accepted'], lump:['Lump sum only','buy-p','New SIP registrations paused; lump-sum purchases accepted'], paused:['Fresh investment paused','buy-x','The fund house has paused fresh purchases and new SIPs (overseas funds pause when the industry overseas-investment limit is reached)']};
+function buyPill(f, always){ var b = buyState(f); if (!b || (b === 'open' && !always)) return ''; var t = BUY_TXT[b]; return '<span class="buy ' + t[1] + '" title="' + esc(t[2]) + '">' + t[0] + '</span>'; }
 function scoreTxt(v){ return isNum(v) ? Math.round(v) + '<small>/100</small>' : '–'; }
 var TAX_SHORT = {equity:'Equity', elss:'Equity (ELSS)', debt:'Debt (slab)', other:'Non-equity'};
 function hint(t){ return '<span class="hint" title="' + esc(t) + '" aria-label="' + esc(t) + '">?</span>'; }
@@ -915,6 +1061,7 @@ function boot(){
     if (!r.ok) throw new Error('HTTP ' + r.status); return r.json();
   }).then(function(j){
     D = j; index(); renderMeta(); buildFilters(); bindUI(); readURL(); render();
+    loadNfo().then(function(n){ var c = (n.nfos || []).filter(function(x){ return x.status !== 'Closed'; }).length; if (c) { $('nfoN').textContent = c; $('nfoN').hidden = false; } }).catch(function(){});
     $('q').disabled = false;
   }).catch(function(e){
     $('ftbody').innerHTML = '<tr><td colspan="12"><div class="err"><b>Fund data is temporarily unavailable</b>Please refresh in a few minutes.</div></td></tr>';
@@ -984,11 +1131,21 @@ function readURL(){
   var fund = +p.get('fund');
   if (fund && BY[fund]) { S.sel = fund; S.view = 'detail'; if (p.get('tab') && DTABS.some(function(t){ return t[0] === p.get('tab'); })) S.tab = p.get('tab'); }
   if (p.get('view') === 'compare') S.view = 'compare';
+  if (p.get('view') === 'nfo') S.view = 'nfo';
+  if (p.get('view') === 'sip') {
+    S.view = 'sip';
+    if (/^h(1|3|5|7|10)$/.test(p.get('h') || '')) S.plan.hz = p.get('h');
+    if (/^[cba]$/.test(p.get('r') || '')) S.plan.rk = p.get('r');
+    if (+p.get('amt') >= 100) S.plan.amt = Math.min(1e7, Math.round(+p.get('amt')));
+    if (p.get('fq') === 'w') S.plan.fq = 'w';
+  }
 }
 function writeURL(){
   var p = new URLSearchParams();
   if (S.view === 'detail' && S.sel) { p.set('fund', S.sel); if (S.tab !== 'overview') p.set('tab', S.tab); }
   else if (S.view === 'compare') { p.set('view', 'compare'); if (S.cmp.length) p.set('cmp', S.cmp.join(',')); }
+  else if (S.view === 'nfo') p.set('view', 'nfo');
+  else if (S.view === 'sip') { p.set('view', 'sip'); p.set('h', S.plan.hz); p.set('r', S.plan.rk); p.set('amt', S.plan.amt); if (S.plan.fq === 'w') p.set('fq', 'w'); }
   else { if (S.sub) p.set('sub', S.sub); else if (S.asset !== 'Equity') p.set('asset', S.asset); }
   var q = p.toString();
   history.replaceState(null, '', location.pathname + (q ? '?' + q : ''));
@@ -1002,6 +1159,8 @@ function setView(v){
   if (v === 'detail') renderDetail();
   if (v === 'compare') renderCompare();
   if (v === 'explore') renderExplore();
+  if (v === 'nfo') renderNfo();
+  if (v === 'sip') renderSip();
   writeURL();
 }
 function render(){ setView(S.view); updateCmpBadge(); }
@@ -1066,6 +1225,7 @@ function filtered(){
     if (f.ter && !(isNum(x.ter) && x.ter <= f.ter)) return false;
     if (f.risk !== '' && x.risk !== +f.risk) return false;
     if (f.status && x.status !== f.status) return false;
+    if (f.buy) { var b = buyState(x); if (f.buy === 'open' ? b !== 'open' : f.buy === 'sip' ? (b !== 'open' && b !== 'sip') : b !== 'paused') return false; }
     for (var i = 0; i < txt.length; i++) if (x.search.indexOf(txt[i]) < 0) return false;
     return true;
   });
@@ -1106,7 +1266,7 @@ function renderTable(){
   } else {
     $('ftbody').innerHTML = show.map(function(f, i){
       return '<tr class="clk" data-code="' + f.code + '"><td class="mut">' + (i + 1) + '</td>' +
-        '<td class="t-fund"><div class="t-name">' + esc(f.name) + '</div><div class="t-meta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + (f.style && f.style !== 'Blend' ? ' · ' + esc(f.style) : '') + '</div></td>' +
+        '<td class="t-fund"><div class="t-name">' + esc(f.name) + '</div><div class="t-meta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + (f.style && f.style !== 'Blend' ? ' · ' + esc(f.style) : '') + '</div>' + (buyPill(f, f.asset === 'Global') ? '<div style="margin-top:4px">' + buyPill(f, f.asset === 'Global') + '</div>' : '') + '</td>' +
         '<td>' + stars(f.rating) + '</td>' +
         '<td>' + statusPill(f.status) + '</td>' +
         ['r1y','r3y','r5y','sip3'].map(function(k){ return '<td class="num' + (s.k === k ? ' sorted-col' : '') + '">' + fmtPct(f[k]) + '</td>'; }).join('') +
@@ -1117,7 +1277,7 @@ function renderTable(){
     }).join('');
     $('fcards').innerHTML = show.map(function(f){
       var sk = s.k, extra = sk === 'sharpe' ? ['Sharpe', fmt(f.sharpe)] : sk === 'ter' ? ['TER', isNum(f.ter) ? fmt(f.ter) + '%' : '–'] : sk === 'aum' ? ['AUM', fmtAum(f.aum)] : sk === 'sip3' ? ['SIP 3Y', pctTxt(f.sip3)] : ['TER', isNum(f.ter) ? fmt(f.ter) + '%' : '–'];
-      return '<div class="mc" data-code="' + f.code + '"><div class="mc-top"><div style="min-width:0"><div class="mc-name">' + esc(f.name) + '</div><div class="mc-meta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + '</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">' + stars(f.rating) + (f.status ? statusPill(f.status) : '') + '</div></div>' +
+      return '<div class="mc" data-code="' + f.code + '"><div class="mc-top"><div style="min-width:0"><div class="mc-name">' + esc(f.name) + '</div><div class="mc-meta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + '</div>' + (buyPill(f, f.asset === 'Global') ? '<div style="margin-top:5px">' + buyPill(f, f.asset === 'Global') + '</div>' : '') + '</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">' + stars(f.rating) + (f.status ? statusPill(f.status) : '') + '</div></div>' +
         '<div class="mc-row"><div>1Y<b>' + fmtPct(f.r1y) + '</b></div><div>3Y<b>' + fmtPct(f.r3y) + '</b></div><div>5Y<b>' + fmtPct(f.r5y) + '</b></div><div>' + extra[0] + '<b>' + extra[1] + '</b></div></div></div>';
     }).join('');
   }
@@ -1224,7 +1384,7 @@ function renderSnap(f, det){
         (f.style ? '<span class="tag f" title="Factor DNA">' + esc(f.style === 'Blend' ? 'Blend style' : f.style === 'Market' ? 'Market-like' : f.style + ' style') + '</span>' : '') +
         (f.size ? '<span class="tag">' + esc(f.size) + ' cap tilt</span>' : '') + '</div>' +
       '<h2 class="snap-name">' + esc(f.name) + '</h2>' +
-      (f.status ? '<div style="margin-top:6px">' + statusPill(f.status) + '</div>' : '') +
+      (f.status || buyPill(f, f.asset === 'Global') ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">' + (f.status ? statusPill(f.status) : '') + buyPill(f, f.asset === 'Global') + '</div>' : '') +
       '<div class="snap-meta">' + esc(f.amcName) + ' Mutual Fund · Direct Plan · Growth · ' + stars(f.rating) + '</div>' +
     '</div><div class="snap-nav"><b>' + fmtNav(f.nav) + '</b><span class="chg">' + fmtPct(f.r1d) + ' <span class="mut" style="font-size:11.5px">1D</span></span><small>NAV as of ' + fmtDate(f.navDate) + '</small></div></div>' +
     '<div class="snap-body"><div class="kpis">' +
@@ -1810,7 +1970,7 @@ function bindUI(){
   ['ftbody','fcards','spot'].forEach(function(id){ $(id).addEventListener('click', openRow); $(id).addEventListener('mouseover', pre); $(id).addEventListener('touchstart', pre, {passive:true}); });
   $('moreBtn').addEventListener('click', function(){ S.shown += PAGE; renderTable(); });
   $('fText').addEventListener('input', debounce(function(){ S.f.text = this.value; S.shown = PAGE; renderTable(); }, 120));
-  [['fAmc','amc',String],['fRating','rating',Number],['fHist','hist',Number],['fTer','ter',Number],['fRisk','risk',String],['fStatus','status',String]].forEach(function(x){
+  [['fAmc','amc',String],['fRating','rating',Number],['fHist','hist',Number],['fTer','ter',Number],['fRisk','risk',String],['fStatus','status',String],['fBuy','buy',String]].forEach(function(x){
     $(x[0]).addEventListener('change', function(){ S.f[x[1]] = x[2](this.value); S.shown = PAGE; renderTable(); });
   });
   // detail
@@ -1827,12 +1987,215 @@ function bindUI(){
     var pr = t.closest('#panels tr[data-code]'); if (pr) { openFund(+pr.getAttribute('data-code')); return; }
   });
   $('detail').addEventListener('change', function(e){ if (e.target.id === 'peerSort') { S.peerSort = e.target.value; renderDetail(); } });
-  document.querySelector('[data-goview]').addEventListener('click', function(e){ e.preventDefault(); setView('explore'); });
+  document.querySelectorAll('[data-goview]').forEach(function(a){ a.addEventListener('click', function(e){ e.preventDefault(); setView(a.getAttribute('data-goview')); window.scrollTo({top:0, behavior:'smooth'}); }); });
+  bindNfo(); bindSip();
   // compare
   $('slots').addEventListener('click', function(e){ var x = e.target.closest('[data-rm]'); if (x) { S.cmp.splice(S.cmp.indexOf(+x.getAttribute('data-rm')), 1); updateCmpBadge(); renderCompare(); } });
   $('cmpBody').addEventListener('click', function(e){ var b = e.target.closest('#cmpRange [data-r]'); if (!b) return; S.cmpRange = b.getAttribute('data-r'); document.querySelectorAll('#cmpRange button').forEach(function(x){ x.classList.toggle('on', x === b); }); drawCmpChart(); });
   window.addEventListener('resize', debounce(function(){ redrawCharts(); }, 200));
 }
+/* ═════════════════════════ NFO ═════════════════════════ */
+function loadNfo(){ if (!CACHE.nfo) CACHE.nfo = getJSON('nfo.json').then(function(j){ NFO = j; return j; }).catch(function(e){ delete CACHE.nfo; throw e; }); return CACHE.nfo; }
+function daysTo(iso){ return iso ? dnum(iso) - dnum((NFO && NFO.asOf) || D.asOf) : null; }
+function dShort(iso){ if (!iso) return '–'; var p = iso.split('-'); return (+p[2]) + ' ' + MON[+p[1] - 1] + " '" + p[0].slice(2); }
+function nfoStatus(n){
+  if (n.status === 'Closed') return ['Closed', 'nfo-closed', n.reopen ? 'Re-opens ' + fmtDate(n.reopen) : 'Offer period ended'];
+  var dc = daysTo(n.close);
+  if (n.close && dc < 0) return ['Allotment pending', 'nfo-soon', 'Offer closed ' + fmtDate(n.close)];
+  if (n.close && dc <= 3) return [dc === 0 ? 'Closes today' : 'Closes in ' + dc + ' day' + (dc > 1 ? 's' : ''), 'nfo-soon', 'Last date ' + fmtDate(n.close)];
+  var od = daysTo(n.open);
+  if (n.open && od > 0) return ['Opens ' + fmtDate(n.open, false), 'nfo-soon', 'Upcoming offer'];
+  return ['Open now', 'nfo-open', n.close ? 'Closes ' + fmtDate(n.close) : 'Open since ' + fmtDate(n.open)];
+}
+var NFO_KIND = {active:'Actively managed', index:'Index fund', etf:'ETF', fof:'Fund of funds', closed:'Close-ended'};
+function renderNfo(){
+  if (!NFO) { loadNfo().then(renderNfo).catch(function(){ $('nfoGrid').innerHTML = '<div class="card"><div class="err"><b>New fund offers are temporarily unavailable</b>Please refresh in a few minutes.</div></div>'; }); return; }
+  var all = NFO.nfos || [], live = all.filter(function(n){ return n.status !== 'Closed'; });
+  var soon = live.filter(function(n){ var d = daysTo(n.close); return n.close && d >= 0 && d <= 3; }).length;
+  $('nfoStats').innerHTML = '<div class="nfo-stat"><b>' + live.length + '</b><span>Open now</span></div><div class="nfo-stat"><b>' + soon + '</b><span>Closing ≤ 3 days</span></div><div class="nfo-stat"><b>' + (all.length - live.length) + '</b><span>Recently closed</span></div>';
+  $('nfoSub').textContent = 'Mutual fund schemes in their launch period, with offer dates, minimum investment and scheme documents · as of ' + fmtDate(NFO.asOf) + '.';
+  var assets = {}; all.forEach(function(n){ assets[n.asset] = 1; });
+  var sel = $('nfoAsset'), cur = S.nfo.asset;
+  sel.innerHTML = '<option value="">All asset classes</option>' + Object.keys(assets).sort().map(function(a){ return '<option' + (a === cur ? ' selected' : '') + '>' + esc(a) + '</option>'; }).join('');
+  var q = S.nfo.text.toLowerCase().split(/\s+/).filter(Boolean);
+  var list = all.filter(function(n){
+    if (S.nfo.status === 'live' && n.status === 'Closed') return false;
+    if (S.nfo.status === 'Closed' && n.status !== 'Closed') return false;
+    if (S.nfo.asset && n.asset !== S.nfo.asset) return false;
+    if (S.nfo.kind && n.kind !== S.nfo.kind) return false;
+    var hay = (n.name + ' ' + n.amc + ' ' + n.cat).toLowerCase();
+    for (var i = 0; i < q.length; i++) if (hay.indexOf(q[i]) < 0) return false;
+    return true;
+  });
+  if (!list.length) { $('nfoGrid').innerHTML = '<div class="card"><div class="empty">' + (all.length ? 'No new fund offers match these filters.' : 'No new fund offers are open right now. New launches appear here as soon as they are announced.') + '</div></div>'; return; }
+  $('nfoGrid').innerHTML = list.map(function(n){
+    var st = nfoStatus(n), docs = [];
+    if (n.sidDoc) docs.push('<a class="btn" href="' + esc(n.sidDoc) + '" target="_blank" rel="noopener noreferrer">Offer document ↗</a>');
+    if (n.ssdDoc) docs.push('<a class="btn" href="' + esc(n.ssdDoc) + '" target="_blank" rel="noopener noreferrer">Scheme summary ↗</a>');
+    if (n.website) docs.push('<a class="btn" href="' + esc(n.website) + '" target="_blank" rel="noopener noreferrer">Fund house website ↗</a>');
+    var kv = [];
+    kv.push(['Category', esc(n.cat || '–')]);
+    kv.push(['Minimum', isNum(n.minAmt) ? inr(n.minAmt) : esc(n.minTxt || '–')]);
+    if (n.benchmark) kv.push(['Benchmark', esc(n.benchmark)]);
+    if (n.risk) kv.push(['Riskometer', esc(n.risk.replace(/\s*risk\s*$/i, '')) + ' risk']);
+    if (n.load && n.load.length) kv.push(['Exit load', esc(n.load[0])]);
+    if (n.managers && n.managers.length) kv.push(['Fund manager' + (n.managers.length > 1 ? 's' : ''), esc(n.managers.join(', '))]);
+    if (n.maxTer) kv.push(['Max. TER', esc(n.maxTer)]);
+    return '<article class="card nfo">' +
+      '<div class="nfo-top"><div style="min-width:0"><div class="nfo-name">' + esc(n.name) + '</div><div class="nfo-amc">' + esc(n.amc) + '</div></div><span class="nfo-st ' + st[1] + '" title="' + esc(st[2]) + '">' + esc(st[0]) + '</span></div>' +
+      '<div class="nfo-tags"><span class="tag f">' + esc(n.asset) + '</span><span class="tag">' + esc(NFO_KIND[n.kind] || n.kind) + '</span>' + (n.type ? '<span class="tag">' + esc(n.type) + '</span>' : '') + '</div>' +
+      '<div class="nfo-dates"><div><span>Opens</span><b>' + dShort(n.open) + '</b></div><div><span>Closes</span><b title="' + (n.close ? '' : 'Not yet published — see the offer document') + '">' + (n.close ? dShort(n.close) : 'TBA') + '</b></div><div><span>Allotment</span><b>' + dShort(n.allot) + '</b></div><div><span>Re-opens</span><b>' + (n.reopen ? dShort(n.reopen) : (n.kind === 'etf' ? 'Listing' : '–')) + '</b></div></div>' +
+      '<div class="nfo-kv">' + kv.map(function(x){ return '<span>' + x[0] + '</span><span>' + x[1] + '</span>'; }).join('') + '</div>' +
+      (n.objective ? '<details class="nfo-obj"><summary>Investment objective</summary><p style="margin:6px 0 0">' + esc(n.objective) + '</p></details>' : '') +
+      (n.kind === 'etf' ? '<div class="note" style="margin-top:0">Exchange-traded fund — after the offer period, units are bought and sold on the stock exchange through a demat account.</div>' : '') +
+      '<div class="nfo-acts">' + docs.join('') + '</div></article>';
+  }).join('');
+}
+function bindNfo(){
+  $('nfoText').addEventListener('input', debounce(function(){ S.nfo.text = this.value; renderNfo(); }, 120));
+  [['nfoAsset','asset'],['nfoKind','kind'],['nfoStatus','status']].forEach(function(x){ $(x[0]).addEventListener('change', function(){ S.nfo[x[1]] = this.value; renderNfo(); }); });
+}
+
+/* ═════════════════════════ SMART SIP ═════════════════════════ */
+var ASSET_COL = {Equity:'var(--pie1)', Hybrid:'var(--pie6)', Debt:'var(--pie3)', Gold:'var(--pie4)', International:'var(--pie7)'};
+var MERGE_TO = {theme:'flexi', intl:'flexi', small:'mid', mid:'flexi', flexi:'core', core:'flexi', gold:'dcore', eqsav:'arb', baf:'core', dcore:'baf', dshort:'arb', arb:'dshort'};
+function loadSip(){ if (!CACHE.sip) CACHE.sip = getJSON('smartsip.json').then(function(j){ SIP = j; return j; }).catch(function(e){ delete CACHE.sip; throw e; }); return CACHE.sip; }
+function sipMinOf(code){ var f = BY[code]; return f && isNum(f.sipMin) && f.sipMin > 0 ? f.sipMin : 500; }
+/* scale a model plan to the investor's amount: swap funds without weekly SIPs, combine slots below fund minimums */
+function sizePlan(plan, amt, fq){
+  var notes = [];
+  var slots = plan.slots.map(function(s){
+    var code = s.code, swapped = null;
+    if (fq === 'w') {
+      var f = BY[code];
+      if (f && f.buy != null && f.buy.indexOf('W') < 0) {
+        var alt = (s.alts || []).filter(function(c){ return BY[c] && BY[c].buy != null && BY[c].buy.indexOf('W') >= 0; })[0];
+        if (alt) { swapped = code; code = alt; }
+      }
+    }
+    return {key:s.key, label:s.label, asset:s.asset, w:s.w, code:code, swapped:swapped, src:s, merged:[]};
+  });
+  var full = Math.max.apply(null, slots.map(function(s){ return sipMinOf(s.code) * 100 / s.w; }));
+  full = Math.ceil(full / 500) * 500;
+  var guard = 0;
+  while (slots.length > 1 && guard++ < 10) {
+    var bad = slots.filter(function(s){ return amt * s.w / 100 < sipMinOf(s.code); });
+    if (!bad.length) break;
+    bad.sort(function(a, b){ return a.w - b.w; });
+    var x = bad[0], tgtKey = MERGE_TO[x.key], tgt = slots.filter(function(s){ return s.key === tgtKey; })[0];
+    if (!tgt) tgt = slots.filter(function(s){ return s !== x && s.asset === x.asset; }).sort(function(a, b){ return b.w - a.w; })[0];
+    if (!tgt) tgt = slots.filter(function(s){ return s !== x; }).sort(function(a, b){ return b.w - a.w; })[0];
+    tgt.w += x.w; tgt.merged.push(x.label);
+    slots.splice(slots.indexOf(x), 1);
+  }
+  var left = amt;
+  slots.forEach(function(s, i){
+    s.amt = i === slots.length - 1 ? left : Math.round(amt * s.w / 100 / 10) * 10;
+    left -= s.amt;
+  });
+  return {slots:slots, full:full, merged:plan.slots.length - slots.length};
+}
+function renderSip(){
+  if (!SIP) { loadSip().then(renderSip).catch(function(){ $('sipBody').innerHTML = '<div class="card"><div class="err"><b>The Smart SIP planner is temporarily unavailable</b>Please refresh in a few minutes.</div></div>'; }); return; }
+  var P = S.plan, plan = SIP.plans[P.hz + P.rk];
+  $('sipHz').innerHTML = SIP.horizons.map(function(h){ return '<button data-hz="' + h.id + '"' + (h.id === P.hz ? ' class="on"' : '') + '>' + esc(h.label) + '</button>'; }).join('');
+  $('sipRk').innerHTML = SIP.risks.map(function(r){ return '<button data-rk="' + r.id + '"' + (r.id === P.rk ? ' class="on"' : '') + '>' + esc(r.label) + '</button>'; }).join('');
+  document.querySelectorAll('#sipFq button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-fq') === P.fq); });
+  $('sipAmtLbl').textContent = P.fq === 'w' ? 'Amount per week' : 'Amount per month';
+  if (document.activeElement !== $('sipAmt')) $('sipAmt').value = P.amt;
+  if (!plan) { $('sipBody').innerHTML = '<div class="card"><div class="empty">No plan available for this combination.</div></div>'; return; }
+  var sized = sizePlan(plan, P.amt, P.fq), per = P.fq === 'w' ? 'week' : 'month';
+  var yearly = P.fq === 'w' ? P.amt * 52 : P.amt * 12;
+  var mix = {}; sized.slots.forEach(function(s){ mix[s.asset] = (mix[s.asset] || 0) + s.w; });
+  var ter = sized.slots.reduce(function(a, s){ var f = BY[s.code]; return a + (f && isNum(f.ter) ? f.ter * s.w / 100 : 0); }, 0);
+  var amcs = {}; sized.slots.forEach(function(s){ if (BY[s.code]) amcs[BY[s.code].amcName] = 1; });
+  var m = SIP.market || {};
+  var h = '';
+  h += '<div class="sip-kpis">' +
+    kpi('Funds in plan', sized.slots.length + (sized.merged ? ' <span class="mut" style="font-size:12px">of ' + plan.slots.length + '</span>' : ''), Object.keys(amcs).length + ' fund houses') +
+    kpi('Equity exposure', fmt((mix.Equity || 0) + (mix.International || 0), 0) + '%', 'incl. international') +
+    kpi('Weighted expense ratio', fmt(ter) + '%', 'Direct plans') +
+    kpi('Invested per year', inr(yearly), inr(P.amt) + ' per ' + per) +
+    kpi('Market stance', (m.tilt > 0 ? '+' : '') + (m.tilt || 0) + ' pts equity', plan.tilt === (m.tilt || 0) ? (m.zone ? 'Sentiment: ' + esc(m.zone) : 'Applied to this plan') : (P.hz === 'h1' || P.hz === 'h3' ? 'Not applied under 5 years' : 'Plan already at its equity limit'), true) + '</div>';
+  if (sized.merged) h += '<div class="alert">⚠ ' + inr(P.amt) + ' per ' + per + ' is below the minimum SIP for every fund in this plan, so ' + sized.merged + ' smaller allocation' + (sized.merged > 1 ? 's were' : ' was') + ' combined into related funds. Invest ' + inr(sized.full) + ' or more per ' + per + ' for the complete ' + plan.slots.length + '-fund plan.</div>';
+  // allocation table
+  var rows = sized.slots.map(function(s, i){
+    var f = BY[s.code] || {name:'Fund ' + s.code, amcName:'', subLabel:''}, src = s.src, col = 'var(--pie' + (i + 1) + ')';
+    var flags = [];
+    if (src.state === 'watch') flags.push('<span class="st st-un" title="' + esc(src.note) + '">On watch</span>');
+    if (s.swapped) flags.push('<span class="tag" title="' + esc((BY[s.swapped] || {}).name || '') + ' does not offer weekly SIPs">Weekly-SIP alternate</span>');
+    if (s.merged.length) flags.push('<span class="tag" title="Includes the allocation for ' + esc(s.merged.join(', ')) + '">+ ' + esc(s.merged.join(', ')) + '</span>');
+    var why = (src.why || []).map(function(w){ return '<li>' + esc(w) + '</li>'; }).join('');
+    if (src.pool) why += '<li>Ranked #1 of ' + src.pool + ' funds that passed every screen' + (isNum(src.score) ? ' (score ' + Math.round(src.score) + '/100)' : '') + '</li>';
+    if (src.since) why += '<li>In this plan since ' + fmtDate(src.since) + '</li>';
+    var alts = (src.alts || []).filter(function(c){ return BY[c] && c !== s.code; }).map(function(c){ return '<a href="#" data-open="' + c + '">' + esc(shortName(BY[c].name)) + '</a>'; }).join(' · ');
+    if (alts) why += '<li>Alternates: ' + alts + '</li>';
+    if (src.note && src.state !== 'watch') why += '<li>' + esc(src.note) + '</li>';
+    var minTxt = isNum(f.sipMin) ? 'Min. SIP ' + inr(f.sipMin) : '';
+    var body = '<div class="sslot"><i style="background:' + col + '"></i>' + esc(s.label) + '</div>' +
+      '<div class="fname" data-open="' + s.code + '">' + esc(f.name) + '</div>' +
+      '<div class="fmeta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + ' · ' + stars(f.rating) + '</div>' +
+      (flags.length ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">' + flags.join('') + '</div>' : '') +
+      '<details class="sip-why"><summary>Why this fund</summary><ul>' + why + '</ul></details>';
+    return {s:s, f:f, col:col, body:body, minTxt:minTxt};
+  });
+  h += '<div class="sip-grid"><div class="card pcard" style="margin-bottom:0">' +
+    '<div class="sec-title">Your ' + esc(plan.horizon) + ' · ' + esc(plan.risk) + ' plan</div>' +
+    '<div class="sec-sub">' + inr(P.amt) + ' per ' + per + ' split across ' + sized.slots.length + ' funds · reviewed monthly, last review ' + monthTxt(SIP.reviewed) + '</div>' +
+    '<div class="mixbar">' + Object.keys(mix).map(function(a){ return '<i style="width:' + mix[a] + '%;background:' + ASSET_COL[a] + '" title="' + esc(a) + ' ' + mix[a] + '%"></i>'; }).join('') + '</div>' +
+    '<div class="mixleg">' + Object.keys(mix).map(function(a){ return '<span><i style="background:' + ASSET_COL[a] + '"></i>' + esc(a) + ' <b>' + mix[a] + '%</b></span>'; }).join('') + '</div>' +
+    '<div class="tbl-scroll sip-tbl-wrap"><table class="sip-tbl"><thead><tr><th>Fund</th><th class="num">Weight</th><th class="num">Per ' + per + '</th><th class="num">3Y</th><th class="num">5Y</th><th class="num">TER</th></tr></thead><tbody>' +
+    rows.map(function(r){
+      return '<tr><td>' + r.body + '</td><td class="num">' + r.s.w + '%<div class="wbar"><i style="width:' + r.s.w + '%;background:' + r.col + '"></i></div></td>' +
+        '<td><div class="sip-amt">' + inr(r.s.amt) + '<small>' + r.minTxt + '</small></div></td>' +
+        '<td class="num">' + fmtPct(r.f.r3y) + '</td><td class="num">' + fmtPct(r.f.r5y) + '</td><td class="num">' + (isNum(r.f.ter) ? fmt(r.f.ter) + '%' : '–') + '</td></tr>';
+    }).join('') + '</tbody></table></div>' +
+    '<div class="sip-m" style="margin-top:10px">' + rows.map(function(r){
+      return '<div class="mc" style="cursor:default">' + r.body +
+        '<div class="mc-row"><div>Weight<b>' + r.s.w + '%</b></div><div>Per ' + per + '<b>' + inr(r.s.amt) + '</b></div><div>3Y<b>' + fmtPct(r.f.r3y) + '</b></div><div>TER<b>' + (isNum(r.f.ter) ? fmt(r.f.ter) + '%' : '–') + '</b></div></div></div>';
+    }).join('') + '</div>' +
+    '<div class="note">Invest in the Direct plan, Growth option of each fund. Weekly SIP minimums and dates vary by fund house — confirm on the scheme page before registering.</div>' +
+    '</div>';
+  // right column
+  var donut = donutCard('sipDonut', 'Allocation by fund', '', sized.slots.map(function(s){ return [shortName((BY[s.code] || {name:s.label}).name), s.w]; }), [sized.slots.length + ' funds', inr(P.amt) + '/' + (P.fq === 'w' ? 'wk' : 'mo')]);
+  h += '<div>' + '<div class="card pcard">' + donut.replace('<div class="pie-card"', '<div class="pie-card" style="border:none;padding:0;background:none"') + '</div>' +
+    '<div class="card pcard"><div class="sec-title">Market conditions</div><div class="sec-sub">Applied to plans of 5 years or more · reviewed monthly</div>' +
+    (isNum(m.drawdown) ? '<div style="margin-top:8px"><div class="mkt-row"><span>Nifty 500 vs 52-week high</span><b class="' + (m.drawdown < 0 ? 'neg' : 'pos') + '">' + pctTxt(m.drawdown, 1) + '</b></div>' +
+      '<div class="mkt-row"><span>vs 40-week average</span><b class="' + (m.vsAvg40w < 0 ? 'neg' : 'pos') + '">' + pctTxt(m.vsAvg40w, 1) + '</b></div>' +
+      (isNum(m.r1y) ? '<div class="mkt-row"><span>1-year return</span><b class="' + (m.r1y < 0 ? 'neg' : 'pos') + '">' + pctTxt(m.r1y, 1) + '</b></div>' : '') +
+      (m.zone ? '<div class="mkt-row"><span>Market sentiment</span><b style="font-family:inherit">' + esc(m.zone) + '</b></div>' : '') + '</div>' : '') +
+    '<div class="tilt"><b>' + (m.tilt > 0 ? '+' : '') + (m.tilt || 0) + '</b><span>' +
+      (m.tilt > 0 ? 'Prices are below recent highs, so long-horizon plans add up to ' + m.tilt + ' points to equity — buying more units while prices are lower.' :
+       m.tilt < 0 ? 'Prices look stretched, so long-horizon plans move ' + (-m.tilt) + ' points from equity into debt until conditions normalise.' :
+       'Conditions are neutral — plans follow their standard allocation.') + '</span></div></div>' +
+    '<div class="card pcard"><div class="sec-title">How funds are selected</div><ul class="rules">' +
+      '<li><b>Track record:</b> at least 5 years for equity and hybrid funds, 3 years for index, debt, gold and international funds.</li>' +
+      '<li><b>Benchmark beaten</b> in at least half of all rolling 3-year periods (actively managed funds).</li>' +
+      '<li><b>Fair cost:</b> expense ratio no higher than the category median; size above category thresholds.</li>' +
+      '<li><b>Quality:</b> ranked on rolling returns, consistency, Sortino ratio, drawdown, recent form and cost. Debt funds must hold at least 85% AAA / sovereign paper.</li>' +
+      '<li><b>Diversified:</b> low top-holding overlap between equity funds, mid / small-cap-tilted diversified funds avoided when dedicated slots exist, and no more than two funds per fund house.</li>' +
+      '<li><b>Satellites:</b> thematic and international funds only for 7+ year aggressive plans, capped at 5–10% each, and only when the fund is accepting SIPs.</li>' +
+    '</ul></div>' +
+    '<div class="card pcard"><div class="sec-title">Built to stay stable</div><ul class="rules">' +
+      '<li>The number of funds in a plan is fixed — the plan never adds funds month after month.</li>' +
+      '<li>Funds are reviewed once a month. A fund that slips is put <b>on watch</b> and replaced only if it fails the next review too, or at once if it closes to SIPs.</li>' +
+      '<li>When a fund is replaced, keep the units you hold — simply redirect future instalments to the new fund.</li>' +
+      '<li>Next review: ' + fmtDate(SIP.nextReview) + '.</li>' +
+    '</ul>' + ((plan.changes || []).length ? '<div class="pf-h" style="margin-top:12px">Recent changes</div><ul class="rules">' + plan.changes.map(function(c){ return '<li>' + fmtDate(c.date) + ': ' + esc((BY[c.from] || {name:'Previous fund'}).name) + ' → ' + esc((BY[c.to] || {name:'new fund'}).name) + (c.note ? ' — ' + esc(c.note) : '') + '</li>'; }).join('') + '</ul>' : '') + '</div>' +
+    '</div></div>';
+  h += '<p class="disc" style="margin-top:14px"><strong>Important:</strong> Smart SIP plans are model allocations generated from historical data for educational purposes only. They are not personalised investment advice and do not consider your income, existing investments, tax position or goals. Past performance does not guarantee future returns. We are not SEBI registered investment advisors — please consult a certified financial advisor before investing.</p>';
+  $('sipBody').innerHTML = h;
+  bindDonuts();
+}
+function bindSip(){
+  $('sipHz').addEventListener('click', function(e){ var b = e.target.closest('[data-hz]'); if (!b) return; S.plan.hz = b.getAttribute('data-hz'); renderSip(); writeURL(); });
+  $('sipRk').addEventListener('click', function(e){ var b = e.target.closest('[data-rk]'); if (!b) return; S.plan.rk = b.getAttribute('data-rk'); renderSip(); writeURL(); });
+  $('sipFq').addEventListener('click', function(e){ var b = e.target.closest('[data-fq]'); if (!b) return; var fq = b.getAttribute('data-fq'); if (fq === S.plan.fq) return;
+    S.plan.amt = Math.max(100, Math.round((fq === 'w' ? S.plan.amt * 12 / 52 : S.plan.amt * 52 / 12) / 100) * 100); S.plan.fq = fq; $('sipAmt').value = S.plan.amt; renderSip(); writeURL(); });
+  $('sipAmt').addEventListener('input', debounce(function(){ var v = Math.round(+this.value); if (v >= 100 && v <= 1e7) { S.plan.amt = v; renderSip(); writeURL(); } }, 300));
+  $('sipBody').addEventListener('click', function(e){ var o = e.target.closest('[data-open]'); if (o) { e.preventDefault(); openFund(+o.getAttribute('data-open')); } });
+}
+
 function share(){
   var url = location.href, f = BY[S.sel];
   if (navigator.share) navigator.share({title:f.name + ' — VilfinTV', url:url}).catch(function(){});

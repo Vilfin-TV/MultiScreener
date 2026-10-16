@@ -487,7 +487,7 @@ def load_facts(universe, args):
         except Exception:  # noqa: BLE001
             return 999
 
-    todo = [i for i in isins if (i in cache and age(cache[i].get("_ts", "")) >= 6)
+    todo = [i for i in isins if (i in cache and (age(cache[i].get("_ts", "")) >= 6 or "lump_available" not in cache[i]))
             or (i not in cache and age(neg.get(i, "")) >= 3)]
     todo.sort(key=lambda i: (i in cache, cache.get(i, {}).get("_ts", "")))
     todo = todo[:args.facts_budget]
@@ -516,7 +516,8 @@ def load_facts(universe, args):
                     keep = {k: rec.get(k) for k in (
                         "name", "short_name", "lump_min", "sip_min", "lock_in_period", "detail_info", "start_date",
                         "expense_ratio", "expense_ratio_date", "fund_manager", "crisil_rating", "investment_objective",
-                        "portfolio_turnover", "aum", "fund_category", "fund_type", "returns", "nav")}
+                        "portfolio_turnover", "aum", "fund_category", "fund_type", "returns", "nav",
+                        "lump_available", "sip_available", "sips")}
                     keep["_ts"] = today.isoformat()
                     cache[isin] = keep
                     neg.pop(isin, None)
@@ -903,6 +904,16 @@ def _num(x):
         return None
 
 
+def buy_flags(f):
+    """Purchase status: "L" lump sum accepted, "S" SIP accepted, "W" weekly SIP offered; "" = closed to fresh
+    money (e.g. overseas schemes paused at the industry overseas-investment limit); None = not known yet."""
+    la, sa = f.get("lump_available"), f.get("sip_available")
+    if la is None and sa is None:
+        return None
+    freqs = {str(x.get("sip_frequency", "")).upper() for x in (f.get("sips") or []) if isinstance(x, dict)}
+    return ("L" if la == "Y" else "") + ("S" if sa == "Y" else "") + ("W" if sa == "Y" and "WEEKLY" in freqs else "")
+
+
 def merged_facts(r, f):
     """Combine AMFI official scheme data (preferred) with scheme facts (fallback)."""
     e = ENRICH.get(r["code"]) or {}
@@ -983,7 +994,7 @@ def write_outputs(universe, work, results, facts, bench, asof, risk_asof, series
     cols = ["code", "name", "amc", "sub", "nav", "navDate", "r1d", "r1w", "r1m", "r3m", "r6m", "ytd", "r1y", "r3y",
             "r5y", "r10y", "si", "inc", "sip1", "sip3", "sip5", "ter", "aum", "risk", "rating", "std", "sharpe",
             "sortino", "beta", "alpha", "mdd", "style", "size", "roll3", "beat3", "pos1", "sipMin", "lumpMin",
-            "lock", "bench", "isin", "cons", "rec", "vols", "ltp", "status", "tax", "exitNil"]
+            "lock", "bench", "isin", "cons", "rec", "vols", "ltp", "status", "tax", "exitNil", "buy"]
     rows = []
     MF = {}
     for r in sorted(work, key=lambda r: (r["sub"], r["disp"].lower())):
@@ -1005,6 +1016,7 @@ def write_outputs(universe, work, results, facts, bench, asof, risk_asof, series
             (ro.get("3") or {}).get("avg"), (ro.get("3") or {}).get("beat"), (ro.get("1") or {}).get("pos"),
             m["sipMin"], m["lumpMin"], m["lock"], res["bench"], r["isin"],
             sc.get("cons"), sc.get("rec"), sc.get("vol"), sc.get("ltp"), sc.get("status"), m["tax"], m["exitNil"],
+            buy_flags(f),
         ])
     # round all floats to 2 dp in the screener (returns in %, ratios) — 4 dp for NAV / ratios
     for row in rows:

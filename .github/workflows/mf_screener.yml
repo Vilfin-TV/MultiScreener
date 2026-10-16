@@ -32,6 +32,8 @@ on:
       - 'scripts/build_mf_screener.py'
       - 'scripts/mf_common.py'
       - 'scripts/mf_enrich.py'
+      - 'scripts/build_mf_nfo.py'
+      - 'scripts/build_smart_sip.py'
       - 'scripts/audit_mf_live.py'
       - 'scripts/verify_mf_screener.js'
       - '.github/workflows/mf_screener.yml'
@@ -108,6 +110,13 @@ jobs:
 
       - name: Build India MF screener data
         run: python scripts/build_mf_screener.py --workers 10
+
+      - name: New fund offers
+        continue-on-error: true
+        run: python scripts/build_mf_nfo.py
+
+      - name: Smart SIP model plans
+        run: python scripts/build_smart_sip.py
 
       - name: Save NAV-history cache
         if: always()

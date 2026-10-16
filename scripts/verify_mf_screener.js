@@ -409,9 +409,65 @@ function verifyHoldings() {
   console.log(`Holdings: ${funds} fund portfolios checked`);
 }
 
+// Smart SIP model plans (data/mf/smartsip.json) — structure, diversification and satellite rules
+function verifySmartSip() {
+  const f = path.join(OUT, 'smartsip.json');
+  if (!fs.existsSync(f)) { fail('smartsip.json missing'); return; }
+  const P = JSON.parse(fs.readFileSync(f, 'utf8'));
+  const J = JSON.parse(fs.readFileSync(path.join(OUT, 'screener.json'), 'utf8'));
+  const C = Object.fromEntries(J.cols.map((c, i) => [c, i]));
+  const rows = Object.fromEntries(J.rows.map(r => [r[C.code], r]));
+  ok(Object.keys(P.plans).length === 15, `smart SIP has ${Object.keys(P.plans).length} plans`);
+  ok(Math.abs(P.market.tilt) <= 10 && P.market.tilt % 5 === 0, `market tilt ${P.market.tilt}`);
+  for (const [id, p] of Object.entries(P.plans)) {
+    const w = p.slots.reduce((a, s) => a + s.w, 0);
+    ok(w === 100, `${id}: weights add to ${w}`);
+    ok(p.slots.length >= 2 && p.slots.length <= 8, `${id}: ${p.slots.length} funds`);
+    const codes = p.slots.map(s => s.code);
+    ok(new Set(codes).size === codes.length, `${id}: duplicate fund`);
+    const amc = {};
+    for (const s of p.slots) {
+      const r = rows[s.code];
+      ok(!!r, `${id}/${s.key}: fund ${s.code} not in screener`);
+      if (!r) continue;
+      amc[r[C.amc]] = (amc[r[C.amc]] || 0) + 1;
+      ok(s.w >= 5, `${id}/${s.key}: weight ${s.w}`);
+      ok(!(r[C.lock] > 0), `${id}/${s.key}: fund has a lock-in`);
+      if (C.buy != null && r[C.buy] != null) ok(r[C.buy].includes('S'), `${id}/${s.key}: fund not accepting SIPs`);
+      ok(r[C.status] !== 'Out of track', `${id}/${s.key}: fund is Out of track`);
+      if (s.key === 'theme' || s.key === 'intl') {
+        ok(s.w <= 10, `${id}/${s.key}: satellite weight ${s.w}`);
+        ok(/^h(7|10)a$/.test(id), `${id}: satellite ${s.key} outside 7+ year aggressive plans`);
+      }
+      (s.alts || []).forEach(a => ok(!!rows[a], `${id}/${s.key}: alternate ${a} not in screener`));
+    }
+    for (const [a, n] of Object.entries(amc)) ok(n <= 2 || p.slots.length <= 3, `${id}: ${n} funds from fund house ${J.amcs[a]}`);
+  }
+  console.log(`Smart SIP: ${Object.keys(P.plans).length} plans checked (tilt ${P.market.tilt})`);
+}
+// new fund offers (data/mf/nfo.json)
+function verifyNfo() {
+  const f = path.join(OUT, 'nfo.json');
+  if (!fs.existsSync(f)) return;                      // optional: the page shows an empty state
+  const N = JSON.parse(fs.readFileSync(f, 'utf8'));
+  ok(Array.isArray(N.nfos) && N.count === N.nfos.length, 'nfo.json count');
+  const seen = new Set();
+  for (const n of N.nfos) {
+    ok(n.sid && n.name && n.amc, `NFO ${n.sid}: missing name / fund house`);
+    ok(!seen.has(n.sid), `NFO ${n.sid}: duplicate`); seen.add(n.sid);
+    ok(['Open', 'Closing', 'Closed'].includes(n.status), `NFO ${n.sid}: status ${n.status}`);
+    ok(!n.open || /^\d{4}-\d\d-\d\d$/.test(n.open), `NFO ${n.sid}: open date ${n.open}`);
+    ok(!n.close || !n.open || n.close >= n.open, `NFO ${n.sid}: closes before it opens`);
+    for (const u of [n.sidDoc, n.ssdDoc, n.website]) ok(!u || /^https:\/\//.test(u) || /^http:\/\//.test(u), `NFO ${n.sid}: bad link ${u}`);
+  }
+  console.log(`NFO: ${N.nfos.length} offers checked`);
+}
+
 if (process.argv.includes('--holdings')) { verifyHoldings(); console.log(`${checks} checks, ${failures} failure(s).`); process.exit(failures ? 1 : 0); }
 verifySample();
 verifyFiles();
+verifySmartSip();
+verifyNfo();
 // publish a compact audit record next to the data (shown on the page as a verification note)
 try {
   const J = JSON.parse(fs.readFileSync(path.join(OUT, 'screener.json'), 'utf8'));
