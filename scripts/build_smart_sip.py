@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Smart SIP planner v2 for the India MF Screener → data/mf/smartsip.json (+ data/mf/smartsip_state.json).
 
-Fifteen model plans — 5 investment horizons × 3 risk levels — each with a fixed set of up to 8 fund slots.
+Twenty model plans — 5 investment horizons × 4 risk levels (conservative, balanced, aggressive, very aggressive) — each with a fixed set of up to 8 fund slots.
 Every slot is filled by the best fund that passes a full checklist, chosen dynamically from market conditions:
 
 * Rate cycle (debt) — policy repo rate (now vs a year ago), the 10-year government bond yield (latest weeks and a
@@ -52,7 +52,7 @@ log = logging.getLogger("smartsip")
 
 HORIZONS = [("h1", "Under 3 years", 2, 1, 3), ("h3", "3–5 years", 4, 3, 5), ("h5", "5–7 years", 6, 5, 7),
             ("h7", "7–10 years", 8, 7, 10), ("h10", "10+ years", 15, 10, 30)]
-RISKS = [("c", "Conservative"), ("b", "Balanced"), ("a", "Aggressive")]
+RISKS = [("c", "Conservative"), ("b", "Balanced"), ("a", "Aggressive"), ("v", "Very aggressive")]
 
 # slot → label, asset, candidate subs (None = decided at run time), kind, min years, min AUM (₹ cr), volatility %
 SLOTS = {
@@ -66,6 +66,8 @@ SLOTS = {
     "dshort": ("Short-term debt", "Debt", None, "debt", 3, 1000, 0.8),
     "dcore":  ("Core debt", "Debt", None, "debt", 3, 1000, 2.5),
     "metal":  ("Precious metals", "Commodity", None, "passive", 3, 200, 15),
+    "value":  ("Value / contrarian", "Equity", ["value", "contra"], "active", 5, 1000, 17),
+    "momentum": ("Momentum factor (index)", "Equity", ["idx_factor"], "factor", 3, 300, 21),
     "theme":  ("Sector satellite", "Equity", None, "sector", 5, 300, 22),
     "intl":   ("International satellite", "International", ["us", "global"], "intl", 3, 300, 17),
 }
@@ -85,9 +87,15 @@ TEMPLATES = {
     "h10c": {"core": 30, "flexi": 20, "mid": 5, "baf": 10, "dcore": 25, "metal": 10},
     "h10b": {"core": 30, "flexi": 20, "mid": 15, "small": 10, "dcore": 15, "metal": 10},
     "h10a": {"core": 25, "flexi": 20, "mid": 15, "small": 15, "theme": 5, "intl": 10, "dcore": 5, "metal": 5},
+    # very aggressive: growth-heavy, diversified across market caps, styles (value, momentum), a sector and overseas
+    "h1v":  {"core": 15, "baf": 35, "arb": 20, "dshort": 30},
+    "h3v":  {"core": 25, "flexi": 25, "mid": 15, "baf": 15, "dcore": 15, "metal": 5},
+    "h5v":  {"core": 20, "flexi": 20, "mid": 20, "small": 15, "value": 10, "dcore": 10, "metal": 5},
+    "h7v":  {"core": 15, "flexi": 15, "mid": 20, "small": 20, "momentum": 10, "theme": 10, "intl": 5, "metal": 5},
+    "h10v": {"core": 10, "flexi": 10, "mid": 20, "small": 25, "value": 10, "momentum": 10, "theme": 10, "intl": 5},
 }
-ORDER = ["core", "flexi", "mid", "small", "theme", "baf", "eqsav", "arb", "dcore", "dshort", "metal", "intl"]
-FALLBACK = {"intl": ["flexi", "core"], "theme": ["flexi", "core"], "small": ["mid", "flexi"], "mid": ["flexi", "core"],
+ORDER = ["core", "flexi", "mid", "small", "value", "momentum", "theme", "baf", "eqsav", "arb", "dcore", "dshort", "metal", "intl"]
+FALLBACK = {"value": ["flexi", "core"], "momentum": ["mid", "flexi", "core"], "intl": ["flexi", "core"], "theme": ["flexi", "core"], "small": ["mid", "flexi"], "mid": ["flexi", "core"],
             "flexi": ["core"], "core": ["flexi"], "metal": ["dcore", "dshort"], "eqsav": ["arb", "baf"], "baf": ["core", "dcore"],
             "dcore": ["dshort", "baf"], "dshort": ["dcore", "arb"], "arb": ["dshort"]}
 
@@ -138,13 +146,14 @@ SECTORS = [
     ("psu", "PSU", ["cpse", "pse"], ["sec_psu"], None, None),
     ("mnc", "MNC", ["mnc"], ["sec_mnc"], None, None),
 ]
+RX_MOMENTUM = re.compile(r"momentum", re.I)
 RX_NIFTY50 = re.compile(r"\bnifty 50\b(?!\s*(equal|value|quality|low|momentum|alpha|shariah|arbitrage))", re.I)
 RX_NOT_CORE = re.compile(r"elss|tax saver|next 50|equal weight|value|quality|momentum|low vol|alpha", re.I)
 RX_INTL_THEME = re.compile(r"mining|clean energy|energy|innovation|technology|tech\b|agri|real estate|reit|ev\b|electric|"
                            r"healthcare|consumer|commodit|fang|nasdaq|china|brazil|japan|taiwan|asean|emerging|india", re.I)
 SAFE_CREDIT = ("AAA", "Sovereign", "A1+", "Cash")
-EQUITY_BASE = {"core": 11.0, "flexi": 12.0, "mid": 13.0, "small": 13.5, "theme": 12.5, "intl": 10.0}
-EQUITY_VAL_KEY = {"core": "n50", "flexi": "n500", "mid": "mid150", "small": "sml250"}
+EQUITY_BASE = {"core": 11.0, "flexi": 12.0, "mid": 13.0, "small": 13.5, "value": 12.5, "momentum": 13.0, "theme": 12.5, "intl": 10.0}
+EQUITY_VAL_KEY = {"core": "n50", "flexi": "n500", "mid": "mid150", "small": "sml250", "value": "n500", "momentum": "n500"}
 ASSUMPTIONS = {"inflation": 5.0, "cess": 4.0, "stcgEquity": 20.0, "ltcgEquity": 12.5, "ltcgExempt": 125000, "ltcgOther": 12.5,
                "equityLtMonths": 12, "otherLtMonths": 24, "metalReturn": 9.0}
 MONTHS = {m: i for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
@@ -494,6 +503,8 @@ def fund_checks(u, slot, code, ctx):
     ma = 100 if (kind == "sector" and is_idx) else (500 if sub in ("gilt", "dynbond", "gilt10", "floater") else min_aum)
     chk("Fund size", (g("aum") or 0) >= ma, f"₹{(g('aum') or 0):,.0f} cr (needs ₹{ma:,} cr+)")
     ter, med = g("ter"), cs.get("ter")
+    if slot == "momentum":                   # factor funds cost more than plain index funds — compare like with like
+        med = median([u.g(c, "ter") for c in u.by_subs(subs) if RX_MOMENTUM.search(u.g(c, "name") or "") and u.g(c, "ter") is not None])
     tol = 0.05 if asset == "Debt" or kind in ("index", "passive", "arb") or is_idx else 0.10
     chk("Expense ratio", ter is not None and (med is None or ter <= med + tol),
         (f"{ter:.2f}% vs category median {med:.2f}%" if ter is not None else "not disclosed") if med is not None else f"{ter}%")
@@ -518,7 +529,7 @@ def fund_checks(u, slot, code, ctx):
         if longest:
             chk("Fund-manager tenure", (u.today - longest).days >= 365, f"longest-serving manager since {longest:%b %Y}")
         top10 = (u.pf.get(code) or {}).get("top10")
-        if top10 and slot in ("flexi", "mid", "small"):
+        if top10 and slot in ("flexi", "mid", "small", "value"):
             chk("Portfolio concentration", top10 <= 60, f"top 10 holdings {top10:.0f}%")
     if (kind in ("active", "sector") and not is_idx) or kind == "hybrid":
         deep_checks(u, slot, code, subs, chk)
@@ -529,12 +540,18 @@ def fund_checks(u, slot, code, ctx):
     if slot == "small":
         chk("Market-cap fit", g("size") not in ("Large", "Multi"), f"{g('size') or 'blend'} tilt")
         chk("Size manageable for small caps", (g("aum") or 0) <= 40000, f"₹{(g('aum') or 0):,.0f} cr")
+    if slot == "value":
+        chk("Value style", sub in ("value", "contra") and g("size") not in ("Small",), f"{'contra' if sub == 'contra' else 'value'} fund · {g('size') or 'blend'} tilt")
+    if slot == "momentum":
+        chk("Momentum factor", bool(RX_MOMENTUM.search(name)), "rules-based momentum index" if RX_MOMENTUM.search(name) else "not a momentum index")
+        r3, m3 = g("r3y"), median([u.g(c, "r3y") for c in u.by_subs(["idx_large"]) if RX_NIFTY50.search(u.g(c, "name") or "") and u.g(c, "r3y") is not None])
+        chk("3Y return above the Nifty 50", r3 is not None and (m3 is None or r3 > m3), f"{r3:.1f}% vs {m3:.1f}% a year" if r3 is not None and m3 is not None else "no 3-year record")
     if slot == "core":
         chk("Tracks the Nifty 50", bool(RX_NIFTY50.search(name)) and not RX_NOT_CORE.search(name), "plain Nifty 50 index fund")
     if kind in ("index", "passive") or is_idx:
         rmed = median([u.g(c, "r3y") for c in index_peers(u, code, sub)] or [u.g(c, "r3y") for c in u.by_subs([sub])]) if sub else None
         td = None if g("r3y") is None or rmed is None else abs(g("r3y") - rmed)
-        chk("Tracking vs peers", td is None or td <= (0.6 if kind != "sector" else 1.5), f"3Y return within {td:.2f} pt of peers" if td is not None else "new")
+        chk("Tracking vs peers", td is None or td <= (0.6 if kind not in ("sector", "factor") else 1.5), f"3Y return within {td:.2f} pt of peers" if td is not None else "new")
         index_checks(u, slot, code, sub, chk)
     if asset == "Debt" or kind == "arb":
         sd, sm = g("std"), cs.get("std")
@@ -564,6 +581,7 @@ def fund_checks(u, slot, code, ctx):
 def index_key(name: str) -> str:
     """The index a passive fund tracks, from its name ("HDFC Nifty 50 Index Fund" → "nifty 50")."""
     n = re.sub(r"\(.*?\)", " ", (name or "").lower())
+    n = re.sub(r"\b(nifty|midcap|smallcap)(\d)", r"\1 \2", n)          # "Nifty200" / "Midcap150" spellings
     m = re.search(r"\b((?:nifty|bse|s&p bse|sensex|crisil|msci|nasdaq|s&p)\b.*?)(?=\s+(?:index|etf|fund|fof|plan)\b|$)", n)
     return re.sub(r"\s+", " ", m.group(1)).strip() if m else n.strip()
 
@@ -675,7 +693,10 @@ def deep_checks(u, slot, code, subs, chk):
 def scores(u, slot, codes, kind):
     m = lambda col: {c: u.g(c, col) for c in codes}  # noqa: E731
     logaum = {c: math.log10(max(u.g(c, "aum") or 1, 1)) for c in codes}
-    if kind in ("index", "passive"):
+    if kind == "factor":
+        parts = [(pct_rank(m("r3y")), .25), (pct_rank(m("sortino")), .15), (pct_rank(m("mdd")), .10),
+                 (pct_rank(m("ter"), False), .25), (pct_rank(logaum), .25)]
+    elif kind in ("index", "passive"):
         r3 = [u.g(c, "r3y") for c in codes if u.g(c, "r3y") is not None]
         med = st.median(r3) if r3 else None
         track = {c: (None if u.g(c, "r3y") is None or med is None else -abs(u.g(c, "r3y") - med)) for c in codes}
@@ -706,6 +727,9 @@ def pool_for(u, slot, ctx):
     if slot == "metal":
         subs = [ctx["metal"]]
         return subs, u.by_subs(subs), kind
+    if slot == "momentum":
+        codes = [c for c in u.by_subs(subs) if RX_MOMENTUM.search(u.g(c, "name") or "")]
+        return subs, codes, kind
     if slot == "theme":
         codes = sector_funds(u, ctx["sector"])
         return sorted({u.g(c, "sub") for c in codes}), codes, kind
@@ -746,7 +770,7 @@ def expected_return(u, slot, code, ctx, macro):
             base += clamp(((v["peMed"] / v["pe"]) ** 0.1 - 1) * 100, -2.0, 2.0)
         return base
     sub = u.g(code, "sub")
-    if slot in ("core", "flexi", "mid", "small", "theme", "intl"):
+    if slot in ("core", "flexi", "mid", "small", "value", "momentum", "theme", "intl"):
         gross = eq(slot)
     elif slot == "baf":
         gross = 0.6 * eq("core") + 0.4 * (tb364 + 0.6)
@@ -871,7 +895,7 @@ def apply_tilt(weights, tilt, hz):
     if hz in ("h1", "h3") or not tilt:
         return w, 0
     eq_take = ["core", "flexi"] if tilt > 0 else ["small", "mid", "flexi", "core"]
-    dt_take = ["dcore", "dshort", "metal", "baf", "eqsav", "arb"]
+    dt_take = ["dcore", "dshort", "metal", "baf", "eqsav", "arb"] if tilt > 0 or any(k in w for k in ("dcore", "dshort", "metal", "baf", "eqsav", "arb")) else ["value"]
     moved, need = 0, abs(tilt)
     for k in (dt_take if tilt > 0 else eq_take):
         while need > 0 and w.get(k, 0) > 5:
@@ -959,7 +983,7 @@ def main() -> int:
                 pool_key = None
                 if slot in DEBT_POOLS:
                     pool_key = "easing_long" if (slot == "dcore" and regime == "easing" and hz in ("h5", "h7", "h10")) else regime
-                m = metal_choice if (rk == "a" and hz in ("h7", "h10")) else "gold"
+                m = metal_choice if (rk in ("a", "v") and hz in ("h7", "h10")) else "gold"
                 ctx = {"pool_key": pool_key, "metal": m if slot == "metal" else None, "sector": sector if slot == "theme" else None,
                        "regime": regime, "sector_index": sector_row.get("index"), "sector_label": sector_row.get("label")}
                 ctx["ctx_tag"] = f"{pool_key}|{ctx['metal']}|{ctx['sector']}"
@@ -1000,7 +1024,7 @@ def main() -> int:
                     pst["slots"].pop(k)
             pst["changes"] = (changes + pst.get("changes", []))[:6]
             codes = [s["code"] for s in slots]
-            eq = [c for c in codes if chosen.get(c) in ("core", "flexi", "mid", "small", "theme")]
+            eq = [c for c in codes if chosen.get(c) in ("core", "flexi", "mid", "small", "value", "momentum", "theme")]
             ovs = [o for o in (u.overlap(a, b) for i, a in enumerate(eq) for b in eq[i + 1:]) if o is not None]
             mix = {}
             for s in slots:

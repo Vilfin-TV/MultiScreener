@@ -228,10 +228,13 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .tips ul{margin:10px 0 0;padding-left:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 26px;font-size:13px;color:var(--text2);line-height:1.55}
 
 /* ═══════════════ SMART SIP ═══════════════ */
-.sip-ctl{padding:18px;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr) auto;gap:16px;align-items:end}
+.sip-ctl{padding:18px;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1.35fr) minmax(0,.8fr) auto;gap:16px;align-items:end}
 .sip-ctl .fld label{margin-bottom:7px}
 .sip-ctl .seg{display:flex;width:100%;flex-wrap:wrap}
 .sip-ctl .seg button{flex:1 0 auto;padding:8px 6px;font-size:12.5px;white-space:nowrap}
+.sip-ctl #sipRk,.sip-ctl #sipHz{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.sip-ctl #sipHz{grid-template-columns:repeat(5,minmax(0,1fr))}
+.sip-ctl #sipRk button,.sip-ctl #sipHz button{padding:8px 4px;white-space:normal;line-height:1.2;min-height:34px}
 .amt{position:relative}
 .amt span{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--text3)}
 .amt .tin{padding-left:26px;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600}
@@ -753,6 +756,7 @@ footer a{color:var(--text2)}
   .nfo-grid{grid-template-columns:1fr}
   .nfo,.nfo-head,.tips,.sip-ctl{padding:14px}
   .sip-ctl{grid-template-columns:1fr}
+  .sip-ctl #sipRk{grid-template-columns:repeat(2,minmax(0,1fr))}
   .sip-ctl2{grid-template-columns:1fr 1fr;padding:14px}
   .sip-ctl2 .note{grid-column:1/-1}
   .proj{padding:14px}
@@ -998,7 +1002,7 @@ footer a{color:var(--text2)}
       <details class="faq"><summary>What do the scores and status mean?</summary><p><b>Consistency</b> is the share of the last 36 month-ends in which the fund ranked in the top half of its category on rolling 1-year return. <b>Recency</b> blends 3-month, 6-month and 1-year returns (20/30/50) into a category percentile. <b>Volatility</b> ranks 3-year volatility within the category (100 = calmest). <b>Status</b>: <i>In form</i> — recency in the top 30%; <i>On track</i> — recency between the 40th and 70th percentile; <i>Underperforming</i> — recency in the bottom 40% but a top-half long-term record; <i>Out of track</i> — both recent and long-term returns in the bottom half. Index funds are not scored, since they track an index by design.</p></details>
       <details class="faq"><summary>How is taxation shown?</summary><p>Each fund is mapped to its capital-gains treatment from its SEBI category and stated asset allocation: equity-oriented, specified (debt-oriented), or other. Rates exclude surcharge and cess and may change with each Union Budget — please confirm with a tax professional.</p></details>
       <details class="faq"><summary>Where do portfolio holdings come from?</summary><p>From each fund house's statutory monthly portfolio disclosure, published within ten days of every month-end. The Portfolio tab shows the top holdings, sector allocation, asset mix and market-cap split as of that month-end. Market-cap buckets follow SEBI's ranking — Nifty 100 constituents are large cap, Nifty Midcap 150 constituents are mid cap and other listed stocks are small cap. Portfolios are being added fund house by fund house.</p></details>
-      <details class="faq"><summary>How does the Smart SIP planner work?</summary><p>Choose your investment horizon and risk level, and the planner builds a diversified plan of up to eight funds across equity, hybrid, debt and gold — with small thematic and international satellites only for aggressive plans of seven years or more. Funds must have a long record, beat their benchmark in most rolling periods, cost no more than their category median and hold low overlap with each other. Plans are reviewed monthly and stay stable: a fund is replaced only after failing two reviews in a row, and the number of funds never grows. A small market-condition tilt adds equity when prices are well below recent highs and trims it when valuations look stretched.</p></details>
+      <details class="faq"><summary>How does the Smart SIP planner work?</summary><p>Choose your investment horizon and risk level, and the planner builds a diversified plan of up to eight funds across equity, hybrid, debt and gold — with small thematic and international satellites only for aggressive plans of seven years or more. The Very aggressive level holds more mid and small caps and adds a value / contrarian fund (5+ years) and a rules-based momentum index fund (7+ years). These spread a growth-heavy plan across investing styles as well as market caps. Funds must have a long record, beat their benchmark in most rolling periods, cost no more than their category median and hold low overlap with each other. Plans are reviewed monthly and stay stable: a fund is replaced only after failing two reviews in a row, and the number of funds never grows. A small market-condition tilt adds equity when prices are well below recent highs and trims it when valuations look stretched.</p></details>
       <details class="faq"><summary>What does “Fresh investment paused” mean?</summary><p>Some funds — mostly overseas funds when the industry-wide overseas investment limit is reached — temporarily stop accepting new lump-sum purchases or SIPs. Existing investments are unaffected. Use the purchase-status filter in Explore to see which global funds are open for investment today.</p></details>
       <details class="faq"><summary>Where do new fund offers come from?</summary><p>The NFO tab lists schemes in their official new-fund-offer period, with offer dates, minimum investment, category and links to the offer document and fund house. Recently closed offers stay listed for 45 days.</p></details>
       <details class="faq"><summary>How is Factor DNA calculated?</summary><p>Three years of weekly returns are matched against NSE's Momentum, Value, Quality, Low-Volatility and size indices. The best-fitting combination (weights that are positive and add to 100%) shows the fund's style. A fund is labelled with a single style only when that style dominates and the fit is strong; otherwise it is a <b>Blend</b>.</p></details>
@@ -1248,7 +1252,7 @@ function readURL(){
   if (p.get('view') === 'sip') {
     S.view = 'sip';
     if (/^h(1|3|5|7|10)$/.test(p.get('h') || '')) S.plan.hz = p.get('h');
-    if (/^[cba]$/.test(p.get('r') || '')) S.plan.rk = p.get('r');
+    if (/^[cbav]$/.test(p.get('r') || '')) S.plan.rk = p.get('r');
     if (+p.get('amt') >= 100) S.plan.amt = Math.min(1e7, Math.round(+p.get('amt')));
     if (p.get('fq') === 'w') S.plan.fq = 'w';
     if (+p.get('y') >= 1 && +p.get('y') <= 30) S.plan.yrs = Math.round(+p.get('y'));
@@ -2404,9 +2408,9 @@ function renderSip(){
       '<div class="mi-kpis"><div><small title="Gold / silver price ratio vs its history">G/S ratio</small><b>' + (isNum(met.ratioPct) ? Math.round(met.ratioPct * 100) + 'th pct' : '–') + '</b></div><div><small>Gold 3M</small><b>' + pctTxt(met.gold3m, 1) + '</b></div><div><small>Silver 3M</small><b>' + pctTxt(met.silver3m, 1) + '</b></div></div>' +
       '<div class="sig2"><span class="sig-k">History compared</span><span class="sig-v">' + (met.years ? met.years + ' years' : '–') + '</span><span></span></div>' +
       '<div class="sig2"><span class="sig-k">Silver chosen when</span><span class="sig-v">ratio ≥ 70th pct</span><span></span></div>' +
-      '<p class="mi-foot">' + esc(met.note || '') + '. The metal choice applies to 7+ year aggressive plans; other plans hold gold.</p></div>' +
+      '<p class="mi-foot">' + esc(met.note || '') + '. The metal choice applies to 7+ year aggressive and very aggressive plans; other plans hold gold.</p></div>' +
     '</div>';
-  if (secRows) h += '<div class="card pcard sec-card"><div class="mi-top"><div><div class="sec-title">Sector valuations</div><div class="sec-sub">P/E against each sector\'s own 10-year history and momentum against the Nifty 50 · ★ current sector satellite (7+ year aggressive plans) · only sectors with a fund passing every check can be chosen</div></div></div>' +
+  if (secRows) h += '<div class="card pcard sec-card"><div class="mi-top"><div><div class="sec-title">Sector valuations</div><div class="sec-sub">P/E against each sector\'s own 10-year history and momentum against the Nifty 50 · ★ current sector satellite (7+ year aggressive and very aggressive plans) · only sectors with a fund passing every check can be chosen</div></div></div>' +
     '<div class="sec-wrap"><table class="sec-tbl"><thead><tr><th>Sector</th><th class="num">P/E</th><th class="num hide-m">10Y median</th><th>Cheap ↔ dear</th><th class="num">6M vs Nifty</th><th class="num hide-m">12M vs Nifty</th><th class="num hide-m">Funds passing</th><th>Signal</th></tr></thead><tbody>' + secRows + '</tbody></table></div></div>';
   h += '<div class="mi-grid two">' +
     '<div class="card pcard mi"><div class="sec-title">How funds are selected</div><ul class="rules">' +
@@ -2416,7 +2420,8 @@ function renderSip(){
       '<li><b>Debt:</b> credit quality (85%+ AAA / sovereign where the portfolio is published), no credit events, volatility in line with the category, category matched to the rate cycle, cost no higher than the median.</li>' +
       '<li><b>Index (16+ checks):</b> tracking error, R² and beta against the Nifty 50, tracking difference, symmetric up/down capture, year-by-year tracking against funds on the same index, cost and size rank among those funds, and exit load.</li>' +
       '<li><b>Valuation rotation:</b> within equity, up to 10 points move from the market-cap segment that is dearest against its own 10-year history to the cheapest; when the whole market is expensive the equity tilt shifts money to debt and balanced-advantage funds.</li>' +
-      '<li><b>Satellites:</b> sector and international funds only in 7+ year aggressive plans (5–10% each); the sector is chosen on valuation and momentum, the metal on the gold/silver ratio.</li>' +
+      '<li><b>Satellites:</b> sector and international funds only in 7+ year aggressive and very aggressive plans (5–10% each); the sector is chosen on valuation and momentum, the metal on the gold/silver ratio.</li>' +
+      '<li><b>Very aggressive:</b> the highest equity share at every horizon, more mid and small caps, plus value / contrarian (5+ yrs) and momentum-index (7+ yrs) sleeves of up to 10% each. Expect deeper falls along the way; suited only to investors who can stay invested through them.</li>' +
       '<li><b>Diversified:</b> low top-holding overlap and no more than two funds per fund house.</li>' +
     '</ul></div>' +
     '<div class="card pcard mi"><div class="sec-title">Built to stay stable</div><ul class="rules">' +
