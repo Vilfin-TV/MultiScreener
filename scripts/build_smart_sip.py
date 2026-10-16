@@ -13,7 +13,7 @@ Every slot is filled by the best fund that passes a full checklist, chosen dynam
   (data/mf/val_hist.json via build_macro.py), plus the earnings yield vs the 10-year bond yield.
   - Equity tilt: cheap markets add up to 10 points of equity, expensive markets remove up to 10 (5-point steps,
     combined with drawdown from the 52-week high; horizons under 5 years are not tilted).
-  - Sector satellite (7+ year aggressive plans, 5%): sectors — banking, IT, healthcare, consumption,
+  - Sector satellite (7+ year aggressive plans, 5–10%): 54 sectors (every published Nifty sector index) — e.g. banking, IT, healthcare, consumption,
     infrastructure, real estate & housing, manufacturing & defence, auto, energy, PSU, MNC — are scored on cheapness
     (60%) and relative momentum (40%); expensive sectors (above the 85th valuation percentile) and falling knives
     are excluded; the best fund in the most attractive sector is chosen.
