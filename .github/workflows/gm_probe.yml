@@ -1,0 +1,39 @@
+name: Global macro probe (temporary)
+on:
+  push:
+    branches: [claude/festive-bell-an714y]
+    paths: [.github/workflows/gm_probe.yml]
+permissions: {contents: write}
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: claude/festive-bell-an714y}
+      - run: |
+          mkdir -p .probe
+          python3 - <<'PY' > .probe/gm.log 2>&1 || true
+          import requests, re
+          s=requests.Session(); s.headers.update({"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/129.0 Safari/537.36","Accept":"*/*"})
+          for sym in ["DX-Y.NYB","^TNX","^IRX","EEM","^GSPC","INR=X","GC=F","SI=F","HG=F","BZ=F","CL=F","^VIX","^NSEI","TIP","^FVX"]:
+              try:
+                  r=s.get(f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=2y",timeout=30)
+                  j=r.json()["chart"]["result"][0]; c=[x for x in j["indicators"]["quote"][0]["close"] if x]
+                  print("Y",sym,r.status_code,len(c),c[-1])
+              except Exception as e: print("Y",sym,"ERR",e)
+          for sid in ["T10YIE","DFII10","CPIAUCSL","INDCPIALLMINMEI","DGS10","DTWEXBGS","FPCPITOTLZGIND"]:
+              try:
+                  r=s.get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}",timeout=30); t=r.text.strip().splitlines()
+                  print("F",sid,r.status_code,len(t),t[-1] if t else "")
+              except Exception as e: print("F",sid,"ERR",e)
+          for u in ["https://www.rbi.org.in/home.aspx","https://www.rbi.org.in/Scripts/BS_NSDPDisplay.aspx?param=4"]:
+              try:
+                  r=s.get(u,timeout=40); txt=re.sub(r"<[^>]+>"," ",r.text); txt=re.sub(r"\s+"," ",txt)
+                  for m in re.finditer(r"(CPI|Consumer Price|Inflation|WPI)[^.]{0,160}",txt,re.I): print("R",u[-30:],m.group(0)[:170])
+              except Exception as e: print("R",u,"ERR",e)
+          try:
+              r=s.get("https://api.worldbank.org/v2/country/IND/indicator/FP.CPI.TOTL.ZG?format=json&per_page=5",timeout=30); print("WB",r.status_code,r.text[:300])
+          except Exception as e: print("WB ERR",e)
+          PY
+          git config user.name "github-actions[bot]"; git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add .probe && git commit -m "chore(dev): global macro probe [skip ci]" && git push
