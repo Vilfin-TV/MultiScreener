@@ -414,7 +414,7 @@ def sector_table(u, macro):
         vp = [x for x in (v.get("pePct"), v.get("pbPct")) if x is not None]
         rows.append({"key": key, "label": label, "index": next(k for k in idx if k in val), "pe": v.get("pe"), "pb": v.get("pb"),
                      "peMed": v.get("peMed"), "valPct": round(sum(vp) / len(vp), 3) if vp else None,
-                     "r6mRel": v.get("r6mRel"), "r12mRel": v.get("r12mRel"), "r6m": v.get("r6m")})
+                     "r6mRel": v.get("r6mRel"), "r12mRel": v.get("r12mRel"), "r6m": v.get("r6m"), "years": v.get("years")})
     mom = pct_rank({r["key"]: r.get("r6mRel") for r in rows})
     for r in rows:
         cheap = 1 - r["valPct"] if r["valPct"] is not None else 0.5
@@ -1022,7 +1022,7 @@ def main() -> int:
                       "n50": {k: (val.get("n50") or {}).get(k) for k in ("pe", "pb", "dy", "pePct", "pbPct", "peMed", "pbMed", "r12m")},
                       "valuationAsOf": macro.get("valuationAsOf")},
            "rates": {**rr, "applied": regime},
-           "sectors": [{k: r.get(k) for k in ("key", "label", "pe", "peMed", "valPct", "r6mRel", "r12mRel", "score", "signal", "excluded", "eligible")}
+           "sectors": [{k: r.get(k) for k in ("key", "label", "pe", "peMed", "valPct", "r6mRel", "r12mRel", "score", "signal", "excluded", "eligible", "years")}
                        for r in sectors],
            "sector": sector, "metal": {**metal, "applied": metal_choice},
            "assumptions": ASSUMPTIONS,
