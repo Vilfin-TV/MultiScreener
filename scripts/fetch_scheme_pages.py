@@ -59,7 +59,10 @@ WEBSITES = {
 }
 SKIP_PATH = re.compile(r"\.(pdf|xlsx?|zip|jpe?g|png|svg|docx?)$|blog|news|article|press|media-?cent|insight|learn|faq|calculator|"
                        r"factsheet|disclosure|download|career|investor-?education|campaign|webinar|video|podcast|glossary|"
-                       r"compare|nfo-?update|addendum|notice|/tag/|/category/|/author/|/amp/|idcw|dividend-?option", re.I)
+                       r"compare|nfo-?update|addendum|notice|/tag/|/category/|/author/|/amp/|idcw|dividend-?option|archive|timeline|"
+                       r"media-?kit|handbook|active-?share|portfolio/|sitemap", re.I)
+GENERIC = {"mutual", "funds", "fund", "schemes", "scheme", "equity", "debt", "hybrid", "products", "product", "our", "details",
+           "detail", "solution", "oriented", "invest", "empower", "explorer", "overview", "mf", "en", "in", "fund-details"}
 BRAND_WORDS = re.compile(r"[a-z0-9]+")
 
 
@@ -106,53 +109,70 @@ def sitemap_urls(site: str, budget_s: float = 90) -> list[str]:
     return list(dict.fromkeys(pages))
 
 
-def url_tokens(u: str) -> set:
-    path = urlparse(u).path.lower()
-    segs = [s for s in path.split("/") if s][-2:]
-    words = " ".join(re.sub(r"[-_+.]+", " ", s) for s in segs)
-    words = re.sub(r"\b(html?|aspx|php|direct|regular|growth|plan|option)\b", " ", words)
-    return H.tokens(words)
+def url_tokens(u: str) -> tuple[set, set]:
+    """(tokens of the whole path, tokens of the most specific part) — plan codes such as "nx-dg" are ignored."""
+    path = unquote(urlparse(u).path).lower()
+    segs = [s for s in path.split("/") if s]
+    clean = lambda x: H.tokens(re.sub(r"\b(html?|aspx|php|direct|regular|growth|plan|option)\b", " ", re.sub(r"[-_+.()]+", " ", x)))
+    allt = set().union(*[clean(s) for s in segs]) - GENERIC if segs else set()
+    named = [s for s in segs if len([t for t in clean(s) - GENERIC if len(t) >= 3]) >= 2] or segs[-1:]
+    return allt, (clean(named[-1]) - GENERIC) if named else set()
 
 
 def match(funds: list[dict], urls: list[str], brand: set) -> dict[int, str]:
+    out = {}
+    # 1) an address carrying the fund's own scheme code is an exact match
+    for f in funds:
+        rx = re.compile(r"[=/]" + str(f["code"]) + r"(?:\b|$)")
+        hit = [u for u in urls if rx.search(u)]
+        if hit:
+            out[f["code"]] = min(hit, key=len)
     cands = []
     for u in urls:
         if SKIP_PATH.search(urlparse(u).path):
             continue
-        t = url_tokens(u) - brand
-        if len(t) >= 1:
-            cands.append((u, t))
-    out = {}
+        allt, spec = url_tokens(u)
+        allt, spec = allt - brand, spec - brand
+        if spec:
+            cands.append((u, allt, spec))
     for f in funds:
-        ft = H.tokens(f["name"]) - brand
-        if not ft:
+        if f["code"] in out:
             continue
         best = []
-        for u, t in cands:
-            if ft <= t:                                     # every word of the fund's name is in the address
-                extra = len(t - ft)
-                if extra <= 3:
-                    best.append((extra, len(u), u))
+        for nm in f["names"]:
+            ft = H.tokens(nm) - brand - GENERIC
+            if not ft:
+                continue
+            for u, allt, spec in cands:
+                if ft <= allt and ft & spec:
+                    extra = len(spec - ft)
+                    if extra <= 3:
+                        low = u.lower()
+                        plan = 0 if re.search(r"direct|dir-g|-dg\b", low) else (2 if re.search(r"regular|reg-g|-rg\b", low) else 1)
+                        best.append((extra, plan, len(u), u))
         if not best:
             continue
         best.sort()
-        if len(best) > 1 and best[0][0] == best[1][0] and urlparse(best[0][2]).path.rstrip("/") != urlparse(best[1][2]).path.rstrip("/"):
-            # two equally good pages: keep the one whose path looks like a fund page
-            fundish = [b for b in best if b[0] == best[0][0] and re.search(r"fund|scheme|product|mutual", urlparse(b[2]).path, re.I)]
-            if len(fundish) != 1:
-                continue
-            out[f["code"]] = fundish[0][2]
-        else:
-            out[f["code"]] = best[0][2]
+        top = [b for b in best if b[:2] == best[0][:2]]
+        # several different scheme pages fit equally well → too ambiguous to link
+        stems = {re.sub(r"/(direct|regular)[^/]*$|[-/](dir|reg)[-_]?g(rowth)?$", "", urlparse(b[3]).path.rstrip("/").lower()) for b in top}
+        if len(stems) > 1:
+            continue
+        out[f["code"]] = best[0][3]
     return out
 
 
 def main():
     scr = json.load(open(ROOT / "data" / "mf" / "screener.json"))
     C = {c: i for i, c in enumerate(scr["cols"])}
+    det = {}
+    for f in (ROOT / "data" / "mf" / "d").glob("*.json"):
+        det.update(json.load(open(f)))
     by_amc = defaultdict(list)
     for r in scr["rows"]:
-        by_amc[scr["amcs"][r[C["amc"]]]].append({"code": r[C["code"]], "name": r[C["name"]]})
+        code = r[C["code"]]
+        amfi = (det.get(str(code)) or {}).get("info", {}).get("amfiName") or ""
+        by_amc[scr["amcs"][r[C["amc"]]]].append({"code": code, "names": [n for n in {r[C["name"]], amfi} if n]})
     prev = json.load(open(OUT)) if OUT.exists() else {}
     res, stats = {}, {}
 
