@@ -33,7 +33,7 @@ log = logging.getLogger("macro")
 
 # index name in the daily close file → short key used by the planner
 INDICES = {
-    "Nifty 50": "n50", "Nifty 500": "n500", "Nifty Midcap 150": "mid150", "Nifty Smallcap 250": "sml250",
+    "Nifty 50": "n50", "Nifty Next 50": "nn50", "Nifty 500": "n500", "Nifty Midcap 150": "mid150", "Nifty Smallcap 250": "sml250",
     "Nifty Bank": "bank", "Nifty Financial Services": "fin", "Nifty Private Bank": "pvtbank", "Nifty PSU Bank": "psubank",
     "Nifty IT": "it", "Nifty Pharma": "pharma", "Nifty Healthcare Index": "health", "Nifty FMCG": "fmcg",
     "Nifty India Consumption": "consumption", "Nifty Auto": "auto", "Nifty Infrastructure": "infra",
