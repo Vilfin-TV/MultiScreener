@@ -123,6 +123,16 @@ BENIGN = {"formerly", "known", "erstwhile", "earlier", "series", "option", "plan
           "snapshot", "nav", "pages", "fundsandperformance"}
 
 
+def tail_code(u: str) -> set:
+    """A short scheme / plan code at the end of an address ("…/EBGP", "…-fund-fionf", "…/J282")."""
+    segs = _segs(u)
+    if not segs:
+        return set()
+    last = segs[-1]
+    piece = re.split(r"[-_]", last)[-1]
+    return {t.lower() for t in {last, piece} if re.fullmatch(r"[a-z0-9]{2,6}", t.lower())}
+
+
 def harmless(extra: set, sitewide: frozenset = frozenset()) -> bool:
     """Extra address words are fine only if they are codes, numbers, generic page words or words used site-wide."""
     return all(len(t) <= 3 or t.isdigit() or t in BENIGN or t in sitewide
@@ -185,7 +195,7 @@ def match(funds: list[dict], urls: list[str], brand: set) -> dict[int, str]:
                     continue
                 if ft <= allt and ft & spec:
                     extra = len(spec - ft)
-                    rest = spec - ft - set().union(*[H.tokens(_prep(n)) for n in f["names"]])
+                    rest = spec - ft - set().union(*[H.tokens(_prep(n)) for n in f["names"]]) - tail_code(u)
                     if extra <= 3 and not harmless(rest, sitewide):
                         near.append((f["names"][0], sorted(rest), u))
                     if extra <= 3 and harmless(rest, sitewide):
