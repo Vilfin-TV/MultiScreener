@@ -1,0 +1,25 @@
+name: MF Info Probe (temporary)
+on:
+  push:
+    branches: [claude/festive-bell-an714y]
+    paths: ['scripts/mf_info_probe.py', '.github/workflows/mf_info_probe.yml']
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache/restore@v4
+        with:
+          path: .mfcache
+          key: mf-cache-none
+          restore-keys: mf-cache-
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install requests numpy scipy && mkdir -p .probe && python scripts/mf_info_probe.py 2>&1 | tee .probe/info_probe.log
+      - run: |
+          git config user.name "github-actions[bot]"; git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f .probe; git commit -qm "chore(probe): fund info [skip ci]" || exit 0
+          for i in 1 2 3; do git pull --rebase -q origin ${{ github.ref_name }} && git push origin HEAD:${{ github.ref_name }} && break; sleep 5; done
