@@ -915,6 +915,32 @@ def write_etf_facts(rows, args):
     except Exception as e:  # noqa: BLE001
         log.warning("ETF enrichment failed: %s", e)
         enr = {}
+    # official NAV history → long-horizon returns (split / face-value changes restated like every fund)
+    navr = {}
+
+    def job(code):
+        try:
+            return code, fetch_history(code)[0]
+        except Exception:  # noqa: BLE001
+            return code, None
+    yrs = list(range(date.today().year - 6, date.today().year))
+    with ThreadPoolExecutor(max_workers=args.workers) as ex:
+        for code, pts in ex.map(job, [r["code"] for r in etfs]):
+            if not pts or len(pts) < 30:
+                continue
+            row = next(r for r in etfs if r["code"] == code)
+            o = row["date"].toordinal()
+            if pts[-1][0] < o:
+                pts.append([o, row["nav"]])
+            cleaned, _ = clean_points(pts)
+            sr = C.Series(cleaned)
+            if len(sr) < 30 or date.fromordinal(int(sr.d[-1])) < row["date"] - timedelta(days=10):
+                continue
+            tr = C.trailing_returns(sr)
+            navr[code] = {"r": {k: (None if tr.get(k) is None else round(tr[k], 2)) for k in ("1y", "3y", "5y", "10y", "si")},
+                          "cy": {k: round(v, 2) for k, v in C.calendar_returns(sr, yrs).items() if v is not None},
+                          "first": C.iso(int(sr.d[0]))}
+    log.info("ETF NAV histories: %d/%d", len(navr), len(etfs))
     out = {}
     for r in etfs:
         e = enr.get(r["code"]) or {}
@@ -929,6 +955,8 @@ def write_etf_facts(rows, args):
                "objective": re.sub(r"\s+", " ", ssd.get("objective") or det.get("objective") or "")[:500],
                "sid": f"{E.PORTAL}/spages/{sid}.pdf" if sid else None, "ssd": f"{E.PORTAL}/spages/SSD_{sid}.pdf" if sid else None,
                "website": (PAGES.get("_sites") or {}).get(r["amcName"]) or _site(det.get("website"))}
+        if r["code"] in navr:
+            rec["navR"], rec["navCy"], rec["navFirst"] = navr[r["code"]]["r"], navr[r["code"]]["cy"], navr[r["code"]]["first"]
         out[r["isin"]] = {k: v for k, v in rec.items() if v not in (None, "", [])}
     write_json(OUT / "etf_facts.json", {"generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                                         "count": len(out), "etfs": out})

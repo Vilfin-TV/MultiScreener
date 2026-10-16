@@ -379,6 +379,17 @@ def clean_series(dates: list, closes: list[float]) -> tuple[list, list[float], l
         if c[i] <= 0:
             continue
         ratio = c[i - 1] / c[i]
+        up = c[i] / c[i - 1] if c[i - 1] > 0 else 0
+        if up > 1.8 and i < len(c) - 1 and c[i + 1] / c[i] > 0.6:     # older history over-adjusted → scale it up
+            for k in SPLIT_FACTORS:
+                if abs(up / k - 1) < (0.06 if k < 5 else 0.12):
+                    for j in range(i):
+                        c[j] *= k
+                    flags.append(f"split-{k}:1")
+                    break
+            else:
+                cut = i
+            continue
         if ratio > 1.8:
             for k in SPLIT_FACTORS:
                 if abs(ratio / k - 1) < (0.06 if k < 5 else 0.12):
@@ -611,6 +622,9 @@ def main() -> int:
     bench_syms = [c for _, _, _, cands in BENCHMARKS for c in cands]
     etf_syms = [f"{s}.NS" for s in universe]
     raw = download(bench_syms + etf_syms, period="max")
+    missing = [t for t in bench_syms + etf_syms if t not in raw]
+    if missing:                                   # a few symbols reject "max" — fall back to the 2-year window
+        raw.update(download(missing, period="2y"))
 
     # ── as-of date: the latest session most ETFs have traded; indices must reach it ──
     def last_day(tk: str):
@@ -763,6 +777,19 @@ def main() -> int:
 
         pf = perf(d, c, n50)
         rec["r"] = pf.get("r", {})
+        nav_r = (fx or {}).get("navR") or {}
+        if nav_r:                                  # official NAV history: split-safe long-horizon returns
+            for k in ("3y", "5y", "10y", "si"):
+                rec["r"][k] = nav_r.get(k)
+            if fx.get("navCy"):
+                pf["cy"] = fx["navCy"]
+            if fx.get("navFirst"):
+                pf["first"] = min(fx["navFirst"], pf.get("first") or fx["navFirst"])
+            rec["lb"] = "nav"
+        elif flags:                                # price history needed repair → long returns not trustworthy
+            for k in ("3y", "5y", "10y", "si"):
+                rec["r"][k] = None
+            pf.pop("cy", None)
         for k in ("cy", "vol", "mdd", "vol3", "rr3", "dvol3", "beta", "corr", "first"):
             if pf.get(k) is not None:
                 rec[k] = pf[k]
