@@ -46,7 +46,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
-          sparse-checkout: data/etf_momentum.json
+          sparse-checkout: |
+            data/etf_momentum.json
+            data/mf/etf_facts.json
           sparse-checkout-cone-mode: false
 
       - name: Compare published session with the latest NSE session
@@ -88,6 +90,13 @@ jobs:
                       run, why = False, f"behind ({as_of} < {expected}) but last attempt {age_min:.0f} min ago (holiday or source not ready)"
                   else:
                       why = f"behind ({as_of} < {expected}), last attempt {age_min:.0f} min ago"
+          if not run:                         # newer official fund facts (expense ratio, NAV returns) → refresh the page data
+              try:
+                  fx = json.load(open("data/mf/etf_facts.json")).get("generated", "")
+                  if fx and fx > d.get("generated", ""):
+                      run, why = True, f"newer ETF fund facts ({fx})"
+              except Exception:
+                  pass
           print(f"run={run}: {why}")
           with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
               fh.write(f"run={'true' if run else 'false'}\n")
@@ -130,7 +139,7 @@ jobs:
         run: |
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/etf_momentum.json
+          git add data/etf_momentum.json data/etf_hist.json
           if git diff --staged --quiet; then
             echo "No changes to ETF momentum data."
             exit 0

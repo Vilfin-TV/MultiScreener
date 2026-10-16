@@ -418,6 +418,8 @@ def load_official_ter(universe, args):
         stale = (today_ - date.fromisoformat(st.get("done", ""))).days >= 7
     except ValueError:
         pass
+    if not cache.get("_etf"):              # one fresh pass that also keeps the regular-plan TER (ETFs have no Direct plan)
+        stale, st = True, {}
     stat = Counter()
     if stale:
         if not st.get("month") or st.get("done"):
@@ -447,23 +449,27 @@ def load_official_ter(universe, args):
             if data is None:
                 break
             for x in data:
-                try:
-                    dd, ter = x["TER_Date"][:10], float(x["D_TER"])
-                except (KeyError, TypeError, ValueError):
+                dd = str(x.get("TER_Date") or "")[:10]
+                ter, rter = _num(x.get("D_TER")), _num(x.get("R_TER"))
+                if not dd or (ter is None and rter is None):
                     continue
                 k = _norm_name(x.get("Scheme_Name", ""))
                 if k and (k not in rows or dd >= rows[k][0]):
-                    rows[k] = [dd, ter, x.get("Scheme_Name")]
+                    rows[k] = [dd, ter, x.get("Scheme_Name"), rter]
             stat["rows"] += len(data)
             if len(data) < 100:
                 st["done"] = today_.isoformat()
                 break
             st["page"] += 1
         stat["seconds"] = round(time.time() - t0)
-        save_gz(CACHE / "ter.json.gz", {"_v": 5, "rows": rows, "state": st})
+        save_gz(CACHE / "ter.json.gz", {"_v": 5, "_etf": 1, "rows": rows, "state": st})
     out = {}
     for r in universe:
         hit = rows.get(_norm_name(r["name"]))
+        if hit and r.get("etf"):              # ETFs: single plan — use whichever TER is disclosed
+            hit = [hit[0], hit[1] if hit[1] is not None else (hit[3] if len(hit) > 3 else None), hit[2]]
+        if hit and hit[1] is None:
+            hit = None
         if hit and 0 <= hit[1] <= 2.6:          # SEBI caps Direct-plan TER well below this; anything above is a typo
             out[r["code"]] = {"ter": hit[1], "date": hit[0]}
         elif hit:
@@ -648,6 +654,7 @@ def main():
     ap.add_argument("--facts-budget", type=int, default=1200, help="max scheme-fact refreshes per run")
     ap.add_argument("--enrich-seconds", type=int, default=900, help="time budget for official scheme details")
     ap.add_argument("--ter-seconds", type=int, default=420, help="time budget for the official TER disclosure")
+    ap.add_argument("--etf-enrich-seconds", type=int, default=240, help="time budget for official ETF scheme details")
     ap.add_argument("--amfi-budget", type=int, default=60, help="max official history windows fetched per run")
     args = ap.parse_args()
     CACHE.mkdir(exist_ok=True)
@@ -676,6 +683,10 @@ def main():
     except Exception as e:  # noqa: BLE001 — enrichment must never block the NAV refresh
         log.warning("Official scheme enrichment failed: %s", e)
         ENRICH = {}
+    try:
+        write_etf_facts(rows, args)
+    except Exception as e:  # noqa: BLE001 — ETF facts must never block the fund refresh
+        log.warning("ETF facts failed: %s", e)
 
     # official AMFI NAVs on every date the analytics depend on (return base dates first, then month-ends)
     asof0 = navdate
@@ -875,6 +886,82 @@ def _site(u):
         return None
     u = u.strip().replace("\\", "/").replace("https:////", "https://").replace("http:////", "http://")
     return u if re.match(r"https?://", u, re.I) else "https://" + u.lstrip("/")
+
+
+def etf_rows(rows):
+    """Open-ended exchange-traded schemes in the official NAV file (one row per ISIN, growth units)."""
+    out = {}
+    for r in rows:
+        if not r["cat"].startswith("Open Ended") or not r["isin"] or not r["nav"] or not r["date"]:
+            continue
+        if not ("ETF" in r["cat"].split("(", 1)[-1][:40] or re.search(r"Gold ETF|Other\s+ETFs", r["cat"])):
+            continue
+        if re.search(r"idcw|dividend|payout|segregat", r["name"], re.I):
+            continue
+        out[r["isin"]] = {**r, "etf": True, "disp": C.nice_name(r["name"]), "amcName": C.amc_short(r["amc"])}
+    return list(out.values())
+
+
+def write_etf_facts(rows, args):
+    """data/mf/etf_facts.json — official facts for every listed ETF, keyed by ISIN (read by the ETF page build):
+    NAV, expense ratio, fund size, benchmark, riskometer, launch date, managers and document links."""
+    etfs = etf_rows(rows)
+    if len(etfs) < 50:
+        log.warning("ETF facts: only %d ETFs in the NAV file — skipped", len(etfs))
+        return
+    ter = load_official_ter(etfs, argparse.Namespace(**{**vars(args), "ter_seconds": 0}))
+    try:
+        enr = E.Enricher(S, CACHE / "enrich.json.gz", budget_s=args.etf_enrich_seconds).run(etfs)
+    except Exception as e:  # noqa: BLE001
+        log.warning("ETF enrichment failed: %s", e)
+        enr = {}
+    # official NAV history → long-horizon returns (split / face-value changes restated like every fund)
+    navr = {}
+
+    def job(code):
+        try:
+            return code, fetch_history(code)[0]
+        except Exception:  # noqa: BLE001
+            return code, None
+    yrs = list(range(date.today().year - 6, date.today().year))
+    with ThreadPoolExecutor(max_workers=args.workers) as ex:
+        for code, pts in ex.map(job, [r["code"] for r in etfs]):
+            if not pts or len(pts) < 30:
+                continue
+            row = next(r for r in etfs if r["code"] == code)
+            o = row["date"].toordinal()
+            if pts[-1][0] < o:
+                pts.append([o, row["nav"]])
+            cleaned, _ = clean_points(pts)
+            sr = C.Series(cleaned)
+            if len(sr) < 30 or date.fromordinal(int(sr.d[-1])) < row["date"] - timedelta(days=10):
+                continue
+            tr = C.trailing_returns(sr)
+            navr[code] = {"r": {k: (None if tr.get(k) is None else round(tr[k], 2)) for k in ("1y", "3y", "5y", "10y", "si")},
+                          "cy": {k: round(v, 2) for k, v in C.calendar_returns(sr, yrs).items() if v is not None},
+                          "first": C.iso(int(sr.d[0]))}
+    log.info("ETF NAV histories: %d/%d", len(navr), len(etfs))
+    out = {}
+    for r in etfs:
+        e = enr.get(r["code"]) or {}
+        det, ssd, aum = e.get("details") or {}, e.get("ssd") or {}, e.get("aum") or {}
+        t = ter.get(r["code"]) or {}
+        sid = e.get("sid")
+        rec = {"code": r["code"], "name": r["disp"], "amc": r["amcName"], "nav": r["nav"], "navDate": C.iso(r["date"].toordinal()),
+               "ter": t.get("ter"), "terDate": t.get("date"),
+               "aum": round(aum["totalLakh"] / 100, 1) if aum.get("totalLakh") else None, "aumAsOf": aum.get("quarter"),
+               "benchmark": ssd.get("benchmark") or "", "risk": re.sub(r"\s+risk$", "", (ssd.get("riskometer") or ""), flags=re.I).strip(),
+               "launch": det.get("launch") or "", "managers": [m["name"] for m in (ssd.get("managers") or [])][:4],
+               "objective": re.sub(r"\s+", " ", ssd.get("objective") or det.get("objective") or "")[:500],
+               "sid": f"{E.PORTAL}/spages/{sid}.pdf" if sid else None, "ssd": f"{E.PORTAL}/spages/SSD_{sid}.pdf" if sid else None,
+               "website": (PAGES.get("_sites") or {}).get(r["amcName"]) or _site(det.get("website"))}
+        if r["code"] in navr:
+            rec["navR"], rec["navCy"], rec["navFirst"] = navr[r["code"]]["r"], navr[r["code"]]["cy"], navr[r["code"]]["first"]
+        out[r["isin"]] = {k: v for k, v in rec.items() if v not in (None, "", [])}
+    write_json(OUT / "etf_facts.json", {"generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                        "count": len(out), "etfs": out})
+    log.info("ETF facts: %d ETFs · TER %d · AUM %d · benchmark %d", len(out), sum("ter" in v for v in out.values()),
+             sum("aum" in v for v in out.values()), sum("benchmark" in v for v in out.values()))
 
 
 def ter_of(r, f):
