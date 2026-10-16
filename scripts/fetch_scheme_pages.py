@@ -109,9 +109,18 @@ def sitemap_urls(site: str, budget_s: float = 90) -> list[str]:
     return list(dict.fromkeys(pages))
 
 
+def _prep(text: str) -> str:
+    """Keep phrases whose small words matter ("ultra short TO short term" is a different fund)."""
+    t = re.sub(r"short[\s\-_]+to[\s\-_]+short", "shorttoshort", text, flags=re.I)
+    return re.sub(r"fund[\s\-_]+of[\s\-_]+funds?", "fof", t, flags=re.I)
+
+
+KIND_WORDS = ("etf", "fof", "index")
+
+
 def url_tokens(u: str) -> tuple[set, set]:
     """(tokens of the whole path, tokens of the most specific part) — plan codes such as "nx-dg" are ignored."""
-    path = unquote(urlparse(u).path).lower()
+    path = _prep(unquote(urlparse(u).path).lower())
     segs = [s for s in path.split("/") if s]
     clean = lambda x: H.tokens(re.sub(r"\b(html?|aspx|php|direct|regular|growth|plan|option)\b", " ", re.sub(r"[-_+.()]+", " ", x)))
     allt = set().union(*[clean(s) for s in segs]) - GENERIC if segs else set()
@@ -140,10 +149,13 @@ def match(funds: list[dict], urls: list[str], brand: set) -> dict[int, str]:
             continue
         best = []
         for nm in f["names"]:
-            ft = H.tokens(nm) - brand - GENERIC
+            ft = H.tokens(_prep(nm)) - brand - GENERIC
             if not ft:
                 continue
             for u, allt, spec in cands:
+                # an ETF / index / FoF page only fits a fund of the same kind (and vice versa)
+                if any((k in spec) != (k in ft) for k in KIND_WORDS if k != "index") or ("index" in spec and "index" not in ft):
+                    continue
                 if ft <= allt and ft & spec:
                     extra = len(spec - ft)
                     if extra <= 3:
@@ -259,9 +271,10 @@ def main():
         res.update(m)
         log.info("%-24s browser links %5d · +%3d → %3d of %3d", amc, len(links), len(m), stats[amc][1] + len(m), stats[amc][2])
     lists = {amc: list_page(WEBSITES[amc], all_urls.get(amc, [])) for amc in by_amc if amc in WEBSITES}
-    # a fund matched before but not this time (site briefly unreachable) keeps its earlier link
+    # a fund house whose site was unreachable this time keeps last week's links
+    down = {f["code"] for a, fs in by_amc.items() if not all_urls.get(a) for f in fs}
     for k, v in prev.items():
-        if not k.startswith("_") and int(k) not in res and int(k) in {f["code"] for fs in by_amc.values() for f in fs}:
+        if not k.startswith("_") and int(k) in down and int(k) not in res:
             res[int(k)] = v
     out = {str(k): v for k, v in sorted(res.items())}
     out["_asOf"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
