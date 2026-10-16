@@ -272,6 +272,326 @@ const SOURCE_POOL = {
     { url: 'https://news.google.com/rss/search?q=mobile+phone+computer+app+tech+news+india&hl=ml&gl=IN&ceid=IN:ml', name: 'Tech News' },
   ],
 
+  // ── tamil ────────────────────────────────────────────────────────────────────
+  tamil: [
+    { url: 'https://news.google.com/rss/headlines/section/geo/India?hl=ta&gl=IN&ceid=IN:ta',        name: 'Google News Tamil' },
+    { url: 'https://news.google.com/rss/headlines/section/geo/India/IN-TN?hl=ta&gl=IN&ceid=IN:ta', name: 'Google Tamil Nadu' },
+    { url: 'https://news.google.com/rss/search?q=tamilnadu+news&hl=ta&gl=IN&ceid=IN:ta',            name: 'TN Search' },
+    { url: 'https://news.google.com/rss/search?q=தமிழ்நாடு+செய்திகள்&hl=ta&gl=IN&ceid=IN:ta',     name: 'TN News Tamil' },
+    { url: 'https://news.google.com/rss/search?q=chennai+news+latest&hl=ta&gl=IN&ceid=IN:ta',       name: 'Chennai News' },
+    { url: 'https://news.google.com/rss/search?q=site:dinamalar.com&hl=ta&gl=IN&ceid=IN:ta',        name: 'Dinamalar' },
+    { url: 'https://news.google.com/rss/search?q=site:dinakaran.com&hl=ta&gl=IN&ceid=IN:ta',        name: 'Dinakaran' },
+  ],
+
+  // ── Tamil Edition sub-categories (RSS-only, Tamil language) ──────────────────
+  ta_trending: [
+    { url: 'https://news.google.com/rss/headlines/section/geo/India/IN-TN?hl=ta&gl=IN&ceid=IN:ta', name: 'Google TN' },
+    { url: 'https://news.google.com/rss/search?q=tamilnadu+viral+trending&hl=ta&gl=IN&ceid=IN:ta', name: 'TN Trending' },
+    { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=IN',                   name: 'Google Trends IN' },
+    { url: 'https://news.google.com/rss/search?q=tamil+trending+viral+news&hl=ta&gl=IN&ceid=IN:ta', name: 'Tamil Viral' },
+  ],
+  ta_stock: [
+    { url: 'https://news.google.com/rss/search?q=பங்குச்சந்தை+நிஃப்டி+சென்செக்ஸ்&hl=ta&gl=IN&ceid=IN:ta',  name: 'Stock Market Tamil' },
+    { url: 'https://news.google.com/rss/search?q=site:tamil.economictimes.com&hl=ta&gl=IN&ceid=IN:ta',        name: 'ET Tamil' },
+    { url: 'https://news.google.com/rss/search?q=mutual+fund+SIP+share+market+tamil&hl=ta&gl=IN&ceid=IN:ta', name: 'MF Tamil' },
+    { url: 'https://news.google.com/rss/search?q=business+economy+gold+price+tamil+nadu&hl=ta&gl=IN&ceid=IN:ta', name: 'Business TN' },
+    { url: 'https://news.google.com/rss/search?q=தங்கம்+வணிகம்+முதலீடு+தமிழ்&hl=ta&gl=IN&ceid=IN:ta',     name: 'Gold & Business Tamil' },
+  ],
+  ta_movies: [
+    { url: 'https://news.google.com/rss/search?q=kollywood+tamil+cinema+movie&hl=ta&gl=IN&ceid=IN:ta',   name: 'Kollywood' },
+    { url: 'https://news.google.com/rss/search?q=tamil+film+new+release+OTT&hl=ta&gl=IN&ceid=IN:ta',    name: 'Tamil Film OTT' },
+    { url: 'https://news.google.com/rss/search?q=தமிழ்+திரைப்படம்+சினிமா&hl=ta&gl=IN&ceid=IN:ta',     name: 'Tamil Cinema' },
+  ],
+  ta_music: [
+    { url: 'https://news.google.com/rss/search?q=tamil+music+song+album+singer&hl=ta&gl=IN&ceid=IN:ta', name: 'Tamil Music' },
+    { url: 'https://news.google.com/rss/search?q=தமிழ்+இசை+பாடல்+இசையமைப்பாளர்&hl=ta&gl=IN&ceid=IN:ta', name: 'Music Tamil' },
+    { url: 'https://news.google.com/rss/search?q=tamil+song+new+release+AR+Rahman&hl=ta&gl=IN&ceid=IN:ta', name: 'New Tamil Songs' },
+  ],
+  ta_local: [
+    { url: 'https://news.google.com/rss/search?q=tamilnadu+district+local+news&hl=ta&gl=IN&ceid=IN:ta',   name: 'TN Local' },
+    { url: 'https://news.google.com/rss/search?q=madurai+coimbatore+trichy+salem+tirunelveli&hl=ta&gl=IN&ceid=IN:ta', name: 'TN Cities' },
+    { url: 'https://news.google.com/rss/search?q=tamilnadu+government+panchayat+local+body&hl=ta&gl=IN&ceid=IN:ta', name: 'TN Local Bodies' },
+  ],
+  ta_science: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/SCIENCE?hl=ta&gl=IN&ceid=IN:ta',          name: 'Google Science Tamil' },
+    { url: 'https://news.google.com/rss/search?q=science+research+discovery+அறிவியல்&hl=ta&gl=IN&ceid=IN:ta', name: 'Science Tamil' },
+    { url: 'https://news.google.com/rss/search?q=tamilnadu+science+technology+innovation&hl=ta&gl=IN&ceid=IN:ta', name: 'TN Science' },
+  ],
+  ta_space: [
+    { url: 'https://news.google.com/rss/search?q=ISRO+space+mission+rocket+satellite&hl=ta&gl=IN&ceid=IN:ta',      name: 'ISRO Space' },
+    { url: 'https://news.google.com/rss/search?q=NASA+space+planet+விண்வெளி+chandrayaan&hl=ta&gl=IN&ceid=IN:ta', name: 'Space Tamil' },
+  ],
+  ta_sports: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/SPORTS?hl=ta&gl=IN&ceid=IN:ta',               name: 'Google Sports Tamil' },
+    { url: 'https://news.google.com/rss/search?q=cricket+football+sports+tamilnadu+IPL+CSK&hl=ta&gl=IN&ceid=IN:ta', name: 'TN Sports' },
+    { url: 'https://news.google.com/rss/search?q=தமிழ்நாடு+விளையாட்டு+கிரிக்கெட்&hl=ta&gl=IN&ceid=IN:ta',  name: 'Sports Tamil' },
+  ],
+  ta_health: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/HEALTH?hl=ta&gl=IN&ceid=IN:ta',                   name: 'Google Health Tamil' },
+    { url: 'https://news.google.com/rss/search?q=health+siddha+ayurveda+wellness+tamilnadu&hl=ta&gl=IN&ceid=IN:ta', name: 'TN Health' },
+    { url: 'https://news.google.com/rss/search?q=உடல்நலம்+சித்த+மருத்துவம்+tamilnadu&hl=ta&gl=IN&ceid=IN:ta',  name: 'Health Tamil' },
+  ],
+  ta_food: [
+    { url: 'https://news.google.com/rss/search?q=food+agriculture+farming+tamilnadu+rice&hl=ta&gl=IN&ceid=IN:ta',  name: 'TN Food & Farm' },
+    { url: 'https://news.google.com/rss/search?q=உணவு+விவசாயம்+agriculture+food+recipe+tamil&hl=ta&gl=IN&ceid=IN:ta', name: 'Food Tamil' },
+    { url: 'https://news.google.com/rss/search?q=tamilnadu+vegetable+fish+price+market&hl=ta&gl=IN&ceid=IN:ta',    name: 'TN Market Prices' },
+  ],
+  ta_realestate: [
+    { url: 'https://news.google.com/rss/search?q=real+estate+property+tamilnadu+home+flat&hl=ta&gl=IN&ceid=IN:ta',    name: 'TN Property' },
+    { url: 'https://news.google.com/rss/search?q=chennai+house+construction+apartment+land&hl=ta&gl=IN&ceid=IN:ta',   name: 'Chennai Real Estate' },
+    { url: 'https://news.google.com/rss/search?q=interior+home+design+tamilnadu&hl=ta&gl=IN&ceid=IN:ta',              name: 'TN Home Design' },
+  ],
+  ta_career: [
+    { url: 'https://news.google.com/rss/search?q=job+employment+career+vacancy+tamilnadu+TNPSC&hl=ta&gl=IN&ceid=IN:ta', name: 'TN Jobs' },
+    { url: 'https://news.google.com/rss/search?q=government+job+recruitment+notification+tamilnadu&hl=ta&gl=IN&ceid=IN:ta', name: 'TN Govt Recruitment' },
+    { url: 'https://news.google.com/rss/search?q=வேலைவாய்ப்பு+TNPSC+recruitment+job+tamil&hl=ta&gl=IN&ceid=IN:ta',    name: 'Jobs Tamil' },
+  ],
+  ta_tech: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=ta&gl=IN&ceid=IN:ta',                 name: 'Google Tech Tamil' },
+    { url: 'https://news.google.com/rss/search?q=technology+smartphone+gadget+tamilnadu+IT&hl=ta&gl=IN&ceid=IN:ta', name: 'TN Tech' },
+    { url: 'https://news.google.com/rss/search?q=mobile+phone+app+tech+news+india+tamil&hl=ta&gl=IN&ceid=IN:ta',    name: 'Tech Tamil' },
+  ],
+
+  // ── telugu ───────────────────────────────────────────────────────────────────
+  telugu: [
+    { url: 'https://news.google.com/rss/headlines/section/geo/India?hl=te&gl=IN&ceid=IN:te',        name: 'Google News Telugu' },
+    { url: 'https://news.google.com/rss/headlines/section/geo/India/IN-TG?hl=te&gl=IN&ceid=IN:te', name: 'Google Telangana' },
+    { url: 'https://news.google.com/rss/search?q=telangana+andhra+news&hl=te&gl=IN&ceid=IN:te',     name: 'AP/TS Search' },
+    { url: 'https://news.google.com/rss/search?q=తెలుగు+వార్తలు+తెలంగాణ&hl=te&gl=IN&ceid=IN:te', name: 'Telugu News' },
+    { url: 'https://news.google.com/rss/search?q=hyderabad+news+latest&hl=te&gl=IN&ceid=IN:te',     name: 'Hyderabad News' },
+    { url: 'https://news.google.com/rss/search?q=site:eenadu.net&hl=te&gl=IN&ceid=IN:te',           name: 'Eenadu' },
+    { url: 'https://news.google.com/rss/headlines/section/geo/India/IN-AP?hl=te&gl=IN&ceid=IN:te', name: 'Google Andhra Pradesh' },
+  ],
+
+  // ── Telugu Edition sub-categories (RSS-only, Telugu language) ────────────────
+  te_trending: [
+    { url: 'https://news.google.com/rss/headlines/section/geo/India/IN-TG?hl=te&gl=IN&ceid=IN:te', name: 'Google Telangana' },
+    { url: 'https://news.google.com/rss/search?q=telangana+viral+trending&hl=te&gl=IN&ceid=IN:te', name: 'TS Trending' },
+    { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=IN',                   name: 'Google Trends IN' },
+    { url: 'https://news.google.com/rss/search?q=telugu+trending+viral+news&hl=te&gl=IN&ceid=IN:te', name: 'Telugu Viral' },
+  ],
+  te_stock: [
+    { url: 'https://news.google.com/rss/search?q=షేర్+మార్కెట్+నిఫ్టీ+సెన్సెక్స్&hl=te&gl=IN&ceid=IN:te',    name: 'Stock Market Telugu' },
+    { url: 'https://news.google.com/rss/search?q=site:telugu.economictimes.com&hl=te&gl=IN&ceid=IN:te',          name: 'ET Telugu' },
+    { url: 'https://news.google.com/rss/search?q=mutual+fund+SIP+share+market+telugu&hl=te&gl=IN&ceid=IN:te',   name: 'MF Telugu' },
+    { url: 'https://news.google.com/rss/search?q=business+gold+price+hyderabad+telugu&hl=te&gl=IN&ceid=IN:te',  name: 'Business Telugu' },
+    { url: 'https://news.google.com/rss/search?q=బంగారం+వ్యాపారం+పెట్టుబడి+తెలుగు&hl=te&gl=IN&ceid=IN:te',  name: 'Gold Telugu' },
+  ],
+  te_movies: [
+    { url: 'https://news.google.com/rss/search?q=tollywood+telugu+cinema+movie&hl=te&gl=IN&ceid=IN:te',   name: 'Tollywood' },
+    { url: 'https://news.google.com/rss/search?q=telugu+film+new+release+OTT&hl=te&gl=IN&ceid=IN:te',    name: 'Telugu Film OTT' },
+    { url: 'https://news.google.com/rss/search?q=తెలుగు+సినిమా+చలనచిత్రం&hl=te&gl=IN&ceid=IN:te',      name: 'Telugu Cinema' },
+  ],
+  te_music: [
+    { url: 'https://news.google.com/rss/search?q=telugu+music+song+album+singer&hl=te&gl=IN&ceid=IN:te', name: 'Telugu Music' },
+    { url: 'https://news.google.com/rss/search?q=తెలుగు+సంగీతం+పాట+గాయకుడు&hl=te&gl=IN&ceid=IN:te',   name: 'Music Telugu' },
+    { url: 'https://news.google.com/rss/search?q=telugu+song+new+release+DSP&hl=te&gl=IN&ceid=IN:te',    name: 'New Telugu Songs' },
+  ],
+  te_local: [
+    { url: 'https://news.google.com/rss/search?q=telangana+andhra+district+local+news&hl=te&gl=IN&ceid=IN:te', name: 'AP/TS Local' },
+    { url: 'https://news.google.com/rss/search?q=hyderabad+vijayawada+visakhapatnam&hl=te&gl=IN&ceid=IN:te',   name: 'Telugu Cities' },
+    { url: 'https://news.google.com/rss/search?q=telangana+government+panchayat+local&hl=te&gl=IN&ceid=IN:te', name: 'TS Local Bodies' },
+  ],
+  te_science: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/SCIENCE?hl=te&gl=IN&ceid=IN:te',              name: 'Google Science Telugu' },
+    { url: 'https://news.google.com/rss/search?q=science+research+discovery+శాస్త్రం&hl=te&gl=IN&ceid=IN:te', name: 'Science Telugu' },
+    { url: 'https://news.google.com/rss/search?q=telangana+science+technology+innovation&hl=te&gl=IN&ceid=IN:te', name: 'TS Science' },
+  ],
+  te_space: [
+    { url: 'https://news.google.com/rss/search?q=ISRO+space+mission+rocket+satellite&hl=te&gl=IN&ceid=IN:te',       name: 'ISRO Space' },
+    { url: 'https://news.google.com/rss/search?q=NASA+space+planet+అంతరిక్షం+chandrayaan&hl=te&gl=IN&ceid=IN:te', name: 'Space Telugu' },
+  ],
+  te_sports: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/SPORTS?hl=te&gl=IN&ceid=IN:te',                    name: 'Google Sports Telugu' },
+    { url: 'https://news.google.com/rss/search?q=cricket+football+sports+telangana+IPL&hl=te&gl=IN&ceid=IN:te',   name: 'TS Sports' },
+    { url: 'https://news.google.com/rss/search?q=తెలుగు+క్రీడలు+క్రికెట్+ఫుట్‌బాల్&hl=te&gl=IN&ceid=IN:te',   name: 'Sports Telugu' },
+  ],
+  te_health: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/HEALTH?hl=te&gl=IN&ceid=IN:te',                      name: 'Google Health Telugu' },
+    { url: 'https://news.google.com/rss/search?q=health+ayurveda+wellness+lifestyle+telangana&hl=te&gl=IN&ceid=IN:te', name: 'TS Health' },
+    { url: 'https://news.google.com/rss/search?q=ఆరోగ్యం+ఆయుర్వేదం+telugu+hospital&hl=te&gl=IN&ceid=IN:te',      name: 'Health Telugu' },
+  ],
+  te_food: [
+    { url: 'https://news.google.com/rss/search?q=food+agriculture+farming+telangana+rice&hl=te&gl=IN&ceid=IN:te',    name: 'TS Food & Farm' },
+    { url: 'https://news.google.com/rss/search?q=ఆహారం+వ్యవసాయం+agriculture+food+recipe+telugu&hl=te&gl=IN&ceid=IN:te', name: 'Food Telugu' },
+    { url: 'https://news.google.com/rss/search?q=telangana+vegetable+fish+price+market&hl=te&gl=IN&ceid=IN:te',      name: 'TS Market Prices' },
+  ],
+  te_realestate: [
+    { url: 'https://news.google.com/rss/search?q=real+estate+property+hyderabad+home+flat&hl=te&gl=IN&ceid=IN:te',   name: 'Hyderabad Property' },
+    { url: 'https://news.google.com/rss/search?q=telangana+house+construction+apartment+land&hl=te&gl=IN&ceid=IN:te', name: 'TS Real Estate' },
+    { url: 'https://news.google.com/rss/search?q=hyderabad+interior+home+design&hl=te&gl=IN&ceid=IN:te',             name: 'HYD Home Design' },
+  ],
+  te_career: [
+    { url: 'https://news.google.com/rss/search?q=job+employment+career+vacancy+telangana+TSPSC&hl=te&gl=IN&ceid=IN:te', name: 'TS Jobs' },
+    { url: 'https://news.google.com/rss/search?q=government+job+recruitment+notification+telangana&hl=te&gl=IN&ceid=IN:te', name: 'TS Govt Recruitment' },
+    { url: 'https://news.google.com/rss/search?q=ఉద్యోగం+TSPSC+recruitment+job+telugu&hl=te&gl=IN&ceid=IN:te',       name: 'Jobs Telugu' },
+  ],
+  te_tech: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=te&gl=IN&ceid=IN:te',                   name: 'Google Tech Telugu' },
+    { url: 'https://news.google.com/rss/search?q=technology+smartphone+gadget+hyderabad+IT&hl=te&gl=IN&ceid=IN:te',   name: 'HYD Tech' },
+    { url: 'https://news.google.com/rss/search?q=mobile+phone+app+tech+news+india+telugu&hl=te&gl=IN&ceid=IN:te',     name: 'Tech Telugu' },
+  ],
+
+  // ── hindi ────────────────────────────────────────────────────────────────────
+  hindi: [
+    { url: 'https://news.google.com/rss/headlines/section/geo/India?hl=hi&gl=IN&ceid=IN:hi',        name: 'Google News Hindi' },
+    { url: 'https://news.google.com/rss/headlines/section/geo/India/IN-DL?hl=hi&gl=IN&ceid=IN:hi', name: 'Google Delhi' },
+    { url: 'https://news.google.com/rss/search?q=india+news+hindi&hl=hi&gl=IN&ceid=IN:hi',          name: 'India Hindi Search' },
+    { url: 'https://news.google.com/rss/search?q=हिंदी+समाचार+भारत&hl=hi&gl=IN&ceid=IN:hi',       name: 'Hindi News India' },
+    { url: 'https://news.google.com/rss/search?q=site:aajtak.in&hl=hi&gl=IN&ceid=IN:hi',            name: 'Aaj Tak' },
+    { url: 'https://news.google.com/rss/search?q=site:bhaskar.com&hl=hi&gl=IN&ceid=IN:hi',          name: 'Dainik Bhaskar' },
+    { url: 'https://news.google.com/rss/search?q=site:jagran.com&hl=hi&gl=IN&ceid=IN:hi',           name: 'Dainik Jagran' },
+  ],
+
+  // ── Hindi Edition sub-categories (RSS-only, Hindi language) ──────────────────
+  hi_trending: [
+    { url: 'https://news.google.com/rss/headlines/section/geo/India/IN-DL?hl=hi&gl=IN&ceid=IN:hi', name: 'Google Delhi' },
+    { url: 'https://news.google.com/rss/search?q=india+viral+trending+hindi&hl=hi&gl=IN&ceid=IN:hi', name: 'India Trending' },
+    { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=IN',                    name: 'Google Trends IN' },
+    { url: 'https://news.google.com/rss/search?q=hindi+trending+viral+news+today&hl=hi&gl=IN&ceid=IN:hi', name: 'Hindi Viral' },
+  ],
+  hi_stock: [
+    { url: 'https://news.google.com/rss/search?q=शेयर+बाजार+निफ्टी+सेंसेक्स&hl=hi&gl=IN&ceid=IN:hi',     name: 'Stock Market Hindi' },
+    { url: 'https://news.google.com/rss/search?q=site:hindi.economictimes.com&hl=hi&gl=IN&ceid=IN:hi',      name: 'ET Hindi' },
+    { url: 'https://news.google.com/rss/search?q=mutual+fund+SIP+share+market+hindi&hl=hi&gl=IN&ceid=IN:hi', name: 'MF Hindi' },
+    { url: 'https://news.google.com/rss/search?q=business+gold+price+india+hindi&hl=hi&gl=IN&ceid=IN:hi',   name: 'Business Hindi' },
+    { url: 'https://news.google.com/rss/search?q=सोना+व्यापार+निवेश+हिंदी&hl=hi&gl=IN&ceid=IN:hi',        name: 'Gold Hindi' },
+  ],
+  hi_movies: [
+    { url: 'https://news.google.com/rss/search?q=bollywood+hindi+cinema+movie&hl=hi&gl=IN&ceid=IN:hi',   name: 'Bollywood' },
+    { url: 'https://news.google.com/rss/search?q=hindi+film+new+release+OTT&hl=hi&gl=IN&ceid=IN:hi',    name: 'Hindi Film OTT' },
+    { url: 'https://news.google.com/rss/search?q=हिंदी+सिनेमा+बॉलीवुड+फिल्म&hl=hi&gl=IN&ceid=IN:hi',  name: 'Hindi Cinema' },
+  ],
+  hi_music: [
+    { url: 'https://news.google.com/rss/search?q=hindi+music+song+album+singer+bollywood&hl=hi&gl=IN&ceid=IN:hi', name: 'Hindi Music' },
+    { url: 'https://news.google.com/rss/search?q=हिंदी+संगीत+गाना+एल्बम&hl=hi&gl=IN&ceid=IN:hi',              name: 'Music Hindi' },
+    { url: 'https://news.google.com/rss/search?q=hindi+song+new+release+AR+Rahman+Pritam&hl=hi&gl=IN&ceid=IN:hi', name: 'New Hindi Songs' },
+  ],
+  hi_local: [
+    { url: 'https://news.google.com/rss/search?q=india+state+local+news+hindi&hl=hi&gl=IN&ceid=IN:hi',  name: 'India Local' },
+    { url: 'https://news.google.com/rss/search?q=delhi+mumbai+lucknow+jaipur+patna&hl=hi&gl=IN&ceid=IN:hi', name: 'Hindi Cities' },
+    { url: 'https://news.google.com/rss/search?q=india+government+nagar+panchayat+local&hl=hi&gl=IN&ceid=IN:hi', name: 'Local Bodies Hindi' },
+  ],
+  hi_science: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/SCIENCE?hl=hi&gl=IN&ceid=IN:hi',            name: 'Google Science Hindi' },
+    { url: 'https://news.google.com/rss/search?q=science+research+discovery+विज्ञान&hl=hi&gl=IN&ceid=IN:hi', name: 'Science Hindi' },
+    { url: 'https://news.google.com/rss/search?q=india+science+technology+innovation+hindi&hl=hi&gl=IN&ceid=IN:hi', name: 'India Science' },
+  ],
+  hi_space: [
+    { url: 'https://news.google.com/rss/search?q=ISRO+space+mission+rocket+satellite&hl=hi&gl=IN&ceid=IN:hi',      name: 'ISRO Space' },
+    { url: 'https://news.google.com/rss/search?q=NASA+space+planet+अंतरिक्ष+chandrayaan&hl=hi&gl=IN&ceid=IN:hi', name: 'Space Hindi' },
+  ],
+  hi_sports: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/SPORTS?hl=hi&gl=IN&ceid=IN:hi',                  name: 'Google Sports Hindi' },
+    { url: 'https://news.google.com/rss/search?q=cricket+football+sports+india+IPL+hindi&hl=hi&gl=IN&ceid=IN:hi', name: 'India Sports Hindi' },
+    { url: 'https://news.google.com/rss/search?q=भारत+क्रिकेट+खेल+फुटबॉल+IPL&hl=hi&gl=IN&ceid=IN:hi',         name: 'Sports Hindi' },
+  ],
+  hi_health: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/HEALTH?hl=hi&gl=IN&ceid=IN:hi',                  name: 'Google Health Hindi' },
+    { url: 'https://news.google.com/rss/search?q=health+ayurveda+wellness+lifestyle+india&hl=hi&gl=IN&ceid=IN:hi', name: 'India Health' },
+    { url: 'https://news.google.com/rss/search?q=स्वास्थ्य+आयुर्वेद+योग+india+hospital&hl=hi&gl=IN&ceid=IN:hi', name: 'Health Hindi' },
+  ],
+  hi_food: [
+    { url: 'https://news.google.com/rss/search?q=food+agriculture+farming+india+wheat&hl=hi&gl=IN&ceid=IN:hi',   name: 'India Food & Farm' },
+    { url: 'https://news.google.com/rss/search?q=खाना+कृषि+agriculture+food+recipe+hindi&hl=hi&gl=IN&ceid=IN:hi', name: 'Food Hindi' },
+    { url: 'https://news.google.com/rss/search?q=india+vegetable+price+market+kisan&hl=hi&gl=IN&ceid=IN:hi',     name: 'India Market Prices' },
+  ],
+  hi_realestate: [
+    { url: 'https://news.google.com/rss/search?q=real+estate+property+delhi+mumbai+home+flat&hl=hi&gl=IN&ceid=IN:hi', name: 'India Property' },
+    { url: 'https://news.google.com/rss/search?q=india+house+construction+apartment+land+hindi&hl=hi&gl=IN&ceid=IN:hi', name: 'India Real Estate' },
+    { url: 'https://news.google.com/rss/search?q=interior+home+design+india+hindi&hl=hi&gl=IN&ceid=IN:hi',             name: 'India Home Design' },
+  ],
+  hi_career: [
+    { url: 'https://news.google.com/rss/search?q=job+employment+career+vacancy+india+UPSC&hl=hi&gl=IN&ceid=IN:hi', name: 'India Jobs' },
+    { url: 'https://news.google.com/rss/search?q=government+job+recruitment+notification+india&hl=hi&gl=IN&ceid=IN:hi', name: 'India Govt Jobs' },
+    { url: 'https://news.google.com/rss/search?q=नौकरी+UPSC+SSC+recruitment+job+hindi&hl=hi&gl=IN&ceid=IN:hi',    name: 'Jobs Hindi' },
+  ],
+  hi_tech: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=hi&gl=IN&ceid=IN:hi',                name: 'Google Tech Hindi' },
+    { url: 'https://news.google.com/rss/search?q=technology+smartphone+gadget+india+IT+hindi&hl=hi&gl=IN&ceid=IN:hi', name: 'India Tech' },
+    { url: 'https://news.google.com/rss/search?q=mobile+phone+app+tech+news+india+hindi&hl=hi&gl=IN&ceid=IN:hi',   name: 'Tech Hindi' },
+  ],
+
+  // ── kannada ──────────────────────────────────────────────────────────────────
+  kannada: [
+    { url: 'https://news.google.com/rss/headlines/section/geo/India?hl=kn&gl=IN&ceid=IN:kn',        name: 'Google News Kannada' },
+    { url: 'https://news.google.com/rss/headlines/section/geo/India/IN-KA?hl=kn&gl=IN&ceid=IN:kn', name: 'Google Karnataka' },
+    { url: 'https://news.google.com/rss/search?q=karnataka+news&hl=kn&gl=IN&ceid=IN:kn',            name: 'KA Search' },
+    { url: 'https://news.google.com/rss/search?q=ಕರ್ನಾಟಕ+ಸುದ್ದಿ+ಬೆಂಗಳೂರು&hl=kn&gl=IN&ceid=IN:kn', name: 'KA News Kannada' },
+    { url: 'https://news.google.com/rss/search?q=bangalore+news+latest&hl=kn&gl=IN&ceid=IN:kn',     name: 'Bangalore News' },
+    { url: 'https://news.google.com/rss/search?q=site:prajavani.net&hl=kn&gl=IN&ceid=IN:kn',        name: 'Prajavani' },
+    { url: 'https://news.google.com/rss/search?q=site:vijaykarnataka.com&hl=kn&gl=IN&ceid=IN:kn',   name: 'Vijay Karnataka' },
+  ],
+
+  // ── Kannada Edition sub-categories (RSS-only, Kannada language) ──────────────
+  kn_trending: [
+    { url: 'https://news.google.com/rss/headlines/section/geo/India/IN-KA?hl=kn&gl=IN&ceid=IN:kn', name: 'Google Karnataka' },
+    { url: 'https://news.google.com/rss/search?q=karnataka+viral+trending&hl=kn&gl=IN&ceid=IN:kn', name: 'KA Trending' },
+    { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=IN',                   name: 'Google Trends IN' },
+    { url: 'https://news.google.com/rss/search?q=kannada+trending+viral+news&hl=kn&gl=IN&ceid=IN:kn', name: 'Kannada Viral' },
+  ],
+  kn_stock: [
+    { url: 'https://news.google.com/rss/search?q=ಷೇರು+ಮಾರುಕಟ್ಟೆ+ನಿಫ್ಟಿ+ಸೆನ್ಸೆಕ್ಸ್&hl=kn&gl=IN&ceid=IN:kn',  name: 'Stock Market Kannada' },
+    { url: 'https://news.google.com/rss/search?q=site:kannada.economictimes.com&hl=kn&gl=IN&ceid=IN:kn',          name: 'ET Kannada' },
+    { url: 'https://news.google.com/rss/search?q=mutual+fund+SIP+share+market+kannada&hl=kn&gl=IN&ceid=IN:kn',   name: 'MF Kannada' },
+    { url: 'https://news.google.com/rss/search?q=business+gold+price+bangalore+kannada&hl=kn&gl=IN&ceid=IN:kn',  name: 'Business Kannada' },
+    { url: 'https://news.google.com/rss/search?q=ಚಿನ್ನ+ವ್ಯಾಪಾರ+ಹೂಡಿಕೆ+ಕನ್ನಡ&hl=kn&gl=IN&ceid=IN:kn',         name: 'Gold Kannada' },
+  ],
+  kn_movies: [
+    { url: 'https://news.google.com/rss/search?q=sandalwood+kannada+cinema+movie&hl=kn&gl=IN&ceid=IN:kn',   name: 'Sandalwood' },
+    { url: 'https://news.google.com/rss/search?q=kannada+film+new+release+OTT&hl=kn&gl=IN&ceid=IN:kn',    name: 'Kannada Film OTT' },
+    { url: 'https://news.google.com/rss/search?q=ಕನ್ನಡ+ಚಲನಚಿತ್ರ+ಸಿನಿಮಾ&hl=kn&gl=IN&ceid=IN:kn',         name: 'Kannada Cinema' },
+  ],
+  kn_music: [
+    { url: 'https://news.google.com/rss/search?q=kannada+music+song+album+singer&hl=kn&gl=IN&ceid=IN:kn', name: 'Kannada Music' },
+    { url: 'https://news.google.com/rss/search?q=ಕನ್ನಡ+ಸಂಗೀತ+ಹಾಡು+ಗಾಯಕ&hl=kn&gl=IN&ceid=IN:kn',       name: 'Music Kannada' },
+    { url: 'https://news.google.com/rss/search?q=kannada+song+new+release+SPB&hl=kn&gl=IN&ceid=IN:kn',    name: 'New Kannada Songs' },
+  ],
+  kn_local: [
+    { url: 'https://news.google.com/rss/search?q=karnataka+district+local+news&hl=kn&gl=IN&ceid=IN:kn',   name: 'KA Local' },
+    { url: 'https://news.google.com/rss/search?q=bangalore+mysore+hubli+mangalore&hl=kn&gl=IN&ceid=IN:kn', name: 'KA Cities' },
+    { url: 'https://news.google.com/rss/search?q=karnataka+government+panchayat+local&hl=kn&gl=IN&ceid=IN:kn', name: 'KA Local Bodies' },
+  ],
+  kn_science: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/SCIENCE?hl=kn&gl=IN&ceid=IN:kn',              name: 'Google Science Kannada' },
+    { url: 'https://news.google.com/rss/search?q=science+research+discovery+ವಿಜ್ಞಾನ&hl=kn&gl=IN&ceid=IN:kn', name: 'Science Kannada' },
+    { url: 'https://news.google.com/rss/search?q=karnataka+science+technology+innovation&hl=kn&gl=IN&ceid=IN:kn', name: 'KA Science' },
+  ],
+  kn_space: [
+    { url: 'https://news.google.com/rss/search?q=ISRO+space+mission+rocket+satellite&hl=kn&gl=IN&ceid=IN:kn',       name: 'ISRO Space' },
+    { url: 'https://news.google.com/rss/search?q=NASA+space+planet+ಬಾಹ್ಯಾಕಾಶ+chandrayaan&hl=kn&gl=IN&ceid=IN:kn', name: 'Space Kannada' },
+  ],
+  kn_sports: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/SPORTS?hl=kn&gl=IN&ceid=IN:kn',                    name: 'Google Sports Kannada' },
+    { url: 'https://news.google.com/rss/search?q=cricket+football+sports+karnataka+IPL+RCB&hl=kn&gl=IN&ceid=IN:kn', name: 'KA Sports' },
+    { url: 'https://news.google.com/rss/search?q=ಕರ್ನಾಟಕ+ಕ್ರೀಡೆ+ಕ್ರಿಕೆಟ್+ಫುಟ್‌ಬಾಲ್&hl=kn&gl=IN&ceid=IN:kn',    name: 'Sports Kannada' },
+  ],
+  kn_health: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/HEALTH?hl=kn&gl=IN&ceid=IN:kn',                      name: 'Google Health Kannada' },
+    { url: 'https://news.google.com/rss/search?q=health+ayurveda+wellness+lifestyle+karnataka&hl=kn&gl=IN&ceid=IN:kn', name: 'KA Health' },
+    { url: 'https://news.google.com/rss/search?q=ಆರೋಗ್ಯ+ಆಯುರ್ವೇದ+karnataka+hospital&hl=kn&gl=IN&ceid=IN:kn',     name: 'Health Kannada' },
+  ],
+  kn_food: [
+    { url: 'https://news.google.com/rss/search?q=food+agriculture+farming+karnataka+rice&hl=kn&gl=IN&ceid=IN:kn',    name: 'KA Food & Farm' },
+    { url: 'https://news.google.com/rss/search?q=ಆಹಾರ+ಕೃಷಿ+agriculture+food+recipe+kannada&hl=kn&gl=IN&ceid=IN:kn', name: 'Food Kannada' },
+    { url: 'https://news.google.com/rss/search?q=karnataka+vegetable+fish+price+market&hl=kn&gl=IN&ceid=IN:kn',      name: 'KA Market Prices' },
+  ],
+  kn_realestate: [
+    { url: 'https://news.google.com/rss/search?q=real+estate+property+bangalore+home+flat&hl=kn&gl=IN&ceid=IN:kn',   name: 'Bangalore Property' },
+    { url: 'https://news.google.com/rss/search?q=karnataka+house+construction+apartment+land&hl=kn&gl=IN&ceid=IN:kn', name: 'KA Real Estate' },
+    { url: 'https://news.google.com/rss/search?q=bangalore+interior+home+design&hl=kn&gl=IN&ceid=IN:kn',             name: 'BLR Home Design' },
+  ],
+  kn_career: [
+    { url: 'https://news.google.com/rss/search?q=job+employment+career+vacancy+karnataka+KPSC&hl=kn&gl=IN&ceid=IN:kn', name: 'KA Jobs' },
+    { url: 'https://news.google.com/rss/search?q=government+job+recruitment+notification+karnataka&hl=kn&gl=IN&ceid=IN:kn', name: 'KA Govt Recruitment' },
+    { url: 'https://news.google.com/rss/search?q=ಉದ್ಯೋಗ+KPSC+recruitment+job+kannada&hl=kn&gl=IN&ceid=IN:kn',       name: 'Jobs Kannada' },
+  ],
+  kn_tech: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=kn&gl=IN&ceid=IN:kn',                   name: 'Google Tech Kannada' },
+    { url: 'https://news.google.com/rss/search?q=technology+smartphone+gadget+bangalore+IT&hl=kn&gl=IN&ceid=IN:kn',   name: 'BLR Tech' },
+    { url: 'https://news.google.com/rss/search?q=mobile+phone+app+tech+news+india+kannada&hl=kn&gl=IN&ceid=IN:kn',    name: 'Tech Kannada' },
+  ],
+
   /* ═══════════════════════════════════════════════════════════════════════════
      ENGLISH / GLOBAL EDITION — standalone sessions (RSS-only, English language)
      Sports (+ sub-categories), Science, Fashion, Movies.
@@ -445,6 +765,66 @@ const SECTION_META = {
   ml_realestate:{ image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80', label: 'Home & Real Estate',  accent: '#d97706' },
   ml_career:    { image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1200&q=80', label: 'Career & Jobs',      accent: '#7c3aed' },
   ml_tech:      { image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80', label: 'Technology News',    accent: '#2563eb' },
+  // ── Tamil Edition ─────────────────────────────────────────────────────────
+  tamil:        { image: 'https://images.unsplash.com/photo-1610965939504-9ee3a73a87ff?w=1200&q=80', label: '🎭 Tamil News',        accent: '#f97316' },
+  ta_trending:  { image: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80', label: 'Top Trending TN',     accent: '#ef4444' },
+  ta_stock:     { image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=1200&q=80', label: 'Stocks & Business',   accent: '#059669' },
+  ta_movies:    { image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=80', label: 'Kollywood',           accent: '#f59e0b' },
+  ta_music:     { image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&q=80', label: 'Music News',          accent: '#ec4899' },
+  ta_local:     { image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1200&q=80', label: 'Local News',          accent: '#06b6d4' },
+  ta_science:   { image: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=1200&q=80', label: 'Science News',        accent: '#6366f1' },
+  ta_space:     { image: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200&q=80', label: 'Space News',          accent: '#1e3a8a' },
+  ta_sports:    { image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80', label: 'Sports News',         accent: '#16a34a' },
+  ta_health:    { image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=1200&q=80', label: 'Health & Lifestyle',  accent: '#0ea5e9' },
+  ta_food:      { image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80', label: 'Food & Agriculture',  accent: '#84cc16' },
+  ta_realestate:{ image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80', label: 'Home & Real Estate',  accent: '#d97706' },
+  ta_career:    { image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1200&q=80', label: 'Career & Jobs',      accent: '#7c3aed' },
+  ta_tech:      { image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80', label: 'Technology News',    accent: '#2563eb' },
+  // ── Telugu Edition ────────────────────────────────────────────────────────
+  telugu:       { image: 'https://images.unsplash.com/photo-1609708402964-5ce64d6b9879?w=1200&q=80', label: '🎭 Telugu News',       accent: '#0ea5e9' },
+  te_trending:  { image: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80', label: 'Top Trending AP/TS',  accent: '#ef4444' },
+  te_stock:     { image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=1200&q=80', label: 'Stocks & Business',   accent: '#059669' },
+  te_movies:    { image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=80', label: 'Tollywood',           accent: '#f59e0b' },
+  te_music:     { image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&q=80', label: 'Music News',          accent: '#ec4899' },
+  te_local:     { image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1200&q=80', label: 'Local News',          accent: '#06b6d4' },
+  te_science:   { image: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=1200&q=80', label: 'Science News',        accent: '#6366f1' },
+  te_space:     { image: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200&q=80', label: 'Space News',          accent: '#1e3a8a' },
+  te_sports:    { image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80', label: 'Sports News',         accent: '#16a34a' },
+  te_health:    { image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=1200&q=80', label: 'Health & Lifestyle',  accent: '#0ea5e9' },
+  te_food:      { image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80', label: 'Food & Agriculture',  accent: '#84cc16' },
+  te_realestate:{ image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80', label: 'Home & Real Estate',  accent: '#d97706' },
+  te_career:    { image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1200&q=80', label: 'Career & Jobs',      accent: '#7c3aed' },
+  te_tech:      { image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80', label: 'Technology News',    accent: '#2563eb' },
+  // ── Hindi Edition ─────────────────────────────────────────────────────────
+  hindi:        { image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=1200&q=80', label: '🎭 Hindi News',        accent: '#ef4444' },
+  hi_trending:  { image: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80', label: 'Top Trending India',  accent: '#ef4444' },
+  hi_stock:     { image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=1200&q=80', label: 'Stocks & Business',   accent: '#059669' },
+  hi_movies:    { image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=80', label: 'Bollywood',           accent: '#f59e0b' },
+  hi_music:     { image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&q=80', label: 'Music News',          accent: '#ec4899' },
+  hi_local:     { image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1200&q=80', label: 'Local News',          accent: '#06b6d4' },
+  hi_science:   { image: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=1200&q=80', label: 'Science News',        accent: '#6366f1' },
+  hi_space:     { image: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200&q=80', label: 'Space News',          accent: '#1e3a8a' },
+  hi_sports:    { image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80', label: 'Sports News',         accent: '#16a34a' },
+  hi_health:    { image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=1200&q=80', label: 'Health & Lifestyle',  accent: '#0ea5e9' },
+  hi_food:      { image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80', label: 'Food & Agriculture',  accent: '#84cc16' },
+  hi_realestate:{ image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80', label: 'Home & Real Estate',  accent: '#d97706' },
+  hi_career:    { image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1200&q=80', label: 'Career & Jobs',      accent: '#7c3aed' },
+  hi_tech:      { image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80', label: 'Technology News',    accent: '#2563eb' },
+  // ── Kannada Edition ───────────────────────────────────────────────────────
+  kannada:      { image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=1200&q=80', label: '🎭 Kannada News',      accent: '#eab308' },
+  kn_trending:  { image: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80', label: 'Top Trending KA',    accent: '#ef4444' },
+  kn_stock:     { image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=1200&q=80', label: 'Stocks & Business',   accent: '#059669' },
+  kn_movies:    { image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=80', label: 'Sandalwood',          accent: '#f59e0b' },
+  kn_music:     { image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&q=80', label: 'Music News',          accent: '#ec4899' },
+  kn_local:     { image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1200&q=80', label: 'Local News',          accent: '#06b6d4' },
+  kn_science:   { image: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=1200&q=80', label: 'Science News',        accent: '#6366f1' },
+  kn_space:     { image: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200&q=80', label: 'Space News',          accent: '#1e3a8a' },
+  kn_sports:    { image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80', label: 'Sports News',         accent: '#16a34a' },
+  kn_health:    { image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=1200&q=80', label: 'Health & Lifestyle',  accent: '#0ea5e9' },
+  kn_food:      { image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80', label: 'Food & Agriculture',  accent: '#84cc16' },
+  kn_realestate:{ image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80', label: 'Home & Real Estate',  accent: '#d97706' },
+  kn_career:    { image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1200&q=80', label: 'Career & Jobs',      accent: '#7c3aed' },
+  kn_tech:      { image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80', label: 'Technology News',    accent: '#2563eb' },
   // ── English / Global Edition ───────────────────────────────────────────────
   sports:         { image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80', label: '🏆 All Major Sports Update', accent: '#16a34a' },
   sports_cricket: { image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=1200&q=80', label: '🏏 Cricket',         accent: '#16a34a' },
@@ -1206,6 +1586,62 @@ var RSS_FALLBACK_IMAGES = {
   ml_realestate:'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=70',
   ml_career:    'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&q=70',
   ml_tech:      'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=70',
+  tamil:        'https://images.unsplash.com/photo-1610965939504-9ee3a73a87ff?w=800&q=70',
+  ta_trending:  'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=70',
+  ta_stock:     'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&q=70',
+  ta_movies:    'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=70',
+  ta_music:     'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=70',
+  ta_local:     'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=70',
+  ta_science:   'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800&q=70',
+  ta_space:     'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800&q=70',
+  ta_sports:    'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=70',
+  ta_health:    'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&q=70',
+  ta_food:      'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=70',
+  ta_realestate:'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=70',
+  ta_career:    'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&q=70',
+  ta_tech:      'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=70',
+  telugu:       'https://images.unsplash.com/photo-1609708402964-5ce64d6b9879?w=800&q=70',
+  te_trending:  'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=70',
+  te_stock:     'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&q=70',
+  te_movies:    'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=70',
+  te_music:     'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=70',
+  te_local:     'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=70',
+  te_science:   'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800&q=70',
+  te_space:     'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800&q=70',
+  te_sports:    'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=70',
+  te_health:    'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&q=70',
+  te_food:      'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=70',
+  te_realestate:'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=70',
+  te_career:    'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&q=70',
+  te_tech:      'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=70',
+  hindi:        'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800&q=70',
+  hi_trending:  'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=70',
+  hi_stock:     'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&q=70',
+  hi_movies:    'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=70',
+  hi_music:     'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=70',
+  hi_local:     'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=70',
+  hi_science:   'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800&q=70',
+  hi_space:     'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800&q=70',
+  hi_sports:    'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=70',
+  hi_health:    'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&q=70',
+  hi_food:      'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=70',
+  hi_realestate:'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=70',
+  hi_career:    'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&q=70',
+  hi_tech:      'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=70',
+  kannada:      'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=800&q=70',
+  kn_trending:  'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=70',
+  kn_stock:     'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&q=70',
+  kn_movies:    'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=70',
+  kn_music:     'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=70',
+  kn_local:     'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=70',
+  kn_science:   'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800&q=70',
+  kn_space:     'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800&q=70',
+  kn_sports:    'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=70',
+  kn_health:    'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&q=70',
+  kn_food:      'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=70',
+  kn_realestate:'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=70',
+  kn_career:    'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&q=70',
+  kn_tech:      'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=70',
   sports:         'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=70',
   sports_cricket: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=70',
   sports_football:'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800&q=70',
@@ -1251,6 +1687,10 @@ function rssStory(item, sectionId) {
 async function buildSection(sectionId, feedPool, meta) {
   console.log('\n[Section]', sectionId.toUpperCase());
   var isRssOnly = (sectionId === 'stock' || sectionId === 'malayalam' || sectionId.startsWith('ml_')
+    || sectionId === 'tamil'   || sectionId.startsWith('ta_')
+    || sectionId === 'telugu'  || sectionId.startsWith('te_')
+    || sectionId === 'hindi'   || sectionId.startsWith('hi_')
+    || sectionId === 'kannada' || sectionId.startsWith('kn_')
     || sectionId.startsWith('sports') || sectionId === 'science' || sectionId === 'fashion' || sectionId === 'movies'
     || sectionId === 'tech' || sectionId === 'space' || sectionId === 'food' || sectionId === 'automobile' || sectionId === 'business' || sectionId === 'home');
 
