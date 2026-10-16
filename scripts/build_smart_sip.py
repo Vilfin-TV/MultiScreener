@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Smart SIP planner v2 for the India MF Screener → data/mf/smartsip.json (+ data/mf/smartsip_state.json).
 
-Twenty model plans — 5 investment horizons × 4 risk levels (conservative, balanced, aggressive, very aggressive) — each with a fixed set of up to 8 fund slots.
+Twenty model plans — 5 investment horizons × 4 risk levels (conservative, balanced, aggressive, very aggressive: equity + debt + metals, Nifty Next 50 core) — each with a fixed set of up to 8 fund slots.
 Every slot is filled by the best fund that passes a full checklist, chosen dynamically from market conditions:
 
 * Rate cycle (debt) — policy repo rate (now vs a year ago), the 10-year government bond yield (latest weeks and a
@@ -57,6 +57,7 @@ RISKS = [("c", "Conservative"), ("b", "Balanced"), ("a", "Aggressive"), ("v", "V
 # slot → label, asset, candidate subs (None = decided at run time), kind, min years, min AUM (₹ cr), volatility %
 SLOTS = {
     "core":   ("Large-cap core (Nifty 50 index)", "Equity", ["idx_large"], "index", 3, 500, 15),
+    "next50": ("Large-cap growth (Nifty Next 50 index)", "Equity", ["idx_large"], "index", 3, 500, 20),
     "flexi":  ("Diversified equity (flexi / multi / large & mid)", "Equity", ["flexi", "multi", "largemid"], "active", 5, 1000, 16),
     "mid":    ("Mid cap", "Equity", ["mid"], "active", 5, 1000, 19),
     "small":  ("Small cap", "Equity", ["small"], "active", 5, 1000, 23),
@@ -65,6 +66,7 @@ SLOTS = {
     "arb":    ("Arbitrage", "Hybrid", ["arbitrage"], "arb", 3, 1000, 0.7),
     "dshort": ("Short-term debt", "Debt", None, "debt", 3, 1000, 0.8),
     "dcore":  ("Core debt", "Debt", None, "debt", 3, 1000, 2.5),
+    "dmed":   ("Medium-term debt", "Debt", None, "debt", 3, 1000, 3.5),
     "metal":  ("Precious metals", "Commodity", None, "passive", 3, 200, 15),
     "value":  ("Value / contrarian", "Equity", ["value", "contra"], "active", 5, 1000, 17),
     "momentum": ("Momentum factor (index)", "Equity", ["idx_factor"], "factor", 3, 300, 21),
@@ -88,14 +90,15 @@ TEMPLATES = {
     "h10b": {"core": 30, "flexi": 20, "mid": 15, "small": 10, "dcore": 15, "metal": 10},
     "h10a": {"core": 25, "flexi": 20, "mid": 15, "small": 15, "theme": 5, "intl": 10, "dcore": 5, "metal": 5},
     # very aggressive: growth-heavy, diversified across market caps, styles (value, momentum), a sector and overseas
-    "h1v":  {"core": 15, "baf": 35, "arb": 20, "dshort": 30},
-    "h3v":  {"core": 25, "flexi": 25, "mid": 15, "baf": 15, "dcore": 15, "metal": 5},
-    "h5v":  {"core": 20, "flexi": 20, "mid": 20, "small": 15, "value": 10, "dcore": 10, "metal": 5},
-    "h7v":  {"core": 15, "flexi": 15, "mid": 20, "small": 20, "momentum": 10, "theme": 10, "intl": 5, "metal": 5},
-    "h10v": {"core": 10, "flexi": 10, "mid": 20, "small": 25, "value": 10, "momentum": 10, "theme": 10, "intl": 5},
+    # every very aggressive plan holds equity + debt + precious metals; the large-cap index is the Nifty Next 50 (3+ yrs)
+    "h1v":  {"core": 15, "baf": 30, "arb": 15, "dshort": 30, "metal": 10},
+    "h3v":  {"next50": 25, "flexi": 25, "mid": 15, "baf": 10, "dmed": 15, "metal": 10},
+    "h5v":  {"next50": 20, "flexi": 20, "mid": 20, "small": 10, "value": 10, "dmed": 10, "metal": 10},
+    "h7v":  {"next50": 15, "flexi": 15, "mid": 15, "small": 15, "value": 10, "theme": 10, "dmed": 10, "metal": 10},
+    "h10v": {"next50": 10, "flexi": 15, "mid": 15, "small": 20, "momentum": 10, "theme": 10, "dmed": 10, "metal": 10},
 }
-ORDER = ["core", "flexi", "mid", "small", "value", "momentum", "theme", "baf", "eqsav", "arb", "dcore", "dshort", "metal", "intl"]
-FALLBACK = {"value": ["flexi", "core"], "momentum": ["mid", "flexi", "core"], "intl": ["flexi", "core"], "theme": ["flexi", "core"], "small": ["mid", "flexi"], "mid": ["flexi", "core"],
+ORDER = ["core", "next50", "flexi", "mid", "small", "value", "momentum", "theme", "baf", "eqsav", "arb", "dcore", "dmed", "dshort", "metal", "intl"]
+FALLBACK = {"next50": ["flexi", "core"], "dmed": ["dcore", "dshort", "metal"], "value": ["flexi", "core"], "momentum": ["mid", "flexi", "core"], "intl": ["flexi", "core"], "theme": ["flexi", "core"], "small": ["mid", "flexi"], "mid": ["flexi", "core"],
             "flexi": ["core"], "core": ["flexi"], "metal": ["dcore", "dshort"], "eqsav": ["arb", "baf"], "baf": ["core", "dcore"],
             "dcore": ["dshort", "baf"], "dshort": ["dcore", "arb"], "arb": ["dshort"]}
 
@@ -105,16 +108,19 @@ DEBT_POOLS = {
                "easing": ["money", "lowdur", "ultrashort"]},
     "dcore": {"rising": ["shortdur", "bankpsu", "floater"], "neutral": ["corpbond", "bankpsu", "shortdur"],
               "easing": ["corpbond", "bankpsu", "shortdur"], "easing_long": ["gilt", "dynbond", "gilt10", "corpbond"]},
+    "dmed": {"rising": ["corpbond"], "neutral": ["corpbond", "meddur"], "easing": ["meddur", "corpbond", "dynbond"]},
 }
 DEBT_LABEL = {
     ("dshort", "rising"): "Short-term debt (money market / floating rate)", ("dshort", "neutral"): "Short-term debt (money market / low duration)",
     ("dshort", "easing"): "Short-term debt (money market / low duration)", ("dcore", "rising"): "Core debt (short duration / floating rate)",
     ("dcore", "neutral"): "Core debt (corporate bond / banking & PSU)", ("dcore", "easing"): "Core debt (corporate bond / banking & PSU)",
     ("dcore", "easing_long"): "Core debt (gilt / dynamic bond — duration)",
+    ("dmed", "rising"): "Medium-term debt (corporate bond)", ("dmed", "neutral"): "Medium-term debt (corporate bond / medium duration)",
+    ("dmed", "easing"): "Medium-term debt (medium duration / corporate bond)",
 }
 # worst acceptable 3-year drawdown per debt category (a deeper fall means a credit or liquidity event)
 DEBT_MDD = {"overnight": -0.3, "liquid": -0.5, "money": -0.5, "ultrashort": -0.75, "lowdur": -1.0, "floater": -1.5,
-            "shortdur": -2.0, "bankpsu": -2.0, "corpbond": -2.5, "gilt": -6.0, "gilt10": -7.0, "dynbond": -6.0}
+            "shortdur": -2.0, "bankpsu": -2.0, "corpbond": -2.5, "meddur": -3.0, "gilt": -6.0, "gilt10": -7.0, "dynbond": -6.0}
 
 # sector satellite: key → label, index keys (valuation), fund subs, name filter (include / exclude)
 THEME_SUBS = ["sec_bank", "sec_pharma", "sec_tech", "sec_consumption", "sec_infra", "sec_mfg", "sec_energy", "sec_psu", "sec_mnc",
@@ -147,13 +153,14 @@ SECTORS = [
     ("mnc", "MNC", ["mnc"], ["sec_mnc"], None, None),
 ]
 RX_MOMENTUM = re.compile(r"momentum", re.I)
+RX_NEXT50 = re.compile(r"\bnext 50\b", re.I)
 RX_NIFTY50 = re.compile(r"\bnifty 50\b(?!\s*(equal|value|quality|low|momentum|alpha|shariah|arbitrage))", re.I)
 RX_NOT_CORE = re.compile(r"elss|tax saver|next 50|equal weight|value|quality|momentum|low vol|alpha", re.I)
 RX_INTL_THEME = re.compile(r"mining|clean energy|energy|innovation|technology|tech\b|agri|real estate|reit|ev\b|electric|"
                            r"healthcare|consumer|commodit|fang|nasdaq|china|brazil|japan|taiwan|asean|emerging|india", re.I)
 SAFE_CREDIT = ("AAA", "Sovereign", "A1+", "Cash")
-EQUITY_BASE = {"core": 11.0, "flexi": 12.0, "mid": 13.0, "small": 13.5, "value": 12.5, "momentum": 13.0, "theme": 12.5, "intl": 10.0}
-EQUITY_VAL_KEY = {"core": "n50", "flexi": "n500", "mid": "mid150", "small": "sml250", "value": "n500", "momentum": "n500"}
+EQUITY_BASE = {"core": 11.0, "next50": 12.0, "flexi": 12.0, "mid": 13.0, "small": 13.5, "value": 12.5, "momentum": 13.0, "theme": 12.5, "intl": 10.0}
+EQUITY_VAL_KEY = {"core": "n50", "next50": "nn50", "flexi": "n500", "mid": "mid150", "small": "sml250", "value": "n500", "momentum": "n500"}
 ASSUMPTIONS = {"inflation": 5.0, "cess": 4.0, "stcgEquity": 20.0, "ltcgEquity": 12.5, "ltcgExempt": 125000, "ltcgOther": 12.5,
                "equityLtMonths": 12, "otherLtMonths": 24, "metalReturn": 9.0}
 MONTHS = {m: i for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
@@ -546,6 +553,8 @@ def fund_checks(u, slot, code, ctx):
         chk("Momentum factor", bool(RX_MOMENTUM.search(name)), "rules-based momentum index" if RX_MOMENTUM.search(name) else "not a momentum index")
         r3, m3 = g("r3y"), median([u.g(c, "r3y") for c in u.by_subs(["idx_large"]) if RX_NIFTY50.search(u.g(c, "name") or "") and u.g(c, "r3y") is not None])
         chk("3Y return above the Nifty 50", r3 is not None and (m3 is None or r3 > m3), f"{r3:.1f}% vs {m3:.1f}% a year" if r3 is not None and m3 is not None else "no 3-year record")
+    if slot == "next50":
+        chk("Tracks the Nifty Next 50", bool(RX_NEXT50.search(name)) and not RX_NOT_CORE.search(name.lower().replace("next 50", "")), "plain Nifty Next 50 index fund")
     if slot == "core":
         chk("Tracks the Nifty 50", bool(RX_NIFTY50.search(name)) and not RX_NOT_CORE.search(name), "plain Nifty 50 index fund")
     if kind in ("index", "passive") or is_idx:
@@ -770,7 +779,7 @@ def expected_return(u, slot, code, ctx, macro):
             base += clamp(((v["peMed"] / v["pe"]) ** 0.1 - 1) * 100, -2.0, 2.0)
         return base
     sub = u.g(code, "sub")
-    if slot in ("core", "flexi", "mid", "small", "value", "momentum", "theme", "intl"):
+    if slot in ("core", "next50", "flexi", "mid", "small", "value", "momentum", "theme", "intl"):
         gross = eq(slot)
     elif slot == "baf":
         gross = 0.6 * eq("core") + 0.4 * (tb364 + 0.6)
@@ -780,6 +789,8 @@ def expected_return(u, slot, code, ctx, macro):
         gross = tb91 - 0.1
     elif slot == "dshort":
         gross = tb91 + (0.5 if sub == "floater" else 0.3)
+    elif slot == "dmed":
+        gross = g10 + 0.4 if sub == "meddur" else (g10 if sub == "dynbond" else tb364 + 0.7)
     elif slot == "dcore":
         gross = g10 if sub in ("gilt", "gilt10", "dynbond") else tb364 + (0.5 if sub == "floater" else 0.6)
     elif slot == "metal":
@@ -815,7 +826,7 @@ def choose(u, slot, ctx, chosen, amc_count, incumbent, review, cache):
     def overlap_ok(c):
         for o, oslot in chosen.items():
             ov = u.overlap(c, o)
-            lim = 30 if "core" in (slot, oslot) else 20
+            lim = 30 if {"core", "next50"} & {slot, oslot} else 20
             if ov is not None and ov > lim:
                 return False
         return True
@@ -852,7 +863,7 @@ def choose(u, slot, ctx, chosen, amc_count, incumbent, review, cache):
     return new, cand[1:3], "new", ""
 
 
-SEGMENTS = [("large", "Large caps", "n50", ["core", "flexi"]), ("mid", "Mid caps", "mid150", ["mid"]), ("small", "Small caps", "sml250", ["small"])]
+SEGMENTS = [("large", "Large caps", "n50", ["core", "next50", "flexi"]), ("mid", "Mid caps", "mid150", ["mid"]), ("small", "Small caps", "sml250", ["small"])]
 
 
 def segment_rotation(macro):
@@ -894,8 +905,8 @@ def apply_tilt(weights, tilt, hz):
     w = dict(weights)
     if hz in ("h1", "h3") or not tilt:
         return w, 0
-    eq_take = ["core", "flexi"] if tilt > 0 else ["small", "mid", "flexi", "core"]
-    dt_take = ["dcore", "dshort", "metal", "baf", "eqsav", "arb"] if tilt > 0 or any(k in w for k in ("dcore", "dshort", "metal", "baf", "eqsav", "arb")) else ["value"]
+    eq_take = ["core", "next50", "flexi"] if tilt > 0 else ["small", "mid", "flexi", "next50", "core"]
+    dt_take = ["dcore", "dmed", "dshort", "metal", "baf", "eqsav", "arb"]
     moved, need = 0, abs(tilt)
     for k in (dt_take if tilt > 0 else eq_take):
         while need > 0 and w.get(k, 0) > 5:
@@ -1024,7 +1035,7 @@ def main() -> int:
                     pst["slots"].pop(k)
             pst["changes"] = (changes + pst.get("changes", []))[:6]
             codes = [s["code"] for s in slots]
-            eq = [c for c in codes if chosen.get(c) in ("core", "flexi", "mid", "small", "value", "momentum", "theme")]
+            eq = [c for c in codes if chosen.get(c) in ("core", "next50", "flexi", "mid", "small", "value", "momentum", "theme")]
             ovs = [o for o in (u.overlap(a, b) for i, a in enumerate(eq) for b in eq[i + 1:]) if o is not None]
             mix = {}
             for s in slots:

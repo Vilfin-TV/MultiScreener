@@ -419,10 +419,15 @@ function verifySmartSip() {
   const rows = Object.fromEntries(J.rows.map(r => [r[C.code], r]));
   const nPlans = (P.horizons || []).length * (P.risks || []).length || 15;
   ok(Object.keys(P.plans).length === nPlans && nPlans >= 15, `smart SIP has ${Object.keys(P.plans).length} plans (expected ${nPlans})`);
-  const eqShare = p => p.slots.reduce((a, s) => a + (s.asset === 'Equity' || s.asset === 'International' ? s.w : 0), 0);
+  // very aggressive: more in growth sleeves (beyond the Nifty 50 / diversified core) than aggressive, and always equity + debt + metals
+  const GROWTH = new Set(['next50', 'mid', 'small', 'value', 'momentum', 'theme']);
+  const share = (p, f) => p.slots.reduce((a, s) => a + (f(s) ? s.w : 0), 0);
   for (const h of (P.horizons || [])) {
     const a = P.plans[h.id + 'a'], v = P.plans[h.id + 'v'];
-    if (a && v) ok(eqShare(v) >= eqShare(a), `${h.id}: very aggressive equity ${eqShare(v)}% below aggressive ${eqShare(a)}%`);
+    if (!a || !v) continue;
+    const ga = share(a, s => GROWTH.has(s.key)), gv = share(v, s => GROWTH.has(s.key));
+    ok(gv >= ga, `${h.id}: very aggressive growth share ${gv}% below aggressive ${ga}%`);
+    for (const asset of ['Equity', 'Debt', 'Commodity']) ok(share(v, s => s.asset === asset) >= 5, `${h.id}v: no ${asset.toLowerCase()} allocation`);
   }
   ok(Math.abs(P.market.tilt) <= 10 && P.market.tilt % 5 === 0, `market tilt ${P.market.tilt}`);
   for (const [id, p] of Object.entries(P.plans)) {
@@ -441,6 +446,7 @@ function verifySmartSip() {
       ok(!(r[C.lock] > 0), `${id}/${s.key}: fund has a lock-in`);
       if (C.buy != null && r[C.buy] != null) ok(r[C.buy].includes('S'), `${id}/${s.key}: fund not accepting SIPs`);
       ok(r[C.status] !== 'Out of track', `${id}/${s.key}: fund is Out of track`);
+      if (s.key === 'next50') ok(/next 50/i.test(r[C.name]), `${id}/next50: ${r[C.name]} is not a Nifty Next 50 fund`);
       if (s.key === 'value' || s.key === 'momentum') {
         ok(s.w <= 15, `${id}/${s.key}: style sleeve weight ${s.w}`);
         ok(/^h(5|7|10)v$/.test(id), `${id}: style sleeve ${s.key} outside very aggressive 5+ year plans`);
