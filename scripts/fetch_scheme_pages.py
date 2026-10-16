@@ -16,7 +16,7 @@ import logging
 import re
 import sys
 import time
-from collections import defaultdict
+from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
@@ -117,16 +117,34 @@ def _prep(text: str) -> str:
 
 
 KIND_WORDS = ("etf", "fof", "index")
+# words an address may carry beyond the fund's name without pointing at a different fund
+BENIGN = {"formerly", "known", "erstwhile", "earlier", "series", "option", "plan", "scheme", "schemes", "fund", "funds", "the",
+          "and", "dir", "reg", "growth", "direct", "regular", "overview", "details", "summary", "performance", "aspx", "html",
+          "snapshot", "nav", "pages", "fundsandperformance"}
 
 
-def url_tokens(u: str) -> tuple[set, set]:
-    """(tokens of the whole path, tokens of the most specific part) — plan codes such as "nx-dg" are ignored."""
-    path = _prep(unquote(urlparse(u).path).lower())
-    segs = [s for s in path.split("/") if s]
-    clean = lambda x: H.tokens(re.sub(r"\b(html?|aspx|php|direct|regular|growth|plan|option)\b", " ", re.sub(r"[-_+.()]+", " ", x)))
-    allt = set().union(*[clean(s) for s in segs]) - GENERIC if segs else set()
-    named = [s for s in segs if len([t for t in clean(s) - GENERIC if len(t) >= 3]) >= 2] or segs[-1:]
-    return allt, (clean(named[-1]) - GENERIC) if named else set()
+def harmless(extra: set) -> bool:
+    """Extra address words are fine only if they are codes, numbers or generic page words."""
+    return all(len(t) <= 3 or t.isdigit() or t in BENIGN or re.fullmatch(r"[a-z]{1,4}\d+[a-z\d]*|\d+[a-z]+", t) for t in extra)
+
+
+def _segs(u: str) -> list[str]:
+    return [x for x in _prep(unquote(urlparse(u).path).lower()).split("/") if x]
+
+
+def _clean(seg: str) -> set:
+    return H.tokens(re.sub(r"\b(html?|aspx|php|direct|regular|growth|plan|option)\b", " ", re.sub(r"[-_+.()]+", " ", seg))) - GENERIC
+
+
+PLAN_SEG = re.compile(r"(^|[-_])(direct|regular|growth|dir|reg|dg|rg)([-_]|$)", re.I)
+
+
+def url_tokens(u: str, structural: frozenset = frozenset()) -> tuple[set, set]:
+    """(name tokens, plan-code tokens) of an address, ignoring folder segments repeated across the site."""
+    segs = [x for x in _segs(u) if x not in structural]
+    codes = set().union(*[_clean(x) for x in segs if PLAN_SEG.search(x) and len(_clean(x)) <= 2]) if segs else set()
+    toks = set().union(*[_clean(x) for x in segs]) if segs else set()
+    return toks, codes
 
 
 def match(funds: list[dict], urls: list[str], brand: set) -> dict[int, str]:
@@ -137,12 +155,15 @@ def match(funds: list[dict], urls: list[str], brand: set) -> dict[int, str]:
         hit = [u for u in urls if rx.search(u)]
         if hit:
             out[f["code"]] = min(hit, key=len)
+    seg_n = Counter(x for u in urls for x in set(_segs(u)))
+    structural = frozenset(x for x, n in seg_n.items() if n >= 4)
     cands = []
     for u in urls:
         if SKIP_PATH.search(urlparse(u).path):
             continue
-        allt, spec = url_tokens(u)
-        allt, spec = allt - brand, spec - brand
+        allt, codes = url_tokens(u, structural)
+        allt = allt - brand
+        spec = allt - codes
         if spec:
             cands.append((u, allt, spec))
     for f in funds:
@@ -159,7 +180,7 @@ def match(funds: list[dict], urls: list[str], brand: set) -> dict[int, str]:
                     continue
                 if ft <= allt and ft & spec:
                     extra = len(spec - ft)
-                    if extra <= 3:
+                    if extra <= 3 and harmless(spec - ft - {"formerly", "known"} - set().union(*[H.tokens(_prep(n)) for n in f["names"]])):
                         low = u.lower()
                         plan = 0 if re.search(r"direct|dir-g|-dg\b", low) else (2 if re.search(r"regular|reg-g|-rg\b", low) else 1)
                         best.append((extra, plan, len(u), u))
@@ -292,6 +313,23 @@ def main():
     for k, v in prev.items():
         if not k.startswith("_") and int(k) in down and int(k) not in res:
             res[int(k)] = v
+    # final rule across both passes: a scheme page belongs to one fund — the one whose name fits its address best
+    names = {f["code"]: f["names"] for fs in by_amc.values() for f in fs}
+    by_url = defaultdict(list)
+    for code, u in res.items():
+        by_url[u].append(code)
+    for u, codes in by_url.items():
+        if len(codes) < 2:
+            continue
+        allt, spec = url_tokens(u)
+
+        def fit(c):
+            return max(len(H.tokens(_prep(n)) & allt) / max(1, len(H.tokens(_prep(n)) | allt)) for n in names.get(c, [""]))
+        ranked = sorted(codes, key=fit, reverse=True)
+        keep = ranked[0] if fit(ranked[0]) > fit(ranked[1]) else None
+        for c in codes:
+            if c != keep:
+                res.pop(c, None)
     out = {str(k): v for k, v in sorted(res.items())}
     out["_asOf"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     out["_sites"] = {a: WEBSITES[a] for a in sorted(by_amc) if a in WEBSITES}
