@@ -85,16 +85,23 @@ def fetch_rates(S) -> dict:
         log.info("Rates (national summary): %s", {k: v["last"] for k, v in out.items()})
     except Exception as e:  # noqa: BLE001
         log.warning("national summary unavailable: %s", e)
-    if "repo" not in out or "tb91" not in out:
-        try:
-            txt = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", S.get("https://www.rbi.org.in/", timeout=60).text))
-            for k, rx in (("repo", r"Policy Repo Rate\s*:\s*([\d.]+)"), ("tb91", r"91 day T-bills\s*:\s*([\d.]+)"),
-                          ("tb182", r"182 day T-bills\s*:\s*([\d.]+)"), ("tb364", r"364 day T-bills\s*:\s*([\d.]+)")):
-                m = re.search(rx, txt, re.I)
-                if m and k not in out:
-                    out[k] = {"last": float(m.group(1))}
-        except Exception as e:  # noqa: BLE001
-            log.warning("central bank home page unavailable: %s", e)
+    # The central bank's home page carries the rates in force today; the weekly summary lags policy decisions,
+    # so the home page sets the current value and the summary supplies the history (year ago, recent weeks).
+    try:
+        txt = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", S.get("https://www.rbi.org.in/", timeout=60).text))
+        for k, rx in (("repo", r"Policy Repo Rate\s*:\s*([\d.]+)"), ("tb91", r"91 day T-bills\s*:\s*([\d.]+)"),
+                      ("tb182", r"182 day T-bills\s*:\s*([\d.]+)"), ("tb364", r"364 day T-bills\s*:\s*([\d.]+)")):
+            m = re.search(rx, txt, re.I)
+            if not m:
+                continue
+            cur = float(m.group(1))
+            rec = out.setdefault(k, {"weeks": []})
+            if rec.get("last") is not None and abs(rec["last"] - cur) > 1e-9:
+                rec["summaryLast"] = rec["last"]
+            rec["last"], rec["current"] = cur, True
+        log.info("Rates in force (home page): %s", {k: v["last"] for k, v in out.items() if v.get("current")})
+    except Exception as e:  # noqa: BLE001
+        log.warning("central bank home page unavailable: %s", e)
     return out
 
 

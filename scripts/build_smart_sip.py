@@ -260,10 +260,16 @@ def rate_regime(macro, u):
         score += pts
         sig.append({"k": label, "v": reading, "p": pts})
     repo, g10 = r.get("repo") or {}, r.get("g10") or {}
-    if repo.get("last") is not None and repo.get("yearAgo") is not None:
-        d = repo["last"] - repo["yearAgo"]
-        add("Policy repo rate", f"{repo['last']:.2f}% ({'cut' if d < 0 else 'raised' if d > 0 else 'unchanged'} {abs(d):.2f} pt in a year)",
-            1 if d < 0 else (-1 if d > 0 else 0))
+    if repo.get("last") is not None:
+        prev = repo.get("summaryLast")                 # value before the latest policy decision, if it changed since
+        if prev is not None and abs(repo["last"] - prev) > 1e-9:
+            d = repo["last"] - prev
+            add("Policy repo rate, latest decision", f"{'raised' if d > 0 else 'cut'} to {repo['last']:.2f}% from {prev:.2f}%",
+                -1 if d > 0 else 1)
+        if repo.get("yearAgo") is not None:
+            d = repo["last"] - repo["yearAgo"]
+            add("Policy repo rate vs a year ago", f"{repo['yearAgo']:.2f}% → {repo['last']:.2f}%" + ("" if d else " (unchanged)"),
+                1 if d < -1e-9 else (-1 if d > 1e-9 else 0))
     if g10.get("last") is not None:
         wk = g10.get("weeks") or []
         if len(wk) >= 2:
