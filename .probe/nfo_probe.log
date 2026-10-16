@@ -1,256 +1,170 @@
+2 api paths
 {
- "kv:INF247L01AL5": {
-  "status": 200,
-  "keys": "[]",
-  "flags": {}
- },
- "mirror:INF247L01AL5": {
-  "status": 404,
-  "keys": [
-   "error"
-  ],
-  "flags": {}
- },
- "kv:INF109K01Z14": {
-  "status": 200,
-  "keys": "[]",
-  "flags": {}
- },
- "mirror:INF109K01Z14": {
-  "status": 200,
-  "keys": [
-   "ISIN",
-   "aum",
-   "category",
-   "channel_partner_code",
-   "code",
-   "comparison",
-   "crisil_rating",
-   "detail_info",
-   "direct",
-   "expense_ratio",
-   "expense_ratio_date",
-   "face_value",
-   "fund_category",
-   "fund_house",
-   "fund_manager",
-   "fund_name",
-   "fund_type",
-   "insta_redeem_max_amount",
-   "insta_redeem_min_amount",
-   "instant",
-   "investment_objective",
-   "jan_31_nav",
-   "last_nav",
-   "lock_in_period",
-   "lump_available",
-   "lump_max",
-   "lump_min",
-   "lump_min_additional",
-   "lump_multiplier",
-   "maturity_type",
-   "name",
-   "nav",
-   "plan",
-   "portfolio_turnover",
-   "redemption_allowed",
-   "redemption_amount_minimum",
-   "redemption_amount_multiple",
-   "redemption_quantity_minimum",
-   "redemption_quantity_multiple",
-   "reinvestment",
-   "returns",
-   "short_code",
-   "short_name",
-   "sip_available",
-   "sip_dates",
-   "sip_max",
-   "sip_maximum_gap",
-   "sip_min",
-   "sip_multiplier",
-   "sips",
-   "slug",
-   "small_screen_name",
-   "start_date",
-   "stp_flag",
-   "switch_allowed",
-   "swp_flag",
-   "tags",
-   "tax_period",
-   "upsizecode_sip_dates",
-   "volatility"
-  ],
-  "flags": {
-   "lump_available": "Y",
-   "sip_available": "Y",
-   "lump_min": 5000.0,
-   "lump_min_additional": 1000.0,
-   "lump_max": 10000000000000.0,
-   "lump_multiplier": 1.0,
-   "sip_min": 100.0,
-   "sip_max": 999999999.0,
-   "sip_multiplier": 1.0,
-   "sip_dates": [
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "17",
-    "18",
-    "19",
-    "20",
-    "21",
-    "22",
-    "23",
-    "24",
-    "25",
-    "26",
-    "27",
-    "28",
-    "29",
-    "30"
-   ],
-   "redemption_allowed": "Y",
-   "upsizecode_sip_dates": [
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "17",
-    "18",
-    "19",
-    "20",
-    "21",
-    "22",
-    "23",
-    "24",
-    "25",
-    "26",
-    "27",
-    "28",
-    "29",
-    "30"
-   ],
-   "sip_maximum_gap": 60,
-   "switch_allowed": "Y",
-   "sips": [
-    {
-     "sip_frequency": "DAILY",
-     "sip_dates": [],
-     "sip_minimum_gap": "0",
-     "sip_maximum_gap": "100"
-    },
-    {
-     "sip_frequency": "MONTHLY",
-     "sip_dates": [
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "8",
-      "9",
-      "10",
-      "11",
-      "12",
-      "13",
-      "14",
-      "15",
-      "16",
-      "17",
-      "18",
-      "19",
-      "20",
-      "21",
-      "22",
-      "23",
-      "24",
-      "25",
-      "26",
-      "27",
-      "28",
-      "29",
-      "30"
-     ],
-     "sip_minimum_gap": "0",
-     "sip_maximum_gap": "60"
-    },
-    {
-     "sip_frequency": "QUARTERLY",
-     "sip_dates": [
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "8",
-      "9",
-      "10",
-      "11",
-      "12",
-      "13",
-      "14",
-      "15",
-      "16",
-      "17",
-      "18",
-      "19",
-      "20",
-      "21",
-      "22",
-      "23",
-      "24",
-      "25",
-      "26",
-      "27",
-      "28",
-      "29",
-      "30"
-     ],
-     "sip_minimum_gap": "0",
-     "sip_maximum_gap": "90"
-    }
-   ]
-  }
- },
- "kv:INF200K01T28": {
-  "status": 200,
-  "keys": "[]",
-  "flags": {}
- },
- "mirror:INF200K01T28": {
-  "status": 404,
-  "keys": [
-   "error"
-  ],
-  "flags": {}
- }
+ "/api/nfo": [
+  404,
+  "{\"data\":null,\"error\":{\"status\":404,\"name\":\"NotFoundError\",\"message\":\"Not Found\",\"details\":{}}}"
+ ],
+ "/api/nfo-details": [
+  404,
+  "{\"data\":null,\"error\":{\"status\":404,\"name\":\"NotFoundError\",\"message\":\"Not Found\",\"details\":{}}}"
+ ],
+ "/api/populate-nfo": [
+  404,
+  "{\"data\":null,\"error\":{\"status\":404,\"name\":\"NotFoundError\",\"message\":\"Not Found\",\"details\":{}}}"
+ ],
+ "/api/new-fund-offer": [
+  200,
+  "{\"NewFundOffer\":[{\"MutualFund\":\"Axis Mutual Fund\",\"items\":[{\"Scheme_Id\":14607,\"MutualFund\":\"Axis Mutual Fund\",\"SchemeName\":\"Axis Nifty EV & New Age Automotive Index Fund\",\"MF_Id\":53}]},{\"MutualFund\":\"Carnelian Mutual Fund\",\"items\":[{\"Scheme_Id\":14590,\"MutualFund\":\"Carnelian Mutual Fund\",\"SchemeName\":\"Carnelian Small Cap Fund\",\"MF_Id\":91}]},{\"MutualFund\":\"HDFC Mutual Fund\",\"items\":[{\"Scheme_Id\":14592,\"MutualFund\":\"HDFC Mutual Fund\",\"SchemeName\":\"HDFC Nifty LargeMidcap250 Plus 8-13 yr G-sec 70:30 Index Fund\",\"MF_Id\":9}]},{\"MutualFund\":\"ICICI Prudential Mutual Fund\",\"items\":[{\"Scheme_Id\":14597,\"M"
+ ]
 }
+[
+ {
+  "mid": 22,
+  "n": 877,
+  "sample": [
+   {
+    "scheme_id": "7635",
+    "scheme_name": "Daiwa Fixed Maturity Plan - 3M - Series 1"
+   },
+   {
+    "scheme_id": "7636",
+    "scheme_name": "Daiwa Fixed Maturity Plan - 3M - Series 2"
+   }
+  ]
+ },
+ {
+  "sid": 14506,
+  "name": "SBI Crisil - IBX SDL Index - June 2034 Index Fund",
+  "launch": "2026-07-07T00:00:00+05:30",
+  "type": "Open Ended",
+  "cat": "Index Funds - Debt Funds",
+  "keys": [
+   "MF_Name",
+   "Scheme_Name",
+   "Scheme_Objective",
+   "SchemeType_Desc",
+   "SchemeCat_Desc",
+   "Launch_Date",
+   "Scheme_load",
+   "Scheme_min_amt",
+   "AMC_Website",
+   "scheme_Id",
+   "MF_Id"
+  ]
+ },
+ {
+  "sid": 14523,
+  "name": "SBI Nifty Midcap 150 Momentum 50 ETF FOF",
+  "launch": "2026-07-27T00:00:00+05:30",
+  "type": "Open Ended",
+  "cat": "Fund of Funds Scheme (Domestic) - Fund of Funds Scheme (Domestic)",
+  "keys": [
+   "MF_Name",
+   "Scheme_Name",
+   "Scheme_Objective",
+   "SchemeType_Desc",
+   "SchemeCat_Desc",
+   "Launch_Date",
+   "Scheme_load",
+   "Scheme_min_amt",
+   "AMC_Website",
+   "scheme_Id",
+   "MF_Id"
+  ]
+ },
+ {
+  "sid": 14549,
+  "name": "SBI Balanced Hybrid Fund",
+  "launch": "2026-08-10T00:00:00+05:30",
+  "type": "Open Ended",
+  "cat": "Hybrid Schemes - Balanced Hybrid Fund",
+  "keys": [
+   "MF_Name",
+   "Scheme_Name",
+   "Scheme_Objective",
+   "SchemeType_Desc",
+   "SchemeCat_Desc",
+   "Launch_Date",
+   "Scheme_load",
+   "Scheme_min_amt",
+   "AMC_Website",
+   "scheme_Id",
+   "MF_Id"
+  ]
+ },
+ {
+  "sid": 14580,
+  "name": "SBI Nifty200 Value 30 ETF FOF",
+  "launch": "2026-09-17T00:00:00+05:30",
+  "type": "Open Ended",
+  "cat": "Fund of Funds Scheme (Domestic) - Fund of Funds Scheme (Domestic)",
+  "keys": [
+   "MF_Name",
+   "Scheme_Name",
+   "Scheme_Objective",
+   "SchemeType_Desc",
+   "SchemeCat_Desc",
+   "Launch_Date",
+   "Scheme_load",
+   "Scheme_min_amt",
+   "AMC_Website",
+   "scheme_Id",
+   "MF_Id"
+  ]
+ },
+ {
+  "sid": 14604,
+  "name": "SBI BSE India Defence ETF",
+  "launch": "2026-10-13T00:00:00+05:30",
+  "type": "Open Ended",
+  "cat": "Exchange Traded Funds (ETFs) - Equity ETF",
+  "keys": [
+   "MF_Name",
+   "Scheme_Name",
+   "Scheme_Objective",
+   "SchemeType_Desc",
+   "SchemeCat_Desc",
+   "Launch_Date",
+   "Scheme_load",
+   "Scheme_min_amt",
+   "AMC_Website",
+   "scheme_Id",
+   "MF_Id"
+  ]
+ },
+ {
+  "mid": 3,
+  "n": 1028,
+  "sample": [
+   {
+    "scheme_id": "1106",
+    "scheme_name": "Aditya Birla Fixed Maturity Plan - 1 Year Plan Group 14"
+   },
+   {
+    "scheme_id": "1279",
+    "scheme_name": "Aditya Birla Fixed Maturity Plan - Annual Series 2"
+   }
+  ]
+ },
+ {
+  "sid": 14432,
+  "name": "Aditya Birla Sun Life BSE Top 10 Banks ETF",
+  "launch": "2026-02-23T00:00:00+05:30",
+  "type": "Open Ended",
+  "cat": "Exchange Traded Funds (ETFs) - Equity ETF",
+  "keys": [
+   "MF_Name",
+   "Scheme_Name",
+   "Scheme_Objective",
+   "SchemeType_Desc",
+   "SchemeCat_Desc",
+   "Launch_Date",
+   "Scheme_load",
+   "Scheme_min_amt",
+   "AMC_Website",
+   "scheme_Id",
+   "MF_Id"
+  ]
+ },
+ {
+  "sid": 1
