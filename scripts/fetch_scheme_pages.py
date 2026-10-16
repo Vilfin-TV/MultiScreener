@@ -123,9 +123,10 @@ BENIGN = {"formerly", "known", "erstwhile", "earlier", "series", "option", "plan
           "snapshot", "nav", "pages", "fundsandperformance"}
 
 
-def harmless(extra: set) -> bool:
-    """Extra address words are fine only if they are codes, numbers or generic page words."""
-    return all(len(t) <= 3 or t.isdigit() or t in BENIGN or re.fullmatch(r"[a-z]{1,4}\d+[a-z\d]*|\d+[a-z]+", t) for t in extra)
+def harmless(extra: set, sitewide: frozenset = frozenset()) -> bool:
+    """Extra address words are fine only if they are codes, numbers, generic page words or words used site-wide."""
+    return all(len(t) <= 3 or t.isdigit() or t in BENIGN or t in sitewide
+               or re.fullmatch(r"[a-z]{1,4}\d+[a-z\d]*|\d+[a-z]+", t) for t in extra)
 
 
 def _segs(u: str) -> list[str]:
@@ -166,6 +167,10 @@ def match(funds: list[dict], urls: list[str], brand: set) -> dict[int, str]:
         spec = allt - codes
         if spec:
             cands.append((u, allt, spec))
+    # words found in many of this site's addresses ("explore", "nipponindia", "pages") say nothing about the fund
+    tf = Counter(t for _, _, sp in cands for t in sp)
+    sitewide = frozenset(t for t, n in tf.items() if n >= max(4, 0.15 * len(cands)))
+    near = []
     for f in funds:
         if f["code"] in out:
             continue
@@ -180,7 +185,10 @@ def match(funds: list[dict], urls: list[str], brand: set) -> dict[int, str]:
                     continue
                 if ft <= allt and ft & spec:
                     extra = len(spec - ft)
-                    if extra <= 3 and harmless(spec - ft - {"formerly", "known"} - set().union(*[H.tokens(_prep(n)) for n in f["names"]])):
+                    rest = spec - ft - set().union(*[H.tokens(_prep(n)) for n in f["names"]])
+                    if extra <= 3 and not harmless(rest, sitewide):
+                        near.append((f["names"][0], sorted(rest), u))
+                    if extra <= 3 and harmless(rest, sitewide):
                         low = u.lower()
                         plan = 0 if re.search(r"direct|dir-g|-dg\b", low) else (2 if re.search(r"regular|reg-g|-rg\b", low) else 1)
                         best.append((extra, plan, len(u), u))
@@ -189,6 +197,9 @@ def match(funds: list[dict], urls: list[str], brand: set) -> dict[int, str]:
         best.sort()                              # fewest extra words, direct plan, shortest address
         out[f["code"]] = best[0][3]
         fit[f["code"]] = best[0][0]
+    for n, rest, u in near[:4]:
+        if not any(c for c in out if c in [f["code"] for f in funds if f["names"][0] == n]):
+            log.info("    near miss: %s · extra words %s · %s", n[:50], rest, u[:110])
     # one scheme page claimed by several funds (e.g. plans of one scheme): keep it for the closest name only
     by_url = defaultdict(list)
     for code, u in out.items():
