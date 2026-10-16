@@ -2212,11 +2212,13 @@ var MERGE_TO = {theme:'flexi', intl:'flexi', small:'mid', mid:'flexi', flexi:'co
 var SIG_CLS = {Attractive:'st-in', Neutral:'st-on', Unattractive:'st-un', Avoid:'st-out'};
 var REGIME_TXT = {rising:'Rising yields — staying short', neutral:'Stable rates — high-quality accrual', easing:'Falling yields — adding duration'};
 function loadSip(){ if (!CACHE.sip) CACHE.sip = getJSON('smartsip.json').then(function(j){ SIP = j; return j; }).catch(function(e){ delete CACHE.sip; throw e; }); return CACHE.sip; }
-function sipMinOf(code){ var f = BY[code]; return f && isNum(f.sipMin) && f.sipMin > 0 ? f.sipMin : 500; }
+/* the larger of the fund's SIP and lump-sum minimum, so each month's amount can be invested either way */
+function sipMinOf(code){ var f = BY[code] || {}; var m = Math.max(isNum(f.sipMin) ? f.sipMin : 0, isNum(f.lumpMin) ? f.lumpMin : 0); return m > 0 ? m : 500; }
 /* scale a model plan to the investor's amount: swap funds without weekly SIPs, combine slots below fund minimums */
 function sizePlan(plan, amt, fq){
   var notes = [];
-  var slots = plan.slots.map(function(s){
+  var paused = plan.slots.filter(function(s){ return !(s.w > 0); });
+  var slots = plan.slots.filter(function(s){ return s.w > 0; }).map(function(s){
     var code = s.code, swapped = null;
     if (fq === 'w') {
       var f = BY[code];
@@ -2245,7 +2247,7 @@ function sizePlan(plan, amt, fq){
     s.amt = i === slots.length - 1 ? left : Math.round(amt * s.w / 100 / 10) * 10;
     left -= s.amt;
   });
-  return {slots:slots, full:full, merged:plan.slots.length - slots.length};
+  return {slots:slots, full:full, merged:plan.slots.length - paused.length - slots.length, paused:paused};
 }
 /* expected outcome of a sized plan: per-fund compounding, capital-gains tax by fund type, likely range */
 function sipFV(amt, n, ppy, r){ var g = Math.pow(1 + r / 100, 1 / ppy), v = 0; for (var k = 0; k < n; k++) v += amt * Math.pow(g, n - k); return v; }
@@ -2304,7 +2306,8 @@ function renderSip(){
     kpi('Weighted expense ratio', fmt(ter) + '%', 'Direct plans') +
     kpi('Invested per year', inr(yearly), inr(P.amt) + ' per ' + per) +
     kpi('Rate cycle', esc((R.applied || 'neutral').replace(/^./, function(c){ return c.toUpperCase(); })), esc(REGIME_TXT[R.applied] || ''), true) + '</div>';
-  if (sized.merged) h += '<div class="alert">⚠ ' + inr(P.amt) + ' per ' + per + ' is below the minimum SIP for every fund in this plan, so ' + sized.merged + ' smaller allocation' + (sized.merged > 1 ? 's were' : ' was') + ' combined into related funds. Invest ' + inr(sized.full) + ' or more per ' + per + ' for the complete ' + plan.slots.length + '-fund plan.</div>';
+  if (sized.merged) h += '<div class="alert">⚠ ' + inr(P.amt) + ' per ' + per + ' is below the minimum purchase for every fund in this plan, so ' + sized.merged + ' smaller allocation' + (sized.merged > 1 ? 's were' : ' was') + ' combined into related funds. Invest ' + inr(sized.full) + ' or more per ' + per + ' for the complete ' + (plan.slots.length - sized.paused.length) + '-fund plan.</div>';
+  if (sized.paused.length) h += '<div class="alert">⏸ Paused this month on valuation: ' + sized.paused.map(function(s){ var g = s.gate || {}; return '<b>' + esc(s.label) + '</b> (' + esc(g.index || 'segment') + ' valued above ' + (isNum(g.pct) ? Math.round(g.pct * 100) + '% of' : 'most of') + ' its 10-year history; this month\'s share goes to ' + esc((g.toLabel || 'other funds').toLowerCase()) + ')'; }).join('; ') + '. Units already held stay invested; buying resumes when valuations ease.</div>';
   // ── expected outcome ──
   var gain = Math.max(0, pr.value - pr.invested), postGain = Math.max(0, pr.post - pr.invested);
   h += '<div class="card proj"><div class="proj-top"><div><div class="sec-title">Expected outcome after ' + years + ' year' + (years > 1 ? 's' : '') + '</div>' +
@@ -2332,6 +2335,7 @@ function renderSip(){
     var flags = [];
     if (src.state === 'watch') flags.push('<span class="st st-un" title="' + esc(src.note) + '">On watch</span>');
     if (s.swapped) flags.push('<span class="tag" title="' + esc((BY[s.swapped] || {}).name || '') + ' does not offer weekly SIPs">Weekly-SIP alternate</span>');
+    if (src.gate && src.w > 0) flags.push('<span class="tag" title="' + esc(src.gate.index) + ' is expensive vs its 10-year history">Reduced this month (−' + src.gate.cut + ' pts)</span>');
     if (s.merged.length) flags.push('<span class="tag" title="Includes the allocation for ' + esc(s.merged.join(', ')) + '">+ ' + esc(s.merged.join(', ')) + '</span>');
     var ck = src.checks || [], passed = ck.filter(function(c){ return c[1]; }).length;
     var chk = '<ul class="chk">' + ck.map(function(c){ return '<li class="' + (c[1] ? '' : 'x') + '"><span><b>' + esc(c[0]) + '</b>' + (c[2] ? ' — ' + esc(c[2]) : '') + '</span></li>'; }).join('') + '</ul>';
@@ -2341,7 +2345,7 @@ function renderSip(){
     var alts = (src.alts || []).filter(function(c){ return BY[c] && c !== s.code; }).map(function(c){ return '<a href="#" data-open="' + c + '">' + esc(shortName(BY[c].name)) + '</a>'; }).join(' · ');
     if (alts) why += '<li>Alternates: ' + alts + '</li>';
     if (src.note && src.state !== 'watch') why += '<li>' + esc(src.note) + '</li>';
-    var minTxt = isNum(f.sipMin) ? 'Min. SIP ' + inr(f.sipMin) : '';
+    var minTxt = 'Min. ' + inr(sipMinOf(s.code)) + ' per purchase';
     var body = '<div class="sslot"><i style="background:' + col + '"></i>' + esc(s.label) + '</div>' +
       '<div class="fname" data-open="' + s.code + '">' + esc(f.name) + '</div>' +
       '<div class="fmeta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + ' · ' + stars(f.rating) + '</div>' +
@@ -2365,7 +2369,7 @@ function renderSip(){
       return '<div class="mc" style="cursor:default">' + r.body +
         '<div class="mc-row"><div>Weight<b>' + r.s.w + '%</b></div><div>Per ' + per + '<b>' + inr(r.s.amt) + '</b></div><div>Exp.<b>' + (isNum(r.s.er) ? fmt(r.s.er, 1) + '%' : '–') + '</b></div><div>TER<b>' + (isNum(r.f.ter) ? fmt(r.f.ter) + '%' : '–') + '</b></div></div></div>';
     }).join('') + '</div>' +
-    '<div class="note">Invest in the Direct plan, Growth option of each fund. Weekly SIP minimums and dates vary by fund house — confirm on the scheme page before registering.</div>' +
+    '<div class="note">Invest in the Direct plan, Growth option of each fund — each month as a lump-sum purchase or through a SIP; every fund accepts both, and each amount covers the fund\'s minimum. Weekly SIP minimums and dates vary by fund house — confirm on the scheme page.</div>' +
     '</div>';
   // ── right column: allocation snapshot (sticky beside the plan) ──
   var donut = donutCard('sipDonut', 'Allocation by fund', '', sized.slots.map(function(s){ return [shortName((BY[s.code] || {name:s.label}).name), s.w]; }), [sized.slots.length + ' funds', inr(P.amt) + '/' + (P.fq === 'w' ? 'wk' : 'mo')]);
@@ -2400,6 +2404,10 @@ function renderSip(){
         var cls = z.key === rot.to ? 'to' : z.key === rot.from ? 'from' : '';
         return '<div class="seg-r ' + cls + '"><span>' + esc(z.label) + '</span><div class="vbar"><i style="left:' + Math.round(z.pct * 100) + '%"></i></div><b>P/E ' + fmt(z.pe, 1) + ' · ' + Math.round(z.pct * 100) + 'th</b></div>';
       }).join('') + '<p class="seg-note">' + (rot.pts ? 'Up to ' + rot.pts + ' points move from ' + esc(segName(rot.from)) + ' (dearest vs its history) to ' + esc(segName(rot.to)) + ' (cheapest) in plans of 5+ years.' : 'Segments are similarly valued — no rotation.') + '</p></div>' : '') +
+      (m.gates ? '<div class="seg-rot"><div class="seg-h">Monthly valuation gate</div>' + ['core', 'lmcore', 'flexi', 'mid', 'small'].filter(function(k){ return m.gates[k] && isNum(m.gates[k].pct); }).map(function(k){
+        var g = m.gates[k], lv = g.level, pct = Math.round(g.pct * 100);
+        return '<div class="seg-r ' + (lv === 'pause' ? 'from' : '') + '"><span title="' + esc(g.index) + '">' + ({core:'Large caps', lmcore:'Large & mid', flexi:'Broad market', mid:'Mid caps', small:'Small caps'}[k]) + '</span><div class="vbar"><i style="left:' + pct + '%"></i></div><b>' + pct + 'th · ' + (lv === 'pause' ? 'paused' : lv === 'half' ? 'halved' : 'buying') + '</b></div>';
+      }).join('') + '<p class="seg-note">At the monthly review a segment above the 90th percentile of its 10-year valuation is paused (0% that month) and above the 80th is halved; the money goes to the cheapest fairly valued equity fund in the plan, otherwise to debt.</p></div>' : '') +
       '<p class="mi-foot">' + (m.tilt > 0 ? 'Valuations favour equity — plans of 5+ years add up to ' + m.tilt + ' points to equity.' : m.tilt < 0 ? 'Valuations look stretched — plans of 5+ years move ' + (-m.tilt) + ' points from equity into debt.' : 'Signals balance out — plans follow their standard allocation.') + '</p></div>' +
     '<div class="card pcard mi"><div class="mi-top"><div class="sec-title">Interest-rate cycle</div><span class="regime ' + esc(R.applied || 'neutral') + '">' + esc(cap(R.applied || 'neutral')) + '</span></div>' +
       '<div class="mi-kpis"><div><small>Repo rate</small><b>' + (R.repo != null ? fmt(R.repo) + '%' : '–') + '</b></div><div><small>10-yr G-Sec</small><b>' + (R.g10 != null ? fmt(R.g10) + '%' : '–') + '</b></div><div><small>91-day T-bill</small><b>' + (R.tb91 != null ? fmt(R.tb91) + '%' : '–') + '</b></div></div>' +

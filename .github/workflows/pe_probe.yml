@@ -1,4 +1,4 @@
-name: PE probe (temporary)
+name: PE probe (temporary) v2
 on:
   push:
     branches: [claude/festive-bell-an714y]
@@ -11,6 +11,7 @@ jobs:
       - uses: actions/checkout@v4
         with: {ref: claude/festive-bell-an714y}
       - run: |
+          mkdir -p .probe
           python3 - <<'PY' > .probe/pe.log 2>&1 || true
           import requests, datetime as dt
           s=requests.Session(); s.headers.update({"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/129.0 Safari/537.36","Accept":"*/*","Referer":"https://www.nseindia.com/"})

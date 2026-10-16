@@ -488,15 +488,20 @@ def metal_signal(u):
 
 
 # ───────────────────────────── per-fund checks ─────────────────────────────
+LUMP_MAX = 1000                              # every fund must accept a monthly lump sum of ₹1,000 or less
+
+
 def buy_ok(u, code):
+    """Open for both lump-sum purchases and SIPs (the plan can be invested either way each month)."""
     b = u.g(code, "buy")
-    return True if b is None else ("S" in b)
+    return True if b is None else ("S" in b and "L" in b)
 
 
 def fund_checks(u, slot, code, ctx):
     """[(label, passed, detail)] — every item must pass for a fund to enter a plan."""
     label, asset, _subs, kind, min_y, min_aum, _vol = SLOTS[slot]
     subs = ctx["subs"]
+    growth = ctx.get("profile") == "growth"      # very aggressive plans accept more volatility for more return
     cs = u.category_stats(subs)
     g = lambda c: u.g(code, c)  # noqa: E731
     name, sub = g("name") or "", g("sub") or ""
@@ -516,7 +521,9 @@ def fund_checks(u, slot, code, ctx):
     tol = 0.05 if asset == "Debt" or kind in ("index", "passive", "arb") or is_idx else 0.10
     chk("Expense ratio", ter is not None and (med is None or ter <= med + tol),
         (f"{ter:.2f}% vs category median {med:.2f}%" if ter is not None else "not disclosed") if med is not None else f"{ter}%")
-    chk("Accepting SIPs", buy_ok(u, code), "open for new SIPs" if buy_ok(u, code) else "fresh SIPs paused")
+    chk("Open for investment", buy_ok(u, code), "accepts lump-sum purchases and SIPs" if buy_ok(u, code) else "fresh lump sums or SIPs paused")
+    lm = g("lumpMin")
+    chk("Lump-sum minimum", lm is None or lm <= LUMP_MAX, f"₹{lm:,.0f} per purchase (limit ₹{LUMP_MAX:,})" if lm is not None else "not disclosed")
     chk("No lock-in", not ((g("lock") or 0) > 0 or re.search(r"elss|tax saver", name, re.I)), "redeemable any time")
     chk("Status", g("status") != "Out of track" and not (kind in ("active", "sector", "hybrid") and g("status") == "Underperforming"),
         g("status") or "not rated yet")
@@ -531,7 +538,7 @@ def fund_checks(u, slot, code, ctx):
         c = g("cons")
         chk("Consistency", c is None or c >= 40, f"{c:.0f}/100" if c is not None else "not scored")
         md, mm = g("mdd"), cs.get("mdd")
-        chk("Drawdown vs category", md is None or mm is None or md >= mm - 5,
+        chk("Drawdown vs category", md is None or mm is None or md >= mm - (10 if growth else 5),
             f"{md:.1f}% vs median {mm:.1f}%" if md is not None and mm is not None else "–")
         newest, longest = u.manager_since(code)
         if longest:
@@ -540,7 +547,7 @@ def fund_checks(u, slot, code, ctx):
         if top10 and slot in ("flexi", "lmcore", "mid", "small", "value"):
             chk("Portfolio concentration", top10 <= 60, f"top 10 holdings {top10:.0f}%")
     if (kind in ("active", "sector") and not is_idx) or kind == "hybrid":
-        deep_checks(u, slot, code, subs, chk)
+        deep_checks(u, slot, code, subs, chk, growth)
     if slot == "flexi":
         chk("Market-cap fit", g("size") not in ("Mid", "Small"), f"{g('size') or 'blend'} tilt (mid / small caps have their own slots)")
     if slot == "lmcore":
@@ -654,13 +661,13 @@ def index_checks(u, slot, code, sub, chk):
         chk("Exit load", nil or (days is not None and days <= 30), "nil" if nil else (f"only within {days} days" if days else "see scheme documents"))
 
 
-def deep_checks(u, slot, code, subs, chk):
+def deep_checks(u, slot, code, subs, chk, growth=False):
     """Extra quality checks for actively managed equity and hybrid funds (3-year monthly risk, rolling and calendar data)."""
     d = u.deep(code)
     hybrid = slot in ("baf", "eqsav")
     dc, uc = d["downCap"], d["upCap"]
     if dc is not None:
-        lim = (80 if slot == "baf" else 60) if hybrid else 100
+        lim = (80 if slot == "baf" else 60) if hybrid else (115 if growth else 100)
         chk("Downside protection", dc <= lim, f"captured {dc:.0f}% of the benchmark's falls (limit {lim}%)")
     if not hybrid:
         if dc and uc is not None:
@@ -674,11 +681,11 @@ def deep_checks(u, slot, code, subs, chk):
         if p is not None:
             chk(f"{lab} vs category", p >= 0.35, f"{d[key]:.2f} · better than {round(p * 100)}% of peers")
     p = u.deep_rank(subs, "std", code, higher=False)
-    if p is not None:
+    if p is not None and not growth:
         chk("Volatility vs category", p >= 0.2, f"{d['std']:.1f}% a year · calmer than {round(p * 100)}% of peers")
     p = u.deep_rank(subs, "min3", code)
     if p is not None:
-        chk("Worst rolling 3Y return", p >= 0.3, f"{d['min3']:.1f}% a year · better than {round(p * 100)}% of peers")
+        chk("Worst rolling 3Y return", p >= (0.15 if growth else 0.3), f"{d['min3']:.1f}% a year · better than {round(p * 100)}% of peers")
     if d["beat5"] is not None and (d["n5"] or 0) >= 120 and not hybrid:
         chk("Beats benchmark (rolling 5Y)", d["beat5"] >= 50, f"{d['beat5']:.0f}% of periods")
     won, n = u.cal_vs_category(subs, code)
@@ -702,7 +709,7 @@ def deep_checks(u, slot, code, subs, chk):
         chk("Smaller falls than equity", md is None or md >= lim, f"worst fall {md:.1f}% (limit {lim}%)" if md is not None else "–")
 
 
-def scores(u, slot, codes, kind):
+def scores(u, slot, codes, kind, growth=False):
     m = lambda col: {c: u.g(c, col) for c in codes}  # noqa: E731
     logaum = {c: math.log10(max(u.g(c, "aum") or 1, 1)) for c in codes}
     if kind == "factor":
@@ -721,6 +728,11 @@ def scores(u, slot, codes, kind):
     elif kind == "intl":
         parts = [(pct_rank(m("r5y")), .20), (pct_rank(m("r3y")), .15), (pct_rank(m("sortino")), .20),
                  (pct_rank(m("mdd")), .10), (pct_rank(m("ter"), False), .20), (pct_rank(logaum), .15)]
+    elif growth and kind == "active":           # very aggressive: rank on return and skill first
+        alpha = {c: u.deep(c).get("alpha") for c in codes}
+        parts = [(pct_rank(m("roll3")), .22), (pct_rank(m("r5y")), .15), (pct_rank(alpha), .13), (pct_rank(m("beat3")), .12),
+                 (pct_rank(m("sortino")), .10), (pct_rank(m("cons")), .08), (pct_rank(m("rec")), .07), (pct_rank(m("mdd")), .05),
+                 (pct_rank(m("ter"), False), .05), (pct_rank(logaum), .03)]
     else:
         rec_w = .12 if kind == "sector" else .07
         parts = [(pct_rank(m("roll3")), .20), (pct_rank(m("beat3")), .17), (pct_rank(m("cons")), .14),
@@ -749,7 +761,7 @@ def pool_for(u, slot, ctx):
 
 
 def rank_pool(u, slot, ctx, cache):
-    key = (slot, ctx.get("pool_key"), ctx.get("metal"), ctx.get("sector"))
+    key = (slot, ctx.get("pool_key"), ctx.get("metal"), ctx.get("sector"), ctx.get("profile"))
     if key in cache:
         return cache[key]
     subs, codes, kind = pool_for(u, slot, ctx)
@@ -759,9 +771,9 @@ def rank_pool(u, slot, ctx, cache):
     if kind == "sector":
         act = [c for c in ok if not (u.g(c, "sub") or "").startswith("idx_")]
         idx = [c for c in ok if (u.g(c, "sub") or "").startswith("idx_")]
-        sc = {**(scores(u, slot, act, "active") if act else {}), **(scores(u, slot, idx, "index") if idx else {})}
+        sc = {**(scores(u, slot, act, "active", ctx.get("profile") == "growth") if act else {}), **(scores(u, slot, idx, "index") if idx else {})}
     else:
-        sc = scores(u, slot, ok, kind) if ok else {}
+        sc = scores(u, slot, ok, kind, ctx.get("profile") == "growth") if ok else {}
     ranked = sorted(ok, key=lambda c: -sc[c])
     cache[key] = (ranked, sc, checks, subs)
     return cache[key]
@@ -927,6 +939,48 @@ def apply_rotation(weights, rot, hz):
     return w, moved
 
 
+# valuation gate: an equity slot whose market segment is very expensive vs its own 10-year history gets a smaller
+# (or no) allocation that month; the money goes to the cheapest fairly valued equity slot in the plan, else to debt.
+GATE_KEYS = {"core": ["n50"], "next50": ["nn50"], "lmcore": ["n50", "mid150"], "flexi": ["n500"], "mid": ["mid150"], "small": ["sml250"]}
+GATE_PAUSE, GATE_HALF = 0.90, 0.80
+GATE_LABEL = {"n50": "Nifty 50", "nn50": "Nifty Next 50", "n500": "Nifty 500", "mid150": "Nifty Midcap 150", "sml250": "Nifty Smallcap 250"}
+
+
+def valuation_gates(macro, dec, review):
+    val = (macro or {}).get("valuation") or {}
+    out = {}
+    for slot, keys in GATE_KEYS.items():
+        pcts = []
+        for k in keys:
+            ps = [x for x in ((val.get(k) or {}).get("pePct"), (val.get(k) or {}).get("pbPct")) if x is not None]
+            if ps:
+                pcts.append(sum(ps) / len(ps))
+        pct = round(sum(pcts) / len(pcts), 3) if pcts else None
+        now = "full" if pct is None else ("pause" if pct >= GATE_PAUSE else ("half" if pct >= GATE_HALF else "full"))
+        out[slot] = {"pct": pct, "now": now, "level": stable(dec, f"gate:{slot}", now, review, strong=True),
+                     "index": " / ".join(GATE_LABEL.get(k, k) for k in keys),
+                     "pe": [(val.get(k) or {}).get("pe") for k in keys], "peMed": [(val.get(k) or {}).get("peMed") for k in keys]}
+    return out
+
+
+def apply_gate(weights, gates):
+    """Cut the weight of very expensive segments this month (pause = 0%, half = half) and move it on."""
+    w, cuts = dict(weights), {}
+    for slot in [k for k in sorted(w, key=ORDER.index) if k in gates]:
+        lv = gates[slot]["level"]
+        cut = w[slot] if lv == "pause" else ((w[slot] // 10) * 5 if lv == "half" else 0)
+        if cut <= 0:
+            continue
+        fair = sorted([k for k in w if k in gates and gates[k]["level"] == "full"], key=lambda k: gates[k]["pct"] if gates[k]["pct"] is not None else 0.5)
+        dst = fair[0] if fair else next((k for k in ("value", "momentum", "dmed", "dcore", "baf", "dshort", "arb") if k in w), None)
+        if not dst:
+            continue
+        w[slot] -= cut
+        w[dst] += cut
+        cuts[slot] = {"level": lv, "cut": cut, "to": dst, "pct": gates[slot]["pct"], "index": gates[slot]["index"]}
+    return w, cuts
+
+
 def apply_tilt(weights, tilt, hz):
     w = dict(weights)
     if hz in ("h1", "h3") or not tilt:
@@ -987,6 +1041,7 @@ def main() -> int:
     rot_from, rest = rot_key.split(">")
     rot_to, rot_pts = rest.split(":")
     rotation = {**rot_now, "from": None if rot_from == "None" else rot_from, "to": None if rot_to == "None" else rot_to, "pts": int(rot_pts)}
+    gates = valuation_gates(macro, dec, review)
     sectors = sector_table(u, macro)
     metal = metal_signal(u)
     metal_choice = stable(dec, "metal", metal.get("choice", "gold"), review)
@@ -1014,6 +1069,7 @@ def main() -> int:
             base = TEMPLATES[pid]
             weights, applied = apply_tilt(base, tilt, hz)
             weights, rotated = apply_rotation(weights, rotation, hz)
+            weights, cuts = apply_gate(weights, gates)
             pst = state["plans"].setdefault(pid, {"slots": {}})
             chosen, amc_count, slots, changes, skipped = {}, {}, [], [], []
             for slot in sorted(weights, key=ORDER.index):
@@ -1022,7 +1078,8 @@ def main() -> int:
                     pool_key = "easing_long" if (slot == "dcore" and regime == "easing" and hz in ("h5", "h7", "h10")) else regime
                 m = metal_choice if (rk in ("a", "v") and hz in ("h7", "h10")) else "gold"
                 ctx = {"pool_key": pool_key, "metal": m if slot == "metal" else None, "sector": sector if slot == "theme" else None,
-                       "regime": regime, "sector_index": sector_row.get("index"), "sector_label": sector_row.get("label")}
+                       "regime": regime, "sector_index": sector_row.get("index"), "sector_label": sector_row.get("label"),
+                       "profile": "growth" if rk == "v" else "std"}
                 ctx["ctx_tag"] = f"{pool_key}|{ctx['metal']}|{ctx['sector']}"
                 inc = pst["slots"].get(slot)
                 code, alts, action, note = choose(u, slot, ctx, chosen, amc_count, inc, review, cache)
@@ -1051,6 +1108,9 @@ def main() -> int:
                     "vol": SLOTS[slot][6] if slot != "metal" else (25 if ctx["metal"] == "silver" else 14),
                     "tax": u.g(code, "tax") or ("equity" if SLOTS[slot][1] == "Equity" else "other"),
                 })
+                if slot in cuts:
+                    c = cuts[slot]
+                    slots[-1]["gate"] = {**c, "toLabel": SLOTS[c["to"]][0]}
             for sk in skipped:
                 tgt = next((x for x in FALLBACK.get(sk, []) if any(z["key"] == x for z in slots)), None)
                 tgt = next(z for z in slots if z["key"] == tgt) if tgt else max(slots, key=lambda z: z["w"])
@@ -1071,6 +1131,7 @@ def main() -> int:
                 "slots": slots, "mix": mix, "ter": round(sum((u.g(s["code"], "ter") or 0) * s["w"] for s in slots) / 100, 2),
                 "er": round(sum(s["er"] * s["w"] for s in slots) / 100, 2),
                 "hist": {k: past_return(u, slots, k) for k in ("r3y", "r5y")},
+                "gated": sum(c["cut"] for c in cuts.values()),
                 "maxOverlap": max(ovs) if ovs else None, "amcs": len({u.g(c, "amc") for c in codes}),
                 "checks": sum(len(s["checks"]) for s in slots), "changes": pst["changes"],
             }
@@ -1080,7 +1141,7 @@ def main() -> int:
     val = macro.get("valuation") or {}
     out = {"v": VERSION, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "asOf": scr["asOf"],
            "reviewed": state["reviewed"], "nextReview": date(today.year + (today.month == 12), today.month % 12 + 1, 1).isoformat(),
-           "market": {"tilt": tilt, "tiltNow": tilt_now, "components": tilt_comps, "rotation": rotation,
+           "market": {"tilt": tilt, "tiltNow": tilt_now, "components": tilt_comps, "rotation": rotation, "gates": gates,
                       "n50": {k: (val.get("n50") or {}).get(k) for k in ("pe", "pb", "dy", "pePct", "pbPct", "peMed", "pbMed", "r12m")},
                       "valuationAsOf": macro.get("valuationAsOf")},
            "rates": {**rr, "applied": regime},

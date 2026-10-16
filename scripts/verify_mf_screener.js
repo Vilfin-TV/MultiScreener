@@ -442,9 +442,11 @@ function verifySmartSip() {
       ok(!!r, `${id}/${s.key}: fund ${s.code} not in screener`);
       if (!r) continue;
       amc[r[C.amc]] = (amc[r[C.amc]] || 0) + 1;
-      ok(s.w >= 5, `${id}/${s.key}: weight ${s.w}`);
+      ok(s.w >= 5 || (s.w === 0 && s.gate && s.gate.level === 'pause'), `${id}/${s.key}: weight ${s.w}`);
+      if (s.gate) ok(s.gate.cut > 0 && p.slots.some(z => z.key === s.gate.to), `${id}/${s.key}: valuation-gate money has no destination`);
+      if (C.lumpMin != null && r[C.lumpMin] != null) ok(r[C.lumpMin] <= 1000, `${id}/${s.key}: lump-sum minimum ${r[C.lumpMin]}`);
       ok(!(r[C.lock] > 0), `${id}/${s.key}: fund has a lock-in`);
-      if (C.buy != null && r[C.buy] != null) ok(r[C.buy].includes('S'), `${id}/${s.key}: fund not accepting SIPs`);
+      if (C.buy != null && r[C.buy] != null) ok(r[C.buy].includes('S') && r[C.buy].includes('L'), `${id}/${s.key}: fund not open for both lump sums and SIPs`);
       ok(r[C.status] !== 'Out of track', `${id}/${s.key}: fund is Out of track`);
       if (s.key === 'next50') ok(/next 50/i.test(r[C.name]), `${id}/next50: ${r[C.name]} is not a Nifty Next 50 fund`);
       if (s.key === 'value' || s.key === 'momentum') {
