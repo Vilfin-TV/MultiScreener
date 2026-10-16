@@ -58,6 +58,7 @@ RISKS = [("c", "Conservative"), ("b", "Balanced"), ("a", "Aggressive"), ("v", "V
 SLOTS = {
     "core":   ("Large-cap core (Nifty 50 index)", "Equity", ["idx_large"], "index", 3, 500, 15),
     "next50": ("Large-cap growth (Nifty Next 50 index)", "Equity", ["idx_large"], "index", 3, 500, 20),
+    "lmcore": ("Large & mid cap core", "Equity", ["largemid"], "active", 5, 1000, 17),
     "flexi":  ("Diversified equity (flexi / multi / large & mid)", "Equity", ["flexi", "multi", "largemid"], "active", 5, 1000, 16),
     "mid":    ("Mid cap", "Equity", ["mid"], "active", 5, 1000, 19),
     "small":  ("Small cap", "Equity", ["small"], "active", 5, 1000, 23),
@@ -90,15 +91,15 @@ TEMPLATES = {
     "h10b": {"core": 30, "flexi": 20, "mid": 15, "small": 10, "dcore": 15, "metal": 10},
     "h10a": {"core": 25, "flexi": 20, "mid": 15, "small": 15, "theme": 5, "intl": 10, "dcore": 5, "metal": 5},
     # very aggressive: growth-heavy, diversified across market caps, styles (value, momentum), a sector and overseas
-    # every very aggressive plan holds equity + debt + precious metals; the large-cap index is the Nifty Next 50 (3+ yrs)
+    # every very aggressive plan holds equity + debt + precious metals; the core is an active large & mid cap fund (3+ yrs)
     "h1v":  {"core": 15, "baf": 30, "arb": 15, "dshort": 30, "metal": 10},
-    "h3v":  {"next50": 25, "flexi": 25, "mid": 15, "baf": 10, "dmed": 15, "metal": 10},
-    "h5v":  {"next50": 20, "flexi": 20, "mid": 20, "small": 10, "value": 10, "dmed": 10, "metal": 10},
-    "h7v":  {"next50": 15, "flexi": 15, "mid": 15, "small": 15, "value": 10, "theme": 10, "dmed": 10, "metal": 10},
-    "h10v": {"next50": 10, "flexi": 15, "mid": 15, "small": 20, "momentum": 10, "theme": 10, "dmed": 10, "metal": 10},
+    "h3v":  {"lmcore": 30, "flexi": 20, "mid": 15, "baf": 10, "dmed": 15, "metal": 10},
+    "h5v":  {"lmcore": 25, "flexi": 15, "mid": 20, "small": 10, "value": 10, "dmed": 10, "metal": 10},
+    "h7v":  {"lmcore": 20, "flexi": 10, "mid": 20, "small": 15, "value": 10, "theme": 10, "dmed": 5, "metal": 10},
+    "h10v": {"lmcore": 20, "flexi": 10, "mid": 25, "small": 20, "momentum": 10, "theme": 5, "dmed": 5, "metal": 5},
 }
-ORDER = ["core", "next50", "flexi", "mid", "small", "value", "momentum", "theme", "baf", "eqsav", "arb", "dcore", "dmed", "dshort", "metal", "intl"]
-FALLBACK = {"next50": ["flexi", "core"], "dmed": ["dcore", "dshort", "metal"], "value": ["flexi", "core"], "momentum": ["mid", "flexi", "core"], "intl": ["flexi", "core"], "theme": ["flexi", "core"], "small": ["mid", "flexi"], "mid": ["flexi", "core"],
+ORDER = ["core", "next50", "lmcore", "flexi", "mid", "small", "value", "momentum", "theme", "baf", "eqsav", "arb", "dcore", "dmed", "dshort", "metal", "intl"]
+FALLBACK = {"lmcore": ["flexi", "core"], "next50": ["flexi", "core"], "dmed": ["dcore", "dshort", "metal"], "value": ["flexi", "core"], "momentum": ["mid", "flexi", "core"], "intl": ["flexi", "core"], "theme": ["flexi", "core"], "small": ["mid", "flexi"], "mid": ["flexi", "core"],
             "flexi": ["core"], "core": ["flexi"], "metal": ["dcore", "dshort"], "eqsav": ["arb", "baf"], "baf": ["core", "dcore"],
             "dcore": ["dshort", "baf"], "dshort": ["dcore", "arb"], "arb": ["dshort"]}
 
@@ -159,7 +160,7 @@ RX_NOT_CORE = re.compile(r"elss|tax saver|next 50|equal weight|value|quality|mom
 RX_INTL_THEME = re.compile(r"mining|clean energy|energy|innovation|technology|tech\b|agri|real estate|reit|ev\b|electric|"
                            r"healthcare|consumer|commodit|fang|nasdaq|china|brazil|japan|taiwan|asean|emerging|india", re.I)
 SAFE_CREDIT = ("AAA", "Sovereign", "A1+", "Cash")
-EQUITY_BASE = {"core": 11.0, "next50": 12.0, "flexi": 12.0, "mid": 13.0, "small": 13.5, "value": 12.5, "momentum": 13.0, "theme": 12.5, "intl": 10.0}
+EQUITY_BASE = {"core": 11.0, "next50": 12.0, "lmcore": 12.0, "flexi": 12.0, "mid": 13.0, "small": 13.5, "value": 12.5, "momentum": 13.0, "theme": 12.5, "intl": 10.0}
 EQUITY_VAL_KEY = {"core": "n50", "next50": "nn50", "flexi": "n500", "mid": "mid150", "small": "sml250", "value": "n500", "momentum": "n500"}
 ASSUMPTIONS = {"inflation": 5.0, "cess": 4.0, "stcgEquity": 20.0, "ltcgEquity": 12.5, "ltcgExempt": 125000, "ltcgOther": 12.5,
                "equityLtMonths": 12, "otherLtMonths": 24, "metalReturn": 9.0}
@@ -536,12 +537,14 @@ def fund_checks(u, slot, code, ctx):
         if longest:
             chk("Fund-manager tenure", (u.today - longest).days >= 365, f"longest-serving manager since {longest:%b %Y}")
         top10 = (u.pf.get(code) or {}).get("top10")
-        if top10 and slot in ("flexi", "mid", "small", "value"):
+        if top10 and slot in ("flexi", "lmcore", "mid", "small", "value"):
             chk("Portfolio concentration", top10 <= 60, f"top 10 holdings {top10:.0f}%")
     if (kind in ("active", "sector") and not is_idx) or kind == "hybrid":
         deep_checks(u, slot, code, subs, chk)
     if slot == "flexi":
         chk("Market-cap fit", g("size") not in ("Mid", "Small"), f"{g('size') or 'blend'} tilt (mid / small caps have their own slots)")
+    if slot == "lmcore":
+        chk("Market-cap fit", g("size") not in ("Small",), f"{g('size') or 'blend'} tilt (needs large and mid caps)")
     if slot == "mid":
         chk("Market-cap fit", g("size") not in ("Large",), f"{g('size') or 'blend'} tilt")
     if slot == "small":
@@ -682,7 +685,7 @@ def deep_checks(u, slot, code, subs, chk):
     if n >= 3:
         need = math.ceil(n * 0.5)
         chk("Calendar-year record", won >= need, f"beat the category average in {won} of the last {n} years (needs {need})")
-    if d["r2"] is not None and slot in ("flexi", "mid", "small"):
+    if d["r2"] is not None and slot in ("flexi", "lmcore", "mid", "small"):
         chk("True to mandate (R²)", d["r2"] >= 70, f"{d['r2']:.0f}% of moves explained by its benchmark")
     if d["turnover"] is not None and not hybrid:
         t = d["turnover"] * (100 if d["turnover"] <= 5 else 1)
@@ -779,7 +782,9 @@ def expected_return(u, slot, code, ctx, macro):
             base += clamp(((v["peMed"] / v["pe"]) ** 0.1 - 1) * 100, -2.0, 2.0)
         return base
     sub = u.g(code, "sub")
-    if slot in ("core", "next50", "flexi", "mid", "small", "value", "momentum", "theme", "intl"):
+    if slot == "lmcore":
+        gross = (eq("core") + eq("mid")) / 2      # the category holds at least 35% each in large and mid caps
+    elif slot in ("core", "next50", "flexi", "mid", "small", "value", "momentum", "theme", "intl"):
         gross = eq(slot)
     elif slot == "baf":
         gross = 0.6 * eq("core") + 0.4 * (tb364 + 0.6)
@@ -797,7 +802,28 @@ def expected_return(u, slot, code, ctx, macro):
         gross = ASSUMPTIONS["metalReturn"]
     else:
         gross = 8.0
+    if slot in ALPHA_SLOTS and not (sub or "").startswith("idx_"):
+        gross += alpha_credit(u, code)
     return round(gross - (u.g(code, "ter") or 0), 2)
+
+
+ALPHA_SLOTS = ("lmcore", "flexi", "mid", "small", "value", "theme")
+
+
+def alpha_credit(u, code):
+    """Expected-return credit for an active fund's proven skill: a third of its 3-year alpha over its benchmark
+    (only part of past out-performance tends to persist), between −1 and +2 points a year."""
+    a = u.deep(code).get("alpha")
+    return 0.0 if a is None else round(clamp(a / 3, -1.0, 2.0), 2)
+
+
+def past_return(u, slots, col):
+    """Weighted past annual return of the plan's funds (weights re-scaled over funds with that much history)."""
+    have = [(s["w"], u.g(s["code"], col)) for s in slots if u.g(s["code"], col) is not None]
+    tw = sum(w for w, _ in have)
+    if tw < 70:
+        return None
+    return {"v": round(sum(w * r for w, r in have) / tw, 2), "cover": tw}
 
 
 def why(u, slot, code):
@@ -826,7 +852,7 @@ def choose(u, slot, ctx, chosen, amc_count, incumbent, review, cache):
     def overlap_ok(c):
         for o, oslot in chosen.items():
             ov = u.overlap(c, o)
-            lim = 30 if {"core", "next50"} & {slot, oslot} else 20
+            lim = 30 if {"core", "next50", "lmcore"} & {slot, oslot} else 20
             if ov is not None and ov > lim:
                 return False
         return True
@@ -863,7 +889,7 @@ def choose(u, slot, ctx, chosen, amc_count, incumbent, review, cache):
     return new, cand[1:3], "new", ""
 
 
-SEGMENTS = [("large", "Large caps", "n50", ["core", "next50", "flexi"]), ("mid", "Mid caps", "mid150", ["mid"]), ("small", "Small caps", "sml250", ["small"])]
+SEGMENTS = [("large", "Large caps", "n50", ["core", "next50", "lmcore", "flexi"]), ("mid", "Mid caps", "mid150", ["mid"]), ("small", "Small caps", "sml250", ["small"])]
 
 
 def segment_rotation(macro):
@@ -905,7 +931,7 @@ def apply_tilt(weights, tilt, hz):
     w = dict(weights)
     if hz in ("h1", "h3") or not tilt:
         return w, 0
-    eq_take = ["core", "next50", "flexi"] if tilt > 0 else ["small", "mid", "flexi", "next50", "core"]
+    eq_take = ["core", "next50", "lmcore", "flexi"] if tilt > 0 else ["small", "mid", "flexi", "lmcore", "next50", "core"]
     dt_take = ["dcore", "dmed", "dshort", "metal", "baf", "eqsav", "arb"]
     moved, need = 0, abs(tilt)
     for k in (dt_take if tilt > 0 else eq_take):
@@ -1035,7 +1061,7 @@ def main() -> int:
                     pst["slots"].pop(k)
             pst["changes"] = (changes + pst.get("changes", []))[:6]
             codes = [s["code"] for s in slots]
-            eq = [c for c in codes if chosen.get(c) in ("core", "next50", "flexi", "mid", "small", "value", "momentum", "theme")]
+            eq = [c for c in codes if chosen.get(c) in ("core", "next50", "lmcore", "flexi", "mid", "small", "value", "momentum", "theme")]
             ovs = [o for o in (u.overlap(a, b) for i, a in enumerate(eq) for b in eq[i + 1:]) if o is not None]
             mix = {}
             for s in slots:
@@ -1044,6 +1070,7 @@ def main() -> int:
                 "horizon": hz_label, "risk": rk_label, "years": yrs, "yearsMin": ymin, "yearsMax": ymax, "tilt": applied, "rotated": rotated,
                 "slots": slots, "mix": mix, "ter": round(sum((u.g(s["code"], "ter") or 0) * s["w"] for s in slots) / 100, 2),
                 "er": round(sum(s["er"] * s["w"] for s in slots) / 100, 2),
+                "hist": {k: past_return(u, slots, k) for k in ("r3y", "r5y")},
                 "maxOverlap": max(ovs) if ovs else None, "amcs": len({u.g(c, "amc") for c in codes}),
                 "checks": sum(len(s["checks"]) for s in slots), "changes": pst["changes"],
             }
