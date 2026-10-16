@@ -790,6 +790,7 @@ def main() -> int:
             for k in ("3y", "5y", "10y", "si"):
                 rec["r"][k] = None
             pf.pop("cy", None)
+            pf.pop("rr3", None)
         for k in ("cy", "vol", "mdd", "vol3", "rr3", "dvol3", "beta", "corr", "first"):
             if pf.get(k) is not None:
                 rec[k] = pf[k]

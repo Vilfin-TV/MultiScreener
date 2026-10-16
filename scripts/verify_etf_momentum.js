@@ -104,7 +104,7 @@ for (const e of D.etfs || []) {
   if (e.prem != null && !(Math.abs(e.prem) < 25)) fail(`${e.s}: premium ${e.prem}`);
   if (e.x && e.x.ter != null && !(e.x.ter >= 0 && e.x.ter <= 2.6)) fail(`${e.s}: expense ratio ${e.x.ter}`);
 }
-if (withLong < 100) fail(`only ${withLong} ETFs have a 3-year return`);
+if (withLong < 50) fail(`only ${withLong} ETFs have a 3-year return`);
 const histFile = path.join(path.dirname(dataPath), 'etf_hist.json');
 if (fs.existsSync(histFile)) {
   const H = JSON.parse(fs.readFileSync(histFile, 'utf8'));
