@@ -41,8 +41,32 @@ INDICES = {
     "Nifty CPSE": "cpse", "Nifty MNC": "mnc", "Nifty Commodities": "commodities", "Nifty Metal": "metal",
     "Nifty India Manufacturing": "mfg", "Nifty India Defence": "defence", "Nifty Media": "media",
     "Nifty Services Sector": "services", "Nifty Housing": "housing", "Nifty Transportation & Logistics": "transport",
-    "Nifty India Digital": "digital",
+    "Nifty India Digital": "digital", "Nifty Capital Markets": "capmkt", "Nifty Financial Services Ex-Bank": "finexbank",
+    "Nifty MidSmall IT & Telecom": "msit", "Nifty Chemicals": "chemicals", "Nifty Textile": "textile",
 }
+# alternative spellings used by the exchange over the years (matched after normalising case and punctuation)
+ALIASES = {
+    "capmkt": ["Nifty Capital Market", "Nifty Capital Markets Index"],
+    "finexbank": ["Nifty Financial Services Ex Bank", "Nifty Financial Services ex-Bank Index", "Nifty Fin Services Ex-Bank"],
+    "msit": ["Nifty MidSmall IT and Telecom", "Nifty Midsmall IT & Telecom Index"],
+    "chemicals": ["Nifty Chemical", "Nifty Chemicals Index", "Nifty India Chemicals"],
+    "textile": ["Nifty Textiles", "Nifty India Textile", "Nifty India Textiles", "Nifty Textile Index"],
+    "defence": ["Nifty Defence", "Nifty India Defence Index"],
+    "transport": ["Nifty Transportation and Logistics", "Nifty India Transportation & Logistics"],
+    "oilgas": ["Nifty Oil and Gas", "Nifty Oil & Gas Index"],
+    "commodities": ["Nifty Commodity"], "health": ["Nifty Healthcare"], "mfg": ["Nifty Manufacturing"],
+}
+
+
+def norm_name(n: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", n.lower().replace("&", "and"))
+
+
+NAME_KEY = {norm_name(k): v for k, v in INDICES.items()}
+for _k, _names in ALIASES.items():
+    for _n in _names:
+        NAME_KEY.setdefault(norm_name(_n), _k)
+SEEN_NAMES: set = set()
 START_MONTH = (2016, 1)
 
 
@@ -131,12 +155,12 @@ def close_file(s, d: date):
                                       hdr.index("p/e"), hdr.index("p/b"), hdr.index("div yield"))
     except (ValueError, StopIteration):
         return None
-    lower = {k.lower(): v for k, v in INDICES.items()}
     for ln in lines[1:]:
         c = ln.split(",")
         if len(c) <= max(i_n, i_c, i_pe, i_pb, i_dy):
             continue
-        key = lower.get(c[i_n].strip().lower())
+        SEEN_NAMES.add(c[i_n].strip())
+        key = NAME_KEY.get(norm_name(c[i_n].strip()))
         if key:
             rows[key] = [num(c[i_pe]), num(c[i_pb]), num(c[i_dy]), num(c[i_c])]
     return rows or None
@@ -169,6 +193,23 @@ def update_history(s) -> dict:
         y, m = (y + (m == 12), m % 12 + 1)
     s_ = time.time()
     got = 0
+    keyset = sorted(set(INDICES.values()))
+    if h.get("keys") != keyset:                 # new indices tracked → re-read each stored month-end file once
+        refreshed = 0
+        for mk, rec in list(months.items()):
+            if time.time() - s_ > 420:
+                break
+            try:
+                rows = close_file(s, date.fromisoformat(rec["d"]))
+            except Exception:  # noqa: BLE001
+                rows = None
+            if rows:
+                months[mk] = {"d": rec["d"], "v": rows}
+                refreshed += 1
+            time.sleep(0.2)
+        if refreshed >= len(months) - 2:
+            h["keys"] = keyset
+        log.info("Valuation history: re-read %d/%d month-end files for newly tracked indices", refreshed, len(months))
     for y, m in todo:
         if (y, m) == (today.year, today.month) or time.time() - s_ > 600:
             continue
@@ -187,6 +228,11 @@ def update_history(s) -> dict:
                 h["latest"] = {"d": d.isoformat(), "v": rows}
                 break
     h["months"] = dict(sorted(months.items()))
+    latest_keys = set(((h.get("latest") or {}).get("v") or {}).keys())
+    missing = sorted(set(INDICES.values()) - latest_keys)
+    if missing:
+        log.warning("Indices not found in the latest close file: %s · candidates: %s", missing,
+                    sorted(n for n in SEEN_NAMES if re.search(r"textile|chemical|capital|ex.?bank|telecom|defen", n, re.I)))
     log.info("Valuation history: %d months (+%d this run), latest %s", len(h["months"]), got, (h.get("latest") or {}).get("d"))
     HIST.write_text(json.dumps(h, separators=(",", ":")))
     return h
