@@ -47,7 +47,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MF = ROOT / "data" / "mf"
 OUT = MF / "smartsip.json"
 STATE = MF / "smartsip_state.json"
-VERSION = 2
+VERSION = 3
 log = logging.getLogger("smartsip")
 
 HORIZONS = [("h1", "Under 3 years", 2, 1, 3), ("h3", "3–5 years", 4, 3, 5), ("h5", "5–7 years", 6, 5, 7),
@@ -134,6 +134,13 @@ ASSUMPTIONS = {"inflation": 5.0, "cess": 4.0, "stcgEquity": 20.0, "ltcgEquity": 
 MONTHS = {m: i for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
 
 
+def _num(x):
+    try:
+        return float(x)
+    except (TypeError, ValueError):
+        return None
+
+
 def load(p, default=None):
     try:
         return json.loads(Path(p).read_text())
@@ -217,6 +224,53 @@ class Universe:
         if sub and sub not in self.det:
             self.det[sub] = load(MF / "d" / f"{sub}.json", {}) or {}
         return ((self.det.get(sub) or {}).get(str(code)) or {}).get("info") or {}
+
+    def detail(self, code):
+        sub = self.g(code, "sub")
+        if sub and sub not in self.det:
+            self.det[sub] = load(MF / "d" / f"{sub}.json", {}) or {}
+        return (self.det.get(sub) or {}).get(str(code)) or {}
+
+    def deep(self, code):
+        """Flat dict of the deeper analytics used by the equity / hybrid checklist."""
+        d = self.detail(code)
+        rk, ro = d.get("risk") or {}, d.get("roll") or {}
+        r3, r5 = ro.get("3") or {}, ro.get("5") or {}
+        return {"roll3avg": r3.get("avg"), "downCap": rk.get("downCap"), "upCap": rk.get("upCap"), "alpha": rk.get("alpha"), "ir": rk.get("ir"),
+                "r2": rk.get("r2"), "sharpe": rk.get("sharpe"), "sortino": rk.get("sortino"), "std": rk.get("std"),
+                "min3": r3.get("min"), "beat5": r5.get("beat"), "n5": r5.get("n"), "cal": d.get("cal") or {},
+                "turnover": _num((d.get("info") or {}).get("turnover"))}
+
+    def deep_rank(self, subs, key, code, higher=True):
+        """Percentile (0 = worst, 1 = best) of a deep metric within the category."""
+        cache = self.cat_med.setdefault(("deep", tuple(sorted(subs)), key), {})
+        if not cache:
+            for c in self.by_subs(subs):
+                v = self.deep(c).get(key)
+                if v is not None:
+                    cache[c] = v
+        v = cache.get(code)
+        if v is None or len(cache) < 4:
+            return None
+        vals = sorted(cache.values())
+        below = sum(1 for x in vals if x < v)
+        p = below / (len(vals) - 1) if len(vals) > 1 else 0.5
+        return p if higher else 1 - p
+
+    def cal_vs_category(self, subs, code):
+        """(years beating the category average, years compared) over the last five calendar years."""
+        key = ("calavg", tuple(sorted(subs)))
+        if key not in self.cat_med:
+            acc = {}
+            for c in self.by_subs(subs):
+                for y, v in (self.deep(c)["cal"] or {}).items():
+                    if v is not None:
+                        acc.setdefault(y, []).append(v)
+            self.cat_med[key] = {y: sum(v) / len(v) for y, v in acc.items() if len(v) >= 4}
+        avg = self.cat_med[key]
+        cal = self.deep(code)["cal"]
+        yrs = sorted(y for y in cal if y in avg and cal[y] is not None)[-5:]
+        return sum(1 for y in yrs if cal[y] >= avg[y]), len(yrs)
 
     def holdings(self, code):
         p = self.pf.get(code) or {}
@@ -432,11 +486,13 @@ def fund_checks(u, slot, code, ctx):
     chk("Status", g("status") != "Out of track" and not (kind in ("active", "sector", "hybrid") and g("status") == "Underperforming"),
         g("status") or "not rated yet")
     if kind in ("active", "sector") and not is_idx:
-        b3 = g("beat3")
-        chk("Beats benchmark (rolling 3Y)", b3 is not None and b3 >= 50, f"{b3:.0f}% of periods" if b3 is not None else "no 3-year record")
-        r3, rm = g("roll3"), cs.get("roll3")
-        chk("Rolling 3Y return vs category", r3 is not None and (rm is None or r3 >= rm),
-            f"{r3:.1f}% vs median {rm:.1f}%" if r3 is not None and rm is not None else "–")
+        if slot not in ("baf", "eqsav"):
+            b3 = g("beat3")
+            chk("Beats benchmark (rolling 3Y)", b3 is not None and b3 >= 50, f"{b3:.0f}% of periods" if b3 is not None else "no 3-year record")
+        r3 = g("roll3")
+        pr = u.deep_rank(subs, "roll3avg", code)
+        chk("Rolling 3Y return vs category", r3 is not None and (pr is None or pr >= 0.4),
+            f"{r3:.1f}% a year · better than {round(pr * 100)}% of peers" if r3 is not None and pr is not None else (f"{r3:.1f}%" if r3 is not None else "no 3-year record"))
         c = g("cons")
         chk("Consistency", c is None or c >= 40, f"{c:.0f}/100" if c is not None else "not scored")
         md, mm = g("mdd"), cs.get("mdd")
@@ -448,6 +504,8 @@ def fund_checks(u, slot, code, ctx):
         top10 = (u.pf.get(code) or {}).get("top10")
         if top10 and slot in ("flexi", "mid", "small"):
             chk("Portfolio concentration", top10 <= 60, f"top 10 holdings {top10:.0f}%")
+    if (kind in ("active", "sector") and not is_idx) or kind == "hybrid":
+        deep_checks(u, slot, code, subs, chk)
     if slot == "flexi":
         chk("Market-cap fit", g("size") not in ("Mid", "Small"), f"{g('size') or 'blend'} tilt (mid / small caps have their own slots)")
     if slot == "mid":
@@ -484,6 +542,54 @@ def fund_checks(u, slot, code, ctx):
     if slot == "theme":
         chk("Sector valuation", True, f"{ctx.get('sector_label', '')} chosen on valuation and momentum")
     return out
+
+
+def deep_checks(u, slot, code, subs, chk):
+    """Extra quality checks for actively managed equity and hybrid funds (3-year monthly risk, rolling and calendar data)."""
+    d = u.deep(code)
+    hybrid = slot in ("baf", "eqsav")
+    dc, uc = d["downCap"], d["upCap"]
+    if dc is not None:
+        lim = (80 if slot == "baf" else 60) if hybrid else 100
+        chk("Downside protection", dc <= lim, f"captured {dc:.0f}% of the benchmark's falls (limit {lim}%)")
+    if not hybrid:
+        if dc and uc is not None:
+            chk("Upside vs downside capture", uc / dc >= 1.0, f"up {uc:.0f}% / down {dc:.0f}%")
+        if d["alpha"] is not None:
+            chk("Alpha vs benchmark (3Y)", d["alpha"] > 0, f"{d['alpha']:+.2f}% a year")
+        if d["ir"] is not None:
+            chk("Information ratio (3Y)", d["ir"] > 0, f"{d['ir']:.2f}")
+    for key, lab in (("sharpe", "Sharpe ratio"), ("sortino", "Sortino ratio")):
+        p = u.deep_rank(subs, key, code)
+        if p is not None:
+            chk(f"{lab} vs category", p >= 0.35, f"{d[key]:.2f} · better than {round(p * 100)}% of peers")
+    p = u.deep_rank(subs, "std", code, higher=False)
+    if p is not None:
+        chk("Volatility vs category", p >= 0.2, f"{d['std']:.1f}% a year · calmer than {round(p * 100)}% of peers")
+    p = u.deep_rank(subs, "min3", code)
+    if p is not None:
+        chk("Worst rolling 3Y return", p >= 0.3, f"{d['min3']:.1f}% a year · better than {round(p * 100)}% of peers")
+    if d["beat5"] is not None and (d["n5"] or 0) >= 120 and not hybrid:
+        chk("Beats benchmark (rolling 5Y)", d["beat5"] >= 50, f"{d['beat5']:.0f}% of periods")
+    won, n = u.cal_vs_category(subs, code)
+    if n >= 3:
+        need = math.ceil(n * 0.5)
+        chk("Calendar-year record", won >= need, f"beat the category average in {won} of the last {n} years (needs {need})")
+    if d["r2"] is not None and slot in ("flexi", "mid", "small"):
+        chk("True to mandate (R²)", d["r2"] >= 70, f"{d['r2']:.0f}% of moves explained by its benchmark")
+    if d["turnover"] is not None and not hybrid:
+        t = d["turnover"] * (100 if d["turnover"] <= 5 else 1)
+        chk("Portfolio turnover", t <= 150, f"{t:.0f}% a year")
+    rec = u.g(code, "rec")
+    if rec is not None:
+        chk("Recent form", rec >= 25, f"{rec:.0f}/100 recency score")
+    rating = u.g(code, "rating")
+    if rating:
+        chk("VilfinTV rating", rating >= 3, f"{rating} star{'s' if rating > 1 else ''}")
+    if hybrid:
+        md = u.g(code, "mdd")
+        lim = -20 if slot == "baf" else -10
+        chk("Smaller falls than equity", md is None or md >= lim, f"worst fall {md:.1f}% (limit {lim}%)" if md is not None else "–")
 
 
 def scores(u, slot, codes, kind):
