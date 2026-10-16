@@ -121,6 +121,11 @@ jobs:
         timeout-minutes: 15
         run: python scripts/build_macro.py
 
+      - name: Fund portfolio P/E (holdings × daily stock P/E)
+        continue-on-error: true
+        timeout-minutes: 5
+        run: python scripts/build_fund_pe.py
+
       - name: Smart SIP model plans
         run: python scripts/build_smart_sip.py
 
