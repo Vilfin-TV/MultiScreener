@@ -19,6 +19,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/build_mf_holdings.py'
+      - 'scripts/fetch_fundhouse_loads.py'
       - '.github/workflows/mf_holdings.yml'
 
 permissions:
@@ -54,6 +55,10 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Exit loads from fund houses missing in the scheme master
+        continue-on-error: true
+        run: xvfb-run -a python scripts/fetch_fundhouse_loads.py
+
       - name: Build holdings
         run: |
           mkdir -p .mfcache/holdings
@@ -70,6 +75,7 @@ jobs:
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add -A data/mf/p
+          git add data/mf/exitload_extra.json 2>/dev/null || true
           if git diff --staged --quiet; then
             echo "No changes to holdings data."
             exit 0

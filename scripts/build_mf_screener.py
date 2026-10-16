@@ -99,6 +99,11 @@ SNAPS = {}
 TER = {}
 ENRICH = {}
 SCORES = {}
+# exit loads read directly from fund houses missing from the scheme master (see fetch_fundhouse_loads.py)
+try:
+    LOADS_EXTRA = json.loads((Path(__file__).resolve().parent.parent / "data" / "mf" / "exitload_extra.json").read_text())
+except (OSError, ValueError):
+    LOADS_EXTRA = {}
 RISKOMETER = ["Low", "Low to Moderate", "Moderate", "Moderately High", "High", "Very High"]
 
 
@@ -911,7 +916,8 @@ def merged_facts(r, f):
     if not lock:
         lock = 3 if r["sub"] == "elss" else (5 if r["sub"] in ("retire", "child") else 0)
     m["lock"] = lock
-    lines = E.parse_exit_load(det.get("load")) or E.parse_exit_load(ssd.get("exitLoadSsd"))
+    lines = (E.parse_exit_load(det.get("load")) or E.parse_exit_load(ssd.get("exitLoadSsd"))
+             or LOADS_EXTRA.get(str(r["code"])) or [])
     m["exitLoad"] = lines
     m["exitNil"] = E.is_nil_load(lines) if lines else None
     m["managers"] = ssd.get("managers") or [{"name": x.strip(), "since": "", "role": ""}
