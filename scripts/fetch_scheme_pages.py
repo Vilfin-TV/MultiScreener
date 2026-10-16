@@ -169,30 +169,34 @@ def list_page(site: str, urls: list[str]) -> str:
     return min(cands, key=len) if cands else site
 
 
-def browser_links(sites: dict[str, str]) -> dict[str, list[str]]:
+def browser_links(sites: dict[str, str], budget_s: float = 900, per_site_s: float = 70) -> dict[str, list[str]]:
     """Render each fund-house site, follow its fund-listing pages and collect every link (sites without sitemaps)."""
     from playwright.sync_api import sync_playwright
     out = {}
     with sync_playwright() as pw:
         b, ctx = H.browser(pw)
+        t_all = time.time()
         for amc, site in sites.items():
-            links, visited = set(), set()
+            if time.time() - t_all > budget_s:
+                log.info("  browser budget used up; %s skipped this week", amc)
+                continue
+            links, visited, t_site = set(), set(), time.time()
             queue = [site]
-            while queue and len(visited) < 6:
+            while queue and len(visited) < 5 and time.time() - t_site < per_site_s:
                 url = queue.pop(0)
                 if url in visited:
                     continue
                 visited.add(url)
                 try:
                     p = ctx.new_page()
-                    p.goto(url, wait_until="domcontentloaded", timeout=60000)
+                    p.goto(url, wait_until="domcontentloaded", timeout=35000)
                     try:
-                        p.wait_for_load_state("networkidle", timeout=15000)
+                        p.wait_for_load_state("networkidle", timeout=8000)
                     except Exception:  # noqa: BLE001
                         pass
-                    for _ in range(4):
+                    for _ in range(3):
                         p.mouse.wheel(0, 3000)
-                        p.wait_for_timeout(500)
+                        p.wait_for_timeout(400)
                     got = p.eval_on_selector_all("a", "as => as.map(a => [a.href, (a.innerText || '').trim()])")
                     p.close()
                 except Exception as e:  # noqa: BLE001

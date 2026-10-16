@@ -104,6 +104,11 @@ try:
     LOADS_EXTRA = json.loads((Path(__file__).resolve().parent.parent / "data" / "mf" / "exitload_extra.json").read_text())
 except (OSError, ValueError):
     LOADS_EXTRA = {}
+# each fund's page on its fund house's site + the fund house's website (see fetch_scheme_pages.py)
+try:
+    PAGES = json.loads((Path(__file__).resolve().parent.parent / "data" / "mf" / "scheme_pages.json").read_text())
+except (OSError, ValueError):
+    PAGES = {}
 RISKOMETER = ["Low", "Low to Moderate", "Moderate", "Moderately High", "High", "Very High"]
 
 
@@ -863,6 +868,14 @@ def main():
     dump_validation(universe, work, results, facts, bench, asof, risk_asof, series, month_ends, rf_vals, bench_me)
 
 
+def _site(u):
+    """Normalise a fund-house address from the scheme master ("www.x.com", "https:\\\\x.com")."""
+    if not u:
+        return None
+    u = u.strip().replace("\\", "/").replace("https:////", "https://").replace("http:////", "http://")
+    return u if re.match(r"https?://", u, re.I) else "https://" + u.lstrip("/")
+
+
 def ter_of(r, f):
     """(TER %, as-of date): AMFI's official daily disclosure first, scheme facts otherwise."""
     o = TER.get(r["code"])
@@ -929,7 +942,9 @@ def merged_facts(r, f):
     sid = e.get("sid")
     m["docs"] = {"sid": f"{E.PORTAL}/spages/{sid}.pdf" if sid else (f.get("detail_info") or None),
                  "ssd": f"{E.PORTAL}/spages/SSD_{sid}.pdf" if sid else None,
-                 "website": det.get("website") or None}
+                 "website": (PAGES.get("_sites") or {}).get(r["amcName"]) or _site(det.get("website")),
+                 "scheme": PAGES.get(str(r["code"])) or None,
+                 "list": (PAGES.get("_lists") or {}).get(r["amcName"]) or None}
     m["extra"] = {k: ssd.get(k) for k in ("faceValue", "allotment", "prc", "custodian", "registrar", "maxTer", "listing",
                                           "category", "type") if ssd.get(k)}
     if det.get("launch"):

@@ -1214,6 +1214,7 @@ function renderSnap(f, det){
     '</div><div class="gauge">' + gaugeSVG(f.risk) + '<div><small>Riskometer</small><br><b>' + (isNum(f.risk) ? esc(D.riskometer[f.risk]) + ' Risk' : 'Not disclosed') + '</b></div></div></div>' +
     '<div class="snap-acts"><button class="btn pri" id="cmpAdd" type="button">' + (inCmp ? '✓ Added to compare' : '+ Add to compare') + '</button>' +
       '<button class="btn" id="shareBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4M12 2v13"/></svg>Share</button>' +
+      (det && det.info && det.info.docs && (det.info.docs.scheme || det.info.docs.website) ? '<a class="btn" href="' + esc(det.info.docs.scheme || det.info.docs.website) + '" target="_blank" rel="noopener noreferrer">' + (det.info.docs.scheme ? 'Fund house scheme page' : esc(f.amcName) + ' website') + ' ↗</a>' : '') +
       (det && det.info && det.info.sid ? '<a class="btn" href="' + esc(det.info.sid) + '" target="_blank" rel="noopener noreferrer">Scheme documents ↗</a>' : '') + '</div>';
 }
 function kpi(k, v, s, small){ return '<div class="kpi"><div class="kpi-k">' + k + '</div><div class="kpi-v' + (small ? ' sm' : '') + '">' + v + '</div>' + (s ? '<div class="kpi-s">' + s + '</div>' : '') + '</div>'; }
@@ -1635,11 +1636,14 @@ function pInfo(f, det){
     ['Portfolio turnover', isNum(info.turnover) ? fmt(info.turnover) + '×' : '–'],
     ['Custodian', esc(ex.custodian || '') || '–'],
     ['Registrar', esc(ex.registrar || '') || '–'],
+    ['Fund house website', docs.website ? '<a href="' + esc(docs.website) + '" target="_blank" rel="noopener noreferrer">' + esc(docs.website.replace(/^https?:\/\//, '').replace(/\/$/, '')) + ' ↗</a>' : '–'],
+    ['Scheme page', docs.scheme ? '<a href="' + esc(docs.scheme) + '" target="_blank" rel="noopener noreferrer">View on ' + esc(f.amcName) + ' site ↗</a>' : (docs.list ? '<a href="' + esc(docs.list) + '" target="_blank" rel="noopener noreferrer">Browse ' + esc(f.amcName) + ' funds ↗</a>' : '–')],
     ['ISIN', '<span class="mono">' + esc(f.isin || '–') + '</span>'],
     ['AMFI scheme code', '<span class="mono">' + f.code + '</span>'],
     ['Scheme name (AMFI)', esc(info.amfiName || f.name)]
   ];
-  var docLinks = [[docs.sid, 'Scheme Information Document'], [docs.ssd, 'Scheme Summary'], [docs.website, esc(f.amcName) + ' website']].filter(function(d){ return d[0]; })
+  var docLinks = [[docs.scheme, 'Scheme page on ' + esc(f.amcName) + ' site'], [docs.scheme ? null : docs.list, 'All ' + esc(f.amcName) + ' funds on its site'],
+      [docs.sid, 'Scheme Information Document'], [docs.ssd, 'Scheme Summary'], [docs.website, esc(f.amcName) + ' website']].filter(function(d){ return d[0]; })
     .map(function(d){ return '<a class="btn" href="' + esc(d[0]) + '" target="_blank" rel="noopener noreferrer">' + d[1] + ' ↗</a>'; }).join('');
   return '<div class="grid2e"><div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Exit load</div>' + loadHtml + '</div>' +
       '<div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Taxation</div>' + taxHtml + '</div></div>' +
