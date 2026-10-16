@@ -21,15 +21,25 @@ jobs:
                   k["ssl_context"] = ctx; return super().init_poolmanager(*a, **k)
           s=requests.Session(); s.mount("https://api.mospi.gov.in", Legacy()); s.headers.update({"User-Agent":"Mozilla/5.0","Accept":"application/json"})
           base="https://api.mospi.gov.in/api/cpi/"
-          for q in ["getCPIIndex?base_year=2012&series=Current&year=2026&format=json",
-                    "getCPIIndex?base_year=2012&series=Current&year=2026&state_code=99&sector_code=3&group_code=0&format=json",
-                    "getCPIIndex?base_year=2024&series=Current&year=2026&format=json",
-                    "getCPIIndex?year=2026&Format=JSON",
-                    "getCPIInflation?year=2026",
-                    "getAllIndiaInflation?year=2026"]:
+          for u in ["https://api.mospi.gov.in/swagger.json","https://api.mospi.gov.in/api-docs","https://api.mospi.gov.in/swagger/v1/swagger.json",
+                    "https://api.mospi.gov.in/api/swagger.json","https://api.mospi.gov.in/docs/swagger.json","https://api.mospi.gov.in/static/swagger.json"]:
               try:
-                  r=s.get(base+q,timeout=40); print("==",q,r.status_code,len(r.text)); print(r.text[:900])
+                  r=s.get(u,timeout=40); print("==",u,r.status_code,len(r.text))
+                  if "cpi" in r.text.lower(): 
+                      import re as _r
+                      for m in _r.finditer(r'"/api/cpi/[^"]+"', r.text): print("  path", m.group(0))
+                      i=r.text.lower().find("getcpiindex"); print(r.text[max(0,i-200):i+3000])
+              except Exception as e: print("==",u,"ERR",str(e)[:200])
+          for q in ["getCPIIndex?Format=JSON","getCPIIndex?base_year=2012&Format=JSON&year=2025","getCPIIndex?BaseYear=2012&Year=2025&Format=JSON",
+                    "getCPIIndex?base_year=2012&series=Current&year=2025&month_code=12&format=json","getCPIIndex?limit=5"]:
+              try:
+                  r=s.get(base+q,timeout=40); print("==",q,r.status_code,len(r.text)); print(r.text[:600])
               except Exception as e: print("==",q,"ERR",str(e)[:200])
+          try:
+              r=s.get("https://api.mospi.gov.in/static/js/main.addddd18.js",timeout=40); t=r.text; print("JS",r.status_code,len(t))
+              import re as _r
+              for m in _r.finditer(r"cpi[A-Za-z/]*\?[^\"'`]{0,200}|/api/cpi/[A-Za-z]+", t, _r.I): print("  js", m.group(0)[:220])
+          except Exception as e: print("JS ERR", e)
           PY
           git config user.name "github-actions[bot]"; git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           git add .probe && git commit -m "chore(dev): global macro probe [skip ci]" && git push
