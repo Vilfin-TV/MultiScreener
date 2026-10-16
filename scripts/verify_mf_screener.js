@@ -311,6 +311,10 @@ function verifyFiles() {
   const html = path.join(ROOT, 'india_mf_screener.html');
   if (fs.existsSync(html)) {
     const src = fs.readFileSync(html, 'utf8');
+    // every inline script must parse — a syntax error would blank the whole page
+    for (const m of src.matchAll(/<script>([\s\S]*?)<\/script>/g)) {
+      try { new Function(m[1]); checks++; } catch (e) { fail(`page script does not parse: ${e.message}`); }
+    }
     for (const bad of [/workers\.dev/i, /mfapi/i, /captnemo/i, /kuvera/i, /amfiindia\.com\/spages/i, /nseindia\.com\/api/i,
                        /free ai/i, /no api key/i, /powered by/i, /serverless/i, /live web search/i])
       ok(!bad.test(src), `page contains forbidden reference ${bad}`);
