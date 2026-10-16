@@ -152,13 +152,63 @@ def match(funds: list[dict], urls: list[str], brand: set) -> dict[int, str]:
                         best.append((extra, plan, len(u), u))
         if not best:
             continue
-        best.sort()
-        top = [b for b in best if b[:2] == best[0][:2]]
-        # several different scheme pages fit equally well → too ambiguous to link
-        stems = {re.sub(r"/(direct|regular)[^/]*$|[-/](dir|reg)[-_]?g(rowth)?$", "", urlparse(b[3]).path.rstrip("/").lower()) for b in top}
-        if len(stems) > 1:
-            continue
+        best.sort()                              # fewest extra words, direct plan, shortest address
         out[f["code"]] = best[0][3]
+    return out
+
+
+LIST_RX = re.compile(r"^/?(mutual-?funds?|our-?(schemes|funds|products)|products?|schemes?|funds?|mutual-fund-schemes|"
+                     r"fund-?finder|explore[^/]*|ourfunds/our-funds|invest/mutual-fund-schemes|funds-and-solutions/funds-explorer/all-mutual-funds|"
+                     r"mf-scheme-list\.html|our-funds)/?$", re.I)
+
+
+def list_page(site: str, urls: list[str]) -> str:
+    """The fund house's page listing all its funds (falls back to the home page)."""
+    host = urlparse(site).netloc
+    cands = [u for u in urls if urlparse(u).netloc.endswith(host.replace("www.", "")) and LIST_RX.match(urlparse(u).path)]
+    return min(cands, key=len) if cands else site
+
+
+def browser_links(sites: dict[str, str]) -> dict[str, list[str]]:
+    """Render each fund-house site, follow its fund-listing pages and collect every link (sites without sitemaps)."""
+    from playwright.sync_api import sync_playwright
+    out = {}
+    with sync_playwright() as pw:
+        b, ctx = H.browser(pw)
+        for amc, site in sites.items():
+            links, visited = set(), set()
+            queue = [site]
+            while queue and len(visited) < 6:
+                url = queue.pop(0)
+                if url in visited:
+                    continue
+                visited.add(url)
+                try:
+                    p = ctx.new_page()
+                    p.goto(url, wait_until="domcontentloaded", timeout=60000)
+                    try:
+                        p.wait_for_load_state("networkidle", timeout=15000)
+                    except Exception:  # noqa: BLE001
+                        pass
+                    for _ in range(4):
+                        p.mouse.wheel(0, 3000)
+                        p.wait_for_timeout(500)
+                    got = p.eval_on_selector_all("a", "as => as.map(a => [a.href, (a.innerText || '').trim()])")
+                    p.close()
+                except Exception as e:  # noqa: BLE001
+                    log.info("  %s: %s not reachable (%s)", amc, url[:80], str(e)[:80])
+                    continue
+                host = urlparse(site).netloc.replace("www.", "")
+                for href, txt in got:
+                    if not href.startswith("http") or host not in urlparse(href).netloc:
+                        continue
+                    links.add(href.split("#")[0])
+                    path = urlparse(href).path
+                    if LIST_RX.match(path) or (re.search(r"\b(all|our|explore|view)\b.*\bfunds?\b|\bfunds?\b$", txt, re.I) and len(path) < 60):
+                        queue.append(href.split("#")[0])
+            out[amc] = sorted(links)
+            log.info("  %s: %d links from %d pages", amc, len(links), len(visited))
+        b.close()
     return out
 
 
@@ -176,30 +226,43 @@ def main():
     prev = json.load(open(OUT)) if OUT.exists() else {}
     res, stats = {}, {}
 
-    def work(amc):
+    all_urls = {}
+
+    def work2(amc):
         site = WEBSITES.get(amc)
-        if not site:
-            return amc, {}, 0
-        urls = sitemap_urls(site)
+        urls = sitemap_urls(site) if site else []
         brand = set(BRAND_WORDS.findall(amc.lower())) | {"mf", "mutual", "amc", "india", "asset", "management"}
-        m = match(by_amc[amc], urls, brand)
-        if len(m) < 0.6 * len(by_amc[amc]) and urls:
-            fundish = [u for u in urls if re.search(r"fund|scheme|product", u, re.I) and not SKIP_PATH.search(urlparse(u).path)]
-            log.info("  sample %s: %s", amc, " | ".join((fundish or urls)[:12]))
-        return amc, m, len(urls)
+        return amc, urls, match(by_amc[amc], urls, brand)
 
     with ThreadPoolExecutor(max_workers=8) as ex:
-        for amc, m, n in ex.map(work, sorted(by_amc)):
+        for amc, urls, m in ex.map(work2, sorted(by_amc)):
+            all_urls[amc] = urls
             res.update(m)
-            stats[amc] = (n, len(m), len(by_amc[amc]))
-            log.info("%-24s sitemap URLs %6d · matched %3d of %3d", amc, n, len(m), len(by_amc[amc]))
-    # keep last week's link for a fund whose fund house site was unreachable this time
+            stats[amc] = (len(urls), len(m), len(by_amc[amc]))
+            log.info("%-24s sitemap URLs %6d · matched %3d of %3d", amc, len(urls), len(m), len(by_amc[amc]))
+    # second pass in a browser for fund houses without a usable sitemap
+    weak = {a: WEBSITES[a] for a in by_amc if a in WEBSITES and stats[a][1] < 0.8 * stats[a][2]}
+    try:
+        crawled = browser_links(weak)
+    except Exception as e:  # noqa: BLE001
+        log.warning("browser pass unavailable (%s)", str(e)[:120])
+        crawled = {}
+    for amc, links in crawled.items():
+        all_urls[amc] = list(dict.fromkeys(all_urls.get(amc, []) + links))
+        brand = set(BRAND_WORDS.findall(amc.lower())) | {"mf", "mutual", "amc", "india", "asset", "management"}
+        todo = [f for f in by_amc[amc] if f["code"] not in res]
+        m = match(todo, all_urls[amc], brand)
+        res.update(m)
+        log.info("%-24s browser links %5d · +%3d → %3d of %3d", amc, len(links), len(m), stats[amc][1] + len(m), stats[amc][2])
+    lists = {amc: list_page(WEBSITES[amc], all_urls.get(amc, [])) for amc in by_amc if amc in WEBSITES}
+    # a fund matched before but not this time (site briefly unreachable) keeps its earlier link
     for k, v in prev.items():
-        if not k.startswith("_") and k not in {str(c) for c in res} and stats.get(next((a for a, fs in by_amc.items()
-                                                                                     if any(str(f["code"]) == k for f in fs)), ""), (1,))[0] == 0:
+        if not k.startswith("_") and int(k) not in res and int(k) in {f["code"] for fs in by_amc.values() for f in fs}:
             res[int(k)] = v
     out = {str(k): v for k, v in sorted(res.items())}
     out["_asOf"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    out["_sites"] = {a: WEBSITES[a] for a in sorted(by_amc) if a in WEBSITES}
+    out["_lists"] = lists
     OUT.write_text(json.dumps(out, ensure_ascii=False, indent=0))
     log.info("Scheme pages for %d of %d funds", len(out) - 1, len(scr["rows"]))
 
