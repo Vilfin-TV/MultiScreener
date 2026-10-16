@@ -1,0 +1,62 @@
+INFO  master_symbols ETFs : 353
+INFO  NSE ETF list        : 355
+INFO  universe            : 355 ETFs
+ERROR  ^CNXSC: Period 'max' is invalid, must be one of: 1d, 5d
+ERROR  HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: ^CNXMIDCAP"}}}
+ERROR  $^CNXMIDCAP: possibly delisted; no timezone found
+ERROR  
+2 Failed downloads:
+ERROR  ['^CNXSC']: Period 'max' is invalid, must be one of: 1d, 5d
+ERROR  ['^CNXMIDCAP']: possibly delisted; no timezone found
+ERROR  FARBEES.NS: Period 'max' is invalid, must be one of: 1d, 5d
+ERROR  
+1 Failed download:
+ERROR  ['FARBEES.NS']: Period 'max' is invalid, must be one of: 1d, 5d
+ERROR  HFTSEINDIA.NS: Period 'max' is invalid, must be one of: 1d, 5d
+ERROR  
+1 Failed download:
+ERROR  ['HFTSEINDIA.NS']: Period 'max' is invalid, must be one of: 1d, 5d
+INFO  retry 1: 7 tickers
+ERROR  FARBEES.NS: Period 'max' is invalid, must be one of: 1d, 5d
+ERROR  HFTSEINDIA.NS: Period 'max' is invalid, must be one of: 1d, 5d
+ERROR  ^CNXSC: Period 'max' is invalid, must be one of: 1d, 5d
+ERROR  HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: ^CNXMIDCAP"}}}
+ERROR  $^CNXMIDCAP: possibly delisted; no timezone found
+ERROR  
+4 Failed downloads:
+ERROR  ['FARBEES.NS', 'HFTSEINDIA.NS', '^CNXSC']: Period 'max' is invalid, must be one of: 1d, 5d
+ERROR  ['^CNXMIDCAP']: possibly delisted; no timezone found
+INFO  retry 2: 7 tickers
+ERROR  HFTSEINDIA.NS: Period 'max' is invalid, must be one of: 1d, 5d
+ERROR  FARBEES.NS: Period 'max' is invalid, must be one of: 1d, 5d
+ERROR  $^CNXMIDCAP: possibly delisted; no timezone found
+ERROR  ^CNXSC: Period 'max' is invalid, must be one of: 1d, 5d
+ERROR  
+4 Failed downloads:
+ERROR  ['HFTSEINDIA.NS', 'FARBEES.NS', '^CNXSC']: Period 'max' is invalid, must be one of: 1d, 5d
+ERROR  ['^CNXMIDCAP']: possibly delisted; no timezone found
+INFO  downloaded 358/365 tickers; short re-fetched 114, extended 0
+WARNING  today's session is still open (09:35 IST) — using completed sessions up to 2026-10-15
+INFO  as-of session       : 2026-10-15
+INFO  benchmark NIFTY50      ← ^NSEI
+INFO  benchmark NIFTY100     ← ^CNX100
+INFO  benchmark NIFTYNEXT50  ← ^NSMIDCP
+INFO  benchmark NIFTY500     ← ^CRSLDX
+INFO  benchmark SENSEX       ← ^BSESN
+WARNING  benchmark MIDCAP100 unavailable
+INFO  benchmark MIDCAP150    ← MID150BEES.NS
+WARNING  benchmark SMALLCAP100 unavailable
+INFO  benchmark BANKNIFTY    ← ^NSEBANK
+INFO  benchmark NIFTYIT      ← ^CNXIT
+INFO  benchmark GOLD         ← GOLDBEES.NS
+WARNING  ETF facts unavailable: [Errno 2] No such file or directory: '/home/runner/work/MultiScreener/MultiScreener/data/mf/etf_facts.json'
+INFO  wrote /home/runner/work/MultiScreener/MultiScreener/data/etf_momentum.json  (397 KB)  classified=288 counts={'A': 21, 'D': 57, 'R': 3, 'U': 207} noData=4
+ETFs: 355 · weeks: 104 · benchmarks: NIFTY50, NIFTY100, NIFTYNEXT50, NIFTY500, SENSEX, MIDCAP150, BANKNIFTY, NIFTYIT, GOLD
+classified (default bench): 288 · mismatches: 0 · counts: {"A":21,"D":57,"R":3,"U":207}
+FAILED (6):
+  BSLNIFTY: implausible 10y return 122.19
+  GOLDBEES: implausible 10y return 83.61
+  NV20BEES: implausible 10y return 3486.87
+  QGOLDHALF: implausible 5y return 170.72
+  SETFGOLD: implausible 5y return 210.96
+  SETFGOLD: implausible 10y return 84.1
