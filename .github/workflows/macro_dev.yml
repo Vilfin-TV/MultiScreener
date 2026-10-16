@@ -1,0 +1,21 @@
+name: Macro Dev Build (temporary)
+on:
+  push:
+    branches: [claude/festive-bell-an714y]
+    paths: ['.github/workflows/macro_dev.yml', 'scripts/build_macro.py']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install requests
+      - run: mkdir -p .probe && python scripts/build_macro.py 2>&1 | tee .probe/macro.log || true
+      - run: |
+          git config user.name "github-actions[bot]"; git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f .probe data/mf/macro.json data/mf/val_hist.json; git commit -qm "chore(dev): macro build [skip ci]" || exit 0
+          for i in 1 2 3; do git pull --rebase -q origin ${{ github.ref_name }} && git push origin HEAD:${{ github.ref_name }} && break; sleep 5; done

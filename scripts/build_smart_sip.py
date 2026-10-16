@@ -109,16 +109,32 @@ DEBT_MDD = {"overnight": -0.3, "liquid": -0.5, "money": -0.5, "ultrashort": -0.7
             "shortdur": -2.0, "bankpsu": -2.0, "corpbond": -2.5, "gilt": -6.0, "gilt10": -7.0, "dynbond": -6.0}
 
 # sector satellite: key → label, index keys (valuation), fund subs, name filter (include / exclude)
+THEME_SUBS = ["sec_bank", "sec_pharma", "sec_tech", "sec_consumption", "sec_infra", "sec_mfg", "sec_energy", "sec_psu", "sec_mnc",
+              "sec_cycle", "sec_innov", "sec_other", "idx_bank", "idx_tech", "idx_health", "idx_consumption", "idx_mfg",
+              "idx_infra", "idx_theme"]
+# sector satellite: key → label, index keys (valuation, first available wins), fund subs, name filter (include / exclude)
 SECTORS = [
-    ("bank", "Banking & financial", ["fin", "bank"], ["sec_bank", "idx_bank"], None, None),
-    ("it", "IT & technology", ["it"], ["sec_tech", "idx_tech"], None, None),
+    ("bank", "Banking & financial services", ["fin", "bank"], ["sec_bank", "idx_bank"], None, r"capital market|ex[- ]?bank|non[- ]?bank"),
+    ("finexbank", "Financial services ex-bank", ["finexbank"], THEME_SUBS, r"ex[- ]?bank|non[- ]?bank", None),
+    ("capmkt", "Capital markets", ["capmkt"], THEME_SUBS, r"capital market", None),
+    ("it", "IT & technology", ["it"], ["sec_tech", "idx_tech"], None, r"mid ?small|telecom"),
+    ("msit", "MidSmall IT & telecom", ["msit"], THEME_SUBS, r"mid ?small.*(it|tele)|it ?(&|and) ?telecom", None),
     ("health", "Healthcare & pharma", ["health", "pharma"], ["sec_pharma", "idx_health"], None, None),
-    ("consumption", "Consumption", ["consumption", "fmcg"], ["sec_consumption", "idx_consumption"], None, None),
-    ("infra", "Infrastructure", ["infra"], ["sec_infra", "idx_infra"], None, r"housing|realty|real estate|reit"),
-    ("realty", "Real estate & housing", ["realty", "housing"], ["sec_infra", "idx_infra"], r"housing|realty|real estate|reit", None),
-    ("mfg", "Manufacturing & defence", ["mfg", "defence"], ["sec_mfg", "idx_mfg"], None, r"\bauto|mobility|transport"),
-    ("auto", "Auto & mobility", ["auto"], ["sec_mfg", "idx_mfg", "sec_infra", "idx_theme", "sec_innov", "sec_other"], r"\bauto|mobility|\bev\b|transport", None),
-    ("energy", "Energy & commodities", ["energy", "commodities"], ["sec_energy"], None, None),
+    ("fmcg", "FMCG", ["fmcg"], THEME_SUBS, r"\bfmcg\b", None),
+    ("consumption", "Consumption", ["consumption"], ["sec_consumption", "idx_consumption"], None, r"\bfmcg\b"),
+    ("infra", "Infrastructure", ["infra"], ["sec_infra", "idx_infra"], None, r"housing|realty|real estate|reit|transport|logistic"),
+    ("realty", "Real estate & housing", ["realty", "housing"], THEME_SUBS, r"housing|realty|real estate|reit", None),
+    ("transport", "Transport & logistics", ["transport"], THEME_SUBS, r"transport|logistic", None),
+    ("mfg", "Manufacturing", ["mfg"], ["sec_mfg", "idx_mfg"], None, r"\bauto|mobility|transport|defen[cs]e|\bev\b"),
+    ("defence", "Defence", ["defence"], THEME_SUBS, r"defen[cs]e", None),
+    ("auto", "Auto & mobility", ["auto"], THEME_SUBS, r"\bauto|automotive|mobility|\bev\b", r"transport|logistic"),
+    ("energy", "Energy", ["energy"], ["sec_energy"], None, r"oil|gas\b|commodit"),
+    ("oilgas", "Oil & gas", ["oilgas"], THEME_SUBS, r"\boil\b|\bgas\b", None),
+    ("commodities", "Commodities", ["commodities"], THEME_SUBS, r"commodit", None),
+    ("metal", "Metal", ["metal"], THEME_SUBS, r"\bmetal", None),
+    ("chemicals", "Chemicals", ["chemicals"], THEME_SUBS, r"chemical", None),
+    ("textile", "Textiles", ["textile"], THEME_SUBS, r"textile", None),
+    ("media", "Media & entertainment", ["media"], THEME_SUBS, r"\bmedia\b|entertainment", None),
     ("psu", "PSU", ["cpse", "pse"], ["sec_psu"], None, None),
     ("mnc", "MNC", ["mnc"], ["sec_mnc"], None, None),
 ]
