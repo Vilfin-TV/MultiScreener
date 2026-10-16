@@ -47,7 +47,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MF = ROOT / "data" / "mf"
 OUT = MF / "smartsip.json"
 STATE = MF / "smartsip_state.json"
-VERSION = 3
+VERSION = 4
 log = logging.getLogger("smartsip")
 
 HORIZONS = [("h1", "Under 3 years", 2, 1, 3), ("h3", "3–5 years", 4, 3, 5), ("h5", "5–7 years", 6, 5, 7),
@@ -516,9 +516,10 @@ def fund_checks(u, slot, code, ctx):
     if slot == "core":
         chk("Tracks the Nifty 50", bool(RX_NIFTY50.search(name)) and not RX_NOT_CORE.search(name), "plain Nifty 50 index fund")
     if kind in ("index", "passive") or is_idx:
-        rmed = median([u.g(c, "r3y") for c in u.by_subs([sub])]) if sub else None
+        rmed = median([u.g(c, "r3y") for c in index_peers(u, code, sub)] or [u.g(c, "r3y") for c in u.by_subs([sub])]) if sub else None
         td = None if g("r3y") is None or rmed is None else abs(g("r3y") - rmed)
         chk("Tracking vs peers", td is None or td <= (0.6 if kind != "sector" else 1.5), f"3Y return within {td:.2f} pt of peers" if td is not None else "new")
+        index_checks(u, slot, code, sub, chk)
     if asset == "Debt" or kind == "arb":
         sd, sm = g("std"), cs.get("std")
         chk("Volatility vs category", sd is None or sm is None or sd <= sm * 1.5, f"{sd:.2f} vs median {sm:.2f}" if sd is not None and sm is not None else "–")
@@ -542,6 +543,69 @@ def fund_checks(u, slot, code, ctx):
     if slot == "theme":
         chk("Sector valuation", True, f"{ctx.get('sector_label', '')} chosen on valuation and momentum")
     return out
+
+
+def index_key(name: str) -> str:
+    """The index a passive fund tracks, from its name ("HDFC Nifty 50 Index Fund" → "nifty 50")."""
+    n = re.sub(r"\(.*?\)", " ", (name or "").lower())
+    m = re.search(r"\b((?:nifty|bse|s&p bse|sensex|crisil|msci|nasdaq|s&p)\b.*?)(?=\s+(?:index|etf|fund|fof|plan)\b|$)", n)
+    return re.sub(r"\s+", " ", m.group(1)).strip() if m else n.strip()
+
+
+def index_peers(u, code, sub):
+    key = index_key(u.g(code, "name"))
+    return [c for c in u.by_subs([sub]) if c != code and index_key(u.g(c, "name")) == key]
+
+
+def index_checks(u, slot, code, sub, chk):
+    """Passive funds: how closely, cheaply and consistently the fund delivers its index."""
+    d, peers = u.deep(code), index_peers(u, code, sub)
+    rk = (u.detail(code).get("risk") or {})
+    if slot == "core":                                   # measured against the Nifty 50 itself
+        if rk.get("te") is not None:
+            chk("Tracking error (3Y)", rk["te"] <= 0.30, f"{rk['te']:.2f}% a year (limit 0.30%)")
+        if rk.get("r2") is not None:
+            chk("R² vs the index", rk["r2"] >= 99, f"{rk['r2']:.2f}%")
+        if rk.get("beta") is not None:
+            chk("Beta vs the index", 0.97 <= rk["beta"] <= 1.03, f"{rk['beta']:.3f}")
+        if rk.get("ret") is not None and rk.get("bret") is not None:
+            tdiff = rk["ret"] - rk["bret"]
+            chk("Tracking difference (3Y)", tdiff >= -0.30, f"{tdiff:+.2f}% a year vs the index")
+        if rk.get("upCap") is not None and rk.get("downCap") is not None:
+            gap = abs(rk["upCap"] - rk["downCap"])
+            chk("Symmetric capture", gap <= 1.0, f"up {rk['upCap']:.1f}% / down {rk['downCap']:.1f}%")
+    # year-by-year tracking against the median of funds tracking the same index
+    cal = d["cal"] or {}
+    if cal and peers:
+        yrs = sorted(cal)[-5:]
+        devs = []
+        for y in yrs:
+            pv = [u.deep(c)["cal"].get(y) for c in peers]
+            pv = [v for v in pv if v is not None]
+            if len(pv) >= 3 and cal[y] is not None:
+                devs.append(abs(cal[y] - median(pv)))
+        if devs:
+            lim = 0.6 if slot == "core" else 1.5
+            chk("Consistent tracking every year", max(devs) <= lim, f"largest yearly gap to peers {max(devs):.2f} pt over {len(devs)} years")
+    if peers:
+        ters = sorted(t for t in [u.g(c, "ter") for c in peers] + [u.g(code, "ter")] if t is not None)
+        if len(ters) >= 4 and u.g(code, "ter") is not None:
+            rank = sum(1 for t in ters if t < u.g(code, "ter")) / (len(ters) - 1)
+            chk("Cost rank among peers", rank <= 0.4, f"cheaper than {round((1 - rank) * 100)}% of funds tracking this index")
+        aums = sorted(a for a in [u.g(c, "aum") for c in peers] + [u.g(code, "aum")] if a is not None)
+        if len(aums) >= 4 and u.g(code, "aum") is not None:
+            rank = sum(1 for a in aums if a < u.g(code, "aum")) / (len(aums) - 1)
+            chk("Size rank among peers", rank >= 0.5, f"larger than {round(rank * 100)}% of funds tracking this index")
+    load = " ".join(u.info(code).get("exitLoad") or []).lower()
+    if load:
+        m = re.search(r"(\d+|seven|fifteen|thirty)\s*(day|month|year)", load)
+        words = {"seven": 7, "fifteen": 15, "thirty": 30}
+        days = None
+        if m:
+            n = int(m.group(1)) if m.group(1).isdigit() else words[m.group(1)]
+            days = n * {"day": 1, "month": 30, "year": 365}[m.group(2)]
+        nil = bool(re.search(r"\bnil\b|no load|not applicable", load))
+        chk("Exit load", nil or (days is not None and days <= 30), "nil" if nil else (f"only within {days} days" if days else "see scheme documents"))
 
 
 def deep_checks(u, slot, code, subs, chk):
@@ -748,6 +812,44 @@ def choose(u, slot, ctx, chosen, amc_count, incumbent, review, cache):
     return new, cand[1:3], "new", ""
 
 
+SEGMENTS = [("large", "Large caps", "n50", ["core", "flexi"]), ("mid", "Mid caps", "mid150", ["mid"]), ("small", "Small caps", "sml250", ["small"])]
+
+
+def segment_rotation(macro):
+    """Rank large / mid / small caps by valuation vs their own 10-year history; points move from the dearest
+    segment to the cheapest (5 pts for a 30-pt percentile gap, 10 pts for 50+)."""
+    val = (macro or {}).get("valuation") or {}
+    segs = []
+    for key, label, vk, slots in SEGMENTS:
+        v = val.get(vk) or {}
+        ps = [x for x in (v.get("pePct"), v.get("pbPct")) if x is not None]
+        if ps:
+            segs.append({"key": key, "label": label, "pe": v.get("pe"), "peMed": v.get("peMed"), "pct": round(sum(ps) / len(ps), 3)})
+    if len(segs) < 2:
+        return {"segments": segs, "from": None, "to": None, "pts": 0}
+    cheap, dear = min(segs, key=lambda x: x["pct"]), max(segs, key=lambda x: x["pct"])
+    gap = dear["pct"] - cheap["pct"]
+    pts = 10 if gap >= 0.5 else (5 if gap >= 0.3 else 0)
+    return {"segments": segs, "from": dear["key"] if pts else None, "to": cheap["key"] if pts else None, "pts": pts, "gap": round(gap, 3)}
+
+
+def apply_rotation(weights, rot, hz):
+    """Within the equity sleeve: move points from the dearest segment's slot to the cheapest one present (≥5% kept)."""
+    w = dict(weights)
+    if hz in ("h1", "h3") or not rot or not rot.get("pts"):
+        return w, 0
+    src = next((s for k, _, _, sl in SEGMENTS if k == rot["from"] for s in reversed(sl) if s in w), None)
+    dst = next((s for k, _, _, sl in SEGMENTS if k == rot["to"] for s in sl if s in w), None)
+    if not src or not dst or src == dst:
+        return w, 0
+    moved = 0
+    while moved < rot["pts"] and w[src] > 5:
+        w[src] -= 5
+        w[dst] += 5
+        moved += 5
+    return w, moved
+
+
 def apply_tilt(weights, tilt, hz):
     w = dict(weights)
     if hz in ("h1", "h3") or not tilt:
@@ -803,6 +905,11 @@ def main() -> int:
     regime = stable(dec, "regime", rr["regime"], review, strong=abs(rr["score"]) >= 2.5)
     tilt_now, tilt_comps = market_tilt(u, macro, sentiment)
     tilt = stable(dec, "tilt", tilt_now, review, strong=True)
+    rot_now = segment_rotation(macro)
+    rot_key = stable(dec, "rotation", f"{rot_now['from']}>{rot_now['to']}:{rot_now['pts']}", review)
+    rot_from, rest = rot_key.split(">")
+    rot_to, rot_pts = rest.split(":")
+    rotation = {**rot_now, "from": None if rot_from == "None" else rot_from, "to": None if rot_to == "None" else rot_to, "pts": int(rot_pts)}
     sectors = sector_table(u, macro)
     metal = metal_signal(u)
     metal_choice = stable(dec, "metal", metal.get("choice", "gold"), review)
@@ -829,6 +936,7 @@ def main() -> int:
             pid = hz + rk
             base = TEMPLATES[pid]
             weights, applied = apply_tilt(base, tilt, hz)
+            weights, rotated = apply_rotation(weights, rotation, hz)
             pst = state["plans"].setdefault(pid, {"slots": {}})
             chosen, amc_count, slots, changes, skipped = {}, {}, [], [], []
             for slot in sorted(weights, key=ORDER.index):
@@ -882,7 +990,7 @@ def main() -> int:
             for s in slots:
                 mix[s["asset"]] = mix.get(s["asset"], 0) + s["w"]
             plans[pid] = {
-                "horizon": hz_label, "risk": rk_label, "years": yrs, "yearsMin": ymin, "yearsMax": ymax, "tilt": applied,
+                "horizon": hz_label, "risk": rk_label, "years": yrs, "yearsMin": ymin, "yearsMax": ymax, "tilt": applied, "rotated": rotated,
                 "slots": slots, "mix": mix, "ter": round(sum((u.g(s["code"], "ter") or 0) * s["w"] for s in slots) / 100, 2),
                 "er": round(sum(s["er"] * s["w"] for s in slots) / 100, 2),
                 "maxOverlap": max(ovs) if ovs else None, "amcs": len({u.g(c, "amc") for c in codes}),
@@ -894,7 +1002,7 @@ def main() -> int:
     val = macro.get("valuation") or {}
     out = {"v": VERSION, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "asOf": scr["asOf"],
            "reviewed": state["reviewed"], "nextReview": date(today.year + (today.month == 12), today.month % 12 + 1, 1).isoformat(),
-           "market": {"tilt": tilt, "tiltNow": tilt_now, "components": tilt_comps,
+           "market": {"tilt": tilt, "tiltNow": tilt_now, "components": tilt_comps, "rotation": rotation,
                       "n50": {k: (val.get("n50") or {}).get(k) for k in ("pe", "pb", "dy", "pePct", "pbPct", "peMed", "pbMed", "r12m")},
                       "valuationAsOf": macro.get("valuationAsOf")},
            "rates": {**rr, "applied": regime},
