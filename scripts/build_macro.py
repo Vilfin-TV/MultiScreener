@@ -264,6 +264,18 @@ def update_history(s) -> dict:
     return h
 
 
+def clean_hist(values: list) -> list:
+    """Drop readings that are not comparable (e.g. a P/E of several hundred while a new index held loss-making
+    companies): for indices with under 7 years of data, anything beyond 2.5× either side of the median of the
+    latest 24 readings becomes None."""
+    have = [v for v in values if v]
+    recent = have[-24:]
+    if len(recent) < 12 or len(have) >= 84:      # long-running indices keep their full history
+        return values
+    m = st.median(recent)
+    return [v if v and m / 2.5 <= v <= m * 2.5 else None for v in values]
+
+
 def pct_of(values: list[float], x: float) -> float | None:
     vals = sorted(v for v in values if v is not None and v > 0)
     if len(vals) < 24 or x is None:
@@ -282,8 +294,8 @@ def valuation_table(h: dict) -> dict:
         cur = latest.get(key) or (months[keys[-1]]["v"].get(key) if keys else None)
         if not cur:
             continue
-        pe_hist = [months[k]["v"].get(key, [None])[0] for k in keys[-120:]]
-        pb_hist = [months[k]["v"].get(key, [None, None])[1] for k in keys[-120:]]
+        pe_hist = clean_hist([months[k]["v"].get(key, [None])[0] for k in keys[-120:]])
+        pb_hist = clean_hist([months[k]["v"].get(key, [None, None])[1] for k in keys[-120:]])
         closes = [(k, months[k]["v"].get(key, [None, None, None, None])[3]) for k in keys]
         closes = [(k, c) for k, c in closes if c]
         last_close = cur[3]
@@ -295,13 +307,15 @@ def valuation_table(h: dict) -> dict:
                "peMed": round(st.median([v for v in pe_hist if v]), 2) if sum(1 for v in pe_hist if v) >= 24 else None,
                "pbMed": round(st.median([v for v in pb_hist if v]), 2) if sum(1 for v in pb_hist if v) >= 24 else None,
                "years": round(sum(1 for v in pe_hist if v) / 12, 1)}
-        for n, lab in ((3, "r3m"), (6, "r6m"), (12, "r12m")):
+        for n, lab in ((1, "r1m"), (3, "r3m"), (6, "r6m"), (12, "r12m")):
             b = back(n)
             rec[lab] = round((last_close / b - 1) * 100, 2) if b and last_close else None
+        six = [c for _, c in closes[-6:]]
+        rec["vs6m"] = round((last_close / (sum(six) / len(six)) - 1) * 100, 2) if len(six) == 6 and last_close else None
         out[key] = rec
     n50 = out.get("n50") or {}
     for k, r in out.items():                      # momentum relative to the Nifty 50
-        for lab in ("r6m", "r12m"):
+        for lab in ("r1m", "r3m", "r6m", "r12m"):
             if r.get(lab) is not None and n50.get(lab) is not None:
                 r[lab + "Rel"] = round(r[lab] - n50[lab], 2)
     return out

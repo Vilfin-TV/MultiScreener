@@ -480,6 +480,7 @@ function verifySmartSip() {
   if (P.v >= 2) {
     ok(['rising', 'neutral', 'easing'].includes(P.rates && P.rates.applied), `rate regime ${P.rates && P.rates.applied}`);
     ok(Array.isArray(P.sectors), 'sector table missing');
+    (P.sectors || []).forEach(r => { if (r.outlook) ok(['st', 'mt', 'lt'].every(h => ['pos', 'neu', 'neg'].includes(r.outlook[h])), `sector ${r.key}: outlook ${JSON.stringify(r.outlook)}`); });
     ok(P.assumptions && P.assumptions.ltcgEquity > 0, 'tax assumptions missing');
     if (P.global) {
       ok(Array.isArray(P.global.signals) && P.global.signals.length >= 6, `global macro: only ${(P.global.signals || []).length} checks`);

@@ -603,6 +603,87 @@ def sector_table(u, macro):
     return rows
 
 
+# how each sector reacts to the macro backdrop (used for the medium-term outlook)
+SENS_RATES = {"bank", "pvtbank", "psubank", "finexbank", "msfin", "nbfc", "hfc", "sfb", "realty", "reits", "auto", "ev",
+              "durables", "construction", "capgoods", "infra"}
+SENS_OIL_USER = {"auto", "ev", "chemicals", "transport", "commsvc", "cement", "tourism", "durables", "fmcg", "conssvc"}
+SENS_OIL_PROD = {"oilgas"}
+SENS_EXPORT = {"it", "msit", "health", "mshealth", "textile", "chemicals", "digital"}
+SENS_COMMOD = {"metal", "commodities", "cement", "power", "energy"}
+SENS_FLOWS = {"bank", "pvtbank", "capmkt", "finexbank", "msfin"}
+
+
+def sector_outlook(rows, macro, regime, glob):
+    """Short (1–3 months), medium (6–12 months) and long term (3+ years) outlook per sector: positive / neutral /
+    negative, with the reasons."""
+    val = (macro or {}).get("valuation") or {}
+    g = (glob or {}).get("signals") or []
+    gs = {x["key"]: x for x in g}
+    eflows = ((glob or {}).get("score") or {}).get("E", 0)
+    oil_hot = bool(gs.get("oil", {}).get("fav", {}).get("E", 0) < 0)
+    oil_cool = bool(gs.get("oil", {}).get("fav", {}).get("E", 0) > 0)
+    inr = ((macro or {}).get("global") or {}).get("usdinr", {}).get("c6m")
+    cu = gs.get("cu", {}).get("fav", {})
+
+    def lab(x, up, dn):
+        return "pos" if x >= up else ("neg" if x <= dn else "neu")
+    for r in rows:
+        v = val.get(r["index"]) or {}
+        # short term — relative momentum and trend
+        r3, r1, tr = v.get("r3mRel"), v.get("r1mRel"), v.get("vs6m")
+        st_s, st_w = 0.0, []
+        if r3 is not None:
+            st_s += 1 if r3 > 3 else (-1 if r3 < -3 else 0)
+            st_w.append(f"3M vs Nifty {r3:+.1f}%")
+        if r1 is not None:
+            st_s += 0.5 if r1 > 2 else (-0.5 if r1 < -2 else 0)
+            st_w.append(f"1M vs Nifty {r1:+.1f}%")
+        if tr is not None:
+            st_s += 0.5 if tr > 2 else (-0.5 if tr < -2 else 0)
+            st_w.append(f"{tr:+.1f}% vs 6-month average")
+        if (r3 or 0) > 15 and (r.get("valPct") or 0) > 0.85:
+            st_s = min(st_s, 0.5)
+            st_w.append("stretched after a sharp run")
+        # medium term — 6/12-month relative momentum, valuation and macro sensitivity
+        k, mt_s, mt_w = r["key"], 0.0, []
+        r6, r12, vp = r.get("r6mRel"), r.get("r12mRel"), r.get("valPct")
+        if r6 is not None:
+            mt_s += 1 if r6 > 3 else (-1 if r6 < -3 else 0)
+            mt_w.append(f"6M vs Nifty {r6:+.1f}%")
+        if r12 is not None:
+            mt_s += 0.5 if r12 > 5 else (-0.5 if r12 < -5 else 0)
+        if vp is not None:
+            mt_s += 0.5 if vp < 0.3 else (-0.5 if vp > 0.8 else 0)
+        if k in SENS_RATES and regime in ("rising", "easing"):
+            mt_s += 0.5 if regime == "easing" else -0.5
+            mt_w.append("easing rates help" if regime == "easing" else "rising rates weigh")
+        if k in SENS_OIL_USER and (oil_hot or oil_cool):
+            mt_s += -0.5 if oil_hot else 0.5
+            mt_w.append("costly oil weighs" if oil_hot else "cheaper oil helps")
+        if k in SENS_OIL_PROD and (oil_hot or oil_cool):
+            mt_s += 0.5 if oil_hot else -0.5
+            mt_w.append("high oil prices help" if oil_hot else "lower oil prices weigh")
+        if k in SENS_EXPORT and inr is not None and abs(inr) > 2:
+            mt_s += 0.5 if inr > 2 else -0.5
+            mt_w.append("weak rupee helps exporters" if inr > 2 else "strong rupee weighs on exporters")
+        if k in SENS_COMMOD and cu.get("E"):
+            mt_s += 0.5 if cu["E"] > 0 else -0.5
+            mt_w.append("strong industrial demand" if cu["E"] > 0 else "weak industrial demand")
+        if k in SENS_FLOWS and abs(eflows) >= 2:
+            mt_s += 0.5 if eflows > 0 else -0.5
+            mt_w.append("global flows supportive" if eflows > 0 else "global flows a headwind")
+        # long term — valuation vs its own 10-year history
+        if vp is None:
+            lt, lt_w = "neu", f"only {r.get('years') or 0:.1f} yrs of history — valuation not yet rankable"
+        else:
+            lt = "pos" if vp <= 0.35 else ("neg" if vp >= 0.75 else "neu")
+            pe, med = r.get("pe"), r.get("peMed")
+            lt_w = f"{ordinal(round(vp * 100))} percentile of 10-yr valuation" + (f" · P/E {pe:.1f} vs median {med:.1f}" if pe and med else "")
+        r["outlook"] = {"st": lab(st_s, 1, -1), "mt": lab(mt_s, 1, -1), "lt": lt,
+                        "why": {"st": " · ".join(st_w) or "no recent data", "mt": " · ".join(mt_w) or "no clear driver", "lt": lt_w}}
+    return rows
+
+
 def sector_funds(u, key):
     s = next(x for x in SECTORS if x[0] == key)
     codes = u.by_subs(s[3])
@@ -1266,7 +1347,7 @@ def main() -> int:
     rotation = {**rot_now, "from": None if rot_from == "None" else rot_from, "to": None if rot_to == "None" else rot_to, "pts": int(rot_pts)}
     gates = valuation_gates(macro, dec, review)
     fpe = (load(MF / "fund_pe.json", {}) or {}).get("funds") or {}
-    sectors = sector_table(u, macro)
+    sectors = sector_outlook(sector_table(u, macro), macro, regime, glob)
     metal = metal_signal(u, glob["score"]["S"])
     metal_choice = stable(dec, "metal", metal.get("choice", "gold"), review)
 
@@ -1373,7 +1454,7 @@ def main() -> int:
                       "valuationAsOf": macro.get("valuationAsOf")},
            "rates": {**rr, "applied": regime},
            "global": {**glob, "goldTilt": gold_lvl},
-           "sectors": [{k: r.get(k) for k in ("key", "label", "pe", "peMed", "valPct", "r6mRel", "r12mRel", "score", "signal", "excluded", "eligible", "years")}
+           "sectors": [{k: r.get(k) for k in ("key", "label", "pe", "peMed", "valPct", "r6mRel", "r12mRel", "score", "signal", "excluded", "eligible", "years", "outlook")}
                        for r in sectors],
            "sector": sector, "metal": {**metal, "applied": metal_choice},
            "assumptions": ASSUMPTIONS,
