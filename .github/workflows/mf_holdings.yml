@@ -20,6 +20,7 @@ on:
     paths:
       - 'scripts/build_mf_holdings.py'
       - 'scripts/fetch_fundhouse_loads.py'
+      - 'scripts/fetch_scheme_pages.py'
       - '.github/workflows/mf_holdings.yml'
 
 permissions:
@@ -33,7 +34,7 @@ jobs:
   build:
     name: Build & verify data/mf/p
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 80
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,6 +60,12 @@ jobs:
         continue-on-error: true
         run: xvfb-run -a python scripts/fetch_fundhouse_loads.py
 
+      - name: Scheme pages on fund-house sites (weekly — Mondays, manual runs and script changes)
+        if: github.event_name != 'schedule' || github.event.schedule == '40 4 * * 1'
+        continue-on-error: true
+        timeout-minutes: 30
+        run: xvfb-run -a python scripts/fetch_scheme_pages.py
+
       - name: Build holdings
         run: |
           mkdir -p .mfcache/holdings
@@ -75,7 +82,7 @@ jobs:
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add -A data/mf/p
-          git add data/mf/exitload_extra.json 2>/dev/null || true
+          git add data/mf/exitload_extra.json data/mf/scheme_pages.json 2>/dev/null || true
           if git diff --staged --quiet; then
             echo "No changes to holdings data."
             exit 0

@@ -109,6 +109,9 @@ def is_direct_growth(r: dict) -> bool:
 
 
 # ═══════════════════════════════ CLASSIFICATION ════════════════════════════
+# bump whenever category rules change on purpose: the day-over-day audit then accepts the resulting moves
+RULES_VERSION = 3
+
 ASSETS = ["Equity", "Debt", "Hybrid", "Commodity", "Global", "Index", "Solution"]
 
 SUBS = {  # key: (asset, label)
@@ -119,19 +122,19 @@ SUBS = {  # key: (asset, label)
     # sectoral / thematic funds, split by theme (ratings and scorecards still rank across all of them, see GROUP)
     "sec_bank": ("Equity", "Banking & Financial"), "sec_pharma": ("Equity", "Pharma & Healthcare"),
     "sec_tech": ("Equity", "Technology & Digital"), "sec_consumption": ("Equity", "Consumption"),
-    "sec_infra": ("Equity", "Infrastructure & Housing"), "sec_mfg": ("Equity", "Manufacturing & Exports"),
+    "sec_infra": ("Equity", "Infrastructure & Housing"), "sec_mfg": ("Equity", "Manufacturing, Defence & Exports"),
     "sec_energy": ("Equity", "Energy & Commodities"), "sec_psu": ("Equity", "PSU"),
     "sec_mnc": ("Equity", "MNC & Conglomerates"), "sec_cycle": ("Equity", "Business Cycle & Rotation"),
     "sec_quant": ("Equity", "Quant, Momentum & Factor"), "sec_esg": ("Equity", "ESG & Ethical"),
-    "sec_innov": ("Equity", "Innovation & Opportunities"), "sec_other": ("Equity", "Other Thematic"),
+    "sec_innov": ("Equity", "Innovation, Services & Opportunities"), "sec_other": ("Equity", "Other Thematic"),
     "eqfof": ("Equity", "Equity FoF"),
     "overnight": ("Debt", "Overnight"), "liquid": ("Debt", "Liquid"), "ultrashort": ("Debt", "Ultra Short Duration"),
     "lowdur": ("Debt", "Low Duration"), "money": ("Debt", "Money Market"), "shortdur": ("Debt", "Short Duration"),
     "meddur": ("Debt", "Medium Duration"), "medlong": ("Debt", "Medium to Long Duration"),
     "longdur": ("Debt", "Long Duration"), "dynbond": ("Debt", "Dynamic Bond"), "corpbond": ("Debt", "Corporate Bond"),
-    "credit": ("Debt", "Credit Risk"), "bankpsu": ("Debt", "Banking & PSU"), "gilt": ("Debt", "Gilt"),
+    "credit": ("Debt", "Credit Risk"), "bankpsu": ("Debt", "Banking & PSU / Sectoral Debt"), "gilt": ("Debt", "Gilt"),
     "gilt10": ("Debt", "Gilt 10Y Constant Maturity"), "floater": ("Debt", "Floater"),
-    "target": ("Debt", "Target Maturity / Debt Index"), "debtfof": ("Debt", "Debt FoF"),
+    "target": ("Debt", "Target Maturity Index"), "debtidx": ("Debt", "Debt Index (Rolling)"), "debtfof": ("Debt", "Debt FoF"),
     "aggressive": ("Hybrid", "Aggressive Hybrid"), "balanced": ("Hybrid", "Balanced Hybrid"),
     "conservative": ("Hybrid", "Conservative Hybrid"), "baf": ("Hybrid", "Balanced Advantage / Dynamic"),
     "eqsavings": ("Hybrid", "Equity Savings"), "multiasset": ("Hybrid", "Multi Asset Allocation"),
@@ -142,12 +145,15 @@ SUBS = {  # key: (asset, label)
     "idx_large": ("Index", "Large Cap Index"), "idx_midsmall": ("Index", "Mid & Small Cap Index"),
     "idx_broad": ("Index", "Broad Market Index"), "idx_factor": ("Index", "Smart Beta / Factor"),
     "idx_bank": ("Index", "Bank & Financial Index"), "idx_tech": ("Index", "IT & Digital Index"),
-    "idx_infra": ("Index", "Infra, Defence, Auto & Realty Index"), "idx_theme": ("Index", "Other Sectoral / Thematic Index"),
+    "idx_health": ("Index", "Healthcare & Pharma Index"), "idx_consumption": ("Index", "Consumption Index"),
+    "idx_mfg": ("Index", "Manufacturing, Defence & Auto Index"), "idx_infra": ("Index", "Infrastructure & Realty Index"),
+    "idx_theme": ("Index", "Other Sectoral / Thematic Index"),
     "retire": ("Solution", "Retirement"), "child": ("Solution", "Children's"), "lifecycle": ("Solution", "Life Cycle"),
 }
 
 # ratings and scorecards rank a fund against this wider group (themes alone are too small for percentiles)
-GROUP = {k: ("sector" if k.startswith("sec_") else "idx_sector" if k in ("idx_bank", "idx_tech", "idx_infra", "idx_theme") else k)
+IDX_THEME_SUBS = ("idx_bank", "idx_tech", "idx_health", "idx_consumption", "idx_mfg", "idx_infra", "idx_theme")
+GROUP = {k: ("sector" if k.startswith("sec_") else "idx_sector" if k in IDX_THEME_SUBS else "target" if k == "debtidx" else k)
          for k in SUBS}
 
 
@@ -160,21 +166,28 @@ SEC_THEMES = [  # first match wins
     ("sec_pharma", r"pharma|health"),
     ("sec_tech", r"technolog|digital|\bteck\b|\bit\b|internet"),
     ("sec_consumption", r"consum|fmcg|rural"),
-    ("sec_infra", r"infra|power|build india|t\.?i\.?g\.?e\.?r|reform|housing|transport|logistic|defence"),
-    ("sec_mfg", r"manufactur|automotive|export"),
+    ("sec_infra", r"infra|power|build india|t\.?i\.?g\.?e\.?r|reform|housing|transport|logistic"),
+    ("sec_mfg", r"manufactur|automotive|export|defen[cs]e"),
     ("sec_energy", r"energy|resource|commodit|\bcomma\b"),
     ("sec_psu", r"\bpsu\b|cpse"),
     ("sec_mnc", r"\bmnc\b|conglomerate|business group"),
-    ("sec_quant", r"quant|momentum|quality|multi.?factor|minimum variance|low vol"),
     ("sec_esg", r"\besg\b|ethical|shariah"),
+    ("sec_quant", r"\bquant\b|quantamental|momentum|quality|multi.?factor|minimum variance|low vol"),
     ("sec_cycle", r"business cycle|rotation|multi sector"),
     ("sec_innov", r"innovat|pioneer|\bipo\b|opportunit|special|services"),
 ]
 IDX_THEMES = [
     ("idx_bank", r"bank|financ|capital market"),
     ("idx_tech", r"\bit\b|niftyit|information technology|digital|internet"),
-    ("idx_infra", r"infra|defence|housing|realty|reit|railway|manufactur|\bauto\b|clean environment"),
+    ("idx_health", r"health|pharma|hospital"),
+    ("idx_consumption", r"consum"),
+    ("idx_mfg", r"manufactur|defen[cs]e|\bauto\b|automotive"),
+    ("idx_infra", r"infra|housing|realty|reit|railway|clean environment|power"),
 ]
+# a sector / theme word in an index name wins over its size words ("Nifty MidSmall Healthcare", "Nifty500 Multicap Infrastructure")
+RX_IDX_SECTOR = re.compile(r"bank|financ|capital market|\bit\b|niftyit|information technology|digital|internet|health|pharma|"
+                           r"hospital|consum|manufactur|defen[cs]e|\bauto\b|infra|housing|realty|reit|railway|energy|commodit|"
+                           r"chemical|tourism|\bpsu\b|\bpse\b|shariah|business group|sector leaders|clean environment|metal|power", re.I)
 
 
 def _theme(name: str, themes, default: str) -> str:
@@ -185,7 +198,7 @@ def _theme(name: str, themes, default: str) -> str:
 
 
 # fund-house names that contain a country word ("Nippon India", "Franklin India" …) must not hide a global fund
-RX_BRAND = re.compile(r"^(nippon india|invesco india|franklin india|bank of india|franklin|union|edelweiss)\s+", re.I)
+RX_BRAND = re.compile(r"^(nippon india|invesco india|franklin india|bank of india|franklin|union|edelweiss|quantum|quant)\s+", re.I)
 
 
 _EQ = [
@@ -212,7 +225,7 @@ RX_GLOBAL = re.compile(
     r"\b(us|u\.s\.|usa|nasdaq|s&p ?500|nyse|fang|america|american|global|international|world|overseas|"
     r"developed|europe|european|japan|china|chinese|taiwan|hang ?seng|asia|asian|asean|emerging|brazil|korea|"
     r"greater china|feeder|offshore|msci)\b", re.I)
-RX_US = re.compile(r"\b(us|u\.s\.|usa|nasdaq|s&p ?500|nyse|fang|america|american)\b", re.I)
+RX_US = re.compile(r"\b(us|usa|nasdaq|s&p ?500|nyse|fang|america|american)\b|\bu\.\s?s\.", re.I)
 RX_ASIA = re.compile(r"\b(japan|china|chinese|taiwan|hang ?seng|asia|asian|asean|emerging|brazil|korea|greater china)\b", re.I)
 RX_GOLD = re.compile(r"\bgold\b", re.I)
 RX_SILVER = re.compile(r"\bsilver\b", re.I)
@@ -257,6 +270,8 @@ RX_DOMESTIC = re.compile(r"\bdomestic\b|india (consumption|opportunit)", re.I)
 def _global_sub(name):
     if RX_GDEBT.search(name):
         return "globaldebt"
+    if re.search(r"\bex[\s-]?us\b", name, re.I):
+        return "global"
     if RX_US.search(name):
         return "us"
     if RX_ASIA.search(name):
@@ -267,6 +282,8 @@ def _global_sub(name):
 def _index_sub(name):
     if RX_FACTOR.search(name):
         return "idx_factor"
+    if RX_IDX_SECTOR.search(name):
+        return _theme(name, IDX_THEMES, "idx_theme")
     if RX_MIDSMALL.search(name) and not re.search(r"large ?mid|largemid", name, re.I):
         return "idx_midsmall"
     if RX_BROAD.search(name):
@@ -276,11 +293,16 @@ def _index_sub(name):
     return _theme(name, IDX_THEMES, "idx_theme")
 
 
+def _debt_index(name: str) -> str:
+    """Dated target-maturity index funds vs rolling (constant-maturity / duration) debt index funds."""
+    return "target" if re.search(r"\b20[2-4]\d\b", name) else "debtidx"
+
+
 def classify(name: str, cat: str) -> str | None:
     """AMFI category + scheme name → sub-category key (see SUBS)."""
     inner = cat.split("(", 1)[1].rsplit(")", 1)[0] if "(" in cat else cat
     low = inner.lower()
-    n = name
+    n = re.sub(r"\bu\.\s?s\.", "US", name, flags=re.I)          # "U. S. Opportunities" → "US Opportunities"
 
     if low.startswith(("children", "solution")):
         if "retire" in low:
@@ -295,19 +317,23 @@ def classify(name: str, cat: str) -> str | None:
             return _global_sub(n)
         if RX_GOLD.search(n) or RX_SILVER.search(n) or RX_PRECIOUS.search(n):
             return _commodity_sub(n)
-        if RX_HYBNAME.search(n):
+        if RX_HYBNAME.search(n) and not re.search(r"equity allocator", n, re.I):
             return "hybridfof"
         if RX_DEBT_STRICT.search(n):
-            return "target" if re.search(r"ibx|sdl|g-?sec|gilt|bharat bond|target|20[2-4]\d|crisil", n, re.I) else "debtfof"
+            return _debt_index(n) if re.search(r"ibx|sdl|g-?sec|gilt|bharat bond|target|20[2-4]\d|crisil", n, re.I) else "debtfof"
         return "eqfof"
     if "index fund" in low:
         if RX_GLOBAL.search(n) and not RX_DOMESTIC.search(n):
             return _global_sub(n)
         if RX_GOLD.search(n) or RX_SILVER.search(n):
             return _commodity_sub(n)
+        # equity index + G-Sec blends ("LargeMidcap250 Plus 8-13yr G-Sec 70:30") are hybrid index funds
+        if RX_DEBT_STRICT.search(n) and re.search(r"\d+\s*:\s*\d+", n) and re.search(
+                r"nifty ?\d{2,3}\b|largemid|large ?midcap|midcap|smallcap|momentum|sensex|nifty ?500", n, re.I):
+            return "hybridfof"
         if "debt" in low or RX_DEBT_STRICT.search(n):
             if not re.search(r"nifty ?50\b|sensex|midcap|smallcap|momentum|quality", n, re.I) or "debt" in low:
-                return "target"
+                return _debt_index(n)
         if "hybrid" in low or RX_HYBNAME.search(n):
             return "hybridfof"
         return _index_sub(n)

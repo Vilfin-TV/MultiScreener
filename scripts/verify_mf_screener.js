@@ -358,7 +358,8 @@ function verifyAgainstPrevious(J, C) {
   ok(navJumps <= Math.max(3, n * 0.005), `${navJumps} funds with implausible NAV moves since the last publish`);
   ok(terJumps <= Math.max(10, n * 0.02), `${terJumps} expense ratios changed by more than 0.75 points`);
   ok(aumJumps <= Math.max(15, n * 0.03), `${aumJumps} fund sizes changed more than 3x`);
-  ok(subMoves <= Math.max(5, n * 0.01), `${subMoves} funds changed category`);
+  if ((P.rules || 0) !== (J.rules || 0)) console.log(`Category rules updated (v${P.rules || 0} → v${J.rules}): ${subMoves} intentional category moves accepted`);
+  else ok(subMoves <= Math.max(5, n * 0.01), `${subMoves} funds changed category`);
   AUDIT.dayOverDay = {vs: P.asOf, compared: n, navJumps, terJumps, aumJumps, categoryMoves: subMoves};
   console.log(`Day-over-day audit vs ${P.asOf}: ${n} funds compared · NAV jumps ${navJumps} · TER jumps ${terJumps} · AUM jumps ${aumJumps} · category moves ${subMoves}`);
 }
@@ -367,7 +368,7 @@ function verifyAgainstPrevious(J, C) {
 const EQUITY_DIRECT = new Set(['large', 'largemid', 'mid', 'small', 'multi', 'flexi', 'focused', 'value', 'contra', 'elss', 'dividend',
   'idx_large', 'idx_midsmall', 'idx_broad', 'idx_factor', 'idx_sector']);
 const DEBT_DIRECT = new Set(['overnight', 'liquid', 'money', 'ultrashort', 'lowdur', 'shortdur', 'meddur', 'medlong', 'longdur', 'dynbond',
-  'corpbond', 'credit', 'bankpsu', 'gilt', 'gilt10', 'floater', 'target']);
+  'corpbond', 'credit', 'bankpsu', 'gilt', 'gilt10', 'floater', 'target', 'debtidx']);
 function verifyHoldings() {
   const dir = path.join(OUT, 'p');
   if (!fs.existsSync(dir)) return;
