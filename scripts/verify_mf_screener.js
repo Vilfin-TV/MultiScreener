@@ -420,7 +420,7 @@ function verifySmartSip() {
   const nPlans = (P.horizons || []).length * (P.risks || []).length || 15;
   ok(Object.keys(P.plans).length === nPlans && nPlans >= 15, `smart SIP has ${Object.keys(P.plans).length} plans (expected ${nPlans})`);
   // very aggressive: more in growth sleeves (beyond the Nifty 50 / diversified core) than aggressive, and always equity + debt + metals
-  const GROWTH = new Set(['next50', 'mid', 'small', 'value', 'momentum', 'theme']);
+  const GROWTH = new Set(['next50', 'lmcore', 'mid', 'small', 'value', 'momentum', 'theme']);
   const share = (p, f) => p.slots.reduce((a, s) => a + (f(s) ? s.w : 0), 0);
   for (const h of (P.horizons || [])) {
     const a = P.plans[h.id + 'a'], v = P.plans[h.id + 'v'];
