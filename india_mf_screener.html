@@ -321,6 +321,13 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .pts{justify-self:end;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;min-width:32px;text-align:center}
 .pts.up{background:rgba(34,197,94,.14);color:var(--pos)}.pts.dn{background:rgba(248,113,113,.14);color:var(--neg)}.pts.nt{background:var(--surface3);color:var(--text3)}
 .mi-foot{margin:auto 0 0;padding-top:12px;font-size:12px;color:var(--text3);line-height:1.55}
+.seg-rot{margin-top:12px;padding:12px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)}
+.seg-h{font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.seg-r{display:grid;grid-template-columns:78px minmax(0,1fr) auto;gap:10px;align-items:center;padding:5px 0;font-size:12.5px}
+.seg-r span{font-weight:600;color:var(--text2)}
+.seg-r b{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;white-space:nowrap}
+.seg-r.to span{color:var(--pos)}.seg-r.from span{color:var(--neg)}
+.seg-note{margin:6px 0 0;font-size:11.5px;color:var(--text3);line-height:1.5}
 .tilt-b{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px}
 .tilt-b.up{background:rgba(34,197,94,.14);color:var(--pos)}.tilt-b.dn{background:rgba(248,113,113,.14);color:var(--neg)}.tilt-b.nt{background:var(--surface3);color:var(--text2)}
 .sec-card{margin-bottom:14px}
@@ -2358,8 +2365,10 @@ function renderSip(){
     '</div>';
   // ── right column: allocation snapshot (sticky beside the plan) ──
   var donut = donutCard('sipDonut', 'Allocation by fund', '', sized.slots.map(function(s){ return [shortName((BY[s.code] || {name:s.label}).name), s.w]; }), [sized.slots.length + ' funds', inr(P.amt) + '/' + (P.fq === 'w' ? 'wk' : 'mo')]);
+  var rot = (m.rotation || {}), segName = function(k){ var x = (rot.segments || []).filter(function(z){ return z.key === k; })[0]; return x ? x.label.toLowerCase() : k; };
   var snap = [['Expected return', fmt(pr.er) + '% a year', 'before tax, net of costs'], ['Weighted expense ratio', fmt(ter) + '%', 'Direct plans'],
     ['Equity exposure', fmt((mix.Equity || 0) + (mix.International || 0), 0) + '%', plan.tilt ? (plan.tilt > 0 ? '+' : '') + plan.tilt + ' pts valuation tilt' : 'standard allocation'],
+    ['Equity rotation', plan.rotated ? '+' + plan.rotated + ' pts' : 'none', plan.rotated && rot.to ? 'to ' + segName(rot.to) + ' from ' + segName(rot.from) : 'segments fairly valued'],
     ['Quality checks', nChecks + ' passed', 'across ' + sized.slots.length + ' funds'], ['Fund houses', Object.keys(amcs).length, 'max. 2 funds each'],
     ['Next review', fmtDate(SIP.nextReview), 'last ' + monthTxt(SIP.reviewed)]];
   h += '<aside class="sip-side"><div class="card pcard">' + donut.replace('<div class="pie-card"', '<div class="pie-card" style="border:none;padding:0;background:none"') +
@@ -2382,6 +2391,10 @@ function renderSip(){
     '<div class="card pcard mi"><div class="mi-top"><div class="sec-title">Valuation &amp; equity tilt</div><span class="tilt-b ' + (m.tilt > 0 ? 'up' : m.tilt < 0 ? 'dn' : 'nt') + '">' + (m.tilt > 0 ? '+' : '') + (m.tilt || 0) + ' pts</span></div>' +
       '<div class="mi-kpis"><div><small>Nifty 50 P/E</small><b>' + (n50.pe || '–') + '</b></div><div><small>10-yr median</small><b>' + (n50.peMed || '–') + '</b></div><div><small>Percentile</small><b>' + (isNum(n50.pePct) ? Math.round(n50.pePct * 100) + 'th' : '–') + '</b></div></div>' +
       sigRows(m.components) +
+      ((rot.segments || []).length ? '<div class="seg-rot"><div class="seg-h">Rotation within equity</div>' + rot.segments.map(function(z){
+        var cls = z.key === rot.to ? 'to' : z.key === rot.from ? 'from' : '';
+        return '<div class="seg-r ' + cls + '"><span>' + esc(z.label) + '</span><div class="vbar"><i style="left:' + Math.round(z.pct * 100) + '%"></i></div><b>P/E ' + fmt(z.pe, 1) + ' · ' + Math.round(z.pct * 100) + 'th</b></div>';
+      }).join('') + '<p class="seg-note">' + (rot.pts ? 'Up to ' + rot.pts + ' points move from ' + esc(segName(rot.from)) + ' (dearest vs its history) to ' + esc(segName(rot.to)) + ' (cheapest) in plans of 5+ years.' : 'Segments are similarly valued — no rotation.') + '</p></div>' : '') +
       '<p class="mi-foot">' + (m.tilt > 0 ? 'Valuations favour equity — plans of 5+ years add up to ' + m.tilt + ' points to equity.' : m.tilt < 0 ? 'Valuations look stretched — plans of 5+ years move ' + (-m.tilt) + ' points from equity into debt.' : 'Signals balance out — plans follow their standard allocation.') + '</p></div>' +
     '<div class="card pcard mi"><div class="mi-top"><div class="sec-title">Interest-rate cycle</div><span class="regime ' + esc(R.applied || 'neutral') + '">' + esc(cap(R.applied || 'neutral')) + '</span></div>' +
       '<div class="mi-kpis"><div><small>Repo rate</small><b>' + (R.repo != null ? fmt(R.repo) + '%' : '–') + '</b></div><div><small>10-yr G-Sec</small><b>' + (R.g10 != null ? fmt(R.g10) + '%' : '–') + '</b></div><div><small>91-day T-bill</small><b>' + (R.tb91 != null ? fmt(R.tb91) + '%' : '–') + '</b></div></div>' +
@@ -2401,7 +2414,8 @@ function renderSip(){
       '<li><b>Equity (25+ checks):</b> 5+ year record; benchmark beaten in most rolling 3- and 5-year periods; positive alpha and information ratio; captures less of the market\'s falls than its rises; Sharpe, Sortino, volatility, worst rolling 3-year return and rolling returns ranked against the category; calendar-year record vs the category; true to mandate; turnover, concentration, manager tenure, recent form and rating.</li>' +
       '<li><b>Hybrid:</b> judged against its own category, not an equity index — downside capture (balanced advantage ≤ 80%, equity savings ≤ 60%), smaller falls than equity, risk-adjusted returns, worst rolling 3-year return, calendar-year record and cost.</li>' +
       '<li><b>Debt:</b> credit quality (85%+ AAA / sovereign where the portfolio is published), no credit events, volatility in line with the category, category matched to the rate cycle, cost no higher than the median.</li>' +
-      '<li><b>Index &amp; passive:</b> low cost, size and tight tracking against peers.</li>' +
+      '<li><b>Index (16+ checks):</b> tracking error, R² and beta against the Nifty 50, tracking difference, symmetric up/down capture, year-by-year tracking against funds on the same index, cost and size rank among those funds, and exit load.</li>' +
+      '<li><b>Valuation rotation:</b> within equity, up to 10 points move from the market-cap segment that is dearest against its own 10-year history to the cheapest; when the whole market is expensive the equity tilt shifts money to debt and balanced-advantage funds.</li>' +
       '<li><b>Satellites:</b> sector and international funds only in 7+ year aggressive plans (5–10% each); the sector is chosen on valuation and momentum, the metal on the gold/silver ratio.</li>' +
       '<li><b>Diversified:</b> low top-holding overlap and no more than two funds per fund house.</li>' +
     '</ul></div>' +
