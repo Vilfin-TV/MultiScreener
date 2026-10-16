@@ -19,6 +19,9 @@ Every slot is filled by the best fund that passes a full checklist, chosen dynam
     are excluded; the best fund in the most attractive sector is chosen.
   - Precious metals: gold, or silver when silver is historically cheap against gold (gold/silver ratio in the top
     30% of its range) for 7+ year aggressive plans.
+* Global macro — the US dollar, US yields and curve, inflation expectations, emerging-market vs US equities, the
+  rupee, crude oil, copper vs gold, volatility and metal trends score equities, bonds, gold and silver; the totals
+  feed the equity tilt, the rate cycle, the precious-metal weight (±5 points) and the gold-vs-silver choice.
 * Checks on every fund (all must pass to enter a plan; shown on the page): track record, fund size, expense ratio
   vs category median, accepting SIPs, no lock-in, status, benchmark beaten in rolling 3-year periods, rolling return
   vs category, consistency, drawdown vs category, style / market-cap fit, portfolio concentration, fund-manager
@@ -378,7 +381,113 @@ class Universe:
 
 
 # ───────────────────────────── market conditions ─────────────────────────────
-def rate_regime(macro, u):
+def global_signals(macro):
+    """Global cross-asset checks → points for equities (E), debt duration (D), gold (G) and silver (S).
+    Each check is +1 / −1 / 0 for the assets it affects; the totals steer the equity tilt, the rate cycle,
+    the precious-metal weight and the gold-vs-silver choice."""
+    g = (macro or {}).get("global") or {}
+    sig, tot = [], {"E": 0, "D": 0, "G": 0, "S": 0}
+
+    def x(k, f):
+        return (g.get(k) or {}).get(f)
+
+    def add(key, label, reading, fav, note=""):
+        for a, p in fav.items():
+            tot[a] += p
+        sig.append({"key": key, "k": label, "v": reading, "fav": fav, "note": note})
+
+    v200, c6 = x("dxy", "vs200"), x("dxy", "c6m")
+    if v200 is not None and c6 is not None:
+        strong, weak = v200 > 1 and c6 > 2, v200 < -1 and c6 < -2
+        add("dxy", "US dollar trend", f"{x('dxy', 'last'):.1f} · {c6:+.1f}% in 6M · {v200:+.1f}% vs 200-day",
+            {"E": -1, "G": -1} if strong else ({"E": 1, "G": 1} if weak else {}),
+            "Strong dollar pulls money out of emerging markets and weighs on gold" if strong else
+            ("Weak dollar supports emerging-market equities and gold" if weak else "Dollar range-bound"))
+    c3 = x("us10y", "c3m")
+    if c3 is not None:
+        up, dn = c3 >= 0.4, c3 <= -0.4
+        add("us10y", "US 10-year yield", f"{x('us10y', 'last'):.2f}% · {c3:+.2f} pt in 3M",
+            {"E": -1, "D": -1, "G": -1} if up else ({"E": 1, "D": 1, "G": 1} if dn else {}),
+            "Rising global yields hurt bonds, gold and equity valuations" if up else
+            ("Falling global yields support bonds, gold and equities" if dn else "Global yields steady"))
+    if x("us10y", "last") is not None and x("us3m", "last") is not None:
+        cv = x("us10y", "last") - x("us3m", "last")
+        add("curve", "US yield curve (10Y − 3M)", f"{cv:+.2f} pt", {"G": 1} if cv < -0.25 else {},
+            "Inverted curve — recession risk favours gold as a hedge" if cv < -0.25 else "Curve not inverted")
+    if x("tip", "c6m") is not None and x("ief", "c6m") is not None:
+        be = x("tip", "c6m") - x("ief", "c6m")
+        up, dn = be > 1.0, be < -1.0
+        add("infl", "US inflation expectations", f"inflation-linked vs regular Treasuries {be:+.2f} pt in 6M",
+            {"G": 1, "S": 1, "D": -1} if up else ({"D": 1} if dn else {}),
+            "Inflation expectations rising — favours real assets over bonds" if up else
+            ("Inflation expectations easing — supports bonds" if dn else "Inflation expectations stable"))
+    if x("em", "c6m") is not None and x("spx", "c6m") is not None:
+        rel = x("em", "c6m") - x("spx", "c6m")
+        add("em", "Emerging markets vs US", f"{rel:+.1f} pt in 6M", {"E": 1} if rel > 5 else ({"E": -1} if rel < -5 else {}),
+            "Money rotating into emerging markets" if rel > 5 else ("Emerging markets lagging the US" if rel < -5 else "No clear rotation"))
+    if x("nifty", "c6m") is not None and x("em", "c6m") is not None:
+        rel = x("nifty", "c6m") - x("em", "c6m")
+        add("india", "India vs emerging markets", f"{rel:+.1f} pt in 6M", {},
+            "India ahead of its peers" if rel > 5 else ("India behind its peers — catch-up potential if flows return" if rel < -5 else "In line with peers"))
+    c6 = x("usdinr", "c6m")
+    if c6 is not None:
+        weak, strong = c6 > 3, c6 < -2
+        add("inr", "Rupee vs US dollar", f"₹{x('usdinr', 'last'):.2f} · {c6:+.1f}% in 6M",
+            {"E": -1, "G": 1} if weak else ({"E": 1} if strong else {}),
+            "Weak rupee lifts gold in rupee terms and can drive foreign selling" if weak else
+            ("Firm rupee attracts foreign inflows" if strong else "Rupee stable"))
+    c6, p2 = x("brent", "c6m"), x("brent", "pct2y")
+    if c6 is not None:
+        hot, cool = c6 > 20 or (p2 or 0) > 0.85, c6 < -20
+        rupee_oil = c6 + (x("usdinr", "c6m") or 0)
+        add("oil", "Crude oil (imported inflation)", f"Brent ${x('brent', 'last'):.0f} · {c6:+.1f}% in 6M · {rupee_oil:+.1f}% in rupees",
+            {"E": -1, "D": -1} if hot else ({"E": 1, "D": 1} if cool else {}),
+            "Costly oil raises India's inflation and import bill" if hot else ("Cheaper oil eases inflation and helps margins" if cool else "Oil not a pressure point"))
+    if x("copper", "c6m") is not None and x("gold", "c6m") is not None:
+        r = x("copper", "c6m") - x("gold", "c6m")
+        add("cu", "Copper vs gold (growth vs fear)", f"{r:+.1f} pt in 6M",
+            {"E": 1, "S": 1} if r > 10 else ({"G": 1, "S": -1} if r < -10 else {}),
+            "Industrial demand strong — growth assets and silver favoured" if r > 10 else
+            ("Defensive demand dominates — gold favoured over silver" if r < -10 else "Balanced"))
+    vx = x("vix", "last")
+    if vx is not None:
+        add("vix", "Global volatility (VIX)", f"{vx:.1f}", {"G": 1} if vx > 28 else {},
+            "Stress in global markets — gold as a hedge" if vx > 28 else ("Calm, possibly complacent" if vx < 13 else "Normal"))
+    gv, gc = x("gold", "vs200"), x("gold", "c6m")
+    if gv is not None:
+        stretched, down = gv > 20, (gc or 0) < -10
+        add("goldtrend", "Gold trend", f"${x('gold', 'last'):,.0f} · {gv:+.1f}% vs 200-day · {gc:+.1f}% in 6M",
+            {"G": -1} if stretched or down else {},
+            "Gold stretched far above its trend — buy less this month" if stretched else ("Gold in a downtrend" if down else "Healthy trend"))
+    sv = x("silver", "vs200")
+    if sv is not None:
+        add("silvertrend", "Silver trend", f"${x('silver', 'last'):,.2f} · {sv:+.1f}% vs 200-day", {"S": -1} if sv > 25 else {},
+            "Silver stretched above its trend" if sv > 25 else "Normal")
+    asof = max((v.get("d") for v in g.values() if v.get("d")), default=None)
+    return {"signals": sig, "score": tot, "asOf": asof}
+
+
+def apply_metal_tilt(weights, gscore, hz):
+    """Gold/silver weight ±5 from the global score (≥+2 adds, ≤−2 trims; metals stay 5–15%)."""
+    w = dict(weights)
+    if "metal" not in w or hz == "h1" or abs(gscore) < 2:
+        return w, 0
+    if gscore >= 2 and w["metal"] + 5 <= 15:
+        src = next((k for k in ("dcore", "dmed", "dshort", "baf", "arb", "eqsav", "flexi", "core", "lmcore") if w.get(k, 0) > 5), None)
+        if src:
+            w[src] -= 5
+            w["metal"] += 5
+            return w, 5
+    if gscore <= -2 and w["metal"] > 5:
+        dst = next((k for k in ("dcore", "dmed", "dshort", "baf", "flexi", "core", "lmcore") if k in w), None)
+        if dst:
+            w["metal"] -= 5
+            w[dst] += 5
+            return w, -5
+    return w, 0
+
+
+def rate_regime(macro, u, glob=None):
     """Rising / neutral / easing from the policy rate, the 10-year yield, the curve and gilt vs liquid performance."""
     r = (macro or {}).get("rates") or {}
     sig, score = [], 0.0
@@ -414,6 +523,9 @@ def rate_regime(macro, u):
     if gilt is not None and liq is not None:
         d = gilt - liq
         add("Gilt funds vs liquid funds, 6 months", f"{d:+.2f} pt", 1 if d > 1.0 else (-1 if d < -0.5 else 0))
+    if glob and glob.get("signals"):
+        d = glob["score"]["D"]
+        add("Global bonds, oil & inflation expectations", f"{d:+d} from global checks", 0.5 if d >= 2 else (-0.5 if d <= -2 else 0))
     regime = "easing" if score >= 1.5 else ("rising" if score <= -1.5 else "neutral")
     return {"regime": regime, "score": round(score, 2), "signals": sig,
             "repo": repo.get("last"), "g10": g10.get("last"), "g10YearAgo": g10.get("yearAgo"),
@@ -421,7 +533,7 @@ def rate_regime(macro, u):
             "call": (r.get("call") or {}).get("last")}
 
 
-def market_tilt(u, macro, sentiment):
+def market_tilt(u, macro, sentiment, glob=None):
     """Equity tilt in points (−10…+10, 5-pt steps) from valuation, the bond-yield gap and drawdown."""
     val = (macro or {}).get("valuation") or {}
     n50 = val.get("n50") or {}
@@ -458,6 +570,9 @@ def market_tilt(u, macro, sentiment):
     zone = next((m.get("zone") for m in (sentiment or {}).get("markets", []) if m.get("country") == "India"), None)
     if zone in ("Extreme Fear", "Extreme Greed"):
         add("Market sentiment", zone, 5 if zone == "Extreme Fear" else -5)
+    if glob and glob.get("signals"):
+        e = glob["score"]["E"]
+        add("Global macro (dollar, yields, EM flows, rupee, oil)", f"{e:+d} from global checks", 5 if e >= 2 else (-5 if e <= -2 else 0))
     tilt = int(clamp(round(t / 5) * 5, -10, 10))
     return tilt, comps
 
@@ -498,7 +613,7 @@ def sector_funds(u, key):
     return codes
 
 
-def metal_signal(u):
+def metal_signal(u, sscore=0):
     """Gold/silver ratio from the longest-running gold and silver funds; high ratio = silver cheap vs gold."""
     def longest(sub, rx):
         cands = [c for c in u.by_subs([sub]) if re.search(rx, u.g(c, "name") or "", re.I)]
@@ -521,11 +636,13 @@ def metal_signal(u):
     cur = (u.g(g, "nav") or gs[common[-1]]) / (u.g(s, "nav") or ss[common[-1]])
     pct = sum(1 for r in ratios if r < cur) / len(ratios)
     smom = u.g(s, "r3m")
-    choice = "silver" if pct >= 0.7 and (smom is None or smom > -10) else "gold"
+    choice = "silver" if ((pct >= 0.7 and sscore >= -1) or (pct >= 0.55 and sscore >= 2)) and (smom is None or smom > -10) else "gold"
     return {"choice": choice, "ratioPct": round(pct, 3), "silver3m": smom, "gold3m": u.g(g, "r3m"),
             "years": round(len(common) / 52, 1),
-            "note": "Silver is cheap relative to gold" if choice == "silver" else
-                    ("Gold preferred — silver not cheap enough relative to gold" if pct < 0.7 else "Gold preferred — silver momentum weak")}
+            "silverScore": sscore,
+            "note": ("Silver is cheap relative to gold" + (" and global growth signals support it" if sscore >= 2 else "")) if choice == "silver" else
+                    ("Gold preferred — silver not cheap enough relative to gold" if pct < 0.7 else
+                     ("Gold preferred — global signals favour gold over silver" if sscore < -1 else "Gold preferred — silver momentum weak"))}
 
 
 # ───────────────────────────── per-fund checks ─────────────────────────────
@@ -852,7 +969,7 @@ def expected_return(u, slot, code, ctx, macro):
     elif slot == "dcore":
         gross = g10 if sub in ("gilt", "gilt10", "dynbond") else tb364 + (0.5 if sub == "floater" else 0.6)
     elif slot == "metal":
-        gross = ASSUMPTIONS["metalReturn"]
+        gross = ASSUMPTIONS["metalReturn"] + (ctx.get("metalAdj") or 0)
     else:
         gross = 8.0
     if slot in ALPHA_SLOTS and not (sub or "").startswith("idx_"):
@@ -1135,9 +1252,12 @@ def main() -> int:
     review = state.get("reviewed") != month
     dec = state.setdefault("decisions", {})
 
-    rr = rate_regime(macro, u)
+    glob = global_signals(macro)
+    gold_lvl = stable(dec, "goldtilt", "up" if glob["score"]["G"] >= 2 else ("down" if glob["score"]["G"] <= -2 else "flat"), review, strong=True)
+    gscore = {"up": 2, "down": -2}.get(gold_lvl, 0)
+    rr = rate_regime(macro, u, glob)
     regime = stable(dec, "regime", rr["regime"], review, strong=abs(rr["score"]) >= 2.5)
-    tilt_now, tilt_comps = market_tilt(u, macro, sentiment)
+    tilt_now, tilt_comps = market_tilt(u, macro, sentiment, glob)
     tilt = stable(dec, "tilt", tilt_now, review, strong=True)
     rot_now = segment_rotation(macro)
     rot_key = stable(dec, "rotation", f"{rot_now['from']}>{rot_now['to']}:{rot_now['pts']}", review)
@@ -1147,7 +1267,7 @@ def main() -> int:
     gates = valuation_gates(macro, dec, review)
     fpe = (load(MF / "fund_pe.json", {}) or {}).get("funds") or {}
     sectors = sector_table(u, macro)
-    metal = metal_signal(u)
+    metal = metal_signal(u, glob["score"]["S"])
     metal_choice = stable(dec, "metal", metal.get("choice", "gold"), review)
 
     cache = {}
@@ -1174,6 +1294,7 @@ def main() -> int:
             weights, applied = apply_tilt(base, tilt, hz)
             weights, rotated = apply_rotation(weights, rotation, hz)
             weights, cuts = apply_gate(weights, gates)
+            weights, metal_tilt = apply_metal_tilt(weights, gscore, hz)
             pst = state["plans"].setdefault(pid, {"slots": {}})
             chosen, amc_count, slots, changes, skipped = {}, {}, [], [], []
             for slot in sorted(weights, key=ORDER.index):
@@ -1183,6 +1304,7 @@ def main() -> int:
                 m = metal_choice if (rk in ("a", "v") and hz in ("h7", "h10")) else "gold"
                 ctx = {"pool_key": pool_key, "metal": m if slot == "metal" else None, "sector": sector if slot == "theme" else None,
                        "regime": regime, "sector_index": sector_row.get("index"), "sector_label": sector_row.get("label"),
+                       "metalAdj": 1.0 if gscore >= 2 else (-1.0 if gscore <= -2 else 0.0),
                        "profile": "growth" if rk == "v" else "std"}
                 ctx["ctx_tag"] = f"{pool_key}|{ctx['metal']}|{ctx['sector']}"
                 inc = pst["slots"].get(slot)
@@ -1232,7 +1354,7 @@ def main() -> int:
             for s in slots:
                 mix[s["asset"]] = mix.get(s["asset"], 0) + s["w"]
             plans[pid] = {
-                "horizon": hz_label, "risk": rk_label, "years": yrs, "yearsMin": ymin, "yearsMax": ymax, "tilt": applied, "rotated": rotated,
+                "horizon": hz_label, "risk": rk_label, "years": yrs, "yearsMin": ymin, "yearsMax": ymax, "tilt": applied, "rotated": rotated, "metalTilt": metal_tilt,
                 "slots": slots, "mix": mix, "ter": round(sum((u.g(s["code"], "ter") or 0) * s["w"] for s in slots) / 100, 2),
                 "er": round(sum(s["er"] * s["w"] for s in slots) / 100, 2),
                 "hist": {k: past_return(u, slots, k) for k in ("r3y", "r5y")},
@@ -1250,6 +1372,7 @@ def main() -> int:
                       "n50": {k: (val.get("n50") or {}).get(k) for k in ("pe", "pb", "dy", "pePct", "pbPct", "peMed", "pbMed", "r12m")},
                       "valuationAsOf": macro.get("valuationAsOf")},
            "rates": {**rr, "applied": regime},
+           "global": {**glob, "goldTilt": gold_lvl},
            "sectors": [{k: r.get(k) for k in ("key", "label", "pe", "peMed", "valPct", "r6mRel", "r12mRel", "score", "signal", "excluded", "eligible", "years")}
                        for r in sectors],
            "sector": sector, "metal": {**metal, "applied": metal_choice},

@@ -290,6 +290,21 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .chk-sum{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--pos);background:rgba(34,197,94,.12);border-radius:999px;padding:2px 8px;margin-left:6px}
 .sec-tbl{width:100%;font-size:12.5px;border-collapse:collapse}
 .sec-tbl tr.sec-more{display:none}
+.gm-card{margin-bottom:14px}
+.gm-scores{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.gm-scores div{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 10px;min-width:0}
+.gm-scores small{display:block;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text3)}
+.gm-scores b{display:block;font-family:'JetBrains Mono',monospace;font-size:17px;margin-top:2px}
+.gm-scores span{font-size:11px;color:var(--text3)}
+.gm-scores .up b{color:var(--pos)}.gm-scores .dn b{color:var(--neg)}
+.gm-tbl td{vertical-align:top}
+.gm-tbl .sec-n,.gm-tbl .gm-v{white-space:normal;overflow-wrap:anywhere}
+.gm-tbl .sec-n small{display:block;font-weight:400;font-size:11.5px;color:var(--text3);margin-top:2px;line-height:1.4}
+.gm-v{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)}
+.gm-e{white-space:normal}
+.gm-fx{display:inline-block;margin:0 4px 4px 0;padding:2px 7px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+.gm-fx.up{background:rgba(34,197,94,.14);color:var(--pos)}.gm-fx.dn{background:rgba(239,68,68,.12);color:var(--neg)}
+@media (max-width:640px){.gm-scores{grid-template-columns:repeat(2,minmax(0,1fr))}.gm-tbl thead{display:none}.gm-tbl tr{display:block;padding:8px 0;border-bottom:1px solid var(--border)}.gm-tbl td{display:block;border:0;padding:2px 10px}.gm-tbl{table-layout:fixed}}
 .sec-toggle{display:block;margin:12px auto 0;padding:8px 16px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);color:var(--accent);font:600 13px/1.2 inherit;cursor:pointer}
 .sec-toggle:hover{border-color:var(--accent)}
 .sec-tbl th{position:static;background:none;padding:6px 6px;font-size:10.5px}
@@ -2497,6 +2512,19 @@ function renderSip(){
       '<div class="sig2"><span class="sig-k">Silver chosen when</span><span class="sig-v">ratio ≥ 70th pct</span><span></span></div>' +
       '<p class="mi-foot">' + esc(met.note || '') + '. The metal choice applies to 7+ year aggressive and very aggressive plans; other plans hold gold.</p></div>' +
     '</div>';
+  var GL = SIP.global || {};
+  if ((GL.signals || []).length) {
+    var GA = {E:'Equities', D:'Bonds', G:'Gold', S:'Silver'}, gsc = GL.score || {};
+    var chip = function(a, p){ return '<span class="gm-fx ' + (p > 0 ? 'up' : 'dn') + '">' + GA[a] + ' ' + (p > 0 ? '▲' : '▼') + '</span>'; };
+    h += '<div class="card pcard gm-card"><div class="mi-top"><div><div class="sec-title">Global macro checks</div><div class="sec-sub">US dollar, US yields, inflation expectations, emerging-market flows, the rupee, crude oil, copper, volatility and metal trends · as of ' + (GL.asOf ? fmtDate(GL.asOf) : '–') + '</div></div></div>' +
+      '<div class="gm-scores">' + ['E', 'D', 'G', 'S'].map(function(a){ var v = gsc[a] || 0; return '<div class="' + (v >= 2 ? 'up' : v <= -2 ? 'dn' : '') + '"><small>' + GA[a] + '</small><b>' + (v > 0 ? '+' : '') + v + '</b><span>' + (v >= 2 ? 'favoured' : v <= -2 ? 'headwinds' : 'neutral') + '</span></div>'; }).join('') + '</div>' +
+      '<div class="sec-wrap"><table class="sec-tbl gm-tbl"><thead><tr><th>Check</th><th>Reading</th><th>Effect</th></tr></thead><tbody>' +
+      GL.signals.map(function(x){ var fx = Object.keys(x.fav || {}).filter(function(a){ return x.fav[a]; }).map(function(a){ return chip(a, x.fav[a]); }).join(' ');
+        return '<tr><td class="sec-n">' + esc(x.k) + '<small>' + esc(x.note || '') + '</small></td><td class="gm-v">' + esc(x.v) + '</td><td class="gm-e">' + (fx || '<span class="mut">neutral</span>') + '</td></tr>'; }).join('') +
+      '</tbody></table></div>' +
+      '<p class="mi-foot">How these are used: a total of +2 or more for equities adds 5 points to the equity tilt (−2 or less removes 5); the bond total feeds the interest-rate cycle; gold at +2 or more raises the precious-metal share by 5 points (−2 or less trims it, never below 5%) and adjusts its expected return; the silver total helps decide gold vs silver. ' +
+      (GL.goldTilt === 'up' ? 'This month: gold share raised.' : GL.goldTilt === 'down' ? 'This month: gold share trimmed where it was above 5%.' : 'This month: gold share unchanged.') + ' Decisions change only at the monthly review.</p></div>';
+  }
   if (secRows) h += '<div class="card pcard sec-card"><div class="mi-top"><div><div class="sec-title">Sector valuations</div><div class="sec-sub">P/E against each sector\'s own 10-year history and momentum against the Nifty 50 · ★ current sector satellite (7+ year aggressive and very aggressive plans) · only sectors with a fund passing every check can be chosen</div></div></div>' +
     '<div class="sec-wrap"><table class="sec-tbl"><thead><tr><th>Sector</th><th class="num">P/E</th><th class="num hide-m">10Y median</th><th>Cheap ↔ dear</th><th class="num">6M vs Nifty</th><th class="num hide-m">12M vs Nifty</th><th class="num hide-m">Funds passing</th><th>Signal</th></tr></thead><tbody>' + secRows + '</tbody></table></div>' +
     (secAll.length > SEC_TOP ? '<button class="sec-toggle" id="secToggle" type="button">' + (S.secAll ? 'Show top ' + SEC_TOP + ' sectors' : 'Show all ' + secAll.length + ' sectors') + '</button>' : '') + '</div>';

@@ -481,6 +481,15 @@ function verifySmartSip() {
     ok(['rising', 'neutral', 'easing'].includes(P.rates && P.rates.applied), `rate regime ${P.rates && P.rates.applied}`);
     ok(Array.isArray(P.sectors), 'sector table missing');
     ok(P.assumptions && P.assumptions.ltcgEquity > 0, 'tax assumptions missing');
+    if (P.global) {
+      ok(Array.isArray(P.global.signals) && P.global.signals.length >= 6, `global macro: only ${(P.global.signals || []).length} checks`);
+      ok(['E', 'D', 'G', 'S'].every(k => Number.isInteger((P.global.score || {})[k])), 'global macro scores missing');
+      ok(['up', 'down', 'flat'].includes(P.global.goldTilt), `global macro gold tilt ${P.global.goldTilt}`);
+      for (const [id, p] of Object.entries(P.plans)) {
+        const m = p.slots.find(s => s.key === 'metal');
+        if (m) ok(m.w >= 5 && m.w <= 15, `${id}: precious-metal weight ${m.w}`);
+      }
+    }
   }
   console.log(`Smart SIP: ${Object.keys(P.plans).length} plans checked (tilt ${P.market.tilt}, rates ${P.rates && P.rates.applied}, sector ${P.sector})`);
 }
