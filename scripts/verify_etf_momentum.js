@@ -92,6 +92,26 @@ if (bench) {
 const st = D.stats || {};
 for (const k of ['A', 'D', 'R', 'U']) if (st.counts && st.counts[k] !== counts[k]) fail(`count ${k}: stats=${st.counts[k]} recomputed=${counts[k]}`);
 if (checked < 40) fail(`only ${checked} ETFs classified`);
+// long-horizon returns, risk and official facts: plausibility
+let withLong = 0;
+for (const e of D.etfs || []) {
+  const r = e.r || {};
+  for (const [k, lim] of [['1d', 25], ['1y', 300], ['3y', 120], ['5y', 100], ['10y', 80]])
+    if (r[k] != null && !(Math.abs(r[k]) <= lim)) fail(`${e.s}: implausible ${k} return ${r[k]}`);
+  if (r['3y'] != null) withLong++;
+  if (e.vol != null && !(e.vol >= 0 && e.vol < 150)) fail(`${e.s}: volatility ${e.vol}`);
+  if (e.mdd != null && !(e.mdd <= 0 && e.mdd >= -100)) fail(`${e.s}: drawdown ${e.mdd}`);
+  if (e.prem != null && !(Math.abs(e.prem) < 25)) fail(`${e.s}: premium ${e.prem}`);
+  if (e.x && e.x.ter != null && !(e.x.ter >= 0 && e.x.ter <= 2.6)) fail(`${e.s}: expense ratio ${e.x.ter}`);
+}
+if (withLong < 100) fail(`only ${withLong} ETFs have a 3-year return`);
+const histFile = path.join(path.dirname(dataPath), 'etf_hist.json');
+if (fs.existsSync(histFile)) {
+  const H = JSON.parse(fs.readFileSync(histFile, 'utf8'));
+  if (!H.weeks || H.weeks.length < 200) fail(`etf_hist weeks ${H.weeks && H.weeks.length}`);
+  for (const [s, a] of Object.entries(H.etfs || {})) if (a.length !== H.weeks.length) { fail(`etf_hist ${s} length`); break; }
+  if (H.asOf !== D.asOf) fail(`etf_hist asOf ${H.asOf} != ${D.asOf}`);
+} else fail('etf_hist.json missing');
 if (jumps > (D.etfs || []).length * 0.05) fail(`too many suspicious weekly jumps: ${jumps}`);
 
 console.log(`ETFs: ${(D.etfs || []).length} · weeks: ${W} · benchmarks: ${[...benchIds].join(', ')}`);

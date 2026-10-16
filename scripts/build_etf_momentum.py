@@ -185,6 +185,8 @@ def load_nse_list() -> dict[str, dict]:
         sym_c = next((c for c in df.columns if "symbol" in c.lower()), None)
         und_c = next((c for c in df.columns if "underlying" in c.lower()), None)
         nam_c = next((c for c in df.columns if "security" in c.lower() or "name" in c.lower()), None)
+        isin_c = next((c for c in df.columns if "isin" in c.lower()), None)
+        lst_c = next((c for c in df.columns if "listing" in c.lower()), None)
         for _, row in df.iterrows():
             sym = str(row.get(sym_c, "")).strip().upper() if sym_c else ""
             if not sym or sym == "NAN":
@@ -192,11 +194,22 @@ def load_nse_list() -> dict[str, dict]:
             out[sym] = {
                 "full": str(row.get(nam_c, "")).strip() if nam_c else "",
                 "underlying": str(row.get(und_c, "")).strip() if und_c else "",
+                "isin": str(row.get(isin_c, "")).strip().upper() if isin_c else "",
+                "listed": iso_date(str(row.get(lst_c, "")).strip()) if lst_c else "",
             }
         log.info(f"NSE ETF list        : {len(out)}")
     except Exception as exc:  # noqa: BLE001
         log.warning(f"NSE ETF list skipped: {exc}")
     return out
+
+
+def iso_date(v: str) -> str:
+    for fmt in ("%d-%b-%Y", "%d-%b-%y", "%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"):
+        try:
+            return datetime.strptime(v, fmt).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    return ""
 
 
 def load_previous(path: str) -> dict:
@@ -460,6 +473,122 @@ def pct(a: float | None, b: float | None) -> float | None:
     return round((a / b - 1) * 100, 2)
 
 
+# ── Long-horizon performance & risk (daily closes) ───────────────────────────
+from bisect import bisect_right
+
+
+def _shift_months(d: datetime, months: int) -> datetime:
+    y, m = divmod(d.month - 1 + months, 12)
+    y += d.year
+    m += 1
+    for day in (d.day, 30, 29, 28):
+        try:
+            return d.replace(year=y, month=m, day=day)
+        except ValueError:
+            continue
+    return d
+
+
+def perf(d: list, c: list[float], bench: dict | None = None) -> dict:
+    """Point-to-point returns (absolute up to 1 year, CAGR beyond), calendar-year returns and risk."""
+    if len(c) < 2:
+        return {}
+    last_d, last = d[-1], c[-1]
+
+    def at(t: datetime, tol: int = 10):
+        i = bisect_right(d, t) - 1
+        if i < 0 or (t - d[i]).days > tol:
+            return None
+        return c[i]
+
+    def ret(t: datetime, years: float = 0.0):
+        b = at(t)
+        if b is None or b <= 0:
+            return None
+        if years > 1:
+            return round(((last / b) ** (1 / years) - 1) * 100, 2)
+        return round((last / b - 1) * 100, 2)
+
+    r = {"1d": round((last / c[-2] - 1) * 100, 2) if c[-2] > 0 else None,
+         "1w": ret(last_d - timedelta(days=7), 0), "1m": ret(_shift_months(last_d, -1)),
+         "3m": ret(_shift_months(last_d, -3)), "6m": ret(_shift_months(last_d, -6)),
+         "ytd": ret(datetime(last_d.year - 1, 12, 31), 0), "1y": ret(_shift_months(last_d, -12)),
+         "3y": ret(_shift_months(last_d, -36), 3), "5y": ret(_shift_months(last_d, -60), 5),
+         "10y": ret(_shift_months(last_d, -120), 10)}
+    yrs = (last_d - d[0]).days / 365.25
+    if yrs >= 0.25 and c[0] > 0:
+        r["si"] = round(((last / c[0]) ** (1 / yrs) - 1) * 100, 2) if yrs >= 1 else round((last / c[0] - 1) * 100, 2)
+    out = {"r": r, "first": d[0].strftime("%Y-%m-%d")}
+    cy = {}
+    for y in range(last_d.year - 6, last_d.year):
+        a, b = at(datetime(y - 1, 12, 31)), at(datetime(y, 12, 31))
+        if a and b and d[0] <= datetime(y - 1, 12, 31) + timedelta(days=7):
+            cy[str(y)] = round((b / a - 1) * 100, 2)
+    if cy:
+        out["cy"] = cy
+    # risk on daily log returns
+    lr = [math.log(c[i] / c[i - 1]) for i in range(max(1, len(c) - 250), len(c)) if c[i] > 0 and c[i - 1] > 0]
+    if len(lr) >= 120:
+        m = sum(lr) / len(lr)
+        out["vol"] = round(math.sqrt(sum((x - m) ** 2 for x in lr) / (len(lr) - 1)) * math.sqrt(250) * 100, 2)
+    i3 = bisect_right(d, _shift_months(last_d, -36))
+    if (last_d - d[0]).days >= 365:
+        peak, mdd = 0.0, 0.0
+        for x in c[i3:]:
+            peak = max(peak, x)
+            mdd = min(mdd, x / peak - 1)
+        out["mdd"] = round(mdd * 100, 2)
+    lr3 = [math.log(c[i] / c[i - 1]) for i in range(max(1, i3), len(c)) if c[i] > 0 and c[i - 1] > 0]
+    if r.get("3y") is not None and len(lr3) >= 500:
+        m = sum(lr3) / len(lr3)
+        v3 = math.sqrt(sum((x - m) ** 2 for x in lr3) / (len(lr3) - 1)) * math.sqrt(250) * 100
+        out["vol3"] = round(v3, 2)
+        out["rr3"] = round(r["3y"] / v3, 2) if v3 > 0.5 else None
+        dn = [x for x in lr3 if x < 0]
+        if len(dn) > 20:
+            out["dvol3"] = round(math.sqrt(sum(x * x for x in dn) / len(lr3)) * math.sqrt(250) * 100, 2)
+    if bench:
+        pts = [(d[i], c[i - 1], c[i]) for i in range(max(1, len(c) - 250), len(c))]
+        xs, ys = [], []
+        for dt, p0, p1 in pts:
+            b0 = bench.get(dt)
+            bp = bench.get(("prev", dt))
+            if b0 and bp and p0 > 0:
+                xs.append(b0 / bp - 1)
+                ys.append(p1 / p0 - 1)
+        if len(xs) >= 120:
+            mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
+            vx = sum((x - mx) ** 2 for x in xs)
+            if vx > 0:
+                out["beta"] = round(sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / vx, 2)
+                vy = sum((y - my) ** 2 for y in ys)
+                if vy > 0:
+                    out["corr"] = round(sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / math.sqrt(vx * vy), 2)
+    return out
+
+
+def bench_lookup(d: list, c: list[float]) -> dict:
+    """{date: close, ("prev", date): previous close} for daily beta alignment."""
+    m = {}
+    for i in range(1, len(c)):
+        m[d[i]] = c[i]
+        m[("prev", d[i])] = c[i - 1]
+    return m
+
+
+def load_facts() -> dict:
+    try:
+        with open(os.path.join(ROOT, "data", "mf", "etf_facts.json"), encoding="utf-8") as fh:
+            return json.load(fh).get("etfs", {})
+    except Exception as exc:  # noqa: BLE001
+        log.warning(f"ETF facts unavailable: {exc}")
+        return {}
+
+
+HIST_OUT = os.path.join(ROOT, "data", "etf_hist.json")
+HIST_WEEKS = 262            # ~5 years of weekly closes for the page's long-term chart
+
+
 SESSION_FINAL_IST = (15, 45)   # NSE closes 15:30 IST; closing prices settle by ~15:40
 
 def main() -> int:
@@ -481,7 +610,7 @@ def main() -> int:
 
     bench_syms = [c for _, _, _, cands in BENCHMARKS for c in cands]
     etf_syms = [f"{s}.NS" for s in universe]
-    raw = download(bench_syms + etf_syms)
+    raw = download(bench_syms + etf_syms, period="max")
 
     # ── as-of date: the latest session most ETFs have traded; indices must reach it ──
     def last_day(tk: str):
@@ -542,10 +671,12 @@ def main() -> int:
                 wk = weekly_last(s[0], s[1])
                 if len(wk) >= 60:
                     bench_week_maps[bid] = wk
+                    bp = perf(s[0], s[1])
                     bench_out.append({"id": bid, "name": label, "group": group,
                                       "proxy": not tk.startswith("^") and tk != "NIFTY_MIDCAP_100.NS",
                                       "last": to_rounded(s[1][-1]), "lastDate": s[0][-1].strftime("%Y-%m-%d"),
-                                      "_tk": tk})
+                                      "r": bp.get("r", {}), "cy": bp.get("cy", {}), "vol": bp.get("vol"),
+                                      "mdd": bp.get("mdd"), "_tk": tk})
                     log.info(f"benchmark {bid:<12} ← {tk}")
                     break
         else:
@@ -572,11 +703,32 @@ def main() -> int:
                 vals.append(last if (last is not None and gap <= FFILL_LIMIT) else None)
         return vals
 
+    week_keys5 = sorted(cal_map)[-HIST_WEEKS:]
+    hist_dates = [cal_map[k][0] for k in week_keys5]
+
+    def align5(wk: dict) -> list:
+        vals, gap, last = [], 0, None
+        for k in week_keys5:
+            if k in wk:
+                last, gap = wk[k][1], 0
+                vals.append(to_rounded(wk[k][1]))
+            else:
+                gap += 1
+                vals.append(to_rounded(last) if (last is not None and gap <= FFILL_LIMIT) else None)
+        return vals
+
+    hist = {"asOf": None, "weeks": hist_dates, "bench": {}, "etfs": {}}
     bench_closes = {}
+    n50 = None
     for b in bench_out:
         b["c"] = [to_rounded(v) for v in align(bench_week_maps[b["id"]])]
         bench_closes[b["id"]] = b["c"]
+        hist["bench"][b["id"]] = align5(bench_week_maps[b["id"]])
+        if b["id"] == DEFAULT_BENCH:
+            sb = prep(b["_tk"])
+            n50 = bench_lookup(sb[0], sb[1]) if sb else None
         del b["_tk"]
+    facts = load_facts()
 
     # ── ETFs ──
     etfs, failed, insufficient = [], [], 0
@@ -586,6 +738,17 @@ def main() -> int:
         cat = categorise(sym, name, und)
         s = prep(f"{sym}.NS")
         rec = {"s": sym, "n": name, "a": amc, "u": und, "k": cat}
+        pv = prev_names.get(sym, {})
+        isin = (nse.get(sym, {}).get("isin") or pv.get("i") or "").upper()
+        if re.fullmatch(r"INF[A-Z0-9]{9}", isin):
+            rec["i"] = isin
+        listed = nse.get(sym, {}).get("listed") or pv.get("ld") or ""
+        if listed:
+            rec["ld"] = listed
+        fx = facts.get(isin) if isin else None
+        if fx:
+            rec["x"] = {k: fx[k] for k in ("ter", "terDate", "aum", "aumAsOf", "nav", "navDate", "benchmark", "risk",
+                                           "launch", "managers", "sid", "ssd", "website", "objective") if fx.get(k) not in (None, "", [])}
         if not s or len(s[0]) < 5:
             failed.append(sym)
             rec.update({"q": "nodata", "c": []})
@@ -598,11 +761,22 @@ def main() -> int:
         rec["p"] = to_rounded(last_px)
         rec["d"] = last_dt.strftime("%Y-%m-%d")
 
-        def back(n: int):
-            return c[-1 - n] if len(c) > n else None
-        rec["r"] = {"1w": pct(last_px, back(5)), "1m": pct(last_px, back(21)),
-                    "3m": pct(last_px, back(63)), "6m": pct(last_px, back(126)),
-                    "1y": pct(last_px, back(250))}
+        pf = perf(d, c, n50)
+        rec["r"] = pf.get("r", {})
+        for k in ("cy", "vol", "mdd", "vol3", "rr3", "dvol3", "beta", "corr", "first"):
+            if pf.get(k) is not None:
+                rec[k] = pf[k]
+        av = [vv for vv in v[-20:]]
+        rec["av"] = int(sum(av) / len(av)) if av else 0
+        if fx and fx.get("nav") and fx.get("navDate"):
+            nd = datetime.strptime(fx["navDate"], "%Y-%m-%d")
+            j = bisect_right(d, nd) - 1
+            if j >= 0 and d[j].date() == nd.date() and fx["nav"] > 0:
+                prem = (c[j] / fx["nav"] - 1) * 100
+                if abs(prem) < 25:                      # wider gaps mean a unit mismatch, not a real premium
+                    rec["prem"] = round(prem, 2)
+                    rec["premD"] = fx["navDate"]
+        hist["etfs"][sym] = align5(weekly_last(d, c))
         yr = c[-250:]
         rec["h52"] = to_rounded(max(yr)); rec["l52"] = to_rounded(min(yr))
         tv = [px * vv for px, vv in zip(c[-20:], v[-20:])]
@@ -673,6 +847,11 @@ def main() -> int:
                   "insufficient": insufficient, "noData": len(failed), "counts": counts},
     }
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
+    hist["asOf"] = last_trade
+    hist["etfs"] = {k: v for k, v in hist["etfs"].items() if any(x is not None for x in v)}
+    with open(HIST_OUT + ".tmp", "w", encoding="utf-8") as fh:
+        json.dump(hist, fh, separators=(",", ":"))
+    os.replace(HIST_OUT + ".tmp", HIST_OUT)
     tmp = args.out + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
         json.dump(payload, fh, separators=(",", ":"), ensure_ascii=False)
