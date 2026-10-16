@@ -34,6 +34,7 @@ on:
       - 'scripts/mf_enrich.py'
       - 'scripts/build_mf_nfo.py'
       - 'scripts/build_smart_sip.py'
+      - 'scripts/build_macro.py'
       - 'scripts/audit_mf_live.py'
       - 'scripts/verify_mf_screener.js'
       - '.github/workflows/mf_screener.yml'
@@ -114,6 +115,11 @@ jobs:
       - name: New fund offers
         continue-on-error: true
         run: python scripts/build_mf_nfo.py
+
+      - name: Market & rates inputs (rates, index valuations)
+        continue-on-error: true
+        timeout-minutes: 15
+        run: python scripts/build_macro.py
 
       - name: Smart SIP model plans
         run: python scripts/build_smart_sip.py
