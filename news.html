@@ -1035,7 +1035,11 @@ body{
 .story-modal-body{
   padding:24px 28px 32px;
   overflow-y:auto;flex:1;min-height:0;
-  background:var(--card);
+  /* Always dark — all story HTML uses dark-palette inline colors; forces Safari/Telegram
+     not to apply their own dark-mode adaptation on top, which caused black-on-black or
+     white-on-white text depending on the browser's light/dark state. */
+  background:#0a1626!important;
+  color-scheme:dark;
   scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
 }
 .story-modal-body::-webkit-scrollbar{width:5px}
@@ -1045,12 +1049,12 @@ body{
 .story-modal-headline{
   font-family:'Playfair Display',Georgia,serif;
   font-size:clamp(18px,3.5vw,26px);font-weight:700;
-  color:var(--text);line-height:1.35;margin-bottom:14px;
+  color:#e2eeff!important;line-height:1.35;margin-bottom:14px;
 }
 .story-modal-meta{
   display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-  font-size:12px;color:var(--text2);margin-bottom:20px;
-  padding-bottom:14px;border-bottom:1px solid var(--border);
+  font-size:12px;color:#8ea8c8!important;margin-bottom:20px;
+  padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.1)!important;
 }
 .story-modal-meta-sep{opacity:.4}
 .story-modal-ai-badge{
@@ -1059,12 +1063,12 @@ body{
   padding:2px 8px;border-radius:4px;letter-spacing:.3px;
 }
 .story-body{
-  font-size:16px;color:var(--text);line-height:1.9;
+  font-size:16px;color:#e2eeff;line-height:1.9;
   margin-bottom:24px;
   font-family:'Noto Sans Malayalam','DM Sans',-apple-system,sans-serif;
 }
-.story-body p{margin-bottom:16px;color:var(--text)}
-.story-body strong{color:var(--text);font-weight:600}
+.story-body p{margin-bottom:16px;color:#c8d8f0}
+.story-body strong{color:#f1f5f9;font-weight:600}
 /* Some posts arrive wrapped in a code block (<pre class="ql-syntax">). Render it
    as readable prose — proper Malayalam font, wrapping, normal spacing — instead
    of cramped monospace. */
@@ -1157,14 +1161,8 @@ body{
 [data-theme="gemini"]   .story-body a
 { color: var(--burn2, #60a5fa) !important; }
 
-/* 3. Adapt hardcoded white/light solid backgrounds (disclaimers, callout
-      boxes) to a semi-transparent dark-friendly surface.
-      Excludes <img> and <svg> to avoid nuking real images.                    */
-[data-theme="midnight"] .story-body :not(img):not(svg)[style*="background"],
-[data-theme="maroon"]   .story-body :not(img):not(svg)[style*="background"],
-[data-theme="gold"]     .story-body :not(img):not(svg)[style*="background"],
-[data-theme="gemini"]   .story-body :not(img):not(svg)[style*="background"]
-{ background: rgba(255,255,255,.06) !important; }
+/* 3. (removed — story modal is always dark now, so inline backgrounds render
+      correctly without conversion to transparent) */
 
 /* 4. Neutralise hardcoded table borders that vanish on dark backgrounds       */
 [data-theme="midnight"] .story-body table,[data-theme="midnight"] .story-body th,[data-theme="midnight"] .story-body td,
