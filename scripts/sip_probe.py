@@ -1,72 +1,57 @@
-"""Temporary probe: index valuations, policy rates, government bond yields."""
-import json, re, requests, time
+"""Temporary probe 2: valuation history + 10Y yield."""
+import json, re, requests, time, io
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/129.0 Safari/537.36"}
 out = {}
 def tryit(k, fn):
-    try:
-        out[k] = fn()
-    except Exception as e:
-        out[k] = "ERR " + str(e)[:200]
-S = requests.Session(); S.headers.update(UA)
-# 1. niftyindices P/E P/B history
-def ni():
-    S.get("https://www.niftyindices.com/reports/historical-data", timeout=30)
-    res = {}
-    for name in ["NIFTY 50", "NIFTY 500", "NIFTY AUTO", "NIFTY PHARMA", "NIFTY REALTY", "NIFTY INDIA MANUFACTURING", "NIFTY HEALTHCARE INDEX"]:
-        body = {"cinfo": json.dumps({"name": name, "startDate": "01-Jan-2016", "endDate": "15-Oct-2026", "indexName": name}).replace('"', "'")}
-        r = S.post("https://www.niftyindices.com/Backpage.aspx/getpepbHistoricaldataDBtoString", json=body,
-                   headers={"Content-Type": "application/json; charset=utf-8", "X-Requested-With": "XMLHttpRequest",
-                            "Referer": "https://www.niftyindices.com/reports/historical-data", "Origin": "https://www.niftyindices.com"}, timeout=60)
-        t = r.text
-        try:
-            arr = json.loads(json.loads(t)["d"])
-            res[name] = {"n": len(arr), "first": arr[-1] if arr else None, "last": arr[0] if arr else None}
-        except Exception:
-            res[name] = [r.status_code, t[:300]]
+    try: out[k] = fn()
+    except Exception as e: out[k] = "ERR " + str(e)[:200]
+def nse_session():
+    s = requests.Session(); s.headers.update({**UA, "Accept": "*/*", "Referer": "https://www.nseindia.com/"})
+    s.get("https://www.nseindia.com", timeout=20); return s
+def closeall():
+    s = nse_session(); res = {}
+    for d in ["15102026", "30092026", "29092021", "31012017", "30062016"]:
+        r = s.get(f"https://nsearchives.nseindia.com/content/indices/ind_close_all_{d}.csv", timeout=40)
+        lines = r.text.splitlines()
+        res[d] = [r.status_code, len(lines), lines[:1], [l for l in lines if re.match(r'"?(Nifty 50|Nifty Auto|NIFTY 10 yr|Nifty 10 yr|Nifty Realty)', l, re.I)][:6]]
         time.sleep(1)
     return res
-tryit("niftyindices", ni)
-# 2. NSE all indices (current pe/pb/dy)
-def nse():
-    s = requests.Session(); s.headers.update({**UA, "Accept": "application/json", "Referer": "https://www.nseindia.com/"})
-    s.get("https://www.nseindia.com", timeout=20)
-    j = s.get("https://www.nseindia.com/api/allIndices", timeout=30).json()
-    d = j.get("data", [])
-    return {"n": len(d), "sample": [{k: x.get(k) for k in ("index", "last", "pe", "pb", "dy", "perChange365d")} for x in d if x.get("index") in ("NIFTY 50", "NIFTY AUTO", "NIFTY REALTY", "NIFTY PHARMA", "NIFTY 500")]}
-tryit("nse_allIndices", nse)
-# 3. RBI home page rates
-def rbi():
-    res = {}
-    for u in ["https://www.rbi.org.in/", "https://website.rbi.org.in/web/rbi"]:
-        try:
-            t = S.get(u, timeout=40).text
-            txt = re.sub(r"<[^>]+>", " ", t); txt = re.sub(r"\s+", " ", txt)
-            res[u] = [m for m in re.findall(r"(?:Policy Repo Rate|Repo Rate|Standing Deposit|Marginal Standing|Bank Rate|91 day|182 day|364 day|T-Bill|10 Year|G-Sec|CRR|SLR)[^0-9%]{0,40}[0-9.]+\s*%?", txt)][:30]
-        except Exception as e:
-            res[u] = str(e)[:150]
-    return res
-tryit("rbi", rbi)
-# 4. FRED series
+tryit("ind_close_all", closeall)
+def bondidx():
+    s = nse_session(); j = s.get("https://www.nseindia.com/api/allIndices", timeout=30).json()
+    return [ {k: x.get(k) for k in ("index", "last", "pe", "pb", "dy", "key")} for x in j.get("data", []) if re.search(r"g-?sec|bond|gilt|yield|sdl|t-?bill", x.get("index",""), re.I)] + [sorted({x.get("key") for x in j.get("data", [])})]
+tryit("nse_bond_indices", bondidx)
 def fred():
     res = {}
-    for sid in ["INDIRLTLT01STM", "IR3TIB01INM156N", "INTDSRINM193N", "INDCPIALLMINMEI"]:
-        r = S.get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}", timeout=40)
-        lines = r.text.strip().splitlines()
-        res[sid] = [r.status_code, len(lines), lines[:2], lines[-3:]]
+    for sid in ["INDIRLTLT01STM", "IR3TIB01INM156N"]:
+        r = requests.get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}", headers=UA, timeout=90)
+        lines = r.text.strip().splitlines(); res[sid] = [r.status_code, len(lines), lines[-3:]]
     return res
 tryit("fred", fred)
-# 5. other yield pages
-def others():
+def wgb():
     res = {}
-    for u in ["https://www.ccilindia.com/web/ccil/home", "https://www.fbil.org.in/", "https://www.worldgovernmentbonds.com/bond-historical-data/india/10-years/",
-              "https://in.investing.com/rates-bonds/india-10-year-bond-yield-historical-data"]:
+    for u in ["https://www.ccilindia.com/web/ccil/tenor-wise-yields", "https://www.ccilindia.com/web/ccil/zcyc", "https://www.rbi.org.in/Scripts/BS_NSDPDisplay.aspx?param=4",
+              "https://tradingeconomics.com/india/government-bond-yield", "https://www.cnbc.com/quotes/IN10Y-IN", "https://www.marketwatch.com/investing/bond/tmbmkin-10y?countrycode=bx",
+              "https://query1.finance.yahoo.com/v8/finance/chart/IN10Y.BOND?range=5d&interval=1d"]:
         try:
-            r = S.get(u, timeout=40)
+            r = requests.get(u, headers=UA, timeout=40)
             txt = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", r.text))
-            res[u] = [r.status_code, re.findall(r"(?:10[- ]?(?:Yr|Year)[^0-9]{0,60}[0-9]\.[0-9]{2,4})", txt)[:5]]
+            res[u] = [r.status_code, len(r.text), re.findall(r"(?:10[- ]?(?:Yr|Year|Y)\b[^0-9]{0,80}[0-9]\.[0-9]{2,4})", txt)[:4], txt[:200] if r.status_code != 200 else re.findall(r"[0-9]\.[0-9]{3,4}\s*%", txt)[:8]]
         except Exception as e:
             res[u] = str(e)[:150]
     return res
-tryit("others", others)
-json.dump(out, open(".probe/sip_probe.json", "w"), indent=1, default=str)
-print(json.dumps(out, indent=1, default=str)[:6000])
+tryit("yield_pages", wgb)
+def niftyxhr():
+    from playwright.sync_api import sync_playwright
+    caps = []
+    with sync_playwright() as p:
+        b = p.chromium.launch(); pg = b.new_page()
+        pg.on("request", lambda rq: caps.append([rq.method, rq.url[:160], (rq.post_data or "")[:200]]) if rq.resource_type in ("xhr", "fetch") else None)
+        pg.goto("https://www.niftyindices.com/reports/historical-data", timeout=60000); pg.wait_for_timeout(5000)
+        html = pg.content()
+        btns = re.findall(r'id="([^"]*(?:pe|PE|Pe|pepb|PEPB)[^"]*)"', html)[:20]
+        b.close()
+    return {"xhr": caps[:30], "ids": btns}
+tryit("niftyindices_xhr", niftyxhr)
+json.dump(out, open(".probe/sip_probe2.json", "w"), indent=1, default=str)
+print(json.dumps(out, indent=1, default=str)[:9000])
