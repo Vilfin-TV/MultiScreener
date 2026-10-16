@@ -348,7 +348,8 @@ function verifyAgainstPrevious(J, C) {
     }
     if (q[PC.ter] != null && r[C.ter] != null && Math.abs(r[C.ter] - q[PC.ter]) > 0.75) terJumps++;
     if ('aum' in PC && q[PC.aum] > 50 && r[C.aum] != null && (r[C.aum] / q[PC.aum] > 3 || r[C.aum] / q[PC.aum] < 0.33)) aumJumps++;
-    if (q[PC.sub] !== r[C.sub]) subMoves++;
+    // a renamed or newly split category is not a move; only funds whose old category still exists count
+    if (q[PC.sub] !== r[C.sub] && J.subs[q[PC.sub]]) subMoves++;
   }
   ok(navJumps <= Math.max(3, n * 0.005), `${navJumps} funds with implausible NAV moves since the last publish`);
   ok(terJumps <= Math.max(10, n * 0.02), `${terJumps} expense ratios changed by more than 0.75 points`);
@@ -395,7 +396,7 @@ function verifyHoldings() {
       if (h.credit) ok(h.credit.reduce((a, x) => a + x[1], 0) <= (h.mix.debt || 0) + 0.1, `${id}: credit split exceeds debt share`);
       // the portfolio must fit the fund's category (guards against a sheet being matched to the wrong fund)
       const eq = (h.mix.equity || 0) + (h.mix.overseas || 0) + (h.mix.reit || 0);
-      if (EQUITY_DIRECT.has(sub)) ok(eq >= 60, `${id}: equity fund holds only ${eq.toFixed(1)}% equity`);
+      if (EQUITY_DIRECT.has(sub) || /^(sec_|idx_)/.test(sub)) ok(eq >= 60, `${id}: equity fund holds only ${eq.toFixed(1)}% equity`);
       if (DEBT_DIRECT.has(sub)) ok((h.mix.equity || 0) <= 5, `${id}: debt fund holds ${h.mix.equity}% equity`);
     }
   }

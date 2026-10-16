@@ -112,11 +112,14 @@ def parse_alloc(text: str | None) -> list[dict]:
     out = []
     for m in re.finditer(r"([^,;()]+?)\s*[-–:]?\s*\(?\s*(\d+(?:\.\d+)?)\s*%?\s*(?:-|–|to)\s*(\d+(?:\.\d+)?)\s*%\s*\)?", text or ""):
         label = re.sub(r"\s+", " ", m.group(1)).strip(" -–,")
+        label = re.split(r"(?<=[a-z])[:.]\s+(?=[A-Z])|:\s*", label)[-1].strip(" -–,")   # drop "The asset allocation … :" intros
         if len(label) < 3:
             continue
         lo, hi = float(m.group(2)), float(m.group(3))
         low = label.lower()
-        if re.search(r"debt|money market|bond|g-?sec|government|treasury|tri-?party|repo|cash|fixed income|sdl|t-?bill|cp|cd", low):
+        if re.search(r"etcd|gold|silver|commodit", low):
+            kind = "commodity"
+        elif re.search(r"debt|money market|bond|g-?sec|government|treasury|tri-?party|repo|cash|fixed income|sdl|t-?bill|\bcps?\b|\bcds?\b", low):
             kind = "debt"
         elif re.search(r"equity|stock|share|arbitrage|derivative", low):
             kind = "equity"
@@ -134,7 +137,152 @@ def parse_alloc(text: str | None) -> list[dict]:
     return out[:10]
 
 
+# ───────── scheme summaries come in four layouts; convert all of them to the standard one ─────────
+_LABELS = [  # (regex on a normalised row label, standard tag)
+    (r"^fund_?name$", "Fund_Name"), (r"^fund_?type$", "Fund_Type"),
+    (r"riskometer.*launch", "Riskometer_At_the_time_of_Launch"), (r"riskometer.*(as_?on|date)", "Riskometer_as_on_Date"),
+    (r"category.*sebi", "Category_as_Per_SEBI_Categorization_Circular"), (r"potential_?risk", "Potential_Risk_Class_as_on_date"),
+    (r"objective", "Description_Objective_of_the_scheme"), (r"stated_?asset_?allocation", "Stated_Asset_Allocation"),
+    (r"^face_?value", "Face_Value"), (r"^allotment_?date", "Allotment_Date"),
+    (r"benchmark.*(tier_?1|tier_?i)$", "Benchmark_Tier_1"), (r"benchmark.*(tier_?2|tier_?ii)$", "Benchmark_Tier_2"),
+    (r"annual_?expense", "Annual_Expense_Stated_maximum"), (r"exit_?load", "Exit_Load_if_applicable"),
+    (r"^custodian", "Custodian"), (r"^auditor", "Auditor"), (r"^registrar", "Registrar"), (r"^listing", "Listing_Details"),
+    (r"^minimum_?application_?amount$", "Minimum_Application_Amount"), (r"^minimum_?additional_?amount$", "Minimum_Additional_Amount"),
+    (r"side_?pocket|segr?egated_?portfolio", "Sidepocketing_if_applicable"),
+]
+_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def _iso_to_dmy(v: str) -> str:
+    m = re.match(r"^(\d{4})-(\d{2})-(\d{2})(?:T[\d:.]+)?$", v.strip())
+    return f"{m.group(3)}-{_MONTHS[int(m.group(2)) - 1]}-{m.group(1)}" if m else v
+
+
+def _local(tag) -> str:
+    return tag.split("}")[-1] if isinstance(tag, str) else ""
+
+
+def _rows(root) -> list[list[str]]:
+    """Text of every table row in an Excel-2003 XML workbook or an OpenDocument flat file."""
+    out = []
+    for row in root.iter():
+        if _local(row.tag) not in ("Row", "table-row"):
+            continue
+        cells = []
+        for c in row:
+            if _local(c.tag) not in ("Cell", "table-cell"):
+                continue
+            txt = "\n".join("".join(e.itertext()).strip() for e in c.iter() if _local(e.tag) in ("Data", "p")).strip()
+            cells.append(txt)
+        if any(cells):
+            out.append(cells)
+    return out
+
+
+def _std_xml(fields: dict) -> str:
+    body = "".join(f"<{k}>{html.escape(v)}</{k}>" for k, v in fields.items() if v)
+    return f"<SchemeSummaryDocument><SchemeSummary>{body}</SchemeSummary></SchemeSummaryDocument>"
+
+
+def normalise_ssd(text: str) -> str:
+    """Return the scheme summary in the standard <SchemeSummary> layout (unchanged if it already is)."""
+    if not text or "<SchemeSummary" in text:
+        return text
+    try:
+        root = ET.fromstring(text.lstrip("﻿").replace("ï»¿", "").encode("utf-8"))
+    except ET.ParseError:
+        return text
+    f = {}
+    if _local(root.tag) == "root":                      # JSON-style XML (e.g. SBI)
+        def first(tag):
+            e = root.find(tag)
+            return _clean(e.text) if e is not None and e.text else ""
+        for tag in ("Fund_Name", "Riskometer_At_the_time_of_Launch", "Riskometer_as_on_Date",
+                    "Category_as_Per_SEBI_Categorization_Circular", "Description_Objective_of_the_scheme", "Allotment_Date",
+                    "Benchmark_Tier_1", "Benchmark_Tier_2", "Annual_Expense_Stated_maximum", "Custodian", "Auditor",
+                    "Registrar", "Listing_Details", "Minimum_Application_Amount", "Minimum_Additional_Amount", "Face_Value",
+                    "Exit_Load_if_applicable", "Fund_Type"):
+            f[tag] = first(tag)
+        f["Potential_Risk_Class_as_on_date"] = first("Potential_Risk_Class_as_on_Date") or first("Potential_Risk_Class_as_on_date")
+        f["ISINs"] = ", ".join(_clean(e.text) for e in root.iter("ISIN") if e.text)
+        alloc = []
+        for arr in root:
+            if arr.tag.startswith("Stated_Asset_Allocation"):
+                for it in arr:
+                    ins, ind = it.findtext("Instruments") or "", it.findtext("IndicativeAllocation") or ""
+                    if ins.strip() and ind.strip():
+                        alloc.append(f"{re.sub(r'[()^*#]', ' ', _clean(ins)).strip()} - ({_clean(ind)})")
+        f["Stated_Asset_Allocation"] = ", ".join(alloc)
+        names, dates = [], []
+        for arr in root:
+            if arr.tag.startswith("Fund_Manager"):
+                for it in arr:
+                    n = _clean(it.findtext("Name") or "")
+                    if n:
+                        names.append(n)
+                        dates.append(f"{n} - {_iso_to_dmy(_clean(it.findtext('FundManagerFromDate') or ''))}")
+        f["Fund_Manager_Name"], f["Fund_Manager_From_Date"] = ", ".join(names), ", ".join(dates)
+        sip = [float(m) for t in root.iter("MinimumInstalments") if t.text and re.search(r"monthly.*\bsip\b", t.text, re.I)
+               for m in re.findall(r"Rs\.?\s*([\d.]+)", t.text)]
+        if sip:
+            f["SIP_SWP__STP_Details_Minimum_amount"] = f"Monthly - Rs. {int(min(sip))}"
+        f = {k: re.sub(r"\s\?\s", " – ", v) for k, v in f.items()}   # an en dash arrives as "?" in this layout
+        return _std_xml(f)
+    rows = _rows(root)                                  # Excel / OpenDocument workbooks
+    if not rows:
+        return text
+    names, types, dates, isins, section, last = [], [], [], [], "", ""
+    for cells in rows:
+        cells = [c for c in cells]
+        if len(cells) >= 3 and re.fullmatch(r"\d*\.?|\*", cells[0].strip()):
+            label, value = cells[1], " ".join(c for c in cells[2:] if c).strip()
+        elif len(cells) >= 2:
+            label, value = cells[0], " ".join(c for c in cells[1:] if c).strip()
+        else:
+            if re.search(r"\b(sip|stp|swp)\b", cells[0], re.I):
+                section = cells[0].lower()
+            continue
+        key = re.sub(r"[^a-z0-9]+", "_", label.lower()).strip("_")
+        if re.match(r"(sip|stp|swp)_?details", key):
+            section = key
+            continue
+        if re.search(r"fund_?manager.*name", key):
+            names.append(value); last = "fm"; continue
+        if re.search(r"fund_?manager.*type", key):
+            types.append(value); continue
+        if re.search(r"fund_?manager.*(from|date)", key):
+            dates.append(_iso_to_dmy(value)); continue
+        if key == "isins":
+            last = "isin"; continue
+        if re.fullmatch(r"INF[A-Z0-9]{9}", value):
+            isins.append(value); continue
+        if key == "minimum_amount" and section.startswith("sip") and re.fullmatch(r"[\d.,]+", value):
+            f["SIP_SWP__STP_Details_Minimum_amount"] = f"Monthly - Rs. {value}"
+            continue
+        if last == "expense" and key in ("regular", "direct"):
+            try:
+                v = float(value)
+                f.setdefault("_exp", []).append(f"{label.title()} Plan - {round(v * 100 if v < 0.2 else v, 2)}")
+            except ValueError:
+                pass
+            continue
+        for rx, tag in _LABELS:
+            if re.search(rx, key) and tag not in f:
+                f[tag] = _iso_to_dmy(value) if tag == "Allotment_Date" else value
+                last = "expense" if tag == "Annual_Expense_Stated_maximum" else tag
+                break
+    if f.get("_exp"):
+        f["Annual_Expense_Stated_maximum"] = ", ".join(f.pop("_exp"))
+    f.pop("_exp", None)
+    f["ISINs"] = ", ".join(isins)
+    f["Fund_Manager_Name"] = ", ".join(n for n in names if n)
+    f["Fund_Manager_From_Date"] = ", ".join(f"{n} - {d}" for n, d in zip(names, dates) if n and d)
+    f["Fund_Manager_Type_PrimaryComanageDescription"] = ", ".join(f"{n} - {t}" for n, t in zip(names, types) if n and t)
+    return _std_xml({k: v for k, v in f.items() if isinstance(v, str)})
+
+
 def parse_ssd(xml_text: str) -> dict:
+    xml_text = normalise_ssd(xml_text)
     try:
         root = ET.fromstring(xml_text.lstrip("﻿").replace("ï»¿", "").encode("utf-8"))
     except ET.ParseError:
@@ -204,8 +352,8 @@ class Enricher:
         self.budget = budget_s
         self.workers = workers
         c = _load(cache_path, {})
-        if c.get("_v") != 2:
-            c = {"_v": 2, "amcs": {}, "sd": {}}
+        if c.get("_v") != 3:
+            c = {"_v": 3, "amcs": {}, "sd": {}}
         self.c = c
         self.stat = Counter()
 
@@ -270,7 +418,7 @@ class Enricher:
                 q = x.get("As_At_The_End_Of") or q
             rec["aum"] = {"totalLakh": round(tot, 2), "quarter": q, "plans": per}
         x = self._get(f"{PORTAL}/spages/SSD_{sid}.xml", as_json=False)
-        if x and "<SchemeSummary" in x:
+        if x and re.search(r"<SchemeSummary|<root\b|<Workbook\b|<office:document\b", x[:4000]):
             rec["ssdXml"] = x          # kept raw so parsing improvements apply without refetching
         return sid, rec
 
@@ -401,7 +549,7 @@ OTHER_SUBS = {"gold", "silver", "multicomm", "us", "global", "asia", "globaldebt
 def tax_class(sub: str, alloc: list[dict] | None, name: str) -> str:
     if sub == "elss" or re.search(r"\belss\b|tax saver", name, re.I):
         return "elss"
-    if sub in EQUITY_SUBS:
+    if sub in EQUITY_SUBS or sub.startswith(("sec_", "idx_")):
         return "equity"
     if sub in DEBT_SUBS:
         return "debt"

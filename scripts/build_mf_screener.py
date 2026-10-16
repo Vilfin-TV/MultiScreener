@@ -756,7 +756,7 @@ def main():
         res["inc"], res["incV"] = C.iso(inc_d), inc_v
         res["sip"] = {str(n // 12): C.sip_returns(s, n) for n in (12, 36, 60, 120)}
         res["cal"] = C.calendar_returns(s, years)
-        bkey = SUB_BENCH.get(sub)
+        bkey = SUB_BENCH.get(sub) or SUB_BENCH.get(C.group(sub))
         if sub.startswith("idx_") and bkey:
             nm = r["name"]
             if re.search(r"small ?cap", nm, re.I) and "sml250" in bench:
@@ -805,7 +805,7 @@ def main():
         res = results[r["code"]]
         rk = res.get("risk") or {}
         if C.SUBS[r["sub"]][0] != "Index" and rk.get("months", 0) >= 36 and res.get("trM", {}).get("3y") is not None:
-            by_sub[r["sub"]].append(r)
+            by_sub[C.group(r["sub"])].append(r)
     for sub, lst in by_sub.items():
         if len(lst) < 5:
             continue
@@ -843,7 +843,7 @@ def main():
         for k in range(12, len(me48)):
             a, b = vals[k - 12], vals[k]
             roll12.append(float(b / a - 1) if np.isfinite(a) and np.isfinite(b) and a > 0 else None)
-        groups[r["sub"]].append({"code": r["code"], "tr": res["tr"], "roll12": roll12,
+        groups[C.group(r["sub"])].append({"code": r["code"], "tr": res["tr"], "roll12": roll12,
                                  "std": (res.get("risk") or {}).get("std")})
     global SCORES
     SCORES = {}

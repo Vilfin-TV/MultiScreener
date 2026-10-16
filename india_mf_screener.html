@@ -708,7 +708,7 @@ footer a{color:var(--text2)}
         <li><b>Rolling returns</b> show every possible holding period — the best, the worst and how often the fund beat its benchmark. They reveal consistency that point-to-point returns hide.</li>
         <li><b>Risk ratios</b> use 36 monthly returns to the last month-end. Higher Sharpe / Sortino means more return per unit of risk; a downside capture below 100 means the fund fell less than its benchmark in falling months.</li>
         <li><b>Factor DNA</b> shows which investment style best explains an equity fund's behaviour — Momentum, Value, Quality or Low Volatility — together with its market-cap tilt.</li>
-        <li><b>VilfinTV Rating</b> ranks funds within their category on risk-adjusted return, downside protection, long-term return and cost. Funds need a 3-year record to be rated.</li>
+        <li><b>VilfinTV Rating</b> ranks funds within their category on risk-adjusted return, downside protection, long-term return and cost. Funds need a 3-year record to be rated. Sectoral and thematic funds are grouped by theme (banking, pharma, technology, infrastructure and more) and rated against all sectoral / thematic funds.</li>
       </ul>
     </div>
     <div class="card info">
@@ -1255,6 +1255,8 @@ function pOverview(f, det, tail){
     scorecardCard(f, det) +
     quickRisk(f, det);
 }
+/* themed sectoral funds are scored against the whole sectoral / thematic universe */
+function grpLabel(f){ return /^sec_/.test(f.sub) ? 'Sectoral / Thematic' : f.subLabel; }
 function scorecardCard(f, det){
   if (f.asset === 'Index') return '';
   var sc = det.score || {}, ss = SUBSTAT[f.sub].avg;
@@ -1263,9 +1265,9 @@ function scorecardCard(f, det){
                : '<div class="note" style="margin-top:0;margin-bottom:12px">A status is assigned once the fund has a 1-year record in a category of five or more funds.</div>';
   function meter(k, v, d, tip){ return '<div class="meter"><div class="meter-top"><span class="meter-k">' + k + ' ' + hint(tip) + '</span><span class="meter-v">' + scoreTxt(v) + '</span></div><div class="meter-bar"><i style="width:' + (isNum(v) ? Math.max(2, v) : 0) + '%"></i></div><div class="meter-d">' + d + '</div></div>'; }
   var consD = isNum(f.cons) && sc.consN ? 'Top half of the category in <b>' + sc.consTop + ' of ' + sc.consN + '</b> month-ends (rolling 1-year return).' : 'Needs 12 month-ends of history.';
-  var recD = isNum(f.rec) ? 'Recent returns beat <b>' + Math.round(f.rec) + '%</b> of ' + esc(f.subLabel) + ' peers (3M · 6M · 1Y blend).' : 'Needs a 1-year record.';
+  var recD = isNum(f.rec) ? 'Recent returns beat <b>' + Math.round(f.rec) + '%</b> of ' + esc(grpLabel(f)) + ' peers (3M · 6M · 1Y blend).' : 'Needs a 1-year record.';
   var volD = isNum(f.vols) ? (f.vols >= 67 ? 'Calmer than most peers' : f.vols >= 34 ? 'Typical volatility for its category' : 'More volatile than most peers') + ' (3Y std. dev. ' + (isNum(f.std) ? fmt(f.std) + '%' : '–') + ', category ' + (isNum(ss.std) ? fmt(ss.std) + '%' : '–') + ').' : 'Needs 12 months of history.';
-  return '<div class="card pcard"><div class="pc-head"><div><div class="sec-title">VilfinTV Scorecard</div><div class="sec-sub">Relative to ' + esc(f.subLabel) + ' funds · 100 = best in category</div></div></div>' + box +
+  return '<div class="card pcard"><div class="pc-head"><div><div class="sec-title">VilfinTV Scorecard</div><div class="sec-sub">Relative to ' + esc(grpLabel(f)) + ' funds · 100 = best in category</div></div></div>' + box +
     '<div class="meters">' +
       meter('Consistency', f.cons, consD, 'Share of the last 36 month-ends in which the fund ranked in the top half of its category on rolling 1-year return.') +
       meter('Recency', f.rec, recD, 'Weighted percentile of 3-month (20%), 6-month (30%) and 1-year (50%) returns within the category.') +
@@ -1596,18 +1598,19 @@ function pInfo(f, det){
   var amcFunds = FUNDS.filter(function(x){ return x.amc === f.amc; });
   var bn = benchName(f.bench);
   var T = (D.tax && D.tax.rules && D.tax.rules[f.tax]) || null;
+  var refDoc = '<p class="mut">' + (docs.sid ? 'Refer to the <a href="' + esc(docs.sid) + '" target="_blank" rel="noopener noreferrer">Scheme Information Document ↗</a>.' : 'Refer to the scheme information document.') + '</p>';
   var load = info.exitLoad || [];
   var loadHtml = load.length ? (f.exitNil ? '<p class="objective"><b>Nil</b> — no exit load on redemption.</p>' : '<ul class="load-list">' + load.map(function(l){ return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>')
-                             : '<p class="mut">Refer to the scheme information document.</p>';
+                             : refDoc;
   var taxHtml = T ? '<div class="tag f" style="margin-bottom:6px">' + esc(T.label) + '</div><div class="tax-grid"><div class="tax-cell"><small>Short-term</small><span>' + esc(T.stcg) + '</span></div><div class="tax-cell"><small>Long-term</small><span>' + esc(T.ltcg) + '</span></div></div>' +
       '<div class="note">' + esc(T.note) + ' Rates exclude surcharge and 4% cess. ' + esc(D.tax.asOf) + '. Tax rules change — please confirm with a tax professional.</div>' : '<p class="mut">–</p>';
   var mgHtml = mg.length ? '<div class="mgr2">' + mg.map(function(m){
       var name = typeof m === 'string' ? m : m.name, since = typeof m === 'string' ? '' : String(m.since || '').replace(/^since\s+/i, ''), role = typeof m === 'string' ? '' : m.role;
       return '<div><i>' + esc(initials(name)) + '</i><span><b>' + esc(name) + '</b><small>' + (since ? 'Managing since ' + esc(since) : '') + (since && role ? ' · ' : '') + esc(role || '') + '</small></span></div>';
-    }).join('') + '</div>' : '<p class="mut">Not disclosed.</p>';
+    }).join('') + '</div>' : refDoc;
   var allocHtml = (info.alloc || []).length ? '<div class="alloc">' + info.alloc.map(function(a){
       return '<div class="alloc-row"><span class="lbl">' + esc(a.label) + '</span><span class="rng">' + a.min + '–' + a.max + '%</span><div class="alloc-bar"><i style="left:' + a.min + '%;width:' + Math.max(1.5, a.max - a.min) + '%"></i></div></div>';
-    }).join('') + '</div>' : '<p class="mut">Refer to the scheme information document.</p>';
+    }).join('') + '</div>' : refDoc;
   var rows = [
     ['Fund house', esc(f.amcName) + ' Mutual Fund'],
     ['Category', esc(f.asset) + ' · ' + esc(f.subLabel)],
@@ -1638,7 +1641,7 @@ function pInfo(f, det){
     .map(function(d){ return '<a class="btn" href="' + esc(d[0]) + '" target="_blank" rel="noopener noreferrer">' + d[1] + ' ↗</a>'; }).join('');
   return '<div class="grid2e"><div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Exit load</div>' + loadHtml + '</div>' +
       '<div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Taxation</div>' + taxHtml + '</div></div>' +
-    '<div class="grid2e"><div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Investment objective</div><p class="objective">' + (info.objective ? esc(info.objective) : 'Refer to the scheme information document.') + '</p>' +
+    '<div class="grid2e"><div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Investment objective</div>' + (info.objective ? '<p class="objective">' + esc(info.objective) + '</p>' : refDoc) + ' +
       '<div class="sec-title" style="margin:18px 0 10px">Stated asset allocation</div>' + allocHtml + '</div>' +
       '<div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Fund managers</div>' + mgHtml +
       '<div class="sec-title" style="margin:18px 0 10px">' + esc(f.amcName) + ' Mutual Fund</div>' +
