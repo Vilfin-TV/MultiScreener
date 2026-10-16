@@ -1229,7 +1229,7 @@ function renderDeep(){
   var per = [['1M','1m'],['3M','3m'],['6M','6m'],['YTD','ytd'],['1Y','1y'],['3Y','3y'],['5Y','5y'],['10Y','10y']].filter(function(p){ return rr[p[1]] != null || br[p[1]] != null; });
   var h = '<div class="deep-grid">';
   // performance vs benchmark
-  h += '<div class="card dcard wide"><div class="sec-title">Performance vs ' + esc(b.name || 'benchmark') + '</div><div class="dsub">Price returns as of ' + fmtDate(e.d) + ' · up to 1 year absolute, 3 years and longer annualised (CAGR)' + (e.first ? ' · price history from ' + fmtDate(e.first) : '') + '</div>' +
+  h += '<div class="card dcard wide"><div class="sec-title">Performance vs ' + esc(b.name || 'benchmark') + '</div><div class="dsub">As of ' + fmtDate(e.d) + ' · up to 1 year: market-price returns (absolute); 3 years and longer: ' + (e.lb === 'nav' ? 'official NAV returns' : 'market-price returns') + ', annualised (CAGR)' + (e.first ? ' · history from ' + fmtDate(e.first) : '') + '. Benchmark rows use the price index, which excludes dividends.</div>' +
     '<div class="ptbl-wrap"><div class="ptbl"><table><thead><tr><th></th>' + per.map(function(p){ return '<th class="num">' + p[0] + '</th>'; }).join('') + '</tr></thead><tbody>' +
     '<tr><td>' + esc(e.s) + '</td>' + per.map(function(p){ return '<td class="num">' + fmtPct(rr[p[1]]) + '</td>'; }).join('') + '</tr>' +
     '<tr><td>' + esc(b.name || 'Benchmark') + '</td>' + per.map(function(p){ return '<td class="num">' + fmtPct(br[p[1]]) + '</td>'; }).join('') + '</tr>' +
