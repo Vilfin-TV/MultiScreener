@@ -60,7 +60,8 @@ WEBSITES = {
 SKIP_PATH = re.compile(r"\.(pdf|xlsx?|zip|jpe?g|png|svg|docx?)$|blog|news|article|press|media-?cent|insight|learn|faq|calculator|"
                        r"factsheet|disclosure|download|career|investor-?education|campaign|webinar|video|podcast|glossary|"
                        r"compare|nfo-?update|addendum|notice|/tag/|/category/|/author/|/amp/|idcw|dividend-?option|archive|timeline|"
-                       r"media-?kit|handbook|active-?share|portfolio/|sitemap", re.I)
+                       r"media-?kit|handbook|active-?share|portfolio/|sitemap|knowledge|guide|infographic|personal-finance|what-is|-vs-|"
+                       r"benefits-of|nfo-details|/nfo/|explained|how-to", re.I)
 GENERIC = {"mutual", "funds", "fund", "schemes", "scheme", "equity", "debt", "hybrid", "products", "product", "our", "details",
            "detail", "solution", "oriented", "invest", "empower", "explorer", "overview", "mf", "en", "in", "fund-details"}
 BRAND_WORDS = re.compile(r"[a-z0-9]+")
@@ -129,7 +130,7 @@ def url_tokens(u: str) -> tuple[set, set]:
 
 
 def match(funds: list[dict], urls: list[str], brand: set) -> dict[int, str]:
-    out = {}
+    out, fit = {}, {}
     # 1) an address carrying the fund's own scheme code is an exact match
     for f in funds:
         rx = re.compile(r"[=/]" + str(f["code"]) + r"(?:\b|$)")
@@ -166,7 +167,22 @@ def match(funds: list[dict], urls: list[str], brand: set) -> dict[int, str]:
             continue
         best.sort()                              # fewest extra words, direct plan, shortest address
         out[f["code"]] = best[0][3]
-    return out
+        fit[f["code"]] = best[0][0]
+    # one scheme page claimed by several funds (e.g. plans of one scheme): keep it for the closest name only
+    by_url = defaultdict(list)
+    for code, u in out.items():
+        by_url[u].append(code)
+    for u, codes in by_url.items():
+        if len(codes) > 1:
+            ranked = sorted(codes, key=lambda c: fit.get(c, 0))
+            if len(ranked) > 1 and fit.get(ranked[0], 0) == fit.get(ranked[1], 0):
+                keep = None
+            else:
+                keep = ranked[0]
+            for c in codes:
+                if c != keep:
+                    out.pop(c, None)
+    return {c: re.sub(r"[?&]utm_[^#]*$", "", u) for c, u in out.items()}
 
 
 LIST_RX = re.compile(r"^/?(mutual-?funds?|our-?(schemes|funds|products)|products?|schemes?|funds?|mutual-fund-schemes|"
