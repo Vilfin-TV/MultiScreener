@@ -1084,6 +1084,8 @@ body{
 .story-body h3{font-size:18px;font-weight:700;margin:16px 0 10px;color:var(--text);font-family:'Playfair Display',Georgia,serif;}
 .story-body a{color:var(--burn2,#3b82f6);text-decoration:none;}
 .story-body a:hover{text-decoration:underline;}
+/* table/td/th don't inherit font-family on iOS Safari — must be explicit */
+.story-body table,.story-body th,.story-body td{font-family:'Noto Sans Malayalam','DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;}
 .story-body .ql-align-center{text-align:center;}
 .story-body .ql-align-right{text-align:right;}
 .story-body .ql-align-justify{text-align:justify;}
@@ -2573,7 +2575,7 @@ footer.news-footer{
   <p class="news-legal-banner-text">
     VilfinTV News publishes articles generated with the assistance of artificial intelligence from publicly available RSS feeds. Each story is independently composed — not a verbatim reproduction of original reporting — and core facts are cross-referenced across multiple public sources. VilfinTV claims no ownership of original source material.
     Because AI-assisted content can occasionally contain inaccuracies or omit context, readers are encouraged to verify critical information independently. All content is provided "as is" for general informational purposes only and does not constitute professional, legal, medical, or financial advice. The publishers assume no liability for any decisions or actions taken based on this content.
-    <a href="legal.html#editorial" style="color:inherit;text-decoration:underline">Read our full Editorial &amp; AI Content Policy →</a>
+    <a href="legal.html" style="color:inherit;text-decoration:underline">Read our full Editorial &amp; AI Content Policy →</a>
   </p>
 </div>
 
@@ -2655,8 +2657,6 @@ footer.news-footer{
     <div>
       <div class="footer-col-title">Financial Tools</div>
       <ul class="footer-links">
-        <li><a href="etf_momentum.html" target="_blank">🚀 ETF Momentum Mode</a></li>
-        <li><a href="india_mf_screener.html" target="_blank">🏦 India Mutual Fund Screener</a></li>
         <li><a href="sip_calc.html" target="_blank">🧮 SIP Calculator</a></li>
         <li><a href="lumpsum_calc.html" target="_blank">💰 Lumpsum Calculator</a></li>
         <li><a href="combined_calc.html" target="_blank">📈 SIP + Lumpsum Calc</a></li>
@@ -2708,7 +2708,7 @@ footer.news-footer{
         Stories, headlines, and summaries are compiled automatically and are for informational purposes only.
         Not affiliated with any regulatory authority.
       </p>
-      <div style="margin: 8px 0; text-align: center;"><a href="legal.html" style="color: var(--text3); font-size: 11px; text-decoration: underline;">Legal & Copyright Disclosure</a> <span style="color: var(--text3); font-size: 11px;">·</span> <a href="privacy.html" style="color: var(--text3); font-size: 11px; text-decoration: underline;">Privacy Policy</a> <span style="color: var(--text3); font-size: 11px;">·</span> <a href="terms.html" style="color: var(--text3); font-size: 11px; text-decoration: underline;">Terms of Service</a></div>
+      <div style="margin: 8px 0; text-align: center;"><a href="legal.html" style="color: var(--text3); font-size: 11px; text-decoration: underline;">Legal & Copyright Disclosure</a></div>
       <p class="footer-copyright">© 2026 VilfinTV. All rights reserved.</p>
     </div>
   </div>
