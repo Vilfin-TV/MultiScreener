@@ -943,6 +943,12 @@ def apply_rotation(weights, rot, hz):
 # (or no) allocation that month; the money goes to the cheapest fairly valued equity slot in the plan, else to debt.
 GATE_KEYS = {"core": ["n50"], "next50": ["nn50"], "lmcore": ["n50", "mid150"], "flexi": ["n500"], "mid": ["mid150"], "small": ["sml250"]}
 GATE_PAUSE, GATE_HALF = 0.90, 0.80
+GATE_CAP = 40                                 # no single fund receives more than 40% after a move
+
+
+def gate_cap(key):
+    """Most a slot may hold after receiving moved money (style sleeves ≤15%, satellites never receive)."""
+    return 0 if key in ("theme", "intl") else (15 if key in ("value", "momentum") else GATE_CAP)
 GATE_LABEL = {"n50": "Nifty 50", "nn50": "Nifty Next 50", "n500": "Nifty 500", "mid150": "Nifty Midcap 150", "sml250": "Nifty Smallcap 250"}
 
 
@@ -971,14 +977,70 @@ def apply_gate(weights, gates):
         cut = w[slot] if lv == "pause" else ((w[slot] // 10) * 5 if lv == "half" else 0)
         if cut <= 0:
             continue
-        fair = sorted([k for k in w if k in gates and gates[k]["level"] == "full"], key=lambda k: gates[k]["pct"] if gates[k]["pct"] is not None else 0.5)
-        dst = fair[0] if fair else next((k for k in ("value", "momentum", "dmed", "dcore", "baf", "dshort", "arb") if k in w), None)
-        if not dst:
-            continue
-        w[slot] -= cut
-        w[dst] += cut
-        cuts[slot] = {"level": lv, "cut": cut, "to": dst, "pct": gates[slot]["pct"], "index": gates[slot]["index"]}
+        fair = [k for k in w if k in gates and gates[k]["level"] == "full"] or [k for k in ("value", "momentum") if k in w]
+        rank = lambda k: (gates[k]["pct"] if k in gates and gates[k]["pct"] is not None else 0.5)  # noqa: E731
+        moved, first = 0, None
+        while moved < cut:                       # 5-point steps to the cheapest fair segment below the cap
+            cand = sorted([k for k in fair if w[k] + 5 <= gate_cap(k)], key=rank)
+            dst = cand[0] if cand else next((k for k in ("dmed", "dcore", "baf", "dshort", "arb") if k in w), None)
+            if not dst:
+                break
+            w[slot] -= 5
+            w[dst] += 5
+            moved += 5
+            first = first or dst
+        if moved:
+            cuts[slot] = {"level": lv, "cut": moved, "to": first, "pct": gates[slot]["pct"], "index": gates[slot]["index"]}
     return w, cuts
+
+
+# fund-level valuation: portfolio P/E (data/mf/fund_pe.json) against the median of funds in the same category
+FPE_SLOTS = ("lmcore", "flexi", "mid", "small", "value")
+FPE_HALF, FPE_PAUSE = 1.25, 1.5
+
+
+def fund_pe_info(u, code, fpe):
+    x = fpe.get(code)
+    if not x:
+        return None
+    peers = [fpe[c][0] for c in u.by_subs([u.g(code, "sub")]) if c in fpe]
+    if len(peers) < 5:
+        return None
+    med = median(peers)
+    return {"pe": x[0], "peerPe": round(med, 1), "prem": round(x[0] / med, 2), "cover": x[1]}
+
+
+def apply_fund_pe(u, slots, fpe, dec, pid, review):
+    """Halve (P/E ≥1.25× peers) or pause (≥1.5×) a fund's allocation this month; the money goes to the plan's
+    most reasonably valued equity fund, else to debt."""
+    for s in slots:
+        if s["key"] not in FPE_SLOTS or s["w"] <= 0:
+            continue
+        info = fund_pe_info(u, s["code"], fpe)
+        if not info:
+            continue
+        s["pe"] = info
+        s["why"] = s["why"] + [f"Portfolio P/E {info['pe']:.1f} vs category median {info['peerPe']:.1f}"]
+        now = "pause" if info["prem"] >= FPE_PAUSE else ("half" if info["prem"] >= FPE_HALF else "full")
+        lv = stable(dec, f"fpe:{pid}:{s['key']}:{s['code']}", now, review, strong=True)
+        cut = s["w"] if lv == "pause" else ((s["w"] // 10) * 5 if lv == "half" else 0)
+        if cut <= 0:
+            continue
+        moved, first = 0, None
+        while moved < cut:
+            eq = [z for z in slots if z is not s and z["w"] > 0 and z["w"] + 5 <= gate_cap(z["key"]) and z["asset"] == "Equity" and not z.get("gate")]
+            eq.sort(key=lambda z: ((z.get("pe") or {}).get("prem") or 1.0, z["w"]))
+            dst = eq[0] if eq else next((z for z in slots if z["key"] in ("dmed", "dcore", "baf", "dshort", "arb")), None)
+            if dst is None:
+                break
+            s["w"] -= 5
+            dst["w"] += 5
+            moved += 5
+            first = first or dst
+        if not moved:
+            continue
+        s["gate"] = {"level": lv, "cut": moved, "to": first["key"], "toLabel": first["label"], "reason": "fund",
+                     "pe": info["pe"], "peerPe": info["peerPe"], "index": f"portfolio P/E {info['pe']:.1f} vs category median {info['peerPe']:.1f}"}
 
 
 def apply_tilt(weights, tilt, hz):
@@ -1042,6 +1104,7 @@ def main() -> int:
     rot_to, rot_pts = rest.split(":")
     rotation = {**rot_now, "from": None if rot_from == "None" else rot_from, "to": None if rot_to == "None" else rot_to, "pts": int(rot_pts)}
     gates = valuation_gates(macro, dec, review)
+    fpe = (load(MF / "fund_pe.json", {}) or {}).get("funds") or {}
     sectors = sector_table(u, macro)
     metal = metal_signal(u)
     metal_choice = stable(dec, "metal", metal.get("choice", "gold"), review)
@@ -1116,6 +1179,7 @@ def main() -> int:
                 tgt = next(z for z in slots if z["key"] == tgt) if tgt else max(slots, key=lambda z: z["w"])
                 tgt["w"] += weights[sk]
                 tgt["note"] = (tgt["note"] + " " if tgt["note"] else "") + f"Includes the {SLOTS[sk][0].lower()} allocation (no fund currently passes every check)."
+            apply_fund_pe(u, slots, fpe, dec, pid, review)
             for k in list(pst["slots"]):
                 if k not in weights or k in skipped:
                     pst["slots"].pop(k)
@@ -1131,7 +1195,7 @@ def main() -> int:
                 "slots": slots, "mix": mix, "ter": round(sum((u.g(s["code"], "ter") or 0) * s["w"] for s in slots) / 100, 2),
                 "er": round(sum(s["er"] * s["w"] for s in slots) / 100, 2),
                 "hist": {k: past_return(u, slots, k) for k in ("r3y", "r5y")},
-                "gated": sum(c["cut"] for c in cuts.values()),
+                "gated": sum(z["gate"]["cut"] for z in slots if z.get("gate")),
                 "maxOverlap": max(ovs) if ovs else None, "amcs": len({u.g(c, "amc") for c in codes}),
                 "checks": sum(len(s["checks"]) for s in slots), "changes": pst["changes"],
             }
