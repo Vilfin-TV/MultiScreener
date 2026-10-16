@@ -2346,9 +2346,15 @@ function renderSip(){
     if (alts) why += '<li>Alternates: ' + alts + '</li>';
     if (src.note && src.state !== 'watch') why += '<li>' + esc(src.note) + '</li>';
     var minTxt = 'Min. ' + inr(sipMinOf(s.code)) + ' per purchase';
+    // the fund name already carries the fund house, and the slot label usually names the category — show only what is new
+    var norm = function(x){ return String(x || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim(); };
+    var metaBits = [];
+    if (f.amcName && norm(f.name).indexOf(norm(f.amcName).split(' ')[0]) !== 0) metaBits.push(esc(f.amcName));
+    if (f.subLabel && norm(s.label).indexOf(norm(f.subLabel)) < 0) metaBits.push(esc(f.subLabel));
+    metaBits.push(stars(f.rating));
     var body = '<div class="sslot"><i style="background:' + col + '"></i>' + esc(s.label) + '</div>' +
       '<div class="fname" data-open="' + s.code + '">' + esc(f.name) + '</div>' +
-      '<div class="fmeta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + ' · ' + stars(f.rating) + '</div>' +
+      '<div class="fmeta">' + metaBits.join(' · ') + '</div>' +
       (flags.length ? '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">' + flags.join('') + '</div>' : '') +
       '<details class="sip-why"><summary>Checks<span class="chk-sum">✓ ' + passed + '/' + ck.length + '</span></summary>' + chk + '</details>' +
       '<details class="sip-why"><summary>Why this fund</summary><ul>' + why + '</ul></details>';
