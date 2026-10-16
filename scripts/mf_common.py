@@ -116,7 +116,15 @@ SUBS = {  # key: (asset, label)
     "small": ("Equity", "Small Cap"), "multi": ("Equity", "Multi Cap"), "flexi": ("Equity", "Flexi Cap"),
     "focused": ("Equity", "Focused"), "value": ("Equity", "Value"), "contra": ("Equity", "Contra"),
     "divyield": ("Equity", "Dividend Yield"), "elss": ("Equity", "ELSS (Tax Saver)"),
-    "sector": ("Equity", "Sectoral / Thematic"), "eqfof": ("Equity", "Equity FoF"),
+    # sectoral / thematic funds, split by theme (ratings and scorecards still rank across all of them, see GROUP)
+    "sec_bank": ("Equity", "Banking & Financial"), "sec_pharma": ("Equity", "Pharma & Healthcare"),
+    "sec_tech": ("Equity", "Technology & Digital"), "sec_consumption": ("Equity", "Consumption"),
+    "sec_infra": ("Equity", "Infrastructure & Housing"), "sec_mfg": ("Equity", "Manufacturing & Exports"),
+    "sec_energy": ("Equity", "Energy & Commodities"), "sec_psu": ("Equity", "PSU"),
+    "sec_mnc": ("Equity", "MNC & Conglomerates"), "sec_cycle": ("Equity", "Business Cycle & Rotation"),
+    "sec_quant": ("Equity", "Quant, Momentum & Factor"), "sec_esg": ("Equity", "ESG & Ethical"),
+    "sec_innov": ("Equity", "Innovation & Opportunities"), "sec_other": ("Equity", "Other Thematic"),
+    "eqfof": ("Equity", "Equity FoF"),
     "overnight": ("Debt", "Overnight"), "liquid": ("Debt", "Liquid"), "ultrashort": ("Debt", "Ultra Short Duration"),
     "lowdur": ("Debt", "Low Duration"), "money": ("Debt", "Money Market"), "shortdur": ("Debt", "Short Duration"),
     "meddur": ("Debt", "Medium Duration"), "medlong": ("Debt", "Medium to Long Duration"),
@@ -133,9 +141,52 @@ SUBS = {  # key: (asset, label)
     "globaldebt": ("Global", "International Bonds"),
     "idx_large": ("Index", "Large Cap Index"), "idx_midsmall": ("Index", "Mid & Small Cap Index"),
     "idx_broad": ("Index", "Broad Market Index"), "idx_factor": ("Index", "Smart Beta / Factor"),
-    "idx_sector": ("Index", "Sectoral / Thematic Index"),
+    "idx_bank": ("Index", "Bank & Financial Index"), "idx_tech": ("Index", "IT & Digital Index"),
+    "idx_infra": ("Index", "Infra, Defence, Auto & Realty Index"), "idx_theme": ("Index", "Other Sectoral / Thematic Index"),
     "retire": ("Solution", "Retirement"), "child": ("Solution", "Children's"), "lifecycle": ("Solution", "Life Cycle"),
 }
+
+# ratings and scorecards rank a fund against this wider group (themes alone are too small for percentiles)
+GROUP = {k: ("sector" if k.startswith("sec_") else "idx_sector" if k in ("idx_bank", "idx_tech", "idx_infra", "idx_theme") else k)
+         for k in SUBS}
+
+
+def group(sub: str) -> str:
+    return GROUP.get(sub, sub)
+
+
+SEC_THEMES = [  # first match wins
+    ("sec_bank", r"bank|financ|bfsi"),
+    ("sec_pharma", r"pharma|health"),
+    ("sec_tech", r"technolog|digital|\bteck\b|\bit\b|internet"),
+    ("sec_consumption", r"consum|fmcg|rural"),
+    ("sec_infra", r"infra|power|build india|t\.?i\.?g\.?e\.?r|reform|housing|transport|logistic|defence"),
+    ("sec_mfg", r"manufactur|automotive|export"),
+    ("sec_energy", r"energy|resource|commodit|\bcomma\b"),
+    ("sec_psu", r"\bpsu\b|cpse"),
+    ("sec_mnc", r"\bmnc\b|conglomerate|business group"),
+    ("sec_quant", r"quant|momentum|quality|multi.?factor|minimum variance|low vol"),
+    ("sec_esg", r"\besg\b|ethical|shariah"),
+    ("sec_cycle", r"business cycle|rotation|multi sector"),
+    ("sec_innov", r"innovat|pioneer|\bipo\b|opportunit|special|services"),
+]
+IDX_THEMES = [
+    ("idx_bank", r"bank|financ|capital market"),
+    ("idx_tech", r"\bit\b|niftyit|information technology|digital|internet"),
+    ("idx_infra", r"infra|defence|housing|realty|reit|railway|manufactur|\bauto\b|clean environment"),
+]
+
+
+def _theme(name: str, themes, default: str) -> str:
+    for key, rx in themes:
+        if re.search(rx, name, re.I):
+            return key
+    return default
+
+
+# fund-house names that contain a country word ("Nippon India", "Franklin India" …) must not hide a global fund
+RX_BRAND = re.compile(r"^(nippon india|invesco india|franklin india|bank of india|franklin|union|edelweiss)\s+", re.I)
+
 
 _EQ = [
     (r"large\s*&\s*mid", "largemid"), (r"large cap", "large"), (r"mid cap", "mid"), (r"small cap", "small"),
@@ -159,10 +210,10 @@ _HYB = [
 
 RX_GLOBAL = re.compile(
     r"\b(us|u\.s\.|usa|nasdaq|s&p ?500|nyse|fang|america|american|global|international|world|overseas|"
-    r"developed|europe|european|japan|china|chinese|taiwan|hang ?seng|asia|asean|emerging|brazil|korea|"
+    r"developed|europe|european|japan|china|chinese|taiwan|hang ?seng|asia|asian|asean|emerging|brazil|korea|"
     r"greater china|feeder|offshore|msci)\b", re.I)
 RX_US = re.compile(r"\b(us|u\.s\.|usa|nasdaq|s&p ?500|nyse|fang|america|american)\b", re.I)
-RX_ASIA = re.compile(r"\b(japan|china|chinese|taiwan|hang ?seng|asia|asean|emerging|brazil|korea|greater china)\b", re.I)
+RX_ASIA = re.compile(r"\b(japan|china|chinese|taiwan|hang ?seng|asia|asian|asean|emerging|brazil|korea|greater china)\b", re.I)
 RX_GOLD = re.compile(r"\bgold\b", re.I)
 RX_SILVER = re.compile(r"\bsilver\b", re.I)
 RX_PRECIOUS = re.compile(r"precious metal", re.I)
@@ -180,9 +231,9 @@ RX_FACTOR = re.compile(r"momentum|low vol|quality|value|alpha|equal weight|divid
                        r"size|smart beta|multi factor|factor", re.I)
 RX_MIDSMALL = re.compile(r"mid ?cap|small ?cap|midsmall|micro ?cap|mid ?small", re.I)
 RX_BROAD = re.compile(r"nifty ?500\b|total market|bse 500|nifty ?200\b|large ?mid ?cap|largemidcap|multi ?cap|"
-                      r"flexi ?cap|bse allcap|all ?cap|nifty india 500|bse 250", re.I)
+                      r"flexi ?cap|bse allcap|all ?cap|nifty india 500|bse 250|bse ?1000|nifty ?1000|nifty total", re.I)
 RX_LARGE = re.compile(r"nifty ?50\b|sensex|nifty ?100\b|bse ?100\b|top 100|large ?cap|next ?50\b|bse ?50\b|"
-                      r"nifty next|bse ?sensex next", re.I)
+                      r"nifty next|bse ?sensex next|\bnifty index fund", re.I)
 
 
 def _match(rules, s):
@@ -222,7 +273,7 @@ def _index_sub(name):
         return "idx_broad"
     if RX_LARGE.search(name):
         return "idx_large"
-    return "idx_sector"
+    return _theme(name, IDX_THEMES, "idx_theme")
 
 
 def classify(name: str, cat: str) -> str | None:
@@ -262,8 +313,11 @@ def classify(name: str, cat: str) -> str | None:
         return _index_sub(n)
     if low.startswith("equity"):
         key = _match(_EQ, low)
-        if key == "sector" and RX_GLOBAL.search(n) and not re.search(r"india|bharat", n, re.I):
-            return _global_sub(n)
+        if key == "sector":
+            core = RX_BRAND.sub("", n)
+            if RX_GLOBAL.search(core) and not re.search(r"india|bharat", core, re.I):
+                return _global_sub(core)
+            return _theme(core, SEC_THEMES, "sec_other")
         return key
     if low.startswith(("debt", "income/debt")):
         return _match(_DEBT, low)

@@ -34,7 +34,7 @@
     {
       "@type": "SiteNavigationElement",
       "name": "VilfinTV Screeners",
-      "url": "https://vilfintv.com/mf_live_screener.html"
+      "url": "https://vilfintv.com/india_mf_screener.html"
     }
   ]
 }

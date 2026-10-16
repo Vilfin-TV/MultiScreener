@@ -27,7 +27,6 @@ const PAGES = [
   'stock_research.html',
   'stock_status.html',
   'trendlyne_screener.html',
-  'mf_live_screener.html',
   'mutual_fund_analyser.html',
   path.join('file', 'screener', 'advanced-standalone-multi-asset-screener.html'),
 ];

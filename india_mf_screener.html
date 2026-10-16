@@ -13,13 +13,15 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>India Mutual Fund Screener — VilfinTV | Returns, SIP, Rolling Returns, Risk Ratios &amp; Factor DNA</title>
-<meta name="description" content="Screen every Indian Direct-Growth mutual fund: NAV, trailing and SIP returns, rolling returns, Sharpe, Sortino, alpha, beta, drawdown, expense ratio, AUM, fund managers and Factor DNA (Momentum, Value, Quality, Low Volatility). Updated every morning."/>
+<meta name="description" content="Screen every Indian Direct-Growth mutual fund: NAV, trailing, SIP and rolling returns, Sharpe, alpha, drawdown, expense ratio, AUM, portfolio holdings, sector and market-cap split, exit load, taxation, fund managers, VilfinTV scorecard and Factor DNA. Equity, debt, hybrid, sectoral themes, index, gold and global funds — updated daily."/>
 <link rel="canonical" href="https://vilfintv.com/india_mf_screener.html"/>
 <meta property="og:title" content="India Mutual Fund Screener — VilfinTV"/>
-<meta property="og:description" content="Every Indian Direct-Growth mutual fund with returns, SIP returns, rolling returns, risk ratios and Factor DNA. Updated every morning."/>
+<meta property="og:description" content="Every Indian Direct-Growth mutual fund with returns, risk ratios, portfolio holdings, exit load, taxation, scorecard and Factor DNA — updated daily."/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://vilfintv.com/india_mf_screener.html"/>
 <meta property="og:image" content="https://vilfintv.com/images/vilfintv-logo.jpg"/>
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="India Mutual Fund Screener — VilfinTV"/>
 <link rel="icon" type="image/jpeg" href="images/vilfintv-logo.jpg">
 <link rel="apple-touch-icon" href="images/vilfintv-logo.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -606,7 +608,6 @@ footer a{color:var(--text2)}
     <a class="vt-sn" href="https://vilfintv.com/blog_intelligence_hub.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>Blog</span></a>
     <a class="vt-sn on" href="https://vilfintv.com/india_mf_screener.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/></svg><span>India MF Screener</span></a>
     <a class="vt-sn" href="https://vilfintv.com/etf_momentum.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg><span>ETF Momentum</span></a>
-    <a class="vt-sn" href="mf_live_screener.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg><span>MF Live Screener</span></a>
     </div>
   </nav>
 </header>
@@ -709,7 +710,7 @@ footer a{color:var(--text2)}
         <li><b>Rolling returns</b> show every possible holding period — the best, the worst and how often the fund beat its benchmark. They reveal consistency that point-to-point returns hide.</li>
         <li><b>Risk ratios</b> use 36 monthly returns to the last month-end. Higher Sharpe / Sortino means more return per unit of risk; a downside capture below 100 means the fund fell less than its benchmark in falling months.</li>
         <li><b>Factor DNA</b> shows which investment style best explains an equity fund's behaviour — Momentum, Value, Quality or Low Volatility — together with its market-cap tilt.</li>
-        <li><b>VilfinTV Rating</b> ranks funds within their category on risk-adjusted return, downside protection, long-term return and cost. Funds need a 3-year record to be rated.</li>
+        <li><b>VilfinTV Rating</b> ranks funds within their category on risk-adjusted return, downside protection, long-term return and cost. Funds need a 3-year record to be rated. Sectoral and thematic funds are grouped by theme (banking, pharma, technology, infrastructure and more) and rated against all sectoral / thematic funds.</li>
       </ul>
     </div>
     <div class="card info">
@@ -732,7 +733,7 @@ footer a{color:var(--text2)}
 <footer>
   <div class="wrap">
     <span>© <span id="yr"></span> VilfinTV · India Mutual Fund Screener</span>
-    <span><a href="index.html">Multiscreener</a> · <a href="https://vilfintv.com/news.html">News</a> · <a href="https://vilfintv.com/story.html">Stories</a> · <a href="https://vilfintv.com/education.html">Academy</a> · <a href="https://vilfintv.com/blog_intelligence_hub.html">Blog</a> · <a href="etf_momentum.html">ETF Momentum</a> · <a href="market_sentiment_score.html">Market Sentiment</a> · <a href="legal.html">Legal</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></span>
+    <span><a href="index.html">Multiscreener</a> · <a href="https://vilfintv.com/news.html">News</a> · <a href="https://vilfintv.com/story.html">Stories</a> · <a href="https://vilfintv.com/education.html">Academy</a> · <a href="https://vilfintv.com/blog_intelligence_hub.html">Blog</a> · <a href="india_mf_screener.html">India MF Screener</a> · <a href="etf_momentum.html">ETF Momentum</a> · <a href="market_sentiment_score.html">Market Sentiment</a> · <a href="legal.html">Legal</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></span>
   </div>
 </footer>
 <div class="toast" id="toast" role="status"></div>
@@ -1256,6 +1257,8 @@ function pOverview(f, det, tail){
     scorecardCard(f, det) +
     quickRisk(f, det);
 }
+/* themed sectoral funds are scored against the whole sectoral / thematic universe */
+function grpLabel(f){ return /^sec_/.test(f.sub) ? 'Sectoral / Thematic' : f.subLabel; }
 function scorecardCard(f, det){
   if (f.asset === 'Index') return '';
   var sc = det.score || {}, ss = SUBSTAT[f.sub].avg;
@@ -1264,9 +1267,9 @@ function scorecardCard(f, det){
                : '<div class="note" style="margin-top:0;margin-bottom:12px">A status is assigned once the fund has a 1-year record in a category of five or more funds.</div>';
   function meter(k, v, d, tip){ return '<div class="meter"><div class="meter-top"><span class="meter-k">' + k + ' ' + hint(tip) + '</span><span class="meter-v">' + scoreTxt(v) + '</span></div><div class="meter-bar"><i style="width:' + (isNum(v) ? Math.max(2, v) : 0) + '%"></i></div><div class="meter-d">' + d + '</div></div>'; }
   var consD = isNum(f.cons) && sc.consN ? 'Top half of the category in <b>' + sc.consTop + ' of ' + sc.consN + '</b> month-ends (rolling 1-year return).' : 'Needs 12 month-ends of history.';
-  var recD = isNum(f.rec) ? 'Recent returns beat <b>' + Math.round(f.rec) + '%</b> of ' + esc(f.subLabel) + ' peers (3M · 6M · 1Y blend).' : 'Needs a 1-year record.';
+  var recD = isNum(f.rec) ? 'Recent returns beat <b>' + Math.round(f.rec) + '%</b> of ' + esc(grpLabel(f)) + ' peers (3M · 6M · 1Y blend).' : 'Needs a 1-year record.';
   var volD = isNum(f.vols) ? (f.vols >= 67 ? 'Calmer than most peers' : f.vols >= 34 ? 'Typical volatility for its category' : 'More volatile than most peers') + ' (3Y std. dev. ' + (isNum(f.std) ? fmt(f.std) + '%' : '–') + ', category ' + (isNum(ss.std) ? fmt(ss.std) + '%' : '–') + ').' : 'Needs 12 months of history.';
-  return '<div class="card pcard"><div class="pc-head"><div><div class="sec-title">VilfinTV Scorecard</div><div class="sec-sub">Relative to ' + esc(f.subLabel) + ' funds · 100 = best in category</div></div></div>' + box +
+  return '<div class="card pcard"><div class="pc-head"><div><div class="sec-title">VilfinTV Scorecard</div><div class="sec-sub">Relative to ' + esc(grpLabel(f)) + ' funds · 100 = best in category</div></div></div>' + box +
     '<div class="meters">' +
       meter('Consistency', f.cons, consD, 'Share of the last 36 month-ends in which the fund ranked in the top half of its category on rolling 1-year return.') +
       meter('Recency', f.rec, recD, 'Weighted percentile of 3-month (20%), 6-month (30%) and 1-year (50%) returns within the category.') +
@@ -1597,18 +1600,19 @@ function pInfo(f, det){
   var amcFunds = FUNDS.filter(function(x){ return x.amc === f.amc; });
   var bn = benchName(f.bench);
   var T = (D.tax && D.tax.rules && D.tax.rules[f.tax]) || null;
+  var refDoc = '<p class="mut">' + (docs.sid ? 'Refer to the <a href="' + esc(docs.sid) + '" target="_blank" rel="noopener noreferrer">Scheme Information Document ↗</a>.' : 'Refer to the scheme information document.') + '</p>';
   var load = info.exitLoad || [];
   var loadHtml = load.length ? (f.exitNil ? '<p class="objective"><b>Nil</b> — no exit load on redemption.</p>' : '<ul class="load-list">' + load.map(function(l){ return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>')
-                             : '<p class="mut">Refer to the scheme information document.</p>';
+                             : refDoc;
   var taxHtml = T ? '<div class="tag f" style="margin-bottom:6px">' + esc(T.label) + '</div><div class="tax-grid"><div class="tax-cell"><small>Short-term</small><span>' + esc(T.stcg) + '</span></div><div class="tax-cell"><small>Long-term</small><span>' + esc(T.ltcg) + '</span></div></div>' +
       '<div class="note">' + esc(T.note) + ' Rates exclude surcharge and 4% cess. ' + esc(D.tax.asOf) + '. Tax rules change — please confirm with a tax professional.</div>' : '<p class="mut">–</p>';
   var mgHtml = mg.length ? '<div class="mgr2">' + mg.map(function(m){
       var name = typeof m === 'string' ? m : m.name, since = typeof m === 'string' ? '' : String(m.since || '').replace(/^since\s+/i, ''), role = typeof m === 'string' ? '' : m.role;
       return '<div><i>' + esc(initials(name)) + '</i><span><b>' + esc(name) + '</b><small>' + (since ? 'Managing since ' + esc(since) : '') + (since && role ? ' · ' : '') + esc(role || '') + '</small></span></div>';
-    }).join('') + '</div>' : '<p class="mut">Not disclosed.</p>';
+    }).join('') + '</div>' : refDoc;
   var allocHtml = (info.alloc || []).length ? '<div class="alloc">' + info.alloc.map(function(a){
       return '<div class="alloc-row"><span class="lbl">' + esc(a.label) + '</span><span class="rng">' + a.min + '–' + a.max + '%</span><div class="alloc-bar"><i style="left:' + a.min + '%;width:' + Math.max(1.5, a.max - a.min) + '%"></i></div></div>';
-    }).join('') + '</div>' : '<p class="mut">Refer to the scheme information document.</p>';
+    }).join('') + '</div>' : refDoc;
   var rows = [
     ['Fund house', esc(f.amcName) + ' Mutual Fund'],
     ['Category', esc(f.asset) + ' · ' + esc(f.subLabel)],
@@ -1639,7 +1643,7 @@ function pInfo(f, det){
     .map(function(d){ return '<a class="btn" href="' + esc(d[0]) + '" target="_blank" rel="noopener noreferrer">' + d[1] + ' ↗</a>'; }).join('');
   return '<div class="grid2e"><div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Exit load</div>' + loadHtml + '</div>' +
       '<div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Taxation</div>' + taxHtml + '</div></div>' +
-    '<div class="grid2e"><div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Investment objective</div><p class="objective">' + (info.objective ? esc(info.objective) : 'Refer to the scheme information document.') + '</p>' +
+    '<div class="grid2e"><div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Investment objective</div>' + (info.objective ? '<p class="objective">' + esc(info.objective) + '</p>' : refDoc) +
       '<div class="sec-title" style="margin:18px 0 10px">Stated asset allocation</div>' + allocHtml + '</div>' +
       '<div class="card pcard"><div class="sec-title" style="margin-bottom:10px">Fund managers</div>' + mgHtml +
       '<div class="sec-title" style="margin:18px 0 10px">' + esc(f.amcName) + ' Mutual Fund</div>' +
