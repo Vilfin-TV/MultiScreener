@@ -295,6 +295,44 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .sig:last-child{border-bottom:none}
 .sig span:first-child{color:var(--text3);font-weight:600}
 .sig b{font-family:'JetBrains Mono',monospace;font-weight:600;white-space:nowrap}
+.sip-side{position:sticky;top:96px;align-self:start}
+.sip-side .pcard{margin-bottom:0}
+.snap-list{margin-top:14px;border-top:1px solid var(--border)}
+.snap-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.snap-row:last-child{border-bottom:none;padding-bottom:0}
+.snap-row span{color:var(--text2);font-weight:600}
+.snap-row small{display:block;font-size:11px;color:var(--text3);font-weight:500;margin-top:1px}
+.snap-row b{font-family:'JetBrains Mono',monospace;font-weight:600;text-align:right;white-space:nowrap}
+.mi-head{margin:26px 0 12px;padding-top:18px;border-top:1px solid var(--border)}
+.mi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px;align-items:stretch}
+.mi-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.mi-grid .pcard{margin-bottom:0}
+.mi{display:flex;flex-direction:column}
+.mi-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.mi-top .regime{margin-top:0}
+.mi-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.mi-kpis div{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 10px;min-width:0}
+.mi-kpis small{display:block;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mi-kpis b{display:block;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;margin-top:3px;white-space:nowrap}
+.sig2{display:grid;grid-template-columns:minmax(0,1fr) 40px;column-gap:10px;row-gap:2px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:12.5px}
+.sig-k{grid-column:1;color:var(--text2);font-weight:600;line-height:1.35}
+.sig-v{grid-column:1;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);line-height:1.4}
+.sig2 .pts,.sig2>span:empty{grid-column:2;grid-row:1/3}
+.pts{justify-self:end;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;min-width:32px;text-align:center}
+.pts.up{background:rgba(34,197,94,.14);color:var(--pos)}.pts.dn{background:rgba(248,113,113,.14);color:var(--neg)}.pts.nt{background:var(--surface3);color:var(--text3)}
+.mi-foot{margin:auto 0 0;padding-top:12px;font-size:12px;color:var(--text3);line-height:1.55}
+.tilt-b{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px}
+.tilt-b.up{background:rgba(34,197,94,.14);color:var(--pos)}.tilt-b.dn{background:rgba(248,113,113,.14);color:var(--neg)}.tilt-b.nt{background:var(--surface3);color:var(--text2)}
+.sec-card{margin-bottom:14px}
+.sec-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
+.sec-card .sec-tbl th{background:var(--surface2);padding:10px 12px;border-bottom:1px solid var(--border)}
+.sec-card .sec-tbl td{padding:11px 12px;vertical-align:middle}
+.sec-card .sec-tbl tr:last-child td{border-bottom:none}
+.sec-n{font-weight:600;white-space:nowrap}
+.star{color:var(--star);margin-right:6px}
+.vcell{min-width:170px}
+.vcell .vbar{width:100%}
+.vcell small{display:block;font-size:10.5px;color:var(--text3);margin-top:5px}
 .regime{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;margin-top:8px}
 .regime.rising{background:rgba(232,163,23,.15);color:var(--warn)}.regime.easing{background:rgba(34,197,94,.14);color:var(--pos)}.regime.neutral{background:var(--accent-soft);color:var(--accent2)}
 .quick{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -653,6 +691,9 @@ footer a{color:var(--text2)}
   .fac-wrap{grid-template-columns:1fr}
   .info-list{grid-template-columns:1fr}
   .sip-grid{grid-template-columns:minmax(0,1fr)}
+  .sip-side{position:static}
+  .mi-grid{grid-template-columns:minmax(0,1fr)}
+  .mi-grid.two{grid-template-columns:minmax(0,1fr)}
   .tips ul{grid-template-columns:1fr}
 }
 @media (max-width:860px){
@@ -711,6 +752,8 @@ footer a{color:var(--text2)}
   .proj-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
   .taxrows{grid-template-columns:1fr}
   .sig{flex-direction:column;gap:2px}
+  .vcell{min-width:110px}
+  .mi-kpis b{font-size:13.5px}
   .sig b{white-space:normal}
   #v-sip .pcard,#v-sip .card{min-width:0;overflow-wrap:anywhere}
   .sip-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -2313,36 +2356,47 @@ function renderSip(){
     }).join('') + '</div>' +
     '<div class="note">Invest in the Direct plan, Growth option of each fund. Weekly SIP minimums and dates vary by fund house — confirm on the scheme page before registering.</div>' +
     '</div>';
-  // ── right column: allocation, valuation, rates, sectors, metals, rules ──
+  // ── right column: allocation snapshot (sticky beside the plan) ──
   var donut = donutCard('sipDonut', 'Allocation by fund', '', sized.slots.map(function(s){ return [shortName((BY[s.code] || {name:s.label}).name), s.w]; }), [sized.slots.length + ' funds', inr(P.amt) + '/' + (P.fq === 'w' ? 'wk' : 'mo')]);
-  var n50 = m.n50 || {}, pctTxtV = function(p){ return isNum(p) ? Math.round(p * 100) + 'th pct' : '–'; };
-  var comps = (m.components || []).map(function(c){ return '<div class="sig"><span>' + esc(c.k) + '</span><b>' + esc(c.v) + ' <span class="' + (c.p > 0 ? 'pos' : c.p < 0 ? 'neg' : 'mut') + '">' + (c.p > 0 ? '+' : '') + c.p + '</span></b></div>'; }).join('');
-  var rsig = (R.signals || []).map(function(c){ return '<div class="sig"><span>' + esc(c.k) + '</span><b>' + esc(c.v) + ' <span class="' + (c.p > 0 ? 'pos' : c.p < 0 ? 'neg' : 'mut') + '">' + (c.p > 0 ? '+' : '') + c.p + '</span></b></div>'; }).join('');
+  var snap = [['Expected return', fmt(pr.er) + '% a year', 'before tax, net of costs'], ['Weighted expense ratio', fmt(ter) + '%', 'Direct plans'],
+    ['Equity exposure', fmt((mix.Equity || 0) + (mix.International || 0), 0) + '%', plan.tilt ? (plan.tilt > 0 ? '+' : '') + plan.tilt + ' pts valuation tilt' : 'standard allocation'],
+    ['Quality checks', nChecks + ' passed', 'across ' + sized.slots.length + ' funds'], ['Fund houses', Object.keys(amcs).length, 'max. 2 funds each'],
+    ['Next review', fmtDate(SIP.nextReview), 'last ' + monthTxt(SIP.reviewed)]];
+  h += '<aside class="sip-side"><div class="card pcard">' + donut.replace('<div class="pie-card"', '<div class="pie-card" style="border:none;padding:0;background:none"') +
+    '<div class="snap-list">' + snap.map(function(x){ return '<div class="snap-row"><span>' + x[0] + '<small>' + esc(x[2]) + '</small></span><b>' + x[1] + '</b></div>'; }).join('') + '</div></div></aside></div>';
+
+  // ── market intelligence: full-width sections below the plan ──
+  function sigRows(list){ return (list || []).map(function(c){ var cls = c.p > 0 ? 'up' : c.p < 0 ? 'dn' : 'nt'; return '<div class="sig2"><span class="sig-k">' + esc(c.k) + '</span><span class="sig-v">' + esc(c.v) + '</span><span class="pts ' + cls + '" title="Contribution to the signal">' + (c.p > 0 ? '+' : '') + c.p + '</span></div>'; }).join(''); }
+  var n50 = m.n50 || {}, met = SIP.metal || {}, cap = function(t){ return String(t || '').replace(/^./, function(c){ return c.toUpperCase(); }); };
   var secRows = (SIP.sectors || []).map(function(r){
-    var pick = r.key === SIP.sector;
-    return '<tr' + (pick ? ' class="pick"' : '') + '><td>' + (pick ? '★ ' : '') + esc(r.label) + '</td><td class="num">' + (isNum(r.pe) ? fmt(r.pe, 1) : '–') + '</td>' +
-      '<td title="Valuation percentile vs its own 10-year history (left = cheap)">' + (isNum(r.valPct) ? '<div class="vbar"><i style="left:' + (r.valPct * 100).toFixed(0) + '%"></i></div>' : '–') + '</td>' +
-      '<td class="num">' + pctTxt(r.r6mRel, 1) + '</td><td><span class="st ' + (SIG_CLS[r.signal] || 'st-na') + '" title="' + esc((r.excluded || []).join('; ') || ('score ' + Math.round((r.score || 0) * 100) + '/100' + (r.eligible === 0 ? ' · no fund passes every check yet' : ''))) + '">' + esc(r.signal) + '</span></td></tr>';
+    var pick = r.key === SIP.sector, vp = isNum(r.valPct) ? Math.round(r.valPct * 100) : null;
+    return '<tr' + (pick ? ' class="pick"' : '') + '><td class="sec-n">' + (pick ? '<span class="star" title="Current sector satellite">★</span>' : '') + esc(r.label) + '</td>' +
+      '<td class="num">' + (isNum(r.pe) ? fmt(r.pe, 1) : '–') + '</td><td class="num hide-m">' + (isNum(r.peMed) ? fmt(r.peMed, 1) : '–') + '</td>' +
+      '<td class="vcell" title="Valuation percentile vs its own 10-year history (left = cheap)">' + (vp != null ? '<div class="vbar"><i style="left:' + vp + '%"></i></div><small>' + vp + 'th pct</small>' : '–') + '</td>' +
+      '<td class="num">' + fmtPct(r.r6mRel) + '</td><td class="num hide-m">' + fmtPct(r.r12mRel) + '</td>' +
+      '<td class="num hide-m">' + (r.eligible != null ? r.eligible : '–') + '</td>' +
+      '<td><span class="st ' + (SIG_CLS[r.signal] || 'st-na') + '" title="' + esc((r.excluded || []).join('; ') || ('score ' + Math.round((r.score || 0) * 100) + '/100' + (r.eligible === 0 ? ' · no fund passes every check yet' : ''))) + '">' + esc(r.signal) + '</span></td></tr>';
   }).join('');
-  var met = SIP.metal || {};
-  h += '<div>' + '<div class="card pcard">' + donut.replace('<div class="pie-card"', '<div class="pie-card" style="border:none;padding:0;background:none"') + '</div>' +
-    '<div class="card pcard"><div class="sec-title">Valuation &amp; equity tilt</div><div class="sec-sub">Nifty 50 P/E ' + (n50.pe || '–') + ' vs 10-year median ' + (n50.peMed || '–') + ' · applied to plans of 5+ years</div>' +
-      '<div style="margin-top:8px">' + comps + '</div>' +
-      '<div class="tilt"><b>' + (m.tilt > 0 ? '+' : '') + (m.tilt || 0) + '</b><span>' +
-      (m.tilt > 0 ? 'Valuations favour equity, so long-horizon plans add up to ' + m.tilt + ' points to equity.' :
-       m.tilt < 0 ? 'Valuations look stretched, so long-horizon plans move ' + (-m.tilt) + ' points from equity into debt.' :
-       'Signals balance out — plans follow their standard allocation.') + '</span></div></div>' +
-    '<div class="card pcard"><div class="sec-title">Interest-rate cycle</div><div class="sec-sub">Repo ' + (R.repo != null ? R.repo + '%' : '–') + ' · 10-year bond ' + (R.g10 != null ? R.g10 + '%' : '–') + ' · 91-day T-bill ' + (R.tb91 != null ? R.tb91 + '%' : '–') + '</div>' +
-      '<span class="regime ' + esc(R.applied || 'neutral') + '">' + esc(REGIME_TXT[R.applied] || 'Neutral') + '</span>' +
-      '<div style="margin-top:8px">' + rsig + '</div>' +
-      '<div class="note">Debt funds follow the cycle: short-duration and floating-rate funds when yields rise, high-quality corporate / PSU funds when rates are stable, gilt and dynamic bond funds (5+ year plans) when yields fall.</div></div>' +
-    (secRows ? '<div class="card pcard"><div class="sec-title">Sector valuations</div><div class="sec-sub">P/E vs each sector\'s own 10-year history and 6-month momentum vs the Nifty 50 · ★ = current satellite</div>' +
-      '<div style="overflow-x:auto"><table class="sec-tbl"><thead><tr><th>Sector</th><th class="num">P/E</th><th>Cheap ↔ dear</th><th class="num">6M rel.</th><th>Signal</th></tr></thead><tbody>' + secRows + '</tbody></table></div></div>' : '') +
-    '<div class="card pcard"><div class="sec-title">Precious metals</div><div class="sec-sub">' + esc(met.note || '') + '</div>' +
-      '<div class="sig"><span>Gold / silver ratio</span><b>' + (isNum(met.ratioPct) ? Math.round(met.ratioPct * 100) + 'th percentile of ' + met.years + ' yrs' : '–') + '</b></div>' +
-      '<div class="sig"><span>3-month return</span><b>Gold ' + pctTxt(met.gold3m, 1) + ' · Silver ' + pctTxt(met.silver3m, 1) + '</b></div>' +
-      '<div class="sig"><span>Used in 7+ year aggressive plans</span><b style="font-family:inherit">' + esc((met.applied || 'gold').replace(/^./, function(c){ return c.toUpperCase(); })) + '</b></div></div>' +
-    '<div class="card pcard"><div class="sec-title">How funds are selected</div><ul class="rules">' +
+  h += '<div class="mi-head"><div class="sec-title">Market intelligence</div><div class="sec-sub">The signals behind this month\'s plans · valuations as of ' + (m.valuationAsOf ? fmtDate(m.valuationAsOf) : '–') + ' · reviewed monthly</div></div>';
+  h += '<div class="mi-grid">' +
+    '<div class="card pcard mi"><div class="mi-top"><div class="sec-title">Valuation &amp; equity tilt</div><span class="tilt-b ' + (m.tilt > 0 ? 'up' : m.tilt < 0 ? 'dn' : 'nt') + '">' + (m.tilt > 0 ? '+' : '') + (m.tilt || 0) + ' pts</span></div>' +
+      '<div class="mi-kpis"><div><small>Nifty 50 P/E</small><b>' + (n50.pe || '–') + '</b></div><div><small>10-yr median</small><b>' + (n50.peMed || '–') + '</b></div><div><small>Percentile</small><b>' + (isNum(n50.pePct) ? Math.round(n50.pePct * 100) + 'th' : '–') + '</b></div></div>' +
+      sigRows(m.components) +
+      '<p class="mi-foot">' + (m.tilt > 0 ? 'Valuations favour equity — plans of 5+ years add up to ' + m.tilt + ' points to equity.' : m.tilt < 0 ? 'Valuations look stretched — plans of 5+ years move ' + (-m.tilt) + ' points from equity into debt.' : 'Signals balance out — plans follow their standard allocation.') + '</p></div>' +
+    '<div class="card pcard mi"><div class="mi-top"><div class="sec-title">Interest-rate cycle</div><span class="regime ' + esc(R.applied || 'neutral') + '">' + esc(cap(R.applied || 'neutral')) + '</span></div>' +
+      '<div class="mi-kpis"><div><small>Repo rate</small><b>' + (R.repo != null ? fmt(R.repo) + '%' : '–') + '</b></div><div><small>10-yr G-Sec</small><b>' + (R.g10 != null ? fmt(R.g10) + '%' : '–') + '</b></div><div><small>91-day T-bill</small><b>' + (R.tb91 != null ? fmt(R.tb91) + '%' : '–') + '</b></div></div>' +
+      sigRows(R.signals) +
+      '<p class="mi-foot">' + esc(REGIME_TXT[R.applied] || '') + '. Debt funds follow the cycle: short duration and floating rate when yields rise, corporate / PSU when stable, gilt and dynamic bond (5+ year plans) when yields fall.</p></div>' +
+    '<div class="card pcard mi"><div class="mi-top"><div class="sec-title">Precious metals</div><span class="regime neutral">' + esc(cap(met.applied || 'gold')) + '</span></div>' +
+      '<div class="mi-kpis"><div><small title="Gold / silver price ratio vs its history">G/S ratio</small><b>' + (isNum(met.ratioPct) ? Math.round(met.ratioPct * 100) + 'th pct' : '–') + '</b></div><div><small>Gold 3M</small><b>' + pctTxt(met.gold3m, 1) + '</b></div><div><small>Silver 3M</small><b>' + pctTxt(met.silver3m, 1) + '</b></div></div>' +
+      '<div class="sig2"><span class="sig-k">History compared</span><span class="sig-v">' + (met.years ? met.years + ' years' : '–') + '</span><span></span></div>' +
+      '<div class="sig2"><span class="sig-k">Silver chosen when</span><span class="sig-v">ratio ≥ 70th pct</span><span></span></div>' +
+      '<p class="mi-foot">' + esc(met.note || '') + '. The metal choice applies to 7+ year aggressive plans; other plans hold gold.</p></div>' +
+    '</div>';
+  if (secRows) h += '<div class="card pcard sec-card"><div class="mi-top"><div><div class="sec-title">Sector valuations</div><div class="sec-sub">P/E against each sector\'s own 10-year history and momentum against the Nifty 50 · ★ current sector satellite (7+ year aggressive plans)</div></div></div>' +
+    '<div class="sec-wrap"><table class="sec-tbl"><thead><tr><th>Sector</th><th class="num">P/E</th><th class="num hide-m">10Y median</th><th>Cheap ↔ dear</th><th class="num">6M vs Nifty</th><th class="num hide-m">12M vs Nifty</th><th class="num hide-m">Funds passing</th><th>Signal</th></tr></thead><tbody>' + secRows + '</tbody></table></div></div>';
+  h += '<div class="mi-grid two">' +
+    '<div class="card pcard mi"><div class="sec-title">How funds are selected</div><ul class="rules">' +
       '<li><b>Every fund passes a checklist</b> before it can enter a plan — open the Checks list on any fund to see each item.</li>' +
       '<li><b>Equity:</b> 5+ year record, benchmark beaten in most rolling 3-year periods, rolling return and drawdown at least as good as the category, consistency, fund-manager tenure, market-cap fit and portfolio concentration.</li>' +
       '<li><b>Debt:</b> credit quality (85%+ AAA / sovereign where the portfolio is published), no credit events, volatility in line with the category, category matched to the rate cycle, cost no higher than the median.</li>' +
@@ -2350,14 +2404,14 @@ function renderSip(){
       '<li><b>Satellites:</b> sector and international funds only in 7+ year aggressive plans (5–10% each); the sector is chosen on valuation and momentum, the metal on the gold/silver ratio.</li>' +
       '<li><b>Diversified:</b> low top-holding overlap and no more than two funds per fund house.</li>' +
     '</ul></div>' +
-    '<div class="card pcard"><div class="sec-title">Built to stay stable</div><ul class="rules">' +
+    '<div class="card pcard mi"><div class="sec-title">Built to stay stable</div><ul class="rules">' +
       '<li>The number of funds in a plan is fixed — the plan never adds funds month after month.</li>' +
       '<li>Funds, the rate cycle, the sector and the metal are reviewed once a month; a change in conditions must persist before the plan follows it.</li>' +
       '<li>A fund that slips is put <b>on watch</b> and replaced only if it fails the next review too, or at once if it closes to SIPs.</li>' +
       '<li>When a fund is replaced, keep the units you hold — simply redirect future instalments to the new fund.</li>' +
       '<li>Next review: ' + fmtDate(SIP.nextReview) + '.</li>' +
     '</ul>' + ((plan.changes || []).length ? '<div class="pf-h" style="margin-top:12px">Recent changes</div><ul class="rules">' + plan.changes.map(function(c){ return '<li>' + fmtDate(c.date) + ': ' + esc((BY[c.from] || {name:'Previous fund'}).name) + ' → ' + esc((BY[c.to] || {name:'new fund'}).name) + (c.note ? ' — ' + esc(c.note) : '') + '</li>'; }).join('') + '</ul>' : '') + '</div>' +
-    '</div></div>';
+    '</div>';
   h += '<p class="disc" style="margin-top:14px"><strong>Important:</strong> Smart SIP plans and projections are model illustrations generated from historical data and current market indicators for educational purposes only. They are not personalised investment advice and do not consider your income, existing investments, tax position or goals. Returns are not guaranteed and past performance does not predict future results. We are not SEBI registered investment advisors — please consult a certified financial advisor before investing.</p>';
   $('sipBody').innerHTML = h;
   bindDonuts();
