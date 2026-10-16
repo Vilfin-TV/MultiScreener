@@ -13,24 +13,23 @@ jobs:
       - run: |
           mkdir -p .probe
           python3 - <<'PY' > .probe/gm.log 2>&1 || true
-          import requests, re
-          s=requests.Session(); s.headers.update({"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/129.0 Safari/537.36","Accept":"application/json, text/plain, */*"})
-          urls=["https://api.mospi.gov.in/api/cpi/getCPIIndex?Format=JSON&base_year=2012&series=Current&year=2026&state_code=99&sector_code=3",
-                "https://api.mospi.gov.in/api/cpi/getCPIIndex?base_year=2012&year=2026",
-                "https://api.mospi.gov.in/api/cpi/getCPIInflation?base_year=2012&year=2026",
-                "https://api.mospi.gov.in/api/cpi/getItemIndex?base_year=2012&year=2026",
-                "https://esankhyiki.mospi.gov.in/macroindicators?product=cpi",
-                "https://api.mospi.gov.in/",
-                "https://www.mospi.gov.in/cpi",
-                "https://cpi.mospi.gov.in/",
-                "https://www.rbi.org.in/Scripts/BS_NSDPDisplay.aspx?param=4",
-                "https://dbie.rbi.org.in/"]
-          for u in urls:
+          import requests, re, ssl
+          from requests.adapters import HTTPAdapter
+          class Legacy(HTTPAdapter):
+              def init_poolmanager(self, *a, **k):
+                  ctx = ssl.create_default_context(); ctx.options |= 0x4  # OP_LEGACY_SERVER_CONNECT
+                  k["ssl_context"] = ctx; return super().init_poolmanager(*a, **k)
+          s=requests.Session(); s.mount("https://api.mospi.gov.in", Legacy()); s.headers.update({"User-Agent":"Mozilla/5.0","Accept":"application/json"})
+          base="https://api.mospi.gov.in/api/cpi/"
+          for q in ["getCPIIndex?base_year=2012&series=Current&year=2026&format=json",
+                    "getCPIIndex?base_year=2012&series=Current&year=2026&state_code=99&sector_code=3&group_code=0&format=json",
+                    "getCPIIndex?base_year=2024&series=Current&year=2026&format=json",
+                    "getCPIIndex?year=2026&Format=JSON",
+                    "getCPIInflation?year=2026",
+                    "getAllIndiaInflation?year=2026"]:
               try:
-                  r=s.get(u,timeout=40); t=r.text
-                  print("==",u,r.status_code,len(t)); print(re.sub(r"\s+"," ",t[:700]))
-                  for m in re.finditer(r"(CPI|Consumer Price|nflation)[^<]{0,120}",t): print("  >",m.group(0)[:130]); 
-              except Exception as e: print("==",u,"ERR",e)
+                  r=s.get(base+q,timeout=40); print("==",q,r.status_code,len(r.text)); print(r.text[:900])
+              except Exception as e: print("==",q,"ERR",str(e)[:200])
           PY
           git config user.name "github-actions[bot]"; git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           git add .probe && git commit -m "chore(dev): global macro probe [skip ci]" && git push
