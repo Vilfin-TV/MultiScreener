@@ -82,6 +82,9 @@ TEMPLATES = {
     "h10a": {"core": 25, "flexi": 20, "mid": 15, "small": 15, "theme": 5, "intl": 10, "dcore": 5, "gold": 5},
 }
 ORDER = ["core", "flexi", "mid", "small", "theme", "baf", "eqsav", "arb", "dcore", "dshort", "gold", "intl"]
+FALLBACK = {"intl": ["flexi", "core"], "theme": ["flexi", "core"], "small": ["mid", "flexi"], "mid": ["flexi", "core"],
+            "flexi": ["core"], "core": ["flexi"], "gold": ["dcore", "dshort"], "eqsav": ["arb", "baf"], "baf": ["core", "dcore"],
+            "dcore": ["dshort", "baf"], "dshort": ["dcore", "arb"], "arb": ["dshort"]}
 EQUITY_SLOTS = {"core", "flexi", "mid", "small", "theme", "baf", "eqsav"}
 RX_NIFTY50 = re.compile(r"\bnifty 50\b(?!\s*(equal|value|quality|low|momentum|alpha|shariah|arbitrage))", re.I)
 RX_NOT_CORE = re.compile(r"elss|tax saver|next 50|equal weight|value|quality|momentum|low vol|alpha", re.I)
@@ -408,12 +411,13 @@ def main() -> int:
             base = TEMPLATES[pid]
             weights, applied = apply_tilt(base, tilt, hz)
             pst = state["plans"].setdefault(pid, {"slots": {}})
-            chosen, amc_count, slots, changes = {}, {}, [], []
+            chosen, amc_count, slots, changes, skipped = {}, {}, [], [], []
             for slot in sorted(weights, key=ORDER.index):
                 inc = pst["slots"].get(slot)
                 code, alts, action, note = choose(u, slot, chosen, amc_count, inc, review, rank_cache)
                 if code is None:
-                    log.warning("%s/%s: no eligible fund", pid, slot)
+                    log.warning("%s/%s: no eligible fund — weight moves to a related slot", pid, slot)
+                    skipped.append(slot)
                     continue
                 if action in ("new", "replaced") or not inc or inc.get("code") != code:
                     prev_code = inc.get("code") if inc else None
@@ -430,8 +434,13 @@ def main() -> int:
                     "state": "watch" if action == "watch" else "ok", "note": note,
                     "why": why(u, slot, code, u.ter_med.get(slot)), "pool": len(ranked),
                 })
+            for sk in skipped:                         # keep the plan fully invested: hand the weight to its nearest relative
+                tgt = next((x for x in FALLBACK.get(sk, []) if any(z["key"] == x for z in slots)), None)
+                tgt = next(z for z in slots if z["key"] == tgt) if tgt else max(slots, key=lambda z: z["w"])
+                tgt["w"] += weights[sk]
+                tgt["note"] = (tgt["note"] + " " if tgt["note"] else "") + f"Includes the {SLOTS[sk][0].lower()} allocation (no fund currently passes every check)."
             for k in list(pst["slots"]):
-                if k not in weights:
+                if k not in weights or k in skipped:
                     pst["slots"].pop(k)
             pst["changes"] = (changes + pst.get("changes", []))[:6]
             codes = [s["code"] for s in slots]
