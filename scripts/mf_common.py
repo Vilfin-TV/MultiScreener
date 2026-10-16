@@ -110,7 +110,7 @@ def is_direct_growth(r: dict) -> bool:
 
 # ═══════════════════════════════ CLASSIFICATION ════════════════════════════
 # bump whenever category rules change on purpose: the day-over-day audit then accepts the resulting moves
-RULES_VERSION = 3
+RULES_VERSION = 4
 
 ASSETS = ["Equity", "Debt", "Hybrid", "Commodity", "Global", "Index", "Solution"]
 
@@ -343,6 +343,11 @@ def classify(name: str, cat: str) -> str | None:
             core = RX_BRAND.sub("", n)
             if RX_GLOBAL.search(core) and not re.search(r"india|bharat", core, re.I):
                 return _global_sub(core)
+            # diversified mandates filed under "Thematic" (e.g. a flexi cap fund that may hold overseas stocks)
+            if re.search(r"\bflexi ?cap\b", core, re.I):
+                return "flexi"
+            if re.search(r"\bmulti ?cap\b", core, re.I):
+                return "multi"
             return _theme(core, SEC_THEMES, "sec_other")
         return key
     if low.startswith(("debt", "income/debt")):
