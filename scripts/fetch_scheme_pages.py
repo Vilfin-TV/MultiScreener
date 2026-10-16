@@ -162,7 +162,11 @@ def main():
             return amc, {}, 0
         urls = sitemap_urls(site)
         brand = set(BRAND_WORDS.findall(amc.lower())) | {"mf", "mutual", "amc", "india", "asset", "management"}
-        return amc, match(by_amc[amc], urls, brand), len(urls)
+        m = match(by_amc[amc], urls, brand)
+        if len(m) < 0.6 * len(by_amc[amc]) and urls:
+            fundish = [u for u in urls if re.search(r"fund|scheme|product", u, re.I) and not SKIP_PATH.search(urlparse(u).path)]
+            log.info("  sample %s: %s", amc, " | ".join((fundish or urls)[:12]))
+        return amc, m, len(urls)
 
     with ThreadPoolExecutor(max_workers=8) as ex:
         for amc, m, n in ex.map(work, sorted(by_amc)):
