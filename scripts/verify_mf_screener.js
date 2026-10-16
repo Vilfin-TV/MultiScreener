@@ -440,10 +440,22 @@ function verifySmartSip() {
         ok(/^h(7|10)a$/.test(id), `${id}: satellite ${s.key} outside 7+ year aggressive plans`);
       }
       (s.alts || []).forEach(a => ok(!!rows[a], `${id}/${s.key}: alternate ${a} not in screener`));
+      if (P.v >= 2) {
+        ok(Array.isArray(s.checks) && s.checks.length >= 6, `${id}/${s.key}: only ${(s.checks || []).length} checks`);
+        const failed = (s.checks || []).filter(c => !c[1]).map(c => c[0]);
+        ok(!failed.length || s.state === 'watch', `${id}/${s.key}: checks failed ${failed.join(', ')}`);
+        ok(typeof s.er === 'number' && s.er > -2 && s.er < 25, `${id}/${s.key}: expected return ${s.er}`);
+        ok(['equity', 'elss', 'debt', 'other'].includes(s.tax), `${id}/${s.key}: tax class ${s.tax}`);
+      }
     }
     for (const [a, n] of Object.entries(amc)) ok(n <= 2 || p.slots.length <= 3, `${id}: ${n} funds from fund house ${J.amcs[a]}`);
   }
-  console.log(`Smart SIP: ${Object.keys(P.plans).length} plans checked (tilt ${P.market.tilt})`);
+  if (P.v >= 2) {
+    ok(['rising', 'neutral', 'easing'].includes(P.rates && P.rates.applied), `rate regime ${P.rates && P.rates.applied}`);
+    ok(Array.isArray(P.sectors), 'sector table missing');
+    ok(P.assumptions && P.assumptions.ltcgEquity > 0, 'tax assumptions missing');
+  }
+  console.log(`Smart SIP: ${Object.keys(P.plans).length} plans checked (tilt ${P.market.tilt}, rates ${P.rates && P.rates.applied}, sector ${P.sector})`);
 }
 // new fund offers (data/mf/nfo.json)
 function verifyNfo() {
