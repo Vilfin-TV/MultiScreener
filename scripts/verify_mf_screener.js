@@ -417,7 +417,13 @@ function verifySmartSip() {
   const J = JSON.parse(fs.readFileSync(path.join(OUT, 'screener.json'), 'utf8'));
   const C = Object.fromEntries(J.cols.map((c, i) => [c, i]));
   const rows = Object.fromEntries(J.rows.map(r => [r[C.code], r]));
-  ok(Object.keys(P.plans).length === 15, `smart SIP has ${Object.keys(P.plans).length} plans`);
+  const nPlans = (P.horizons || []).length * (P.risks || []).length || 15;
+  ok(Object.keys(P.plans).length === nPlans && nPlans >= 15, `smart SIP has ${Object.keys(P.plans).length} plans (expected ${nPlans})`);
+  const eqShare = p => p.slots.reduce((a, s) => a + (s.asset === 'Equity' || s.asset === 'International' ? s.w : 0), 0);
+  for (const h of (P.horizons || [])) {
+    const a = P.plans[h.id + 'a'], v = P.plans[h.id + 'v'];
+    if (a && v) ok(eqShare(v) >= eqShare(a), `${h.id}: very aggressive equity ${eqShare(v)}% below aggressive ${eqShare(a)}%`);
+  }
   ok(Math.abs(P.market.tilt) <= 10 && P.market.tilt % 5 === 0, `market tilt ${P.market.tilt}`);
   for (const [id, p] of Object.entries(P.plans)) {
     const w = p.slots.reduce((a, s) => a + s.w, 0);
@@ -435,9 +441,14 @@ function verifySmartSip() {
       ok(!(r[C.lock] > 0), `${id}/${s.key}: fund has a lock-in`);
       if (C.buy != null && r[C.buy] != null) ok(r[C.buy].includes('S'), `${id}/${s.key}: fund not accepting SIPs`);
       ok(r[C.status] !== 'Out of track', `${id}/${s.key}: fund is Out of track`);
+      if (s.key === 'value' || s.key === 'momentum') {
+        ok(s.w <= 15, `${id}/${s.key}: style sleeve weight ${s.w}`);
+        ok(/^h(5|7|10)v$/.test(id), `${id}: style sleeve ${s.key} outside very aggressive 5+ year plans`);
+        if (s.key === 'momentum') ok(/momentum/i.test(r[C.name]), `${id}/momentum: ${r[C.name]} is not a momentum index fund`);
+      }
       if (s.key === 'theme' || s.key === 'intl') {
         ok(s.w <= 10, `${id}/${s.key}: satellite weight ${s.w}`);
-        ok(/^h(7|10)a$/.test(id), `${id}: satellite ${s.key} outside 7+ year aggressive plans`);
+        ok(/^h(7|10)[av]$/.test(id), `${id}: satellite ${s.key} outside 7+ year aggressive plans`);
       }
       (s.alts || []).forEach(a => ok(!!rows[a], `${id}/${s.key}: alternate ${a} not in screener`));
       if (P.v >= 2) {
