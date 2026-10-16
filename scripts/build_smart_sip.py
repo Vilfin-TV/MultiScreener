@@ -471,9 +471,8 @@ def fund_checks(u, slot, code, ctx):
         r1, m1 = g("r1y"), cs.get("r1y")
         chk("1Y return vs category", r1 is None or m1 is None or r1 >= m1 - 0.3, f"{r1:.2f}% vs median {m1:.2f}%" if r1 is not None and m1 is not None else "–")
     if slot == "intl":
-        chk("Diversified mandate", not RX_INTL_THEME.search(name), "broad overseas market")
-        b = g("buy")
-        chk("Accepting lump sum", b is None or "L" in b, "open for fresh money")
+        core = re.sub(r"\b(invesco|nippon|franklin|bank of) india\b", "", name, flags=re.I)   # fund-house brands are not mandates
+        chk("Diversified mandate", not RX_INTL_THEME.search(core), "broad overseas market" if not RX_INTL_THEME.search(core) else "narrow theme or single region")
     if slot == "metal":
         chk("Metal", re.search(ctx["metal"], name, re.I) is not None, f"{ctx['metal']} fund")
     if slot == "theme":
