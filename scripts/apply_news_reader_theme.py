@@ -37,7 +37,6 @@ CHILD_PAGES = [
     "user_manual.html",
     "user_guide.html",
     "trendlyne_screener.html",
-    "mf_live_screener.html",
     "mutual_fund_analyser.html",
     "stock_research.html",
     "pre_market_briefing.html",

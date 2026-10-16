@@ -24,7 +24,7 @@ assignees: ''
 - **Device**: <!-- e.g. iPhone 14, Samsung S23, Desktop -->
 - **OS**: <!-- e.g. iOS 17.4, Android 14, Windows 11 -->
 - **Browser**: <!-- e.g. Chrome 120, Safari 17 -->
-- **URL where it happened**: <!-- e.g. /index.html, /mf_live_screener.html -->
+- **URL where it happened**: <!-- e.g. /index.html, /india_mf_screener.html -->
 
 ## Console errors (optional)
 <!-- Open browser DevTools → Console tab → paste any red errors here. -->
