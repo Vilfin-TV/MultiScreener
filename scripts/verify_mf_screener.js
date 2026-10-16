@@ -315,9 +315,17 @@ function verifyFiles() {
     for (const m of src.matchAll(/<script>([\s\S]*?)<\/script>/g)) {
       try { new Function(m[1]); checks++; } catch (e) { fail(`page script does not parse: ${e.message}`); }
     }
+    // the "Best Brokers & Apps" partner list may name investment platforms (referral links) — the data-source
+    // rule applies to everything else on the page
+    const brk = (src.match(/<section class="brk" id="brokers"[\s\S]*?<\/section>/) || [''])[0];
+    const rest = src.replace(brk, '');
     for (const bad of [/workers\.dev/i, /mfapi/i, /captnemo/i, /kuvera/i, /amfiindia\.com\/spages/i, /nseindia\.com\/api/i,
                        /free ai/i, /no api key/i, /powered by/i, /serverless/i, /live web search/i])
-      ok(!bad.test(src), `page contains forbidden reference ${bad}`);
+      ok(!bad.test(rest), `page contains forbidden reference ${bad}`);
+    for (const bad of [/workers\.dev/i, /mfapi/i, /captnemo/i, /free ai/i, /no api key/i, /powered by/i, /serverless/i])
+      ok(!bad.test(brk), `broker section contains forbidden reference ${bad}`);
+    ok(!brk || (brk.match(/href="https:\/\//g) || []).length >= 14, 'broker section has fewer than 14 links');
+    ok(!brk || !/href="https:\/\/[^"]*kuvera[^"]*"/i.test(brk) || /kuvera\.in\/s\/wsapp\?referral=/i.test(brk), 'broker section links to a non-referral Kuvera address');
   }
   console.log(`Files: ${J.rows.length} funds · ${Object.entries(perAsset).map(([a, n]) => `${a} ${n}`).join(' · ')}`);
 }
