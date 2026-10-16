@@ -86,7 +86,7 @@ def sbi_loads(funds: list[dict]) -> dict[int, list[str]]:
             for nm in {x.get("FundUrlTitle") or "", x.get("FundName") or ""} | set(
                     re.findall(r"\((?:formerly|erstwhile)\s+known\s+as\s+([^)]+)\)", x.get("FundName") or "", re.I)):
                 t = H.tokens(nm)
-                if t and not re.search(r"\betf\b", nm, re.I):
+                if t and not (re.search(r"\betf\b", nm, re.I) and not re.search(r"\bfof\b|fund of funds?", nm, re.I)):
                     cands.append((fid, t))
         want = {}
         for f in funds:
