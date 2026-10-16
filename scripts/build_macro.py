@@ -9,6 +9,12 @@
   val_hist.json keeps one reading per month-end for ~30 indices going back to 2016 (bootstrapped once, then the
   latest month is refreshed each run), so each index's valuation can be ranked against its own 10-year history.
 
+* Global markets — two years of daily closes for the US dollar index, US 10-year / 5-year / 3-month yields,
+  emerging-market and US equities, the Nifty 50, USD/INR, gold, silver, copper, Brent and WTI crude, the US
+  volatility index and US inflation-linked vs regular Treasury bond funds (a market measure of inflation
+  expectations). Each series is summarised as level, 3/6/12-month change, distance from its 200-day average and
+  its 2-year percentile; the planner turns these into signals for equities, debt and precious metals.
+
 Run daily before build_smart_sip.py. Missing sources never fail the build — the previous file is kept.
 """
 from __future__ import annotations
@@ -301,6 +307,54 @@ def valuation_table(h: dict) -> dict:
     return out
 
 
+# global market series: key → (chart symbol, label, kind) — kind "yield" = change in points, else in %
+GLOBAL = {
+    "dxy": ("DX-Y.NYB", "US dollar index", "level"), "us10y": ("^TNX", "US 10-year yield", "yield"),
+    "us5y": ("^FVX", "US 5-year yield", "yield"), "us3m": ("^IRX", "US 3-month T-bill yield", "yield"),
+    "em": ("EEM", "Emerging-market equities", "level"), "spx": ("^GSPC", "US equities (S&P 500)", "level"),
+    "nifty": ("^NSEI", "Nifty 50", "level"), "usdinr": ("INR=X", "USD/INR", "level"),
+    "gold": ("GC=F", "Gold (USD)", "level"), "silver": ("SI=F", "Silver (USD)", "level"),
+    "copper": ("HG=F", "Copper", "level"), "brent": ("BZ=F", "Brent crude", "level"), "wti": ("CL=F", "WTI crude", "level"),
+    "vix": ("^VIX", "US volatility index", "level"), "tip": ("TIP", "US inflation-linked Treasuries", "level"),
+    "ief": ("IEF", "US 7-10 year Treasuries", "level"),
+}
+
+
+def fetch_global(S) -> dict:
+    out = {}
+    for key, (sym, label, kind) in GLOBAL.items():
+        try:
+            r = S.get(f"https://query1.finance.yahoo.com/v8/finance/chart/{requests.utils.quote(sym)}?interval=1d&range=2y", timeout=30)
+            res = r.json()["chart"]["result"][0]
+            ts, cl = res["timestamp"], res["indicators"]["quote"][0]["close"]
+            pts = [(datetime.fromtimestamp(t, timezone.utc).date(), c) for t, c in zip(ts, cl) if c is not None]
+        except Exception as e:  # noqa: BLE001
+            log.warning("global series %s unavailable: %s", key, e)
+            continue
+        if len(pts) < 220:
+            continue
+        last_d, last = pts[-1]
+
+        def ago(days):
+            tgt = last_d - timedelta(days=days)
+            return next((v for d, v in reversed(pts) if d <= tgt), None)
+
+        def chg(days):
+            v = ago(days)
+            if v is None:
+                return None
+            return round(last - v, 3) if kind == "yield" else round((last / v - 1) * 100, 2)
+        ma200 = sum(v for _, v in pts[-200:]) / 200
+        vals = [v for _, v in pts]
+        out[key] = {"label": label, "kind": kind, "d": last_d.isoformat(), "last": round(last, 4),
+                    "c1m": chg(30), "c3m": chg(91), "c6m": chg(182), "c12m": chg(365),
+                    "vs200": round(last - ma200, 3) if kind == "yield" else round((last / ma200 - 1) * 100, 2),
+                    "pct2y": round(sum(1 for v in vals if v < last) / len(vals), 3),
+                    "w": [round(v, 4) for _, v in pts[-260::5]]}            # weekly sample for sparklines
+        time.sleep(0.3)
+    return out
+
+
 def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     S = requests.Session()
@@ -320,13 +374,18 @@ def main() -> int:
     if snap and (not hist or hist[-1].get("d") != today):
         hist.append({"d": today, **snap})
     hist = hist[-800:]
+    glob = fetch_global(S)
+    if len(glob) < len(GLOBAL) // 2:
+        glob = prev.get("global", {}) or glob
     out = {"generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "rates": rates, "rateHist": hist,
-           "valuation": val, "valuationAsOf": val_asof}
+           "valuation": val, "valuationAsOf": val_asof, "global": glob}
     if not rates and not val:
         log.error("no market inputs available — keeping the previous file")
         return 0
     OUT.write_text(json.dumps(out, separators=(",", ":")))
-    log.info("macro.json: rates %s · valuations %d indices (as of %s)", snap, len(val), val_asof)
+    log.info("macro.json: rates %s · valuations %d indices (as of %s) · global series %d", snap, len(val), val_asof, len(glob))
+    for k, g in glob.items():
+        log.info("  %-7s %-10s 3M %s · 6M %s · vs200 %s · 2y pct %s", k, g["last"], g["c3m"], g["c6m"], g["vs200"], g["pct2y"])
     for k in ("n50", "mid150", "sml250", "realty", "auto", "health", "it", "bank"):
         if k in val:
             log.info("  %-8s P/E %s (pct %s, median %s) · 6M rel %s", k, val[k]["pe"], val[k]["pePct"], val[k]["peMed"], val[k].get("r6mRel"))
