@@ -43,6 +43,20 @@ INDICES = {
     "Nifty Services Sector": "services", "Nifty Housing": "housing", "Nifty Transportation & Logistics": "transport",
     "Nifty India Digital": "digital", "Nifty Capital Markets": "capmkt", "Nifty Financial Services Ex-Bank": "finexbank",
     "Nifty MidSmall IT & Telecom": "msit", "Nifty Chemicals": "chemicals", "Nifty Textile": "textile",
+    # further sector and sub-sector indices (published today)
+    "Nifty MidSmall Financial Services": "msfin", "Nifty MidSmall Healthcare": "mshealth",
+    "Nifty MidSmall India Consumption": "mscons", "Nifty Consumer Durables": "durables", "Nifty Cement": "cement",
+    "Nifty REITs & Realty": "reitrealty", "Nifty REITs & InvITs": "reits", "Nifty EV & New Age Automotive": "ev",
+    "Nifty Mobility": "mobility", "Nifty India Tourism": "tourism", "Nifty India Internet": "internet",
+    "Nifty India Railways PSU": "railpsu", "Nifty Rural": "rural", "Nifty India New Age Consumption": "newcons",
+    "Nifty Non-Cyclical Consumer": "noncyc", "Nifty India Infrastructure & Logistics": "infralog",
+    "Nifty Conglomerate 50": "conglo", "Nifty Core Housing": "corehousing",
+    # sector indices not in the daily file yet — picked up automatically once published
+    "Nifty Telecommunications": "telecom", "Nifty Capital Goods": "capgoods", "Nifty Construction": "construction",
+    "Nifty Consumer Services": "conssvc", "Nifty Retail": "retail", "Nifty Hospitals": "hospitals",
+    "Nifty Power": "power", "Nifty Sugar & Ethanol": "sugar", "Nifty NBFC": "nbfc", "Nifty Housing Finance": "hfc",
+    "Nifty Insurance": "insurance", "Nifty Small Finance Banks & MFIs": "sfb",
+    "Nifty Commercial & Transport Services": "commsvc",
 }
 # alternative spellings used by the exchange over the years (matched after normalising case and punctuation)
 ALIASES = {
@@ -55,6 +69,12 @@ ALIASES = {
     "transport": ["Nifty Transportation and Logistics", "Nifty India Transportation & Logistics"],
     "oilgas": ["Nifty Oil and Gas", "Nifty Oil & Gas Index"],
     "commodities": ["Nifty Commodity"], "health": ["Nifty Healthcare"], "mfg": ["Nifty Manufacturing"],
+    "telecom": ["Nifty Telecom", "Nifty India Telecom", "Nifty Telecommunication"], "capgoods": ["Nifty India Capital Goods"],
+    "durables": ["Nifty Consumer Durable"], "reits": ["Nifty REITs and InvITs Index"], "ev": ["Nifty EV and New Age Automotive"],
+    "tourism": ["Nifty Tourism"], "internet": ["Nifty Internet"], "railpsu": ["Nifty India Railway PSU", "Nifty Railways PSU"],
+    "sugar": ["Nifty Sugar and Ethanol"], "sfb": ["Nifty Small Finance Banks and MFIs", "Nifty SFB & MFI"],
+    "nbfc": ["Nifty India NBFC"], "insurance": ["Nifty India Insurance"], "power": ["Nifty India Power", "Nifty Power Index"],
+    "commsvc": ["Nifty Commercial and Transport Services"], "conssvc": ["Nifty India Consumer Services"],
 }
 
 
