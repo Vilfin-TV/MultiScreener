@@ -904,6 +904,36 @@ footer a{color:var(--text2)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* ═══════════════ BEST BROKERS & APPS ═══════════════ */
+/* Smart Invest — beginner's guide */
+.sip-guide{margin-top:14px;padding:18px}
+.sip-guide .gd-lead{margin:8px 0 14px;font-size:13.5px;line-height:1.6;color:var(--text2)}
+.sip-guide .gd-lead b{color:var(--text)}
+.gd-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;counter-reset:gd}
+.gd-steps li{counter-increment:gd;position:relative;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 12px 12px 46px;font-size:12.5px;line-height:1.55;color:var(--text2);min-width:0}
+.gd-steps li::before{content:counter(gd);position:absolute;left:12px;top:13px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:12.5px;display:flex;align-items:center;justify-content:center}
+.gd-steps li b{color:var(--text)}
+.gd-steps li>b:first-child{display:block;font-size:13.5px;margin-bottom:4px}
+.gd-steps a,.sip-guide a{color:var(--accent2);font-weight:700;text-decoration:none}
+.gd-steps a:hover,.sip-guide a:hover{text-decoration:underline}
+.gd-sub{margin:18px 0 8px;font-size:14px;font-weight:800;color:var(--text)}
+.gd-tabs{display:flex;flex-wrap:wrap;width:100%}
+.gd-tabs button{flex:1 0 auto}
+.gd-pane{display:none;margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6;color:var(--text2)}
+.gd-pane.on{display:block}
+.gd-pane b{color:var(--text)}
+.gd-pane ul,.gd-col ul{margin:6px 0 0;padding-left:18px}
+.gd-pane li,.gd-col li{margin:4px 0}
+.gd-day{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.gd-day div{border:1px solid var(--border);border-radius:9px;padding:10px 12px;background:var(--surface)}
+.gd-day div b{display:block;margin-bottom:2px}
+.gd-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.gd-col{border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:12.8px;line-height:1.6;color:var(--text2);min-width:0}
+.gd-col h4{margin:0 0 4px;font-size:13.5px;color:var(--text)}
+.gd-col.do{background:rgba(34,166,90,.07)}
+.gd-col.dont{background:rgba(220,70,70,.06)}
+.gd-key{margin-top:12px;font-size:12.5px;line-height:1.55;border-radius:9px;padding:10px 12px;background:rgba(232,163,23,.12);border:1px solid rgba(232,163,23,.35);color:var(--text)}
+@media (max-width:1100px){.gd-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.gd-steps,.gd-day,.gd-cols{grid-template-columns:minmax(0,1fr)}.sip-guide{padding:14px}.gd-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.gd-tabs button{padding:8px 4px}}
 .brk{margin:22px 0 4px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius,14px);box-shadow:var(--shadow)}
 .brk-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .brk-head h2{margin:0;font-size:18px;letter-spacing:.2px;color:var(--text)}
@@ -1106,6 +1136,73 @@ footer a{color:var(--text2)}
       <div class="note">Projections use today's yields, valuation-adjusted long-run equity returns and each fund's expense ratio. Regular investments run for the years you choose and then stay invested until the end of your holding period; a one-time amount stays invested for the whole holding period. Tax assumes everything is redeemed at the end under current capital-gains rules.</div>
     </div>
     <div id="sipBody"><div class="card"><div class="skel" style="height:260px"></div></div></div>
+    <div class="card sip-guide" id="sipGuide">
+      <div class="sec-title">How to invest with this plan — a beginner's guide</div>
+      <p class="gd-lead">Smart Invest is a plan <b>you carry out yourself</b>. On each investment day you open this page, check the plan and buy <b>every fund in it as a one-time (lump-sum) purchase</b> for the amount shown in the plan table. It is <b>not an automatic SIP</b> — nothing is debited from your bank account unless you place the orders. Buying this way means each new instalment always follows the latest monthly review of the plan, and every fund in it accepts one-time purchases from ₹1,000 or less.</p>
+      <ol class="gd-steps">
+        <li><b>Complete your KYC (once)</b>Keep your PAN card, Aadhaar (linked to your mobile number) and a bank account in your own name ready. KYC is done online in about 10 minutes when you open an investment account and usually becomes active within 1–3 working days. Your KYC status should show <i>Validated</i> or <i>Registered</i> before you invest.</li>
+        <li><b>Open a direct mutual fund account</b>Choose a platform from <a href="#brokers">Best Brokers &amp; Apps</a> below. Choose one that offers <b>Direct</b> plans: there is no distributor commission, so you keep more of your returns. Add your bank account and a <b>nominee</b>.</li>
+        <li><b>Fix your investment day</b>Pick one day you will stick to — ideally <b>1–2 days after your salary arrives</b>, so the money is invested before it is spent. See the timing tips below for your chosen way of investing.</li>
+        <li><b>Buy each fund in the plan</b>Search the exact fund name, choose <b>Direct – Growth</b>, select <b>One-time / Lump sum</b>, enter the amount shown in the plan and pay by UPI or net banking from your own bank account. Repeat for every fund in the plan.</li>
+      </ol>
+
+      <div class="gd-sub">When and how much to invest</div>
+      <div class="seg gd-tabs" id="gdTabs" role="tablist" aria-label="Guide by way of investing"><button data-gfq="m" class="on" role="tab">Monthly</button><button data-gfq="w" role="tab">Weekly</button><button data-gfq="q" role="tab">Quarterly</button><button data-gfq="y" role="tab">Yearly</button><button data-gfq="l" role="tab">One-time</button></div>
+      <div class="gd-pane on" data-gfq="m">
+        <b>Invest once a month, on a day you choose.</b> Use the amounts shown with <i>Monthly</i> selected above.
+        <div class="gd-day">
+          <div><b>Option 1 — Salary day (simplest)</b>Invest on the same date every month, 1–2 days after your salary is credited. This builds the habit, and you never have to watch the market.</div>
+          <div><b>Option 2 — A down day within your window</b>From salary day, give yourself a window of up to 7 days. If the Nifty 50 closes 1% or more lower on any day in that window, invest that day; otherwise invest on the last day of the window. Never skip a month waiting for a fall.</div>
+        </div>
+        <ul><li>Set a monthly calendar reminder for your chosen day.</li><li>Before every purchase, refresh this page — if a fund was replaced at the monthly review, put new money into the new fund.</li></ul>
+      </div>
+      <div class="gd-pane" data-gfq="w">
+        <b>Invest a smaller amount every week</b> — this spreads your purchases across more market days. Use the amounts shown with <i>Weekly</i> selected above.
+        <div class="gd-day">
+          <div><b>Option 1 — Same weekday</b>Pick one weekday (for example Tuesday) and invest every week on that day.</div>
+          <div><b>Option 2 — The weaker day of the week</b>Invest on the first day of the week the Nifty 50 is in the red; if the market has risen every day by Friday, invest on Friday.</div>
+        </div>
+        <ul><li>Weekly investing means more orders, so keep a short checklist of the funds and amounts.</li><li>Each fund must still meet its minimum purchase amount — the plan already merges a fund into another one when a weekly amount is too small.</li></ul>
+      </div>
+      <div class="gd-pane" data-gfq="q">
+        <b>Invest once every three months</b> — useful if your income comes quarterly, or if you prefer fewer orders. Use the amounts shown with <i>Quarterly</i> selected above.
+        <div class="gd-day">
+          <div><b>Suggested days</b>The first week of January, April, July and October, or within a week of a quarterly payout or bonus.</div>
+          <div><b>On a market fall</b>If the Nifty 50 falls 5% or more from its recent high during the quarter, you can invest that quarter's amount early.</div>
+        </div>
+        <ul><li>Keep the quarter's money in your savings account (or a liquid fund) until the investment day — do not spend it.</li></ul>
+      </div>
+      <div class="gd-pane" data-gfq="y">
+        <b>Invest once a year</b> — for annual bonuses, business income or a yearly savings target. Use the amounts shown with <i>Yearly</i> selected above.
+        <div class="gd-day">
+          <div><b>Suggested day</b>Within a week of your bonus or at the start of the financial year (April), on the same date every year.</div>
+          <div><b>When markets look expensive</b>If the plan shows a staggered entry for a one-time amount, you can split the yearly amount into 3–6 monthly parts instead of investing it in one go.</div>
+        </div>
+        <ul><li>Set an annual reminder and recheck your risk level and horizon each year.</li></ul>
+      </div>
+      <div class="gd-pane" data-gfq="l">
+        <b>Invest a large one-time amount</b> — for example savings, a maturity or an inheritance. Select <i>One-time</i> above to see the entry plan.
+        <ul><li><b>Fairly valued market:</b> the plan invests everything on day one — buy each fund for its full amount.</li><li><b>Expensive market:</b> the plan parks the equity share in a liquid fund and moves it into the equity funds in equal monthly parts over 6 or 12 months. Most platforms call this a <b>Systematic Transfer Plan (STP)</b>; where the liquid fund is from another fund house, sell the shown amount from the liquid fund and buy the equity fund on the same day each month.</li><li>Debt, hybrid and gold funds are bought on day one in every case.</li></ul>
+      </div>
+
+      <div class="gd-cols">
+        <div class="gd-col do"><h4>✅ Placing an order — checklist</h4><ul>
+          <li>Pick the <b>Direct</b> plan and the <b>Growth</b> option — not Regular, not IDCW.</li>
+          <li>Pay from <b>your own bank account</b> (UPI / net banking). Third-party payments are rejected.</li>
+          <li>Place orders on a <b>market working day before 2:00 pm</b> so the payment reaches the fund house before its 3:00 pm cut-off and you get that day's price (NAV). Orders after the cut-off or on holidays get the next working day's price.</li>
+          <li>Units appear in your account in <b>1–3 working days</b>. Check every fund in the plan was bought.</li>
+          <li>Keep a simple record of what you bought and when (your platform's portfolio page shows this too).</li>
+        </ul></div>
+        <div class="gd-col dont"><h4>⛔ Common beginner mistakes</h4><ul>
+          <li><b>Stopping when markets fall</b> — falls are when each rupee buys the most units.</li>
+          <li><b>Selling a fund because it was replaced</b> — existing units can stay; selling may cost exit load and tax. Only new money goes to the new fund.</li>
+          <li><b>Chasing last year's top fund</b> or adding many extra funds — the plan is already diversified.</li>
+          <li><b>Investing money you need soon</b> — keep 6 months of expenses as an emergency fund first.</li>
+          <li><b>Skipping months</b> — regular investing matters far more than the perfect day.</li>
+        </ul></div>
+      </div>
+      <p class="gd-key">💡 <b>Rule of thumb:</b> the day you invest matters far less than investing every time. If you are unsure, use your salary day and never miss it. Funds can be bought only after your KYC is active — open your account through <a href="#brokers">Best Brokers &amp; Apps</a> below.</p>
+    </div>
   </section>
 
   <!-- ═════════ INFO ═════════ -->
@@ -1133,6 +1230,16 @@ footer a{color:var(--text2)}
       <details class="faq"><summary>Where do portfolio holdings come from?</summary><p>From each fund house's statutory monthly portfolio disclosure, published within ten days of every month-end. The Portfolio tab shows the top holdings, sector allocation, asset mix and market-cap split as of that month-end. Market-cap buckets follow SEBI's ranking — Nifty 100 constituents are large cap, Nifty Midcap 150 constituents are mid cap and other listed stocks are small cap. Portfolios are being added fund house by fund house.</p></details>
       <details class="faq"><summary>Can I invest a lump sum, or quarterly / yearly?</summary><p>Yes. Under <b>How you invest</b>, choose Monthly, Weekly, Quarterly, Yearly or One-time. The funds and weights are the same for every option, so the plan stays consistent however you invest; only the amounts, the projection and the tax change. For a one-time amount the planner adds an <b>entry plan</b>: when the Nifty 50 is fairly valued (below the 60th percentile of its 10-year valuation) everything is invested at once; when it is expensive, the equity share is parked in a liquid fund and moved in monthly over 6 months (12 months above the 80th percentile), using a systematic transfer plan within the same fund house where possible. Debt, hybrid and gold allocations are invested on day one.</p></details>
       <details class="faq"><summary>How does the Smart Invest planner work?</summary><p>Choose your investment horizon and risk level, and the planner builds a diversified plan of up to eight funds across equity, hybrid, debt and gold — with small thematic and international satellites only for aggressive plans of seven years or more. The Very aggressive level always combines equity, debt and gold or silver; when bonds are unattractive (a rising-rate cycle) or gold scores poorly on the global checks, its separate debt and / or gold fund is replaced by a multi-asset allocation fund, which still holds at least 10% each in equity, debt and gold / silver. Its core is an actively managed large & mid cap fund instead of a Nifty 50 index fund (3+ years). It holds more mid and small caps, and adds a value / contrarian fund (5–10 years), a rules-based momentum index fund (10+ years) and a medium-term corporate-bond or medium-duration debt fund. That spreads a growth-heavy plan across market caps, investing styles and asset classes. Funds must have a long record, beat their benchmark in most rolling periods, cost no more than their category median and hold low overlap with each other. Plans are reviewed monthly and stay stable: a fund is replaced only after failing two reviews in a row, and the number of funds never grows. A small market-condition tilt adds equity when prices are well below recent highs and trims it when valuations look stretched.</p></details>
+      <details class="faq"><summary>Do I invest through an automatic SIP or buy the funds myself?</summary><p>Smart Invest is designed to be followed with <b>one-time (lump-sum) purchases</b>: on each investment day (monthly, weekly, quarterly or yearly) you buy every fund in the plan for the amount shown. Nothing is debited automatically. This keeps every instalment in line with the latest monthly review, and every fund in the plan accepts one-time purchases of ₹1,000 or less. If you prefer automation, you can register a SIP in each fund for the same amounts on your platform — but check the plan every month and change a SIP when a fund is replaced.</p></details>
+      <details class="faq"><summary>What do I need before I can invest?</summary><p>A PAN card, Aadhaar linked to your mobile number, and a bank account in your own name. KYC (Know Your Customer) is a one-time check done online when you open an investment account; it usually becomes active within 1–3 working days. Once your KYC shows <i>Validated</i> or <i>Registered</i>, you can buy any mutual fund. Open your account with one of the platforms listed under <a href="#brokers">Best Brokers &amp; Apps</a>, choose Direct plans, and add a nominee.</p></details>
+      <details class="faq"><summary>Which day should I invest?</summary><p>The simplest and most reliable choice is the <b>same day every period, 1–2 days after your salary arrives</b>. If you want to buy on weaker days, give yourself a short window (up to 7 days for monthly investing, one week for weekly): invest on the first day in that window when the Nifty 50 closes 1% or more lower, otherwise on the last day of the window. Never skip a period waiting for a fall — over many years, investing every time matters far more than the exact day.</p></details>
+      <details class="faq"><summary>Should I wait for the market to fall before investing?</summary><p>No. Nobody can predict short-term falls, and waiting often means missing rises. Regular investing already buys more units when prices are low and fewer when they are high. For a large one-time amount, the entry plan spreads the equity part over 6–12 months when valuations are high, so you do not need to time the market yourself.</p></details>
+      <details class="faq"><summary>How do I place an order for a fund?</summary><p>On your platform, search the exact fund name shown in the plan, choose the <b>Direct</b> plan with the <b>Growth</b> option, select <b>One-time / Lump sum</b>, enter the amount and pay by UPI or net banking from your own bank account. Repeat for each fund. Orders placed on a market working day before about 2:00 pm usually get that day's price (NAV); later orders and orders on holidays get the next working day's price. Units appear in your account within 1–3 working days.</p></details>
+      <details class="faq"><summary>What happens when a fund in the plan is replaced?</summary><p>The plan is reviewed monthly and a fund is replaced only after failing two reviews in a row. When that happens, invest your <b>new money</b> in the new fund. You normally do <b>not</b> need to sell what you already hold in the old fund — selling can cost an exit load and capital-gains tax. Keep holding it as part of your portfolio unless you have a specific reason to switch.</p></details>
+      <details class="faq"><summary>What if my amount is too small for a fund?</summary><p>Every fund has a minimum purchase amount. When a fund's share of your amount is below its minimum, the plan automatically merges that share into a related fund, so you are never asked to buy less than the minimum. As your amount grows, the full plan — and sometimes an upgraded fund with a higher minimum — appears automatically.</p></details>
+      <details class="faq"><summary>What if I miss an investment day?</summary><p>Simply invest as soon as you can, using the amounts shown on that day. There is no penalty, because nothing is linked to your bank account. Avoid doubling up the next period just to catch up unless you have spare savings.</p></details>
+      <details class="faq"><summary>Is my money safe with the platform?</summary><p>Mutual funds are regulated by SEBI. Units are held in your own name with the fund house (or your demat account), and your money goes directly to the fund. The platform is only the route for placing orders — if you ever change platforms, your investments stay with you.</p></details>
+      <details class="faq"><summary>How and when should I sell (redeem)?</summary><p>Sell when you reach your goal or near the end of your chosen horizon, ideally in parts over a few months rather than all at once. Check each fund's exit load (usually only within the first year for equity funds) and remember that gains are taxed under capital-gains rules — the projection shows an estimate of the tax. Redemption money is credited to your registered bank account in 1–3 working days.</p></details>
       <details class="faq"><summary>What does “Fresh investment paused” mean?</summary><p>Some funds — mostly overseas funds when the industry-wide overseas investment limit is reached — temporarily stop accepting new lump-sum purchases or SIPs. Existing investments are unaffected. Use the purchase-status filter in Explore to see which global funds are open for investment today.</p></details>
       <details class="faq"><summary>Where do new fund offers come from?</summary><p>The NFO tab lists schemes in their official new-fund-offer period, with offer dates, minimum investment, category and links to the offer document and fund house. Recently closed offers stay listed for 45 days.</p></details>
       <details class="faq"><summary>How is Factor DNA calculated?</summary><p>Three years of weekly returns are matched against NSE's Momentum, Value, Quality, Low-Volatility and size indices. The best-fitting combination (weights that are positive and add to 100%) shows the fund's style. A fund is labelled with a single style only when that style dominates and the fit is strong; otherwise it is a <b>Blend</b>.</p></details>
@@ -2851,12 +2958,17 @@ function projectPlan(sized, P, years, stay, entry){
   return {invested:invested, value:value, tax:tax, post:post, low:low, high:high, er:er, xirr:(lo + hi) / 2, real:post / Math.pow(1 + (A.inflation || 5) / 100, stay), gains:g, tEq:tEq, tDebt:tDebt, tOth:tOth, n:n, stay:stay, years:years};
 }
 function fmtCr(v){ if (!isNum(v)) return '–'; if (v >= 1e7) return '₹' + (v / 1e7).toLocaleString('en-IN', {maximumFractionDigits:2}) + ' Cr'; if (v >= 1e5) return '₹' + (v / 1e5).toLocaleString('en-IN', {maximumFractionDigits:2}) + ' L'; return inr(v); }
+function gdShow(fq){
+  document.querySelectorAll('#gdTabs [data-gfq]').forEach(function(b){ var on = b.getAttribute('data-gfq') === fq; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+  document.querySelectorAll('#sipGuide .gd-pane').forEach(function(p){ p.classList.toggle('on', p.getAttribute('data-gfq') === fq); });
+}
 function renderSip(){
   if (!SIP) { loadSip().then(renderSip).catch(function(){ $('sipBody').innerHTML = '<div class="card"><div class="err"><b>The Smart Invest planner is temporarily unavailable</b>Please refresh in a few minutes.</div></div>'; }); return; }
   var P = S.plan, plan = SIP.plans[P.hz + P.rk];
   $('sipHz').innerHTML = SIP.horizons.map(function(h){ return '<button data-hz="' + h.id + '"' + (h.id === P.hz ? ' class="on"' : '') + '>' + esc(h.label) + '</button>'; }).join('');
   $('sipRk').innerHTML = SIP.risks.map(function(r){ return '<button data-rk="' + r.id + '"' + (r.id === P.rk ? ' class="on"' : '') + '>' + esc(r.label) + '</button>'; }).join('');
   document.querySelectorAll('#sipFq button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-fq') === P.fq); });
+  gdShow(P.fq);
   var F = FQ[P.fq] || FQ.m, lump = P.fq === 'l';
   $('sipAmtLbl').textContent = F.lbl;
   $('sipYrsFld').hidden = lump; $('sipYrsFld').parentNode.classList.toggle('lump', lump);
@@ -3084,6 +3196,7 @@ function bindSip(){
     tr.after(row);
   });
   $('sipRk').addEventListener('click', function(e){ var b = e.target.closest('[data-rk]'); if (!b) return; S.plan.rk = b.getAttribute('data-rk'); renderSip(); writeURL(); });
+  $('gdTabs').addEventListener('click', function(e){ var b = e.target.closest('[data-gfq]'); if (b) gdShow(b.getAttribute('data-gfq')); });
   $('sipFq').addEventListener('click', function(e){ var b = e.target.closest('[data-fq]'); if (!b) return; var fq = b.getAttribute('data-fq'); if (fq === S.plan.fq) return;
     S.plan.amt = convAmt(S.plan.amt, S.plan.fq, fq); S.plan.fq = fq; $('sipAmt').value = S.plan.amt; renderSip(); writeURL(); });
   $('sipAmt').addEventListener('input', debounce(function(){ var v = Math.round(+this.value); if (v >= 100 && v <= 1e9) { S.plan.amt = v; renderSip(); writeURL(); } }, 300));
