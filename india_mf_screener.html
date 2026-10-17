@@ -280,7 +280,7 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .rules{margin:8px 0 0;padding-left:18px;font-size:12.5px;color:var(--text2);line-height:1.6}
 .alert{margin-top:12px;font-size:12.5px;display:block;border-radius:9px;padding:10px 12px;line-height:1.5;background:rgba(232,163,23,.12);border:1px solid rgba(232,163,23,.35);color:var(--text)}
 .sip-m{display:none}
-.sip-ctl2{padding:14px 18px;margin-top:-4px;display:grid;grid-template-columns:150px 150px 190px minmax(0,1fr);gap:16px;align-items:end}
+.sip-ctl2{padding:14px 18px;margin-top:14px;display:grid;grid-template-columns:150px 150px 190px minmax(0,1fr);gap:16px;align-items:end}
 .sip-ctl2 .note{margin:0;align-self:center}
 .sip-ctl2.lump{grid-template-columns:150px 190px minmax(0,1fr)}
 .proj{padding:18px;margin-bottom:14px}
@@ -904,8 +904,19 @@ footer a{color:var(--text2)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* ═══════════════ BEST BROKERS & APPS ═══════════════ */
+/* Smart Invest — consistent vertical rhythm between sections */
+#sipBody > .alert{margin:0 0 14px}
+#sipBody > .card.proj{margin-bottom:14px}
+#sipBody > .sip-grid{margin-bottom:0}
+#sipMarket:empty{display:none}
+#sipMarket > .mi-head:first-child{margin-top:22px}
+@media (max-width:640px){.sip-kpis .kpi:last-child:nth-child(odd){grid-column:1/-1}}
 /* Smart Invest — beginner's guide */
 .sip-guide{margin-top:14px;padding:18px}
+.gd-nri{margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:rgba(60,130,240,.06)}
+.gd-nri h4{margin:0 0 10px;font-size:14px;color:var(--text)}
+.gd-nri .gd-cols{margin-top:0}
+.gd-nri .gd-col{background:var(--surface)}
 .sip-guide .gd-lead{margin:8px 0 14px;font-size:13.5px;line-height:1.6;color:var(--text2)}
 .sip-guide .gd-lead b{color:var(--text)}
 .gd-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;counter-reset:gd}
@@ -1201,8 +1212,27 @@ footer a{color:var(--text2)}
           <li><b>Skipping months</b> — regular investing matters far more than the perfect day.</li>
         </ul></div>
       </div>
+      <div class="gd-nri" id="gdNri">
+        <h4>🌍 For NRI investors (Non-Resident Indians)</h4>
+        <div class="gd-cols">
+          <div class="gd-col"><h4>KYC &amp; account</h4><ul>
+            <li>Documents: <b>PAN</b>, <b>passport</b>, <b>overseas address proof</b> (utility bill, bank statement or residence permit), a recent photo, and visa / OCI card where applicable.</li>
+            <li>Declare your <b>residential status as NRI</b> and your country of tax residence (FATCA / CRS form). If you were already KYC-registered as a resident, update your status to NRI before investing.</li>
+            <li>Invest only from an <b>NRE account</b> (money can be taken back abroad) or an <b>NRO account</b> (non-repatriable). A resident savings account or a foreign bank account cannot be used.</li>
+            <li>Not every platform supports NRI accounts — check before you sign up. Some fund houses <b>do not accept residents of the USA and Canada</b>, and others ask for an extra declaration; confirm that every fund in your plan accepts you before placing orders.</li>
+            <li>Verification may need a video call or attested copies, so allow a few extra working days.</li>
+          </ul></div>
+          <div class="gd-col"><h4>Tax</h4><ul>
+            <li>Gains are taxed in India at the same rates as for residents, but the fund house <b>deducts tax (TDS) when you sell</b>: on equity funds 20% on short-term gains (held up to 12 months) and 12.5% on long-term gains; on debt funds bought after 1 April 2023, 30%. Surcharge and 4% cess are added.</li>
+            <li>Long-term gains of up to ₹1.25 lakh a year on equity funds are tax-free. If more TDS is deducted than you owe, <b>file an Indian income-tax return to get a refund</b>.</li>
+            <li>India has tax treaties (DTAA) with most countries. Your country of residence may also tax the gains, usually with credit for tax paid in India — keep your TDS certificates (Form 16A).</li>
+            <li>Redemption money is credited to the NRE / NRO account you invested from. The projection on this page uses resident tax rules — the final tax is similar, but TDS reduces the cash you receive until any refund. Rates change with each Union Budget — please confirm with a tax professional.</li>
+          </ul></div>
+        </div>
+      </div>
       <p class="gd-key">💡 <b>Rule of thumb:</b> the day you invest matters far less than investing every time. If you are unsure, use your salary day and never miss it. Funds can be bought only after your KYC is active — open your account through <a href="#brokers">Best Brokers &amp; Apps</a> below.</p>
     </div>
+    <div id="sipMarket"></div>
   </section>
 
   <!-- ═════════ INFO ═════════ -->
@@ -1240,6 +1270,8 @@ footer a{color:var(--text2)}
       <details class="faq"><summary>What if I miss an investment day?</summary><p>Simply invest as soon as you can, using the amounts shown on that day. There is no penalty, because nothing is linked to your bank account. Avoid doubling up the next period just to catch up unless you have spare savings.</p></details>
       <details class="faq"><summary>Is my money safe with the platform?</summary><p>Mutual funds are regulated by SEBI. Units are held in your own name with the fund house (or your demat account), and your money goes directly to the fund. The platform is only the route for placing orders — if you ever change platforms, your investments stay with you.</p></details>
       <details class="faq"><summary>How and when should I sell (redeem)?</summary><p>Sell when you reach your goal or near the end of your chosen horizon, ideally in parts over a few months rather than all at once. Check each fund's exit load (usually only within the first year for equity funds) and remember that gains are taxed under capital-gains rules — the projection shows an estimate of the tax. Redemption money is credited to your registered bank account in 1–3 working days.</p></details>
+      <details class="faq"><summary>Can NRIs invest, and how does KYC work for them?</summary><p>Yes. Non-Resident Indians complete KYC with PAN, passport, overseas address proof and a FATCA / CRS declaration of their country of tax residence, and invest from an NRE (repatriable) or NRO (non-repatriable) bank account — not from a resident savings account or a foreign bank account. If you were registered as a resident, update your KYC status to NRI first. Not every platform supports NRI accounts, and some fund houses do not accept residents of the USA and Canada (others need an extra declaration), so check each fund in your plan before investing.</p></details>
+      <details class="faq"><summary>How are NRIs taxed on mutual fund gains?</summary><p>Gains are taxed at the same rates as for residents, but tax is deducted at source (TDS) when you sell: 20% on short-term equity gains (held up to 12 months), 12.5% on long-term equity gains, and 30% on gains from debt funds bought after 1 April 2023, plus surcharge and cess. Long-term equity gains of up to ₹1.25 lakh a year are exempt; any excess TDS can be claimed back by filing an Indian income-tax return. Under India's tax treaties (DTAA), your country of residence usually gives credit for tax paid in India. Rates change with each Union Budget — please confirm with a tax professional.</p></details>
       <details class="faq"><summary>What does “Fresh investment paused” mean?</summary><p>Some funds — mostly overseas funds when the industry-wide overseas investment limit is reached — temporarily stop accepting new lump-sum purchases or SIPs. Existing investments are unaffected. Use the purchase-status filter in Explore to see which global funds are open for investment today.</p></details>
       <details class="faq"><summary>Where do new fund offers come from?</summary><p>The NFO tab lists schemes in their official new-fund-offer period, with offer dates, minimum investment, category and links to the offer document and fund house. Recently closed offers stay listed for 45 days.</p></details>
       <details class="faq"><summary>How is Factor DNA calculated?</summary><p>Three years of weekly returns are matched against NSE's Momentum, Value, Quality, Low-Volatility and size indices. The best-fitting combination (weights that are positive and add to 100%) shows the fund's style. A fund is labelled with a single style only when that style dominates and the fit is strong; otherwise it is a <b>Blend</b>.</p></details>
@@ -2374,16 +2406,16 @@ function pSip(f, det, tail){
   return '<div class="card pcard"><div class="pc-head"><div><div class="sec-title">SIP returns</div><div class="sec-sub">Monthly SIP on the same date each month, valued at the NAV of ' + fmtDate(f.navDate) + '</div></div></div>' +
     '<div class="calc"><div class="fld"><label for="sipAmt">Monthly SIP amount (₹)</label><input class="tin" id="sipAmt" type="number" inputmode="numeric" min="100" step="500" value="' + S.sipAmt + '"/></div>' +
     '<div class="seg" id="sipQuick">' + [1000,5000,10000,25000].map(function(a){ return '<button data-a="' + a + '"' + (S.sipAmt === a ? ' class="on"' : '') + '>₹' + (a >= 1000 ? a / 1000 + 'k' : a) + '</button>'; }).join('') + '</div></div>' +
-    '<div class="tbl-scroll" style="display:block"><table class="dtbl"><thead><tr><th>Period</th><th class="num">Invested</th><th class="num">Value</th><th class="num hide-m">Gain</th><th class="num">XIRR</th></tr></thead><tbody id="sipBody">' + rows + '</tbody></table></div>' +
+    '<div class="tbl-scroll" style="display:block"><table class="dtbl"><thead><tr><th>Period</th><th class="num">Invested</th><th class="num">Value</th><th class="num hide-m">Gain</th><th class="num">XIRR</th></tr></thead><tbody id="sipCalcBody">' + rows + '</tbody></table></div>' +
     '<div class="note">XIRR is the annualised return on all instalments, accounting for when each was invested. Values scale exactly with the SIP amount.</div></div>';
 }
 function bindSipCalc(f, tail){
   function upd(){
     var a = Math.max(0, +$('sipAmt').value || 0); S.sipAmt = a;
     var k = a / 10000;
-    document.querySelectorAll('#sipBody .sip-inv').forEach(function(el){ el.textContent = inr(+el.getAttribute('data-inv') * k); });
-    document.querySelectorAll('#sipBody .sip-val').forEach(function(el){ el.textContent = inr(+el.getAttribute('data-val') * k); });
-    document.querySelectorAll('#sipBody .sip-gain').forEach(function(el){ var g = +el.getAttribute('data-g') * k; el.textContent = (g >= 0 ? '+' : '−') + inr(Math.abs(g)); });
+    document.querySelectorAll('#sipCalcBody .sip-inv').forEach(function(el){ el.textContent = inr(+el.getAttribute('data-inv') * k); });
+    document.querySelectorAll('#sipCalcBody .sip-val').forEach(function(el){ el.textContent = inr(+el.getAttribute('data-val') * k); });
+    document.querySelectorAll('#sipCalcBody .sip-gain').forEach(function(el){ var g = +el.getAttribute('data-g') * k; el.textContent = (g >= 0 ? '+' : '−') + inr(Math.abs(g)); });
     document.querySelectorAll('#sipQuick button').forEach(function(b){ b.classList.toggle('on', +b.getAttribute('data-a') === a); });
   }
   $('sipAmt').addEventListener('input', upd);
@@ -2973,7 +3005,7 @@ function renderSip(){
   $('sipAmtLbl').textContent = F.lbl;
   $('sipYrsFld').hidden = lump; $('sipYrsFld').parentNode.classList.toggle('lump', lump);
   if (document.activeElement !== $('sipAmt')) $('sipAmt').value = P.amt;
-  if (!plan) { $('sipBody').innerHTML = '<div class="card"><div class="empty">No plan available for this combination.</div></div>'; return; }
+  if (!plan) { $('sipBody').innerHTML = '<div class="card"><div class="empty">No plan available for this combination.</div></div>'; $('sipMarket').innerHTML = ''; return; }
   var hzd = SIP.horizons.filter(function(h){ return h.id === P.hz; })[0] || {years:plan.years, min:1, max:30};
   // stay invested = the horizon (how long the money is held); invest for = how many years instalments are paid (≤ stay)
   var stayMax = hzd.id === 'h10' ? 40 : hzd.max;
@@ -3179,12 +3211,14 @@ function renderSip(){
     '</ul>' + ((plan.changes || []).length ? '<div class="pf-h" style="margin-top:12px">Recent changes</div><ul class="rules">' + plan.changes.map(function(c){ return '<li>' + fmtDate(c.date) + ': ' + esc((BY[c.from] || {name:'Previous fund'}).name) + ' → ' + esc((BY[c.to] || {name:'new fund'}).name) + (c.note ? ' — ' + esc(c.note) : '') + '</li>'; }).join('') + '</ul>' : '') + '</div>' +
     '</div>';
   h += '<p class="disc" style="margin-top:14px"><strong>Important:</strong> Smart Invest plans and projections are model illustrations generated from historical data and current market indicators for educational purposes only. They are not personalised investment advice and do not consider your income, existing investments, tax position or goals. Returns are not guaranteed and past performance does not predict future results. We are not SEBI registered investment advisors — please consult a certified financial advisor before investing.</p>';
-  $('sipBody').innerHTML = h;
+  var cut = h.indexOf('<div class="mi-head">');
+  $('sipBody').innerHTML = cut < 0 ? h : h.slice(0, cut);
+  $('sipMarket').innerHTML = cut < 0 ? '' : h.slice(cut);
   bindDonuts();
 }
 function bindSip(){
   $('sipHz').addEventListener('click', function(e){ var b = e.target.closest('[data-hz]'); if (!b) return; S.plan.hz = b.getAttribute('data-hz'); S.plan.yrs = 0; S.plan.stay = 0; renderSip(); writeURL(); });
-  $('sipBody').addEventListener('click', function(e){
+  $('v-sip').addEventListener('click', function(e){
     if (e.target.id === 'secToggle') { S.secAll = !S.secAll; renderSip(); return; }
     var pill = e.target.closest('.olp'); if (!pill) return;
     var tr = pill.closest('tr'), nx = tr.nextElementSibling;
@@ -3204,7 +3238,7 @@ function bindSip(){
   $('sipStay').addEventListener('input', debounce(function(){ var v = Math.round(+this.value); if (v >= 1 && v <= 40) { S.plan.stay = v; if (S.plan.yrs > v) S.plan.yrs = v; S.plan.hz = hzForYears(v); renderSip(); writeURL(); } }, 300));
   ['sipYrs', 'sipStay'].forEach(function(id){ $(id).addEventListener('blur', function(){ renderSip(); }); });   // show the value actually used
   $('sipSlab').addEventListener('change', function(){ S.plan.slab = +this.value; renderSip(); writeURL(); });
-  $('sipBody').addEventListener('click', function(e){ var o = e.target.closest('[data-open]'); if (o) { e.preventDefault(); openFund(+o.getAttribute('data-open')); } });
+  $('v-sip').addEventListener('click', function(e){ var o = e.target.closest('[data-open]'); if (o) { e.preventDefault(); openFund(+o.getAttribute('data-open')); } });
 }
 
 function share(){
