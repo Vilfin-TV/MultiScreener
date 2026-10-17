@@ -112,6 +112,10 @@ jobs:
       - name: Build India MF screener data
         run: python scripts/build_mf_screener.py --workers 10
 
+      - name: Fund-manager directory
+        continue-on-error: true
+        run: python scripts/build_mf_managers.py
+
       - name: New fund offers
         continue-on-error: true
         run: python scripts/build_mf_nfo.py
