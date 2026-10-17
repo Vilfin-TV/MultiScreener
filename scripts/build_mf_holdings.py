@@ -44,7 +44,10 @@ UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like 
 
 # fund house (as named in screener.json "amcs") → disclosure page + link filter
 # fund houses whose monthly portfolio is read from each fund's own page (no machine-readable monthly file)
-PAGE_SOURCES = {"Trust": "trust", "PGIM India": "pgim", "Edelweiss": "dom", "Zerodha": "dom", "Baroda BNP Paribas": "dom", "Axis": "dom"}
+PAGE_SOURCES = {"Trust": "trust", "PGIM India": "pgim", "Baroda BNP Paribas": "dom"}
+# fund-page tables can be truncated: an equity fund must show ≥90 % invested (index funds ≥95 %) to be used
+PAGE_MIN_LISTED = {"index": 95.0, "equity": 90.0}
+EQUITY_SUBS = {"large", "largemid", "mid", "small", "multi", "flexi", "focused", "value", "contra", "elss", "dividend"}
 SKIP_DEFAULT = r"fortnight|debt-portfolio|risk-param|half|annual|commission|aaum|votes|riskometer|weblink"
 SOURCES = {
     "SBI": {"page": "https://www.sbimf.com/portfolios",
@@ -701,6 +704,11 @@ def main():
                 sm = summarise(blk, large, mid)
                 listed = 100 - sm["mix"]["cashOther"]
                 if listed < 40 or listed > 130 or not sm["top"]:
+                    continue
+                sub = sub_of.get(code, "")
+                need = PAGE_MIN_LISTED["index"] if sub.startswith("idx_") else PAGE_MIN_LISTED["equity"] if (sub in EQUITY_SUBS or sub.startswith("sec_")) else 0
+                if listed < need:
+                    log.info("    %s: page lists only %.0f%% of the portfolio — incomplete, skipped", code, listed)
                     continue
                 sm["asOf"] = month
                 results[code] = sm
