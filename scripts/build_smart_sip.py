@@ -493,6 +493,8 @@ def apply_metal_tilt(weights, gscore, hz):
     return w, 0
 
 
+EARLY_BEAT3, EARLY_CONS = 80, 80     # very aggressive: 3-year exception for an exceptional early record
+TURNOVER_MAX, TURNOVER_MAX_GROWTH = 150, 300
 MULTI_MIN = 10        # a multi-asset fund holds ≥10 % each in equity, debt and gold/silver (SEBI) — keep it meaningful
 
 
@@ -789,7 +791,12 @@ def fund_checks(u, slot, code, ctx):
         out.append([lab, bool(ok), det])
     y = years_since(g("inc"), u.today)
     my = 3 if (kind == "sector" and is_idx) else min_y
-    chk("Track record", y >= my, f"{y:.1f} years (needs {my}+)")
+    # very aggressive plans accept a younger active fund (3+ years) whose early record is exceptional
+    early = (growth and kind in ("active", "sector") and not is_idx and my > 3 and y >= 3
+             and (g("beat3") or 0) >= EARLY_BEAT3 and (g("cons") or 0) >= EARLY_CONS)
+    chk("Track record", y >= my or early,
+        f"{y:.1f} years — strong early record (beat its benchmark in {g('beat3'):.0f}% of rolling 3-year periods, consistency {g('cons'):.0f}/100)"
+        if early and y < my else f"{y:.1f} years (needs {my}+)")
     ma = 100 if (kind == "sector" and is_idx) else (500 if sub in ("gilt", "dynbond", "gilt10", "floater") else min_aum)
     chk("Fund size", (g("aum") or 0) >= ma, f"₹{(g('aum') or 0):,.0f} cr (needs ₹{ma:,} cr+)")
     ter, med = g("ter"), cs.get("ter")
@@ -978,7 +985,8 @@ def deep_checks(u, slot, code, subs, chk, growth=False):
         chk("True to mandate (R²)", d["r2"] >= 70, f"{d['r2']:.0f}% of moves explained by its benchmark")
     if d["turnover"] is not None and not hybrid:
         t = d["turnover"] * (100 if d["turnover"] <= 5 else 1)
-        chk("Portfolio turnover", t <= 150, f"{t:.0f}% a year")
+        lim = TURNOVER_MAX_GROWTH if growth else TURNOVER_MAX
+        chk("Portfolio turnover", t <= lim, f"{t:.0f}% a year (limit {lim}%)")
     rec = u.g(code, "rec")
     if rec is not None:
         chk("Recent form", rec >= 25, f"{rec:.0f}/100 recency score")
