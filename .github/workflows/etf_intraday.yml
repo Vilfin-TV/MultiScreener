@@ -1,0 +1,101 @@
+name: ETF Intraday Prices
+
+# Near-live prices for the ETF page's trading chart: today's forming daily bar for every ETF,
+# refreshed about every 30 minutes during NSE market hours → data/etf_live.json.
+# Wakes after every "Update Market Sentiment" run (every 30 min, reliable) with a cron as a fallback;
+# the gate skips non-trading days, out-of-hours runs and runs less than 12 minutes after the last update.
+on:
+  workflow_run:
+    workflows: ["Update Market Sentiment"]
+    types: [completed]
+  schedule:
+    - cron: '7,37 3-10 * * 1-5'   # 08:37–16:07 IST, fallback
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: etf-intraday
+  cancel-in-progress: false
+
+jobs:
+  live:
+    name: Today's ETF bars
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Is a refresh due?
+        id: due
+        run: |
+          python3 - <<'PY'
+          import datetime as dt, json, os
+          now = dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=5, minutes=30)
+          hm = (now.hour, now.minute)
+          run = now.weekday() < 5 and (9, 20) <= hm <= (15, 50)
+          why = "market hours" if run else f"outside market hours ({now:%a %H:%M} IST)"
+          if os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch":
+              run, why = True, "manual run"
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"run={'true' if run else 'false'}\n")
+          print(f"run={run}: {why}")
+          PY
+
+      - name: Checkout
+        if: steps.due.outputs.run == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Recent enough?
+        if: steps.due.outputs.run == 'true'
+        id: fresh
+        run: |
+          python3 - <<'PY'
+          import datetime as dt, json, os
+          run = True
+          try:
+              d = json.load(open("data/etf_live.json"))
+              upd = dt.datetime.fromisoformat(d["updated"])
+              age = (dt.datetime.now(dt.timezone.utc) - upd).total_seconds() / 60
+              if age < 12 and os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch":
+                  run = False
+              print(f"last update {age:.0f} min ago")
+          except Exception as e:
+              print(f"no previous file ({e})")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"run={'true' if run else 'false'}\n")
+          PY
+
+      - name: Set up Python 3.12
+        if: steps.due.outputs.run == 'true' && steps.fresh.outputs.run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build today's bars
+        if: steps.due.outputs.run == 'true' && steps.fresh.outputs.run == 'true'
+        run: |
+          pip install --quiet --upgrade pip yfinance pandas requests
+          python scripts/build_etf_intraday.py ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }}
+
+      - name: Commit (with rebase-and-retry)
+        if: steps.due.outputs.run == 'true' && steps.fresh.outputs.run == 'true'
+        run: |
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/etf_live.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+          git commit -m "chore(data): ETF intraday prices [skip ci]"
+          for attempt in 1 2 3 4; do
+            if git push origin HEAD:main; then
+              echo "Pushed."
+              exit 0
+            fi
+            git pull --rebase --autostash origin main || git rebase --abort
+            sleep $((attempt * 5))
+          done
+          exit 1
