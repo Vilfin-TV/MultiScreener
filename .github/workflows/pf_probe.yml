@@ -18,7 +18,7 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Holdings for new fund houses
         run: xvfb-run -a python scripts/build_mf_holdings.py "--only=Abakkus,Capitalmind,Old Bridge,JM Financial,Shriram,Trust,Samco,Helios,Baroda BNP Paribas,Zerodha,360 ONE,Unifi,LIC" --force > .probe/holdings.log 2>&1 || true
-      - run: cp .mfcache/report.json .probe/holdings_report.json || true
+      - run: cp .mfcache/holdings/report.json .probe/holdings_report.json || true
       - name: Probe larger fund houses
         run: xvfb-run -a python .probe/pf_probe2.py > .probe/pf_probe2.log 2>&1 || true
       - run: |
