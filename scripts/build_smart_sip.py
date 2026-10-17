@@ -77,6 +77,7 @@ SLOTS = {
     "theme":  ("Sector satellite", "Equity", None, "sector", 5, 300, 22),
     "intl":   ("International satellite", "International", ["us", "global"], "intl", 3, 300, 17),
     "multi":  ("Multi-asset allocation (equity + debt + gold/silver)", "Hybrid", ["multiasset"], "active", 3, 1000, 11),
+    "pioneer": ("Innovation & global tech (Nasdaq 100 sleeve)", "Equity", ["sec_innov"], "active", 5, 1000, 18),
 }
 TEMPLATES = {
     "h1c":  {"arb": 40, "dshort": 60},
@@ -87,25 +88,25 @@ TEMPLATES = {
     "h3a":  {"core": 30, "flexi": 25, "baf": 15, "dcore": 20, "metal": 10},
     "h5c":  {"core": 25, "flexi": 10, "baf": 20, "dcore": 35, "metal": 10},
     "h5b":  {"core": 30, "flexi": 20, "mid": 10, "baf": 10, "dcore": 20, "metal": 10},
-    "h5a":  {"core": 30, "flexi": 25, "mid": 15, "small": 5, "dcore": 15, "metal": 10},
+    "h5a":  {"core": 20, "flexi": 25, "mid": 15, "small": 5, "pioneer": 10, "dcore": 15, "metal": 10},
     "h7c":  {"core": 30, "flexi": 15, "baf": 15, "dcore": 30, "metal": 10},
     "h7b":  {"core": 30, "flexi": 20, "mid": 15, "small": 5, "dcore": 20, "metal": 10},
-    "h7a":  {"core": 25, "flexi": 20, "mid": 15, "small": 10, "theme": 5, "intl": 10, "dcore": 10, "metal": 5},
+    "h7a":  {"core": 25, "flexi": 20, "mid": 15, "small": 10, "pioneer": 10, "theme": 5, "dcore": 10, "metal": 5},
     "h10c": {"core": 30, "flexi": 20, "mid": 5, "baf": 10, "dcore": 25, "metal": 10},
     "h10b": {"core": 30, "flexi": 20, "mid": 15, "small": 10, "dcore": 15, "metal": 10},
-    "h10a": {"core": 25, "flexi": 20, "mid": 15, "small": 15, "theme": 5, "intl": 10, "dcore": 5, "metal": 5},
+    "h10a": {"core": 25, "flexi": 20, "mid": 15, "small": 15, "pioneer": 10, "theme": 5, "dcore": 5, "metal": 5},
     # very aggressive: growth-heavy, diversified across market caps, styles (value, momentum), a sector and overseas
     # every very aggressive plan holds equity + debt + precious metals; the core is an active large & mid cap fund (3+ yrs)
     "h1v":  {"core": 15, "baf": 30, "arb": 15, "dshort": 30, "metal": 10},
     "h3v":  {"lmcore": 30, "flexi": 20, "mid": 15, "baf": 10, "dmed": 15, "metal": 10},
-    "h5v":  {"lmcore": 25, "flexi": 15, "mid": 20, "small": 10, "value": 10, "dmed": 10, "metal": 10},
-    "h7v":  {"lmcore": 20, "flexi": 10, "mid": 20, "small": 15, "value": 10, "theme": 10, "dmed": 5, "metal": 10},
-    "h10v": {"lmcore": 20, "flexi": 10, "mid": 25, "small": 20, "momentum": 10, "theme": 5, "dmed": 5, "metal": 5},
+    "h5v":  {"lmcore": 15, "flexi": 15, "mid": 20, "small": 10, "value": 10, "pioneer": 10, "dmed": 10, "metal": 10},
+    "h7v":  {"lmcore": 10, "flexi": 10, "mid": 20, "small": 15, "value": 10, "pioneer": 10, "theme": 10, "dmed": 5, "metal": 10},
+    "h10v": {"lmcore": 20, "flexi": 10, "mid": 25, "small": 20, "pioneer": 10, "theme": 5, "dmed": 5, "metal": 5},
 }
-ORDER = ["core", "next50", "lmcore", "flexi", "mid", "small", "value", "momentum", "theme", "baf", "multi", "eqsav", "arb", "dcore", "dmed", "dshort", "metal", "intl"]
+ORDER = ["core", "next50", "lmcore", "flexi", "mid", "small", "value", "momentum", "pioneer", "theme", "baf", "multi", "eqsav", "arb", "dcore", "dmed", "dshort", "metal", "intl"]
 FALLBACK = {"lmcore": ["flexi", "core"], "next50": ["flexi", "core"], "dmed": ["dcore", "dshort", "metal"], "value": ["flexi", "core"], "momentum": ["mid", "flexi", "core"], "intl": ["flexi", "core"], "theme": ["flexi", "core"], "small": ["mid", "flexi"], "mid": ["flexi", "core"],
             "flexi": ["core"], "core": ["flexi"], "metal": ["dcore", "dshort"], "eqsav": ["arb", "baf"], "baf": ["core", "dcore"],
-            "dcore": ["dshort", "baf"], "dshort": ["dcore", "arb"], "arb": ["dshort"], "multi": ["baf", "flexi"]}
+            "dcore": ["dshort", "baf"], "dshort": ["dcore", "arb"], "arb": ["dshort"], "multi": ["baf", "flexi"], "pioneer": ["value", "momentum", "flexi"]}
 
 # debt pools by rate regime
 DEBT_POOLS = {
@@ -201,7 +202,9 @@ SECTORS = [
 # international-slot backup: Indian funds with an overseas sleeve, used only while no pure international fund is
 # open and passes every check (overseas funds pause purchases whenever the industry overseas limit is reached).
 # Evidence = a published portfolio with ≥10 % overseas, or a known overseas (Nasdaq 100) sleeve listed here.
-RX_INTL_BACKUP = re.compile(r"\bkotak pioneer\b", re.I)
+RX_INTL_BACKUP = re.compile(r"(?!x)x")        # names only by published portfolio (≥10 % overseas); none listed by name
+# innovation & global-tech sleeve (aggressive / very aggressive 5+ yrs): Kotak Pioneer holds a Nasdaq 100 sleeve
+RX_PIONEER = re.compile(r"\bkotak pioneer\b", re.I)
 INTL_BACKUP_MIN_OVERSEAS = 10.0
 RX_MOMENTUM = re.compile(r"momentum", re.I)
 RX_NEXT50 = re.compile(r"\bnext 50\b", re.I)
@@ -210,8 +213,8 @@ RX_NOT_CORE = re.compile(r"elss|tax saver|next 50|equal weight|value|quality|mom
 RX_INTL_THEME = re.compile(r"mining|clean energy|energy|innovation|technology|tech\b|agri|real estate|reit|ev\b|electric|"
                            r"healthcare|consumer|commodit|fang|nasdaq|china|brazil|japan|taiwan|asean|emerging|india", re.I)
 SAFE_CREDIT = ("AAA", "Sovereign", "A1+", "Cash")
-EQUITY_BASE = {"core": 11.0, "next50": 12.0, "lmcore": 12.0, "flexi": 12.0, "mid": 13.0, "small": 13.5, "value": 12.5, "momentum": 13.0, "theme": 12.5, "intl": 10.0}
-EQUITY_VAL_KEY = {"core": "n50", "next50": "nn50", "flexi": "n500", "mid": "mid150", "small": "sml250", "value": "n500", "momentum": "n500"}
+EQUITY_BASE = {"core": 11.0, "next50": 12.0, "lmcore": 12.0, "flexi": 12.0, "mid": 13.0, "small": 13.5, "value": 12.5, "momentum": 13.0, "theme": 12.5, "intl": 10.0, "pioneer": 12.5}
+EQUITY_VAL_KEY = {"pioneer": "n500", "core": "n50", "next50": "nn50", "flexi": "n500", "mid": "mid150", "small": "sml250", "value": "n500", "momentum": "n500"}
 ASSUMPTIONS = {"inflation": 5.0, "cess": 4.0, "stcgEquity": 20.0, "ltcgEquity": 12.5, "ltcgExempt": 125000, "ltcgOther": 12.5,
                "equityLtMonths": 12, "otherLtMonths": 24, "metalReturn": 9.0}
 MONTHS = {m: i for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
@@ -1038,6 +1041,8 @@ def pool_for(u, slot, ctx):
     if slot in DEBT_POOLS:
         subs = DEBT_POOLS[slot][ctx["pool_key"]]
         return subs, u.by_subs(subs), kind
+    if slot == "pioneer":
+        return subs, [c for c in u.by_subs(subs) if RX_PIONEER.search(u.g(c, "name") or "")], kind
     if slot == "metal":
         subs = [ctx["metal"]]
         return subs, u.by_subs(subs), kind
@@ -1051,7 +1056,7 @@ def pool_for(u, slot, ctx):
 
 
 def rank_pool(u, slot, ctx, cache):
-    key = (slot, ctx.get("pool_key"), ctx.get("metal"), ctx.get("sector"), ctx.get("profile"))
+    key = (slot, ctx.get("pool_key"), ctx.get("metal"), ctx.get("sector"), ctx.get("profile"), ctx.get("style") if slot == "pioneer" else None)
     if key in cache:
         return cache[key]
     subs, codes, kind = pool_for(u, slot, ctx)
@@ -1075,6 +1080,10 @@ def rank_pool(u, slot, ctx, cache):
         sc = scores(u, slot, ok, "active", ctx.get("profile") == "growth") if ok else {}
         subs = bsubs
     ranked = sorted(ok, key=lambda c: -sc[c])
+    if slot == "pioneer":            # alternates: value or momentum funds, whichever style the market favours this month
+        sr, ssc, schecks, ssubs = rank_pool(u, ctx.get("style") or "value", {**ctx, "pool_key": None}, cache)
+        ranked = ranked + [c for c in sr if c not in ranked]
+        sc, checks, subs = {**ssc, **sc}, {**schecks, **checks}, list(subs) + [x for x in ssubs if x not in subs]
     cache[key] = (ranked, sc, checks, subs)
     return cache[key]
 
@@ -1096,7 +1105,9 @@ def expected_return(u, slot, code, ctx, macro):
     sub = u.g(code, "sub")
     if slot == "lmcore":
         gross = (eq("core") + eq("mid")) / 2      # the category holds at least 35% each in large and mid caps
-    elif slot in ("core", "next50", "flexi", "mid", "small", "value", "momentum", "theme", "intl"):
+    elif slot == "pioneer" and ctx.get("style_fund"):           # slot filled by its value / momentum alternate
+        gross = eq(ctx["style_fund"])
+    elif slot in ("core", "next50", "flexi", "mid", "small", "value", "momentum", "theme", "intl", "pioneer"):
         gross = eq(slot)
     elif slot == "baf":
         gross = 0.6 * eq("core") + 0.4 * (tb364 + 0.6)
@@ -1121,7 +1132,7 @@ def expected_return(u, slot, code, ctx, macro):
     return round(gross - (u.g(code, "ter") or 0), 2)
 
 
-ALPHA_SLOTS = ("lmcore", "flexi", "mid", "small", "value", "theme", "multi")
+ALPHA_SLOTS = ("lmcore", "flexi", "mid", "small", "value", "theme", "multi", "pioneer")
 
 
 def alpha_credit(u, code):
@@ -1176,7 +1187,8 @@ def choose(u, slot, ctx, chosen, amc_count, incumbent, review, cache):
     cand = [c for c in ranked if fits(c)] or [c for c in ranked if c not in chosen]
     if incumbent:
         code = incumbent["code"]
-        hard = u.g(code, "sub") is not None and buy_ok(u, code) and u.g(code, "status") != "Out of track"
+        hard = (u.g(code, "sub") is not None and buy_ok(u, code) and u.g(code, "status") != "Out of track"
+                and code in checks)                      # a fund that no longer belongs to this slot's pool is replaced
         strategic = incumbent.get("ctx") == ctx.get("ctx_tag")
         if not hard:
             new = cand[0] if cand else None
@@ -1431,6 +1443,13 @@ def main() -> int:
     gscore = {"up": 2, "down": -2}.get(gold_lvl, 0)
     rr = rate_regime(macro, u, glob)
     regime = stable(dec, "regime", rr["regime"], review, strong=abs(rr["score"]) >= 2.5)
+    # style for the innovation sleeve's alternates: momentum while the Nifty 50 trends up (above its 6-month average with a
+    # positive 6-month return), value otherwise — a monthly-stable decision like the others
+    n50v = ((macro or {}).get("valuation") or {}).get("n50") or {}
+    trending = (n50v.get("vs6m") or 0) > 0 and (n50v.get("r6m") or 0) > 0
+    style = stable(dec, "style", "momentum" if trending else "value", review)
+    style_why = (f"Nifty 50 {n50v.get('vs6m', 0):+.1f}% vs its 6-month average, {n50v.get('r6m', 0):+.1f}% over 6 months — "
+                 + ("trend-following (momentum) funds favoured" if style == "momentum" else "valuation-led (value) funds favoured"))
     tilt_now, tilt_comps = market_tilt(u, macro, sentiment, glob)
     tilt = stable(dec, "tilt", tilt_now, review, strong=True)
     rot_now = segment_rotation(macro)
@@ -1478,6 +1497,7 @@ def main() -> int:
                     pool_key = "easing_long" if (slot == "dcore" and regime == "easing" and hz in ("h5", "h7", "h10")) else regime
                 m = metal_choice if (rk in ("a", "v") and hz in ("h7", "h10")) else "gold"
                 ctx = {"pool_key": pool_key, "metal": m if slot == "metal" else None, "sector": sector if slot == "theme" else None,
+                       "style": style if slot == "pioneer" else None,
                        "regime": regime, "sector_index": sector_row.get("index"), "sector_label": sector_row.get("label"),
                        "metalAdj": 1.0 if gscore >= 2 else (-1.0 if gscore <= -2 else 0.0),
                        "profile": "growth" if rk == "v" else "std"}
@@ -1501,11 +1521,15 @@ def main() -> int:
                 lab = DEBT_LABEL.get((slot, pool_key)) or (f"Sector satellite — {sector_row.get('label', '')}" if slot == "theme" else
                                                              (f"Precious metals — {ctx['metal']}" if slot == "metal" else SLOTS[slot][0]))
                 ck = checks.get(code) or fund_checks(u, slot, code, {**ctx, "subs": subs})
+                if slot == "pioneer" and not RX_PIONEER.search(u.g(code, "name") or ""):
+                    lab = f"{SLOTS[style][0]} — in place of the innovation & global tech sleeve"
                 slots.append({
                     "key": slot, "label": lab, "asset": SLOTS[slot][1], "w": weights[slot], "base": base.get(slot, 0),
                     "code": code, "score": sc.get(code), "alts": alts, "since": pst["slots"][slot]["since"],
                     "state": "watch" if action == "watch" else "ok", "note": note, "why": why(u, slot, code),
-                    "checks": ck, "pool": len(ranked), "er": expected_return(u, slot, code, ctx, macro),
+                    "checks": ck, "pool": len(ranked),
+                    "er": expected_return(u, slot, code, {**ctx, "style_fund": (None if slot != "pioneer" or RX_PIONEER.search(u.g(code, "name") or "")
+                                                                            else ("value" if u.g(code, "sub") in ("value", "contra") else "momentum"))}, macro),
                     "vol": SLOTS[slot][6] if slot != "metal" else (25 if ctx["metal"] == "silver" else 14),
                     "tax": u.g(code, "tax") or ("equity" if SLOTS[slot][1] == "Equity" else "other"),
                 })
@@ -1553,7 +1577,7 @@ def main() -> int:
            "global": {**glob, "goldTilt": gold_lvl},
            "sectors": [{k: r.get(k) for k in ("key", "label", "pe", "peMed", "valPct", "r6mRel", "r12mRel", "score", "signal", "excluded", "eligible", "years", "outlook")}
                        for r in sectors],
-           "sector": sector, "metal": {**metal, "applied": metal_choice},
+           "sector": sector, "metal": {**metal, "applied": metal_choice}, "style": {"value": style, "why": style_why},
            "assumptions": ASSUMPTIONS,
            "horizons": [{"id": h, "label": l, "years": y, "min": a, "max": b} for h, l, y, a, b in HORIZONS],
            "risks": [{"id": r, "label": l} for r, l in RISKS],

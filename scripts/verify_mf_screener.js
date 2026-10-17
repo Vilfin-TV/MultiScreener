@@ -430,7 +430,7 @@ function verifySmartSip() {
   const nPlans = (P.horizons || []).length * (P.risks || []).length || 15;
   ok(Object.keys(P.plans).length === nPlans && nPlans >= 15, `smart SIP has ${Object.keys(P.plans).length} plans (expected ${nPlans})`);
   // very aggressive: more in growth sleeves (beyond the Nifty 50 / diversified core) than aggressive, and always equity + debt + metals
-  const GROWTH = new Set(['next50', 'lmcore', 'mid', 'small', 'value', 'momentum', 'theme']);
+  const GROWTH = new Set(['next50', 'lmcore', 'mid', 'small', 'value', 'momentum', 'theme', 'pioneer']);
   const share = (p, f) => p.slots.reduce((a, s) => a + (f(s) ? s.w : 0), 0);
   for (const h of (P.horizons || [])) {
     const a = P.plans[h.id + 'a'], v = P.plans[h.id + 'v'];
@@ -465,6 +465,11 @@ function verifySmartSip() {
       if (C.buy != null && r[C.buy] != null) ok(r[C.buy].includes('S') && r[C.buy].includes('L'), `${id}/${s.key}: fund not open for both lump sums and SIPs`);
       ok(r[C.status] !== 'Out of track', `${id}/${s.key}: fund is Out of track`);
       if (s.key === 'next50') ok(/next 50/i.test(r[C.name]), `${id}/next50: ${r[C.name]} is not a Nifty Next 50 fund`);
+      if (s.key === 'pioneer') {
+        ok(s.w <= 15, `${id}/pioneer: innovation sleeve weight ${s.w}`);
+        ok(/^h(5|7|10)[av]$/.test(id), `${id}: innovation sleeve outside aggressive / very aggressive 5+ year plans`);
+        ok(/kotak pioneer/i.test(r[C.name]) || ['value', 'contra', 'idx_factor'].includes(r[C.sub]), `${id}/pioneer: ${r[C.name]} is neither Kotak Pioneer nor a value / momentum alternate`);
+      }
       if (s.key === 'value' || s.key === 'momentum') {
         ok(s.w <= 15, `${id}/${s.key}: style sleeve weight ${s.w}`);
         ok(/^h(5|7|10)v$/.test(id), `${id}: style sleeve ${s.key} outside very aggressive 5+ year plans`);
