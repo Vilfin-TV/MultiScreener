@@ -887,3 +887,35 @@ def scorecard(group: list[dict]) -> dict:
         o = out[g["code"]]
         o["status"] = status_of(o.get("rec"), o.get("ltp"))
     return out
+
+
+def scorecard_5y(group: list[dict]) -> dict:
+    """5-year view of the scorecard. group: funds of one category, each {code, roll12_5: [1Y return at each of
+    the last 60 month-ends or None], std5: annualised std. dev. of monthly returns over 5 years}.
+    Returns code → {cons5, cons5Top, cons5N, vol5} (consistency needs 36+ month-ends of history)."""
+    out = {c["code"]: {} for c in group}
+    if len(group) < 5:
+        return out
+    months = max((len(g["roll12_5"]) for g in group), default=0)
+    top = {g["code"]: 0 for g in group}
+    seen = {g["code"]: 0 for g in group}
+    for k in range(months):
+        vals = [(g["code"], g["roll12_5"][k]) for g in group if k < len(g["roll12_5"]) and g["roll12_5"][k] is not None]
+        if len(vals) < 4:
+            continue
+        vals.sort(key=lambda x: -x[1])
+        half = (len(vals) + 1) // 2
+        for rank, (code, _) in enumerate(vals):
+            seen[code] += 1
+            if rank < half:
+                top[code] += 1
+    for g in group:
+        if seen[g["code"]] >= 36:
+            o = out[g["code"]]
+            o["cons5"] = round(top[g["code"]] / seen[g["code"]] * 100, 1)
+            o["cons5Top"], o["cons5N"] = top[g["code"]], seen[g["code"]]
+    pv = percentile_ranks([g.get("std5") for g in group], higher_better=False)
+    for i, g in enumerate(group):
+        if pv[i] is not None:
+            out[g["code"]]["vol5"] = round(pv[i] * 100, 1)
+    return out

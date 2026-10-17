@@ -855,6 +855,7 @@ def main():
 
     # ── scorecard: recency, consistency, volatility, status (within each sub-category)
     me48 = [C.month_end(C.shift_months(risk_asof, -k).year, C.shift_months(risk_asof, -k).month) for k in range(47, -1, -1)]
+    me72 = [C.month_end(C.shift_months(risk_asof, -k).year, C.shift_months(risk_asof, -k).month) for k in range(71, -1, -1)]
     groups = defaultdict(list)
     for r in work:
         if C.SUBS[r["sub"]][0] == "Index":
@@ -865,12 +866,25 @@ def main():
         for k in range(12, len(me48)):
             a, b = vals[k - 12], vals[k]
             roll12.append(float(b / a - 1) if np.isfinite(a) and np.isfinite(b) and a > 0 else None)
-        groups[C.group(r["sub"])].append({"code": r["code"], "tr": res["tr"], "roll12": roll12,
-                                 "std": (res.get("risk") or {}).get("std")})
+        v72 = C.month_end_values(series[r["code"]].upto(risk_asof.toordinal()), me72)
+        roll12_5 = []
+        for k in range(12, len(me72)):
+            a, b = v72[k - 12], v72[k]
+            roll12_5.append(float(b / a - 1) if np.isfinite(a) and np.isfinite(b) and a > 0 else None)
+        m_ret = [float(v72[k] / v72[k - 1] - 1) for k in range(len(me72) - 60, len(me72))
+                 if np.isfinite(v72[k]) and np.isfinite(v72[k - 1]) and v72[k - 1] > 0]
+        std5 = float(np.std(m_ret, ddof=1) * np.sqrt(12) * 100) if len(m_ret) >= 58 else None
+        groups[C.group(r["sub"])].append({"code": r["code"], "tr": res["tr"], "roll12": roll12, "roll12_5": roll12_5,
+                                 "std": (res.get("risk") or {}).get("std"), "std5": std5})
     global SCORES
     SCORES = {}
     for sub, grp in groups.items():
         SCORES.update(C.scorecard(grp))
+        for code, v in C.scorecard_5y(grp).items():
+            SCORES.setdefault(code, {}).update(v)
+        for g in grp:
+            if g.get("std5") is not None:
+                SCORES.setdefault(g["code"], {})["std5"] = round(g["std5"], 2)
     log.info("Scorecard: %s", dict(Counter(v.get("status") for v in SCORES.values())))
 
     if args.no_write:
@@ -1148,7 +1162,8 @@ def write_outputs(universe, work, results, facts, bench, asof, risk_asof, series
                     "sid": MF[r["code"]]["docs"]["sid"], "turnover": _f(f.get("portfolio_turnover")),
                     "terDate": ter_of(r, f)[1], "start": f.get("start_date"),
                 },
-                "score": {k: v for k, v in (SCORES.get(r["code"]) or {}).items() if k in ("consTop", "consN")},
+                "score": {k: v for k, v in (SCORES.get(r["code"]) or {}).items()
+                          if k in ("consTop", "consN", "cons5", "cons5Top", "cons5N", "vol5", "std5")},
             }
             s = series[r["code"]]
             i0 = int(np.searchsorted(s.d, risk_asof.toordinal(), side="right"))

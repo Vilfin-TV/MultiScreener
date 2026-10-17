@@ -555,6 +555,9 @@ td.sorted-col{background:rgba(127,127,127,.05)}
 .stat-v{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;margin-top:4px;white-space:nowrap}
 .stat-c{font-size:11.5px;color:var(--text3);margin-top:3px;line-height:1.35}
 .stat-c b{font-family:'JetBrains Mono',monospace;color:var(--text2);font-weight:600}
+.hint-pop{position:absolute;z-index:1000;background:var(--surface);color:var(--text);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5;box-shadow:0 10px 30px rgba(0,0,0,.25);text-transform:none;letter-spacing:0;font-weight:500}
+.hint{position:relative;cursor:pointer}
+.hint::after{content:'';position:absolute;inset:-8px}
 .hint{display:inline-flex;width:15px;height:15px;border-radius:50%;border:1px solid var(--border2);font-size:9.5px;align-items:center;justify-content:center;color:var(--text3);cursor:help;flex-shrink:0;text-transform:none;letter-spacing:0}
 .note{margin-top:12px;font-size:12px;color:var(--text3);display:flex;gap:8px;align-items:flex-start;background:var(--surface2);border-radius:9px;padding:9px 11px;border:1px dashed var(--border2);line-height:1.5}
 .calc{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;margin-bottom:12px}
@@ -575,6 +578,27 @@ td.sorted-col{background:rgba(127,127,127,.05)}
 .meter-bar{height:8px;border-radius:4px;background:var(--surface3);margin:10px 0 8px;overflow:hidden}
 .meter-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--neg),var(--warn),var(--pos))}
 .meter-d{font-size:12px;color:var(--text2);line-height:1.45}
+.meter-bar{position:relative}
+.meter-bar em{position:absolute;top:-2px;width:2px;height:12px;background:var(--text);opacity:.65;border-radius:1px}
+.meter-rk{font-size:12px;color:var(--text3);margin-bottom:6px}.meter-rk b{color:var(--text)}
+.sc-head{align-items:flex-start;gap:12px;flex-wrap:wrap}
+.sc-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;margin-bottom:12px;align-items:stretch}
+.sc-top .status-box{margin:0}
+.sc-ov{display:flex;gap:14px;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px}
+.sc-ring{--v:0;flex:none;width:78px;height:78px;border-radius:50%;display:flex;align-items:baseline;justify-content:center;padding-top:22px;background:radial-gradient(closest-side,var(--surface2) 78%,transparent 80% 100%),conic-gradient(var(--accent) calc(var(--v)*1%),var(--surface3) 0)}
+.sc-ring b{font-family:'JetBrains Mono',monospace;font-size:24px}.sc-ring small{font-size:11px;color:var(--text3)}
+.sc-ov-k{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);display:flex;gap:6px;align-items:center}
+.sc-ov-r{font-size:16px;margin-top:4px}.sc-ov-r b{font-family:'JetBrains Mono',monospace}
+.sc-ov-m{font-size:12px;color:var(--text2);margin-top:3px}
+.sc-lead{margin-top:14px}
+.sc-lead-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.sc-tbl tr.cur td{background:var(--accent-soft)}
+.sc-tbl{min-width:0;width:100%}
+.sc-tbl .t-name{white-space:normal;overflow-wrap:anywhere}
+.sc-tbl .t-fund{min-width:0;width:auto}
+@media (max-width:600px){.sc-tbl td,.sc-tbl th{padding:9px 8px}.sc-tbl th:first-child,.sc-tbl td:first-child{width:26px}}
+.sc-tbl tr.sc-gap td{text-align:center;color:var(--text3);padding:2px}
+@media (max-width:760px){.sc-top{grid-template-columns:minmax(0,1fr)}}
 .status-box{display:flex;gap:14px;align-items:flex-start;border-radius:12px;padding:14px;margin-bottom:12px;background:var(--sb);border:1px solid var(--sc)}
 .status-box b{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1.2px;color:var(--sc);line-height:1;display:block}
 .status-box p{font-size:13px;color:var(--text2);margin-top:4px;line-height:1.5}
@@ -1138,7 +1162,7 @@ var PAGE = 50;
 var D = null, FUNDS = [], BY = {}, SUBSTAT = {}, AMC_AUM = {};
 var S = {view:'explore', asset:'Equity', sub:'', preset:'top', per:'r3y', sort:null, shown:PAGE,
          f:{text:'', amc:'', rating:0, hist:0, ter:0, risk:'', status:'', buy:''}, sel:null, tab:'overview', range:'3Y', showBench:true,
-         rollWin:'3', sipAmt:10000, cmp:[], cmpRange:'3Y', peerSort:'r3y',
+         rollWin:'3', sipAmt:10000, cmp:[], cmpRange:'3Y', peerSort:'r3y', scP:'3', scK:'ov',
          nfo:{text:'', asset:'', kind:'', status:'live'}, plan:{hz:'h10', rk:'b', amt:10000, fq:'m', yrs:0, slab:30}};
 var NFO = null, SIP = null;
 var CACHE = {d:{}, t:{}, h:{}, p:{}};
@@ -1188,7 +1212,24 @@ var BUY_TXT = {open:['Open for investment','buy-y','Accepting lump-sum and SIP i
 function buyPill(f, always){ var b = buyState(f); if (!b || (b === 'open' && !always)) return ''; var t = BUY_TXT[b]; return '<span class="buy ' + t[1] + '" title="' + esc(t[2]) + '">' + t[0] + '</span>'; }
 function scoreTxt(v){ return isNum(v) ? Math.round(v) + '<small>/100</small>' : '–'; }
 var TAX_SHORT = {equity:'Equity', elss:'Equity (ELSS)', debt:'Debt (slab)', other:'Non-equity'};
-function hint(t){ return '<span class="hint" title="' + esc(t) + '" aria-label="' + esc(t) + '">?</span>'; }
+function hint(t){ return '<span class="hint" role="button" tabindex="0" data-tip="' + esc(t) + '" title="' + esc(t) + '" aria-label="' + esc(t) + '">?</span>'; }
+/* "?" help: tap / click / Enter shows the explanation in a small popover (hover titles do not exist on phones) */
+(function(){
+  var pop = null;
+  function close(){ if (pop) { pop.remove(); pop = null; } }
+  function open(el){
+    close(); pop = document.createElement('div'); pop.className = 'hint-pop'; pop.setAttribute('role', 'tooltip'); pop.textContent = el.getAttribute('data-tip');
+    document.body.appendChild(pop);
+    var r = el.getBoundingClientRect(), w = Math.min(300, window.innerWidth - 24);
+    pop.style.width = w + 'px';
+    var left = Math.max(12, Math.min(window.innerWidth - w - 12, r.left + r.width / 2 - w / 2));
+    var top = r.bottom + 8; if (top + pop.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - pop.offsetHeight - 8);
+    pop.style.left = left + 'px'; pop.style.top = (top + window.scrollY) + 'px';
+  }
+  document.addEventListener('click', function(e){ var h = e.target.closest('.hint[data-tip]'); if (h) { e.preventDefault(); e.stopPropagation(); if (pop && pop._for === h) { close(); return; } open(h); pop._for = h; return; } if (!e.target.closest('.hint-pop')) close(); }, true);
+  document.addEventListener('keydown', function(e){ var h = e.target.closest && e.target.closest('.hint[data-tip]'); if (h && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(h); pop._for = h; } if (e.key === 'Escape') close(); });
+  window.addEventListener('scroll', close, {passive: true}); window.addEventListener('resize', close);
+})();
 
 /* ─────────── theme ─────────── */
 function curTheme(){ var t = document.documentElement.getAttribute('data-theme') || 'default'; if (t === 'standard') t = 'midnight'; return THEMES.some(function(x){ return x.id === t; }) ? t : 'default'; }
@@ -1658,7 +1699,7 @@ function renderPanel(f, det, tail){
     case 'info': h = pInfo(f, det); break;
   }
   $('panels').innerHTML = '<div class="panel on">' + h + '</div>';
-  if (S.tab === 'overview') drawNavChart();
+  if (S.tab === 'overview') { drawNavChart(); CACHE.dSync = {}; CACHE.dSync[f.code] = (det || {}).score; renderScorecard(f); }
   if (S.tab === 'sip') bindSipCalc(f, tail);
   if (S.tab === 'portfolio') {
     var code = f.code;
@@ -1687,21 +1728,79 @@ function pOverview(f, det, tail){
 function grpLabel(f){ return /^sec_/.test(f.sub) ? 'Sectoral / Thematic' : (f.sub === 'target' || f.sub === 'debtidx') ? 'Target Maturity & Debt Index' : f.subLabel; }
 function scorecardCard(f, det){
   if (f.asset === 'Index') return '';
-  var sc = det.score || {}, ss = SUBSTAT[f.sub].avg;
-  var st = f.status;
-  var box = st ? '<div class="status-box ' + ST_CLS[st] + '"><div><b>' + esc(st) + '</b><p>' + ST_DESC[st] + '</p></div></div>'
-               : '<div class="note" style="margin-top:0;margin-bottom:12px">A status is assigned once the fund has a 1-year record in a category of five or more funds.</div>';
-  function meter(k, v, d, tip){ return '<div class="meter"><div class="meter-top"><span class="meter-k">' + k + ' ' + hint(tip) + '</span><span class="meter-v">' + scoreTxt(v) + '</span></div><div class="meter-bar"><i style="width:' + (isNum(v) ? Math.max(2, v) : 0) + '%"></i></div><div class="meter-d">' + d + '</div></div>'; }
-  var consD = isNum(f.cons) && sc.consN ? 'Top half of the category in <b>' + sc.consTop + ' of ' + sc.consN + '</b> month-ends (rolling 1-year return).' : 'Needs 12 month-ends of history.';
-  var recD = isNum(f.rec) ? 'Recent returns beat <b>' + Math.round(f.rec) + '%</b> of ' + esc(grpLabel(f)) + ' peers (3M · 6M · 1Y blend).' : 'Needs a 1-year record.';
-  var volD = isNum(f.vols) ? (f.vols >= 67 ? 'Calmer than most peers' : f.vols >= 34 ? 'Typical volatility for its category' : 'More volatile than most peers') + ' (3Y std. dev. ' + (isNum(f.std) ? fmt(f.std) + '%' : '–') + ', category ' + (isNum(ss.std) ? fmt(ss.std) + '%' : '–') + ').' : 'Needs 12 months of history.';
-  return '<div class="card pcard"><div class="pc-head"><div><div class="sec-title">VilfinTV Scorecard</div><div class="sec-sub">Relative to ' + esc(grpLabel(f)) + ' funds · 100 = best in category</div></div></div>' + box +
-    '<div class="meters">' +
-      meter('Consistency', f.cons, consD, 'Share of the last 36 month-ends in which the fund ranked in the top half of its category on rolling 1-year return.') +
-      meter('Recency', f.rec, recD, 'Weighted percentile of 3-month (20%), 6-month (30%) and 1-year (50%) returns within the category.') +
-      meter('Volatility', f.vols, volD, 'Percentile of 3-year volatility within the category, inverted so that 100 = calmest.') +
-    '</div></div>';
+  return '<div class="card pcard sc-card" id="scCard"><div class="skel" style="height:260px"></div></div>';
 }
+/* ── VilfinTV scorecard: 3- or 5-year view, overall score & rank, peer medians and category leaders ── */
+function grpKey(x){ return /^sec_/.test(x.sub) ? 'sec' : (x.sub === 'target' || x.sub === 'debtidx') ? 'tgt' : x.sub; }
+function overallScore(c, r, v){
+  var parts = [[c, .4], [r, .3], [v, .3]].filter(function(p){ return isNum(p[0]); });
+  if (parts.length < 2) return null;
+  return parts.reduce(function(a, p){ return a + p[0] * p[1]; }, 0) / parts.reduce(function(a, p){ return a + p[1]; }, 0);
+}
+function scorePeers(f){
+  var peers = FUNDS.filter(function(x){ return x.asset !== 'Index' && grpKey(x) === grpKey(f); });
+  var subs = peers.map(function(x){ return x.sub; }).filter(function(v, i, a){ return a.indexOf(v) === i; });
+  return Promise.all(subs.map(function(sb){ return loadSub(sb).then(function(r){ return r[0]; }).catch(function(){ return {}; }); })).then(function(ds){
+    var det = {}; ds.forEach(function(d){ Object.keys(d || {}).forEach(function(k){ det[k] = d[k]; }); });
+    return peers.map(function(x){
+      var sc = (det[x.code] || {}).score || {};
+      var p3 = {cons: x.cons, rec: x.rec, vol: x.vols}, p5 = {cons: sc.cons5, rec: x.rec, vol: sc.vol5};
+      p3.ov = overallScore(p3.cons, p3.rec, p3.vol); p5.ov = overallScore(p5.cons, p5.rec, p5.vol);
+      return {f: x, sc: sc, p3: p3, p5: p5};
+    });
+  });
+}
+function renderScorecard(f){
+  var box = $('scCard'); if (!box) return;
+  scorePeers(f).then(function(rows){
+    if (!$('scCard') || S.sel !== f.code) return;
+    var P = S.scP === '5' ? 'p5' : 'p3', yrs = S.scP === '5' ? 5 : 3, me = rows.filter(function(r){ return r.f.code === f.code; })[0] || {p3: {}, p5: {}, sc: {}};
+    var M = [['ov', 'VilfinTV score', 'Weighted blend: consistency 40%, recency 30%, volatility 30%.'],
+             ['cons', 'Consistency', 'Share of the last ' + (yrs * 12 - 12) + ' month-ends (' + yrs + '-year window) in which the fund ranked in the top half of its category on rolling 1-year return.'],
+             ['rec', 'Recency', 'Weighted percentile of 3-month (20%), 6-month (30%) and 1-year (50%) returns within the category — a short-term view, the same in both periods.'],
+             ['vol', 'Low volatility', 'Percentile of ' + yrs + '-year volatility (std. dev. of monthly returns) within the category, inverted so that 100 = calmest.']];
+    function rankOf(k){
+      var have = rows.filter(function(r){ return isNum(r[P][k]); }).sort(function(a, b){ return b[P][k] - a[P][k]; });
+      var i = have.findIndex(function(r){ return r.f.code === f.code; });
+      var vals = have.map(function(r){ return r[P][k]; }), med = vals.length ? vals.slice().sort(function(a, b){ return a - b; })[Math.floor(vals.length / 2)] : null;
+      return {rank: i >= 0 ? i + 1 : null, n: have.length, med: med, list: have};
+    }
+    var st = f.status, ovR = rankOf('ov'), ov = me[P].ov;
+    var h = '<div class="pc-head sc-head"><div><div class="sec-title">VilfinTV Scorecard</div><div class="sec-sub">Relative to ' + esc(grpLabel(f)) + ' funds · 100 = best in category · ' + rows.length + ' peers</div></div>' +
+      '<div class="seg" id="scPer" role="group" aria-label="Scorecard period"><button data-p="3"' + (S.scP !== '5' ? ' class="on"' : '') + '>3 years</button><button data-p="5"' + (S.scP === '5' ? ' class="on"' : '') + '>5 years</button></div></div>';
+    h += '<div class="sc-top"><div class="sc-ov"><div class="sc-ring" style="--v:' + (isNum(ov) ? Math.round(ov) : 0) + '"><b>' + (isNum(ov) ? Math.round(ov) : '–') + '</b><small>/100</small></div>' +
+      '<div><div class="sc-ov-k">VilfinTV score ' + hint(M[0][2]) + '</div><div class="sc-ov-r">' + (ovR.rank ? 'Rank <b>#' + ovR.rank + '</b> of ' + ovR.n : 'Not ranked yet') + '</div>' +
+      '<div class="sc-ov-m">' + (ovR.rank ? (ovR.rank <= Math.ceil(ovR.n / 4) ? 'Top quarter of the category' : ovR.rank <= Math.ceil(ovR.n / 2) ? 'Upper half of the category' : ovR.rank <= Math.ceil(ovR.n * 3 / 4) ? 'Lower half of the category' : 'Bottom quarter of the category') + ' · median peer ' + (isNum(ovR.med) ? Math.round(ovR.med) : '–') : (yrs === 5 ? 'Needs a 5-year record for the 5-year view' : 'Needs a 1-year record')) + '</div></div></div>' +
+      (st ? '<div class="status-box ' + ST_CLS[st] + '"><div><b>' + esc(st) + '</b><p>' + ST_DESC[st] + '</p></div></div>' : '<div class="note" style="margin:0">A status is assigned once the fund has a 1-year record in a category of five or more funds.</div>') + '</div>';
+    var sc = me.sc || {}, ss = SUBSTAT[f.sub].avg;
+    var desc = {
+      cons: yrs === 5 ? (isNum(sc.cons5) ? 'Top half of the category in <b>' + sc.cons5Top + ' of ' + sc.cons5N + '</b> month-ends (rolling 1-year return).' : 'Needs 36+ month-ends of 5-year history.')
+                      : ((det_cons(f)) || 'Needs 12 month-ends of history.'),
+      rec: isNum(f.rec) ? 'Recent returns beat <b>' + Math.round(f.rec) + '%</b> of peers (3M · 6M · 1Y blend).' : 'Needs a 1-year record.',
+      vol: yrs === 5 ? (isNum(sc.std5) ? '5-year volatility ' + fmt(sc.std5) + '% a year.' : 'Needs 5 years of monthly history.')
+                     : (isNum(f.std) ? '3-year volatility ' + fmt(f.std) + '% a year (category ' + (isNum(ss.std) ? fmt(ss.std) + '%' : '–') + ').' : 'Needs 12 months of history.')
+    };
+    h += '<div class="meters">' + M.slice(1).map(function(m){
+      var v = me[P][m[0]], r = rankOf(m[0]);
+      return '<div class="meter"><div class="meter-top"><span class="meter-k">' + m[1] + ' ' + hint(m[2]) + '</span><span class="meter-v">' + scoreTxt(v) + '</span></div>' +
+        '<div class="meter-bar"><i style="width:' + (isNum(v) ? Math.max(2, v) : 0) + '%"></i>' + (isNum(r.med) ? '<em style="left:' + r.med + '%" title="Category median ' + Math.round(r.med) + '"></em>' : '') + '</div>' +
+        '<div class="meter-rk">' + (r.rank ? 'Rank <b>#' + r.rank + '</b> of ' + r.n : 'Not ranked') + (isNum(r.med) ? ' · median ' + Math.round(r.med) : '') + '</div>' +
+        '<div class="meter-d">' + desc[m[0]] + '</div></div>';
+    }).join('') + '</div>';
+    var K = S.scK || 'ov', L = rankOf(K), top = L.list.slice(0, 5), mine = L.rank && L.rank > 5 ? L.list[L.rank - 1] : null;
+    var tr = function(r, i){ var x = r.f; return '<tr class="clk' + (x.code === f.code ? ' cur' : '') + '" data-code="' + x.code + '"><td class="mut">' + (i + 1) + '</td><td class="t-fund"><div class="t-name">' + esc(x.name) + '</div><div class="t-meta">' + esc(x.amcName) + '</div></td>' +
+      '<td class="num"><b>' + Math.round(r[P][K]) + '</b></td><td class="num hide-m">' + scoreN(r[P].cons) + '</td><td class="num hide-m">' + scoreN(r[P].rec) + '</td><td class="num hide-m">' + scoreN(r[P].vol) + '</td><td class="num">' + fmtPct(yrs === 5 ? x.r5y : x.r3y) + '</td></tr>'; };
+    h += '<div class="sc-lead"><div class="sc-lead-h"><div class="sec-title" style="font-size:15px">Category leaders</div><div class="seg" id="scLead">' +
+      [['ov', 'Overall'], ['cons', 'Consistency'], ['rec', 'Recency'], ['vol', 'Low volatility']].map(function(t){ return '<button data-k="' + t[0] + '"' + (K === t[0] ? ' class="on"' : '') + '>' + t[1] + '</button>'; }).join('') + '</div></div>' +
+      '<div class="tbl-scroll" style="display:block"><table class="sc-tbl"><thead><tr><th>#</th><th>Fund</th><th class="num">Score</th><th class="num hide-m">Cons.</th><th class="num hide-m">Rec.</th><th class="num hide-m">Vol.</th><th class="num">' + yrs + 'Y return</th></tr></thead><tbody>' +
+      (top.length ? top.map(tr).join('') : '<tr><td colspan="7" class="mut">Not enough funds with a ' + yrs + '-year record yet.</td></tr>') +
+      (mine ? '<tr class="sc-gap"><td colspan="7">⋯</td></tr>' + tr(mine, L.rank - 1) : '') + '</tbody></table></div>' +
+      '<div class="note">' + (yrs === 5 ? '5-year view: consistency over the last 60 month-ends and 5-year volatility; recency is always short-term.' : '3-year view: consistency over the last 36 month-ends and 3-year volatility.') + ' Scores are percentiles within the category (100 = best); tap a fund to open it.</div></div>';
+    box.innerHTML = h;
+  });
+}
+function scoreN(v){ return isNum(v) ? Math.round(v) : '–'; }
+function det_cons(f){ var d = (CACHE.dSync || {})[f.code]; return d && d.consN ? 'Top half of the category in <b>' + d.consTop + ' of ' + d.consN + '</b> month-ends (rolling 1-year return).' : ''; }
 function quickRisk(f, det){
   var rk = det.risk || {}, ss = SUBSTAT[f.sub].avg;
   var it = [
@@ -2220,6 +2319,8 @@ function bindUI(){
     var tb = t.closest('.pcard [data-tab]'); if (tb) { S.tab = tb.getAttribute('data-tab'); writeURL(); renderDetail(); return; }
     if (t.closest('#cmpAdd')) { toggleCmp(S.sel); return; }
     if (t.closest('#shareBtn')) { share(); return; }
+    var sp = t.closest('#scPer [data-p]'); if (sp) { S.scP = sp.getAttribute('data-p'); renderScorecard(BY[S.sel]); return; }
+    var sk = t.closest('#scLead [data-k]'); if (sk) { S.scK = sk.getAttribute('data-k'); renderScorecard(BY[S.sel]); return; }
     var rb = t.closest('#rangeSeg [data-r]'); if (rb) { S.range = rb.getAttribute('data-r'); document.querySelectorAll('#rangeSeg button').forEach(function(x){ x.classList.toggle('on', x === rb); }); drawNavChart(); return; }
     if (t.closest('#benchTgl')) { S.showBench = !S.showBench; t.closest('#benchTgl').textContent = (S.showBench ? 'Hide' : 'Show') + ' benchmark'; drawNavChart(); return; }
     var wb = t.closest('#rollSeg [data-w]'); if (wb && !wb.disabled) { S.rollWin = wb.getAttribute('data-w'); renderDetail(); return; }
