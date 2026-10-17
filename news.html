@@ -1100,6 +1100,9 @@ body{
 .story-body td{color:#e2eeff;}
 /* strong inside cells must inherit cell color — !important so Telegram UA can't override */
 .story-body td strong,.story-body th strong{color:inherit!important;}
+/* <li> text: Telegram/WhatsApp overrides INHERITED color from <ul style="color:xxx"> but
+   not explicit inline styles. !important forces the browser to always inherit from parent. */
+.story-body li{color:inherit!important;}
 .story-body .ql-align-center{text-align:center;}
 .story-body .ql-align-right{text-align:right;}
 .story-body .ql-align-justify{text-align:justify;}
