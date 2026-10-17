@@ -65,8 +65,8 @@ RATING_W = {"cost": 20, "liq": 20, "trk": 15, "ret": 20, "risk": 15, "size": 10}
 
 def role_of(e: dict) -> str:
     """Same rule as roleOf() in etf_momentum.html."""
-    k, n = e.get("k") or "", f"{e.get('n') or ''} {e.get('u') or ''}"
-    if re.search(r"hybrid|balanced|multi.?asset", n, re.I):
+    k, n = e.get("k") or "", f"{e.get('n') or ''} {e.get('u') or ''} {(e.get('x') or {}).get('benchmark') or ''}"
+    if re.search(r"hybrid|balanced|multi.?asset|\bplus\b.*\bg-?sec\b|\bg-?sec\b.*\b\d{2}:\d{2}\b", n, re.I):
         return "hyb"
     if k in ("Broad Market", "Next 50, Mid & Small Cap"):
         return "core"
