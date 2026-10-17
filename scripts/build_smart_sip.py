@@ -62,7 +62,7 @@ SLOTS = {
     "core":   ("Large-cap core (Nifty 50 index)", "Equity", ["idx_large"], "index", 3, 500, 15),
     "next50": ("Large-cap growth (Nifty Next 50 index)", "Equity", ["idx_large"], "index", 3, 500, 20),
     "lmcore": ("Large & mid cap core", "Equity", ["largemid"], "active", 5, 1000, 17),
-    "flexi":  ("Diversified equity (flexi / multi / large & mid)", "Equity", ["flexi", "multi", "largemid"], "active", 5, 1000, 16),
+    "flexi":  ("Diversified equity (flexi / multi / large & mid / focused)", "Equity", ["flexi", "multi", "largemid", "focused"], "active", 5, 1000, 16),
     "mid":    ("Mid cap", "Equity", ["mid"], "active", 5, 1000, 19),
     "small":  ("Small cap", "Equity", ["small"], "active", 5, 1000, 23),
     "baf":    ("Balanced advantage (dynamic)", "Hybrid", ["baf"], "active", 5, 1000, 9),
@@ -76,6 +76,7 @@ SLOTS = {
     "momentum": ("Momentum factor (index)", "Equity", ["idx_factor"], "factor", 3, 300, 21),
     "theme":  ("Sector satellite", "Equity", None, "sector", 5, 300, 22),
     "intl":   ("International satellite", "International", ["us", "global"], "intl", 3, 300, 17),
+    "multi":  ("Multi-asset allocation (equity + debt + gold/silver)", "Hybrid", ["multiasset"], "active", 3, 1000, 11),
 }
 TEMPLATES = {
     "h1c":  {"arb": 40, "dshort": 60},
@@ -101,10 +102,10 @@ TEMPLATES = {
     "h7v":  {"lmcore": 20, "flexi": 10, "mid": 20, "small": 15, "value": 10, "theme": 10, "dmed": 5, "metal": 10},
     "h10v": {"lmcore": 20, "flexi": 10, "mid": 25, "small": 20, "momentum": 10, "theme": 5, "dmed": 5, "metal": 5},
 }
-ORDER = ["core", "next50", "lmcore", "flexi", "mid", "small", "value", "momentum", "theme", "baf", "eqsav", "arb", "dcore", "dmed", "dshort", "metal", "intl"]
+ORDER = ["core", "next50", "lmcore", "flexi", "mid", "small", "value", "momentum", "theme", "baf", "multi", "eqsav", "arb", "dcore", "dmed", "dshort", "metal", "intl"]
 FALLBACK = {"lmcore": ["flexi", "core"], "next50": ["flexi", "core"], "dmed": ["dcore", "dshort", "metal"], "value": ["flexi", "core"], "momentum": ["mid", "flexi", "core"], "intl": ["flexi", "core"], "theme": ["flexi", "core"], "small": ["mid", "flexi"], "mid": ["flexi", "core"],
             "flexi": ["core"], "core": ["flexi"], "metal": ["dcore", "dshort"], "eqsav": ["arb", "baf"], "baf": ["core", "dcore"],
-            "dcore": ["dshort", "baf"], "dshort": ["dcore", "arb"], "arb": ["dshort"]}
+            "dcore": ["dshort", "baf"], "dshort": ["dcore", "arb"], "arb": ["dshort"], "multi": ["baf", "flexi"]}
 
 # debt pools by rate regime
 DEBT_POOLS = {
@@ -197,6 +198,11 @@ SECTORS = [
     ("mnc", "MNC", ["mnc"], ["sec_mnc"], None, r"conglomerate"),
     ("conglo", "Conglomerates", ["conglo"], THEME_SUBS, r"conglomerate", None),
 ]
+# international-slot backup: Indian funds with an overseas sleeve, used only while no pure international fund is
+# open and passes every check (overseas funds pause purchases whenever the industry overseas limit is reached).
+# Evidence = a published portfolio with ≥10 % overseas, or a known overseas (Nasdaq 100) sleeve listed here.
+RX_INTL_BACKUP = re.compile(r"\bkotak pioneer\b", re.I)
+INTL_BACKUP_MIN_OVERSEAS = 10.0
 RX_MOMENTUM = re.compile(r"momentum", re.I)
 RX_NEXT50 = re.compile(r"\bnext 50\b", re.I)
 RX_NIFTY50 = re.compile(r"\bnifty 50\b(?!\s*(equal|value|quality|low|momentum|alpha|shariah|arbitrage))", re.I)
@@ -485,6 +491,38 @@ def apply_metal_tilt(weights, gscore, hz):
             w[dst] += 5
             return w, -5
     return w, 0
+
+
+MULTI_MIN = 10        # a multi-asset fund holds ≥10 % each in equity, debt and gold/silver (SEBI) — keep it meaningful
+
+
+def apply_multi_asset(weights, rk, hz, regime, dscore, gscore):
+    """Very aggressive plans (3+ yrs): when bonds are unattractive (rising rate cycle or bond score ≤ −2) the separate
+    debt slot is dropped, and when gold is unattractive (gold score ≤ −2) the separate precious-metal slot is dropped;
+    their weight goes to a multi-asset allocation fund (≥10 %, topped up from the diversified-equity slot), which still
+    holds debt and gold/silver and lets its manager shift between them. Returns (weights, dropped slots)."""
+    w = dict(weights)
+    if rk != "v" or hz == "h1":
+        return w, []
+    drop = []
+    debt = next((k for k in ("dmed", "dcore", "dshort") if w.get(k)), None)
+    if debt and (regime == "rising" or dscore <= -2):
+        drop.append(debt)
+    if w.get("metal") and gscore <= -2:
+        drop.append("metal")
+    if not drop:
+        return w, []
+    moved = sum(w.pop(k) for k in drop)
+    if moved < MULTI_MIN:
+        for src in ("flexi", "lmcore", "mid"):
+            take = min(MULTI_MIN - moved, max(0, w.get(src, 0) - 5))
+            if take > 0:
+                w[src] -= take
+                moved += take
+            if moved >= MULTI_MIN:
+                break
+    w["multi"] = w.get("multi", 0) + moved
+    return w, drop
 
 
 def rate_regime(macro, u, glob=None):
@@ -826,6 +864,11 @@ def fund_checks(u, slot, code, ctx):
     if kind == "arb":
         r1, m1 = g("r1y"), cs.get("r1y")
         chk("1Y return vs category", r1 is None or m1 is None or r1 >= m1 - 0.3, f"{r1:.2f}% vs median {m1:.2f}%" if r1 is not None and m1 is not None else "–")
+    if slot == "intl" and ctx.get("intl_backup"):
+        ov = ((u.pf.get(code) or {}).get("mix") or {}).get("overseas")
+        chk("International exposure", ov is not None and ov >= INTL_BACKUP_MIN_OVERSEAS or bool(RX_INTL_BACKUP.search(name)),
+            (f"{ov:.0f}% held overseas" if ov is not None else "Indian innovation fund with an overseas (Nasdaq 100) sleeve")
+            + " — used while international funds are closed to new money")
     if slot == "intl":
         core = re.sub(r"\b(invesco|nippon|franklin|bank of) india\b", "", name, flags=re.I)   # fund-house brands are not mandates
         chk("Diversified mandate", not RX_INTL_THEME.search(core), "broad overseas market" if not RX_INTL_THEME.search(core) else "narrow theme or single region")
@@ -1013,6 +1056,16 @@ def rank_pool(u, slot, ctx, cache):
         sc = {**(scores(u, slot, act, "active", ctx.get("profile") == "growth") if act else {}), **(scores(u, slot, idx, "index") if idx else {})}
     else:
         sc = scores(u, slot, ok, kind, ctx.get("profile") == "growth") if ok else {}
+    if slot == "intl" and not ok:                       # every international fund closed or failing → backup pool
+        bsubs = list(subs) + ["sec_innov"]
+        backup = [c for c in u.by_subs(["sec_innov"])
+                  if ((u.pf.get(c) or {}).get("mix") or {}).get("overseas", 0) >= INTL_BACKUP_MIN_OVERSEAS
+                  or RX_INTL_BACKUP.search(u.g(c, "name") or "")]
+        bctx = {**ctx, "subs": bsubs, "intl_backup": True}
+        checks.update({c: fund_checks(u, slot, c, bctx) for c in backup})
+        ok = [c for c in backup if all(x[1] for x in checks[c])]
+        sc = scores(u, slot, ok, "active", ctx.get("profile") == "growth") if ok else {}
+        subs = bsubs
     ranked = sorted(ok, key=lambda c: -sc[c])
     cache[key] = (ranked, sc, checks, subs)
     return cache[key]
@@ -1039,6 +1092,8 @@ def expected_return(u, slot, code, ctx, macro):
         gross = eq(slot)
     elif slot == "baf":
         gross = 0.6 * eq("core") + 0.4 * (tb364 + 0.6)
+    elif slot == "multi":                         # typical mix: two-thirds equity, a fifth debt, the rest gold/silver
+        gross = 0.65 * eq("core") + 0.2 * (tb364 + 0.6) + 0.15 * (ASSUMPTIONS["metalReturn"] + (ctx.get("metalAdj") or 0))
     elif slot == "eqsav":
         gross = 0.35 * eq("core") + 0.65 * (tb364 + 0.3)
     elif slot == "arb":
@@ -1058,7 +1113,7 @@ def expected_return(u, slot, code, ctx, macro):
     return round(gross - (u.g(code, "ter") or 0), 2)
 
 
-ALPHA_SLOTS = ("lmcore", "flexi", "mid", "small", "value", "theme")
+ALPHA_SLOTS = ("lmcore", "flexi", "mid", "small", "value", "theme", "multi")
 
 
 def alpha_credit(u, code):
@@ -1376,6 +1431,7 @@ def main() -> int:
             weights, rotated = apply_rotation(weights, rotation, hz)
             weights, cuts = apply_gate(weights, gates)
             weights, metal_tilt = apply_metal_tilt(weights, gscore, hz)
+            weights, multi_drop = apply_multi_asset(weights, rk, hz, regime, 0, gscore)   # both decisions are monthly-stable
             pst = state["plans"].setdefault(pid, {"slots": {}})
             chosen, amc_count, slots, changes, skipped = {}, {}, [], [], []
             for slot in sorted(weights, key=ORDER.index):
@@ -1408,7 +1464,7 @@ def main() -> int:
                                                              (f"Precious metals — {ctx['metal']}" if slot == "metal" else SLOTS[slot][0]))
                 ck = checks.get(code) or fund_checks(u, slot, code, {**ctx, "subs": subs})
                 slots.append({
-                    "key": slot, "label": lab, "asset": SLOTS[slot][1], "w": weights[slot], "base": base[slot],
+                    "key": slot, "label": lab, "asset": SLOTS[slot][1], "w": weights[slot], "base": base.get(slot, 0),
                     "code": code, "score": sc.get(code), "alts": alts, "since": pst["slots"][slot]["since"],
                     "state": "watch" if action == "watch" else "ok", "note": note, "why": why(u, slot, code),
                     "checks": ck, "pool": len(ranked), "er": expected_return(u, slot, code, ctx, macro),
@@ -1435,7 +1491,7 @@ def main() -> int:
             for s in slots:
                 mix[s["asset"]] = mix.get(s["asset"], 0) + s["w"]
             plans[pid] = {
-                "horizon": hz_label, "risk": rk_label, "years": yrs, "yearsMin": ymin, "yearsMax": ymax, "tilt": applied, "rotated": rotated, "metalTilt": metal_tilt,
+                "horizon": hz_label, "risk": rk_label, "years": yrs, "yearsMin": ymin, "yearsMax": ymax, "tilt": applied, "rotated": rotated, "metalTilt": metal_tilt, "multiFor": multi_drop,
                 "slots": slots, "mix": mix, "ter": round(sum((u.g(s["code"], "ter") or 0) * s["w"] for s in slots) / 100, 2),
                 "er": round(sum(s["er"] * s["w"] for s in slots) / 100, 2),
                 "hist": {k: past_return(u, slots, k) for k in ("r3y", "r5y")},

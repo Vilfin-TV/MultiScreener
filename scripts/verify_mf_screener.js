@@ -437,7 +437,13 @@ function verifySmartSip() {
     if (!a || !v) continue;
     const ga = share(a, s => GROWTH.has(s.key)), gv = share(v, s => GROWTH.has(s.key));
     ok(gv >= ga, `${h.id}: very aggressive growth share ${gv}% below aggressive ${ga}%`);
-    for (const asset of ['Equity', 'Debt', 'Commodity']) ok(share(v, s => s.asset === asset) >= 5, `${h.id}v: no ${asset.toLowerCase()} allocation`);
+    // debt and gold/silver may be held through a multi-asset fund (≥10 %; it must hold ≥10 % of each) when the planner
+    // dropped the separate slot on market conditions (published in multiFor)
+    const multi = share(v, s => s.key === 'multi'), via = new Set(v.multiFor || []);
+    ok(share(v, s => s.asset === 'Equity') >= 5, `${h.id}v: no equity allocation`);
+    ok(share(v, s => s.asset === 'Debt') >= 5 || (multi >= 10 && [...via].some(k => /^d/.test(k))), `${h.id}v: no debt allocation`);
+    ok(share(v, s => s.asset === 'Commodity') >= 5 || (multi >= 10 && via.has('metal')), `${h.id}v: no commodity allocation`);
+    if (multi) ok(multi >= 10 && via.size > 0, `${h.id}v: multi-asset slot ${multi}% without a market-condition reason`);
   }
   ok(Math.abs(P.market.tilt) <= 10 && P.market.tilt % 5 === 0, `market tilt ${P.market.tilt}`);
   for (const [id, p] of Object.entries(P.plans)) {
