@@ -105,6 +105,37 @@ FIT_DEBT = {"overnight", "liquid", "money", "ultrashort", "lowdur", "shortdur", 
             "corpbond", "credit", "bankpsu", "gilt", "gilt10", "floater", "target", "debtidx"}
 
 
+def index_key(name: str) -> str:
+    """The index a passive fund tracks, from its name ("HDFC Nifty 50 Index Fund" → "nifty 50")."""
+    n = re.sub(r"\(.*?\)", " ", (name or "").lower())
+    n = re.sub(r"\b(nifty|midcap|smallcap)(\d)", r"\1 \2", n)          # "Nifty200" / "Midcap150" spellings
+    m = re.search(r"\b((?:nifty|bse|s&p bse|sensex|crisil|msci|nasdaq|s&p)\b.*?)(?=\s+(?:index|etf|fund|fof|plan)\b|$)", n)
+    return re.sub(r"\s+", " ", m.group(1)).strip() if m else ""
+
+
+def add_index_proxies(by_sub: dict, sub_of: dict, name_of: dict, aum_of: dict) -> int:
+    """An index fund without its own portfolio gets the statutory portfolio of the largest covered fund tracking the
+    same index (same holdings and weights by mandate). Marked with proxyOf / proxyName / index; rebuilt every run."""
+    own = {int(c): v for d in by_sub.values() for c, v in d.items() if not v.get("proxyOf")}
+    peers = defaultdict(list)
+    for c in own:
+        k = index_key(name_of.get(c, "")) if (sub_of.get(c) or "").startswith("idx_") else ""
+        if k:
+            peers[k].append(c)
+    n = 0
+    for c, sub in sub_of.items():
+        if not (sub or "").startswith("idx_") or c in own:
+            continue
+        k = index_key(name_of.get(c, ""))
+        cand = [p for p in peers.get(k, []) if p != c]
+        if not k or not cand:
+            continue
+        src = max(cand, key=lambda p: aum_of.get(p) or 0)
+        by_sub[sub][str(c)] = {**own[src], "proxyOf": src, "proxyName": name_of.get(src, ""), "index": k}
+        n += 1
+    return n
+
+
 def fits_category(sub: str, mix: dict) -> bool:
     eq = (mix.get("equity") or 0) + (mix.get("overseas") or 0) + (mix.get("reit") or 0)
     if sub in FIT_EQUITY or re.match(r"(sec_|idx_)", sub or ""):
@@ -657,11 +688,12 @@ def main():
     for f in (ROOT / "data" / "mf" / "d").glob("*.json"):
         det.update(json.load(open(f)))
     funds_by_amc = defaultdict(list)
-    sub_of = {}
+    sub_of, name_of, aum_of = {}, {}, {}
     for r in scr["rows"]:
         amc = scr["amcs"][r[C["amc"]]]
         code = r[C["code"]]
         sub_of[code] = r[C["sub"]]
+        name_of[code], aum_of[code] = r[C["name"]], r[C["aum"]]
         funds_by_amc[amc].append({"code": code, "amfi": (det.get(str(code)) or {}).get("info", {}).get("amfiName") or r[C["name"]]})
     meta_path = OUT / "_meta.json"
     meta = json.load(open(meta_path)) if meta_path.exists() else {}
@@ -816,11 +848,15 @@ def main():
         if p.name.startswith("_"):
             continue
         for code, v in json.load(open(p)).items():
-            y, m = map(int, v["asOf"].split("-"))
+            if v.get("proxyOf"):                      # index proxies are rebuilt below from the latest real portfolios
+                continue
             if int(code) in sub_of and pf_age_days(v["asOf"]) <= MAX_AGE_DAYS:
                 by_sub[sub_of[int(code)]][code] = v
     for code, v in results.items():
         by_sub[sub_of[code]][str(code)] = v
+    proxies = add_index_proxies(by_sub, sub_of, name_of, aum_of)
+    log.info("Index funds given the portfolio of a fund tracking the same index: %d", proxies)
+    meta["_proxies"] = proxies
     for sub, d in by_sub.items():
         (OUT / f"{sub}.json").write_text(json.dumps(d, separators=(",", ":"), ensure_ascii=False))
     meta["_generated"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

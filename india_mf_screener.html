@@ -2739,9 +2739,10 @@ function pPortfolio(f, pf){
   var holdPie = donutCard('pieHold', pf.n ? 'Top stocks' : 'Top holdings', '% of fund', (pf.top || []).map(function(h){ return [h[0], h[2]]; }),
                           [fmt((pf.top || []).slice(0, 8).reduce(function(a, h){ return a + h[2]; }, 0), 1) + '%', 'top 8 holdings'], 'All other holdings');
   var pies = secPie || holdPie ? '<div class="pie-grid">' + secPie + holdPie + '</div>' : '';
-  return '<div class="card pcard" id="pfBox"><div class="pc-head"><div><div class="sec-title">Portfolio</div><div class="sec-sub">As of ' + monthTxt(pf.asOf) + ' month-end · ' + (pf.nAll || 0) + ' securities</div></div></div>' +
+  return '<div class="card pcard" id="pfBox"><div class="pc-head"><div><div class="sec-title">Portfolio</div><div class="sec-sub">As of ' + monthTxt(pf.asOf) + ' month-end · ' + (pf.nAll || 0) + ' securities' + (pf.proxyOf ? ' · index holdings' : '') + '</div></div></div>' +
     kp + pies + '<div class="pf-grid">' + hold + '<div>' + capH + mixH + crd + sec + '</div></div>' +
-    '<div class="note">From the fund house\'s statutory monthly portfolio disclosure. Market-cap buckets follow SEBI\'s ranking: Nifty 100 constituents as large cap, Nifty Midcap 150 as mid cap, all other listed stocks as small cap. Cash & others includes TREPS, net receivables and derivatives margin.</div></div>';
+    (pf.proxyOf ? '<div class="alert" style="margin:12px 0 0">Index holdings: this fund\'s own portfolio file is not available, so the holdings shown are from <a href="?fund=' + pf.proxyOf + '">' + esc(pf.proxyName || 'a fund') + '</a>, which tracks the same index. Index funds hold the same stocks in nearly the same weights; small differences in cash and timing are possible.</div>' : '') +
+    '<div class="note">' + (pf.proxyOf ? 'From the statutory monthly portfolio disclosure of a fund tracking the same index.' : 'From the fund house\'s statutory monthly portfolio disclosure.') + ' Market-cap buckets follow SEBI\'s ranking: Nifty 100 constituents as large cap, Nifty Midcap 150 as mid cap, all other listed stocks as small cap. Cash & others includes TREPS, net receivables and derivatives margin.</div></div>';
 }
 
 /* ── peers ── */
