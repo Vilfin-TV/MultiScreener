@@ -5,7 +5,7 @@ on:
     paths: [.github/workflows/pf_hold_test.yml]
 permissions: {contents: write}
 env:
-  ONLY: "Motilal Oswal,Quantum,The Wealth Company"
+  ONLY: "Motilal Oswal,Quantum,The Wealth Company"   # run 2
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -41,4 +41,4 @@ jobs:
       - run: |
           git config user.name "github-actions[bot]"; git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           git add .probe/hold_test && git commit -m "chore(dev): holdings source test [skip ci]"
-          for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep $((i*5)); done
+          git checkout -- data 2>/dev/null; git clean -fdq data; for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep $((i*5)); done
