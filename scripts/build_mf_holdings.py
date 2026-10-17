@@ -74,23 +74,23 @@ SOURCES = {
     "JM Financial": {"page": "https://www.jmfinancialmf.com/downloads/Portfolio-Disclosure",
                      "pick": r"Monthly(?:%20| )Portfolio", "multi": True},
     "Shriram": {"page": "https://www.shriramamc.in/investor-statutory-disclosures",
-                "pick": r"Monthly-Portfolio-Shriram", "multi": True},
-    "Trust": {"page": "https://www.trustmf.com/disclosures",
-              "pick": r"Monthly-Portfolio-Report", "multi": True},
+                "pick": r"/Monthly-Portfolio-Shriram[^/]*$", "skip": r"half|annual|aaum", "multi": True},
     "Samco": {"page": "https://www.samcomf.com/StatutoryDisclosure",
               "pick": r"Portfolio[_-]Monthly|Monthly[_-]Portfolio", "multi": True},
     "Helios": {"page": "https://www.heliosmf.in/portfolio-disclosure/",
                "pick": r"monthly[-_]portfolio|portfolio[-_]as[-_]on", "skip": SKIP_DEFAULT + r"|overlap", "multi": True},
-    "Baroda BNP Paribas": {"pages": ["https://www.barodabnpparibasmf.in/downloads/monthly-factsheet",
-                                     "https://www.barodabnpparibasmf.in/downloads/monthly-portfolio"],
-                           "page": "https://www.barodabnpparibasmf.in/downloads/monthly-factsheet",
-                           "pick": r"Portfolio_Holdings|monthly[-_]portfolio", "multi": True},
-    "Zerodha": {"page": "https://www.zerodhafundhouse.com/resources/disclosures?source=footer",
-                "pick": r"monthly(?:%20| |_|-)portfolio", "skip": SKIP_DEFAULT + r"|top(?:%20| |-|_)10", "multi": True},
+    "HSBC": {"page": "https://www.assetmanagement.hsbc.co.in/en/mutual-funds/investor-resources/information-library",
+             "pick": r"/mutual-funds/portfolios/document-\d{8}/", "multi": True},
+    "Sundaram": {"page": "https://www.sundarammutual.com/monthly-fortnightly-adhoc-portfolios",
+                 "pick": r"monthly|portfolio", "skip": SKIP_DEFAULT + r"|overlap|adhoc|ad-hoc", "multi": True},
+    "The Wealth Company": {"pages": ["https://www.wealthcompanyamc.in/literature-forms/portfolio-documents/monthly/",
+                                     "https://www.wealthcompanyamc.in/literature-forms/portfolio-documents/fortnightly/"],
+                           "page": "https://www.wealthcompanyamc.in/literature-forms/portfolio-documents/monthly/",
+                           "pick": r"monthly", "skip": SKIP_DEFAULT + r"|overlap", "multi": True},
+    "Edelweiss": {"page": "https://www.edelweissmf.com/statutory/financials-portfolios",
+                  "pick": r"monthly", "skip": SKIP_DEFAULT + r"|weekly|overlap", "multi": True},
     "360 ONE": {"page": "https://www.360.one/asset/mutual-funds/downloads/",
                 "pick": r"monthly[-_ ]?portfolio|portfolio[-_ ]?monthly", "multi": True},
-    "Unifi": {"page": "https://unifimf.com/statutory/", "pick": r"portfolio", "skip": SKIP_DEFAULT + r"|overlap", "multi": True},
-    "LIC": {"page": "https://www.licmf.com/downloads/monthly-portfolio", "pick": r"portfolio", "multi": True},
 }
 MONTHS = {m: i for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
 
@@ -569,6 +569,10 @@ def main():
     large, mid = cap_sets(S)
     results, report = {}, {}
     for amc, info in found.items():
+        y, m = map(int, info["month"].split("-"))
+        if (date.today().year - y) * 12 + date.today().month - m > 4:
+            log.warning("%s: latest portfolio file is for %s — too old, skipped", amc, info["month"])
+            continue
         if meta.get(amc, {}).get("month") == info["month"] and meta[amc].get("funds", 0) > 0 and "--force" not in sys.argv:
             log.info("%s: %s already processed", amc, info["month"])
             continue
