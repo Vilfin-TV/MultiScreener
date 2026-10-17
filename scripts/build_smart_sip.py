@@ -885,8 +885,59 @@ def fund_checks(u, slot, code, ctx):
     if slot == "metal":
         chk("Metal", re.search(ctx["metal"], name, re.I) is not None, f"{ctx['metal']} fund")
     if slot == "theme":
-        chk("Sector valuation", True, f"{ctx.get('sector_label', '')} chosen on valuation and momentum")
+        theme_checks(u, code, ctx, chk)
     return out
+
+
+def ordinal(n):
+    return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
+
+
+def theme_checks(u, code, ctx, chk):
+    """Sector satellite: the sector must still be worth owning, and the fund must be a sound way to own it —
+    compared with the other funds of the same sector, not with the whole sectoral category."""
+    g = lambda c: u.g(code, c)  # noqa: E731
+    row = ctx.get("sector_row") or {}
+    lab = ctx.get("sector_label") or row.get("label") or "sector"
+    vp = row.get("valPct")
+    chk("Sector valuation", vp is None or vp < 0.80,
+        f"{lab} at the {ordinal(round(vp * 100))} percentile of its 10-year valuation (limit 80th)" if vp is not None else f"{lab} — valuation history too short")
+    ol = row.get("outlook") or {}
+    why = ol.get("why") or {}
+    chk("Medium-term sector outlook", ol.get("mt") != "neg", f"{ {'pos': 'positive', 'neu': 'neutral'}.get(ol.get('mt'), 'negative' if ol.get('mt') else 'not rated')} · {why.get('mt') or '6–12 months'}")
+    chk("Long-term sector outlook", ol.get("lt") != "neg", f"{ {'pos': 'positive', 'neu': 'neutral'}.get(ol.get('lt'), 'negative' if ol.get('lt') else 'not rated')} · {why.get('lt') or '3+ years'}")
+    rel = row.get("r6mRel")
+    chk("Sector momentum (6M vs Nifty 50)", rel is None or rel >= -10, f"{rel:+.1f}% vs the Nifty 50 over 6 months (limit −10%)" if rel is not None else "not enough history")
+    # like with like: index funds against the sector's index funds, active funds against its active funds
+    idx = (g("sub") or "").startswith("idx_")
+    peers = [c for c in sector_funds(u, ctx["sector"]) if c != code and (u.g(c, "sub") or "").startswith("idx_") == idx] if ctx.get("sector") else []
+
+    kind = "sector index-fund" if idx else "sector active-fund"
+
+    def peer_med(col):
+        return median([u.g(c, col) for c in peers if u.g(c, col) is not None])
+    for col, lab2, tol, fmt in (("r1y", "1Y return vs sector peers", 3.0, "{:.1f}%"), ("r3y", "3Y return vs sector peers", 2.0, "{:.1f}% a year")):
+        v, m = g(col), peer_med(col)
+        if v is not None and m is not None and len(peers) >= 2:
+            chk(lab2, v >= m - tol, f"{fmt.format(v)} vs {kind} median {fmt.format(m)} (within {tol:.0f} pt)")
+    v, m = g("mdd"), peer_med("mdd")
+    if v is not None and m is not None and len(peers) >= 2:
+        chk("Drawdown vs sector peers", v >= m - 5, f"{v:.1f}% vs {kind} median {m:.1f}%")
+    v, m = g("std"), peer_med("std")
+    if v is not None and m is not None and len(peers) >= 2:
+        chk("Volatility vs sector peers", v <= m * 1.2, f"{v:.1f}% vs {kind} median {m:.1f}% a year")
+    v, m = g("sharpe"), peer_med("sharpe")
+    if v is not None and m is not None and len(peers) >= 2:
+        chk("Risk-adjusted return vs sector peers", v >= m - 0.15, f"Sharpe {v:.2f} vs {kind} median {m:.2f}")
+    pf = u.pf.get(code) or {}
+    eq = (pf.get("mix") or {}).get("equity")
+    if eq is not None:
+        chk("Fully invested in equity", eq >= 90, f"{eq:.0f}% in equities (needs 90%+)")
+    top = pf.get("top") or []
+    if top:
+        chk("Single-stock concentration", top[0][2] <= 35, f"largest holding {top[0][0]} {top[0][2]:.1f}% (limit 35%)")
+    if pf.get("n") is not None:
+        chk("Enough holdings", pf["n"] >= 10, f"{pf['n']} stocks (needs 10+)")
 
 
 def index_key(name: str) -> str:
@@ -1467,7 +1518,7 @@ def main() -> int:
     sector_pick = None                       # most attractive sector with at least one fund passing every check
     for row in sectors:
         ranked, *_ = rank_pool(u, "theme", {"sector": row["key"], "pool_key": None, "metal": None, "regime": regime,
-                                            "sector_label": row["label"]}, cache)
+                                            "sector_label": row["label"], "sector_row": row}, cache)
         row["eligible"] = len(ranked)
         if ranked and sector_pick is None and not row["excluded"]:
             sector_pick = row["key"]
@@ -1498,7 +1549,7 @@ def main() -> int:
                 m = metal_choice if (rk in ("a", "v") and hz in ("h7", "h10")) else "gold"
                 ctx = {"pool_key": pool_key, "metal": m if slot == "metal" else None, "sector": sector if slot == "theme" else None,
                        "style": style if slot == "pioneer" else None,
-                       "regime": regime, "sector_index": sector_row.get("index"), "sector_label": sector_row.get("label"),
+                       "regime": regime, "sector_index": sector_row.get("index"), "sector_label": sector_row.get("label"), "sector_row": sector_row,
                        "metalAdj": 1.0 if gscore >= 2 else (-1.0 if gscore <= -2 else 0.0),
                        "profile": "growth" if rk == "v" else "std"}
                 ctx["ctx_tag"] = f"{pool_key}|{ctx['metal']}|{ctx['sector']}"
