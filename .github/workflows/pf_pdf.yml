@@ -12,9 +12,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {tag: p1, amcs: "Kotak Mahindra|Axis|Bandhan|UTI|Edelweiss|Franklin Templeton|LIC"}
-          - {tag: p2, amcs: "Zerodha|WhiteOak Capital|Jio BlackRock|Navi|NJ|Taurus|Angel One"}
-          - {tag: p3, amcs: "AlphaGrep|Choice|Unifi|ASK|Lakshya|Monarch|HSBC"}
+          - {tag: q1, amcs: "Axis|Bandhan|UTI|LIC|WhiteOak Capital|Navi|NJ|Taurus"}
+          - {tag: q2, amcs: "Angel One|Zerodha|Jio BlackRock|Franklin Templeton|Edelweiss|Kotak Mahindra|HSBC|Union"}
+          - {tag: q3, amcs: "Sundaram|Canara Robeco|quant|Mahindra Manulife|Bank of India|Bajaj Finserv|ITI"}
     steps:
       - uses: actions/checkout@v4
         with: {ref: claude/festive-bell-an714y}
@@ -25,10 +25,10 @@ jobs:
           python -m playwright install --with-deps chromium
       - run: |
           IFS='|' read -ra A <<< "${{ matrix.amcs }}"; i=0
-          for a in "${A[@]}"; do i=$((i+1)); echo "== $a" >> .probe/pdf_${{ matrix.tag }}.log
-            timeout 300 xvfb-run -a python .probe/pdf_probe.py "$a" "${{ matrix.tag }}_$i" >> .probe/pdf_${{ matrix.tag }}.log 2>&1 || echo "   timed out / failed: $a" >> .probe/pdf_${{ matrix.tag }}.log
+          for a in "${A[@]}"; do i=$((i+1)); echo "== $a" >> .probe/v2_${{ matrix.tag }}.log
+            timeout 300 xvfb-run -a python .probe/pdf_probe2.py "$a" "${{ matrix.tag }}_$i" >> .probe/v2_${{ matrix.tag }}.log 2>&1 || echo "   timed out / failed: $a" >> .probe/v2_${{ matrix.tag }}.log
           done
       - run: |
           git config user.name "github-actions[bot]"; git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
-          git add .probe && git commit -m "chore(dev): pdf probe ${{ matrix.tag }} [skip ci]"
+          git add .probe && git commit -m "chore(dev): portfolio page probe v2 ${{ matrix.tag }} [skip ci]"
           for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep $((i*7)); done
