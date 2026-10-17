@@ -25,6 +25,7 @@ on:
     paths:
       - 'scripts/build_etf_momentum.py'
       - 'scripts/verify_etf_momentum.js'
+      - 'scripts/build_etf_extras.py'
       - '.github/workflows/etf_momentum.yml'
 
 permissions:
@@ -120,7 +121,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install --upgrade pip yfinance pandas requests
+        run: pip install --upgrade pip yfinance pandas requests numpy scipy
 
       - name: Set up Node 20
         uses: actions/setup-node@v4
@@ -129,6 +130,9 @@ jobs:
 
       - name: Build ETF momentum data
         run: python scripts/build_etf_momentum.py
+
+      - name: ETF analytics (scorecard, rating, Factor DNA, holdings)
+        run: python scripts/build_etf_extras.py
 
       - name: Verify (page engine vs reference, structure checks)
         run: node scripts/verify_etf_momentum.js
@@ -139,7 +143,7 @@ jobs:
         run: |
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/etf_momentum.json data/etf_hist.json
+          git add data/etf_momentum.json data/etf_hist.json data/etf/d data/etf_extras.json data/etf_holdings.json
           if git diff --staged --quiet; then
             echo "No changes to ETF momentum data."
             exit 0

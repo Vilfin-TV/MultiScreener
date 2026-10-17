@@ -365,6 +365,86 @@ td.num{text-align:right;font-family:'JetBrains Mono',monospace;white-space:nowra
 .pc-tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--border2);border-radius:9px;padding:8px 10px;font-size:12px;box-shadow:var(--shadow-s);opacity:0;transition:opacity .1s;white-space:nowrap;z-index:5}
 .pc-tip.on{opacity:1}
 .pc-tip b{font-family:'JetBrains Mono',monospace}
+/* ═══════════════ RATING · SCORECARD · FACTOR DNA · HOLDINGS · TRADING CHART ═══════════════ */
+.muted{color:var(--text3)}
+.stars{display:inline-flex;gap:1px;color:#f5b301;font-size:12px;line-height:1;vertical-align:-1px;white-space:nowrap}
+.stars i{font-style:normal}.stars i.off{color:var(--surface3)}
+.stars.big{font-size:22px;gap:2px}
+.rt-n{font-family:'JetBrains Mono',monospace;font-size:12.5px}
+.mc-rt{display:inline-flex;align-items:center;gap:4px;font-size:12px}
+.rt-hero{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.rt-s{margin-top:6px}.rt-s b{font-family:'JetBrains Mono',monospace;font-size:28px;line-height:1}.rt-s small{font-size:12px;color:var(--text3);margin-left:2px}
+.rt-rk{text-align:right;font-size:15px}.rt-rk b{font-family:'JetBrains Mono',monospace}.rt-rk small{display:block;font-size:11.5px;color:var(--text3);margin-top:3px}
+.rt-none{display:flex;flex-direction:column;gap:4px;background:var(--surface2);border:1px dashed var(--border2);border-radius:12px;padding:16px;font-size:13px;color:var(--text2);line-height:1.5}
+.rt-none b{color:var(--text);font-size:14px}
+.rt-te{font-size:12.5px;color:var(--text2);margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.rt-te b{font-family:'JetBrains Mono',monospace;color:var(--text)}.rt-te b.pos{color:var(--pos)}.rt-te b.neg{color:var(--neg)}
+.mt{margin-bottom:11px}
+.mt-k{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;font-weight:600}
+.mt-k>span{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.mt-k b{font-family:'JetBrains Mono',monospace;font-size:14px}.mt-k b small{font-size:10.5px;color:var(--text3);font-weight:400}
+.mt-bar{position:relative;height:7px;border-radius:4px;background:var(--surface3);margin-top:6px}
+.mt-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.mt-bar em{position:absolute;top:-3px;width:2px;height:13px;margin-left:-1px;background:var(--text);opacity:.6;border-radius:1px}
+.mt-s{font-size:11.5px;color:var(--text3);margin-top:4px;line-height:1.45}
+.sc-top{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.4fr);gap:14px;margin:4px 0 14px;align-items:start}
+.sc-ov{display:flex;gap:14px;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px}
+.sc-ring{--v:0;flex:none;width:78px;height:78px;border-radius:50%;display:flex;align-items:baseline;justify-content:center;padding-top:22px;background:radial-gradient(closest-side,var(--surface2) 78%,transparent 80% 100%),conic-gradient(var(--accent) calc(var(--v)*1%),var(--surface3) 0)}
+.sc-ring b{font-family:'JetBrains Mono',monospace;font-size:24px}.sc-ring small{font-size:11px;color:var(--text3)}
+.sc-ov-k{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text3)}
+.sc-ov-r{font-size:16px;margin-top:4px}.sc-ov-r b{font-family:'JetBrains Mono',monospace}
+.sc-ov-m{font-size:12px;color:var(--text2);margin-top:3px}
+.sc-lead .pc-top{align-items:center;margin-bottom:8px}
+table.xt{min-width:0!important}
+.xt td,.xt th{padding:8px 10px}
+.xt tr.go{cursor:pointer}.xt tr.go:hover{background:var(--surface2)}
+.xt tr.me td{background:var(--accent-soft)}
+.xt .t-name{max-width:340px}
+.fx-chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.fx-chips div{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 11px;min-width:0}
+.fx-chips small{display:block;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text3)}
+.fx-chips b{display:block;font-size:14px;margin-top:3px;overflow-wrap:anywhere}
+.fx-b{display:grid;grid-template-columns:120px minmax(0,1fr) 52px;gap:10px;align-items:center;font-size:12.5px;padding:4px 0}
+.fx-b>div{height:8px;border-radius:4px;background:var(--surface3);overflow:hidden}
+.fx-b>div i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px}
+.fx-b b{font-family:'JetBrains Mono',monospace;text-align:right}
+.fx-b.z{color:var(--text3)}
+.ho-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.ho-k div{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 11px}
+.ho-k small{display:block;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text3)}
+.ho-k b{display:block;font-family:'JetBrains Mono',monospace;font-size:15px;margin-top:3px}
+.ho-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:22px}
+.ho-h{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.ho-r{display:grid;grid-template-columns:22px minmax(0,1fr) 70px 54px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12.5px}
+.ho-r.s{grid-template-columns:minmax(0,1fr) 90px 50px}
+.ho-i{color:var(--text3);font-size:11px;text-align:right}
+.ho-n{min-width:0}.ho-n b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ho-n small{display:block;color:var(--text3);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ho-w{height:6px;border-radius:3px;background:var(--surface3);overflow:hidden}.ho-w i{display:block;height:100%;background:var(--accent2);border-radius:3px}
+.ho-v{font-family:'JetBrains Mono',monospace;text-align:right;font-size:12px}
+.cap-bar{display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px;background:var(--surface3)}
+.cap-bar i{display:block;height:100%}
+.cap-bar i.large,.cap-leg i.large{background:var(--accent)}.cap-bar i.mid,.cap-leg i.mid{background:var(--accent2)}.cap-bar i.small,.cap-leg i.small{background:#f59e0b}
+.cap-leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin-top:8px}
+.cap-leg span{display:inline-flex;align-items:center;gap:6px}.cap-leg i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.tr-ctl{display:flex;gap:8px;flex-wrap:wrap}
+.tr-box{height:360px}
+.tr-box .ma20{stroke:#f59e0b}.tr-box .ma50{stroke:#a855f7}.tr-box .ma200{stroke:var(--text2)}
+.pc-leg i.ln.ma20{background:#f59e0b}.pc-leg i.ln.ma50{background:#a855f7}.pc-leg i.ln.ma200{background:var(--text2)}
+.tr-ohlc{display:grid;grid-template-columns:auto auto auto auto;gap:2px 8px;margin-bottom:3px}
+.tr-ohlc span{color:var(--text3)}
+.hint-pop{position:absolute;z-index:1000;background:var(--surface);color:var(--text);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5;box-shadow:0 10px 30px rgba(0,0,0,.25);text-transform:none;letter-spacing:0;font-weight:500}
+.hint{position:relative;display:inline-flex;width:15px;height:15px;border-radius:50%;border:1px solid var(--border2);font-size:9.5px;align-items:center;justify-content:center;color:var(--text3);cursor:help;flex-shrink:0;text-transform:none;letter-spacing:0;font-weight:600}
+.hint::after{content:'';position:absolute;inset:-8px}
+@media (max-width:760px){
+  .sc-top,.ho-grid{grid-template-columns:minmax(0,1fr)}
+  .ho-k{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fx-b{grid-template-columns:96px minmax(0,1fr) 48px}
+  .tr-box{height:290px}
+  .rt-rk{text-align:left}
+  .xt .t-name{max-width:180px}
+}
+@media (max-width:520px){.xt .xt-rt{display:none}}
+@media (max-width:420px){.fx-chips{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.ho-r{grid-template-columns:18px minmax(0,1fr) 44px 50px}}
 .cy-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
 .cy-row:last-child{border-bottom:none}
 .cy-y{font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:600;color:var(--text2)}
@@ -670,11 +750,14 @@ details.faq ul+p{margin-top:8px}
         <option value="2">Traded ≥ ₹1 crore/day</option>
         <option value="3">Traded ≥ ₹10 crore/day</option>
       </select>
+      <select class="sel sm" id="tRate" aria-label="Rating"><option value="">Any rating</option><option value="5">★★★★★ only</option><option value="4">★★★★ &amp; above</option><option value="3">★★★ &amp; above</option></select>
       <select class="sel sm" id="tAmc" aria-label="Fund house"><option value="">All fund houses</option></select>
       <select class="sel sm" id="tHist" aria-label="Track record"><option value="">Any track record</option><option value="1">1Y+ history</option><option value="3">3Y+ history</option><option value="5">5Y+ history</option></select>
       <select class="sel sm" id="tTer" aria-label="Expense ratio"><option value="">Any expense ratio</option><option value="0.1">≤ 0.10%</option><option value="0.25">≤ 0.25%</option><option value="0.5">≤ 0.50%</option><option value="1">≤ 1.00%</option></select>
       <select class="sel" id="tSort" aria-label="Sort">
         <option value="score">Sort: Strongest first</option>
+        <option value="rating">Sort: VilfinTV rating</option>
+        <option value="vscore">Sort: VilfinTV score 3Y</option>
         <option value="rsr">Sort: RS-Ratio</option>
         <option value="rsm">Sort: RS-Momentum</option>
         <option value="r1m">Sort: 1M return</option>
@@ -771,6 +854,27 @@ details.faq ul+p{margin-top:8px}
       <details class="faq" open><summary>How current is the data?</summary><p>Prices are end-of-day NSE closes, refreshed after market close every trading day. The latest week includes trading up to the date shown at the top of the page. Newly listed ETFs are added automatically once they have enough trading history.</p></details>
       <details class="faq"><summary>What does "Confidence" mean?</summary><p>It cross-checks the mode against simple relative returns: whether the ETF has actually beaten the benchmark over 13 weeks, whether its recent relative return is improving, and whether it trades actively. <b>High</b> means all checks agree.</p></details>
       <details class="faq"><summary>Why is an ETF "Not classified"?</summary><p>At least 20 weeks of clean trading history are needed. Recently listed, suspended or rarely traded ETFs are listed but not classified, to avoid misleading signals.</p></details>
+      <details class="faq"><summary>How is the VilfinTV ETF rating calculated?</summary><p>Every ETF with at least one year of trading history is compared only with <b>similar ETFs</b>: core (broad market, mid and small cap), satellite (sector, thematic and factor), global, hybrid, gold, silver, liquid and bond ETFs are ranked separately. Six parts are scored from 0 to 100 against those peers, then combined:</p>
+        <table class="faq-ex"><thead><tr><th>Part</th><th>Weight</th><th>What it measures</th></tr></thead><tbody>
+        <tr><td>Cost</td><td>20%</td><td>Expense ratio — lower is better</td></tr>
+        <tr><td>Liquidity</td><td>20%</td><td>Average traded value per day — easier to buy and sell near fair value</td></tr>
+        <tr><td>Tracking &amp; pricing</td><td>15%</td><td>Closing premium / discount to NAV and tracking error vs ETFs on the same index</td></tr>
+        <tr><td>Returns</td><td>20%</td><td>1-, 3- and 5-year returns</td></tr>
+        <tr><td>Risk</td><td>15%</td><td>Volatility, worst fall and return per unit of risk</td></tr>
+        <tr><td>Size &amp; track record</td><td>10%</td><td>Fund size and years since listing</td></tr></tbody></table>
+        <p>Stars follow a bell curve within each peer group: top 10% get ★★★★★, the next 22.5% ★★★★, the middle 35% ★★★, the next 22.5% ★★ and the bottom 10% ★. When a part is not available (for example an undisclosed expense ratio) the other weights are re-balanced. Very new or thinly traded ETFs show "Not rated". The rating is an educational comparison, not a recommendation — a 5-star sector ETF can still fall sharply if its sector does.</p></details>
+      <details class="faq"><summary>What is the VilfinTV scorecard (consistency, recency, volatility)?</summary><p>The same scorecard as on our mutual fund pages, built from weekly ETF prices and compared within the same peer group:</p><ul>
+        <li><b>Consistency (40%)</b> — the share of month-ends over the last 3 (or 5) years when the ETF's rolling 1-year return was in the <b>top half</b> of its peers. High consistency means it did well again and again, not just once.</li>
+        <li><b>Recency (30%)</b> — how its 3- and 6-month returns rank right now.</li>
+        <li><b>Low volatility (30%)</b> — how calm its weekly returns were; steadier ETFs score higher.</li></ul>
+        <p>Overall score = 40% consistency + 30% recency + 30% low volatility, with the rank among peers and the "Category leaders" table. Use the <b>3 years / 5 years</b> toggle to compare horizons. Liquid and bond ETFs are not scored because their returns differ too little; ETFs with less than 3 years of prices show "Not scored".</p></details>
+      <details class="faq"><summary>What is Factor DNA?</summary><p>Factor DNA shows <b>what really drives an ETF's returns</b>. Three years of its weekly returns are compared with ETFs tracking market (Nifty 50), mid cap, small cap, momentum, value, quality, low volatility, US and cash-like indices, and the closest mix is found (a method called returns-based style analysis). For example, a momentum ETF shows mostly "Momentum", while a Nifty 50 ETF shows almost 100% "Market".</p><p>"Explained" tells you how well that mix fits. Below about 60%, the ETF mostly follows its own sector or theme (IT, PSU, defence and so on), so treat the weights as a loose guide. Use Factor DNA to avoid owning several ETFs that are secretly the same bet.</p></details>
+      <details class="faq"><summary>Where do the ETF holdings come from?</summary><p>Fund houses publish every scheme's full portfolio each month. When an ETF's own monthly portfolio is available, we show it ("Official monthly portfolio"). Most ETFs track an index, and every fund on the same index must hold the same stocks in the same weights — so when the ETF's own file is not readable yet, we show the official portfolio of the <b>largest fund tracking the same index</b>, clearly labelled "Index holdings" with the source fund named. Weights can differ slightly from the ETF's own (cash, timing). Portfolios are shown for up to 45 days after their month-end. Gold, silver, liquid and bond ETFs hold metal or debt instruments, not company shares, so no stock list is shown.</p></details>
+      <details class="faq"><summary>How do I read the trading chart?</summary><ul>
+        <li><b>Candles</b> — each candle is one trading day: the thick body runs from the open to the close (green = closed higher than it opened, red = lower) and the thin wicks show the day's high and low. Switch to <b>Line</b> for a simple closing-price view.</li>
+        <li><b>Moving averages</b> — the 20-day (short-term), 50-day (medium-term) and 200-day (long-term) averages smooth out daily noise. Price above a rising 200-day average is generally a healthy long-term trend; price below a falling one is a weak trend.</li>
+        <li><b>Volume</b> — the bars at the bottom show how many units changed hands. Rising prices on rising volume are more convincing; very low volume means wider bid-ask spreads.</li>
+        <li>Prices are end-of-day closes. For live prices and the live iNAV during market hours, use the "Live quote &amp; iNAV" link and buy with a limit order close to the iNAV.</li></ul></details>
       <details class="faq"><summary>How are returns, risk and fund facts calculated?</summary><p>Returns up to one year use NSE closing prices. Three-year, five-year and since-listing returns are annualised and use each ETF's official NAV history, which is adjusted for unit splits. Volatility, beta and correlation use one year of daily prices; maximum drawdown covers three years. Expense ratio, fund size, NAV, benchmark and scheme documents come from official scheme disclosures. Premium / discount compares the closing price with that day's NAV — check the live iNAV on the exchange before trading.</p></details>
       <details class="faq"><summary>Which benchmark should I use?</summary><p>Nifty 50 suits most equity ETFs. Compare sector ETFs with their parent index (e.g. Bank ETFs vs Nifty Bank) to see whether they lead within their sector, and gold or silver ETFs vs Gold.</p></details>
     </div>
@@ -905,7 +1009,7 @@ var PAGE = 40;
 /* ─────────── state ─────────── */
 var D = null, P = null;                  // data, params
 var bySym = {}, cache = {};              // computed per benchmark
-var state = {bench:null, sel:null, tab:'all', cat:'', role:'', trend:'', liq:'', amc:'', hist:'', ter:'', view:'momentum', range:'3Y', filter:'', sort:'score', dir:-1, shown:PAGE, showAll:false};
+var state = {bench:null, sel:null, tab:'all', cat:'', role:'', trend:'', liq:'', amc:'', hist:'', ter:'', view:'momentum', range:'3Y', scv:'3', scl:'o', trg:'6M', tct:'c', rate:'', filter:'', sort:'score', dir:-1, shown:PAGE, showAll:false};
 var HIST = null, HIST_P = null;
 var LOW_FIRST = {sym:1, cat:1, ter:1, vol:1};
 var acIdx = -1, acList = [];
@@ -1090,6 +1194,8 @@ function sortVal(r, k){
     case 'tv': return e.tv;
     case 'vol': case 'mdd': case 'beta': case 'rr3': case 'prem': return e[k];
     case 'ter': return x.ter; case 'aum': return x.aum;
+    case 'rating': var o = exOf(e.s); return o && o.rt ? o.rt.st * 1000 + o.rt.s : null;
+    case 'vscore': var o2 = exOf(e.s); return o2 && o2.sc && o2.sc['3'] ? o2.sc['3'].o : null;
     default: return r.score;
   }
 }
@@ -1102,6 +1208,8 @@ var COLS = {
   sym:{n:'ETF', f:function(r){ return '<div class="t-sym">' + nseLink(r.e.s) + '</div><div class="t-name" title="' + esc(r.e.n) + '">' + esc(r.e.n) + '</div><div class="t-role">' + roleTag(r.e) + '</div>'; }},
   trend:{n:'Trend S·M·L', t:'Short (1–3 months) · Medium (6–12 months) · Long term (1–3 years): ▲ positive · ● neutral · ▼ negative', f:function(r){ return trendChips(r.e); }},
   cat:{n:'Category', cls:'t-cat', f:function(r){ return esc(r.e.k || '–'); }},
+  rating:{n:'Rating', num:1, t:'VilfinTV rating (1–5 stars, score out of 100) vs comparable ETFs: cost, liquidity, tracking, returns, risk, size', f:function(r){ return ratingCell(r.e); }},
+  vscore:{n:'Score 3Y', num:1, t:'VilfinTV scorecard (3 years): 40% consistency + 30% recency + 30% low volatility, rank among comparable ETFs', f:function(r){ return scoreCell(r.e); }},
   mode:{n:'Mode', f:function(r){ return pill(r); }},
   rsr:{n:'RS-Ratio', num:1, f:function(r){ return fmt(r.rsr); }},
   rsm:{n:'RS-Mom.', num:1, f:function(r){ return fmt(r.rsm); }},
@@ -1124,9 +1232,9 @@ var COLS = {
   tv:{n:'Liquidity', num:1, t:'Avg. daily traded value (20 days)', f:function(r){ return liqBars(r.e.tv) + ' ' + fmtTv(r.e.tv); }}
 };
 var VIEWS = {
-  momentum:{cols:['sym','cat','mode','trend','rsr','rsm','r1m','r3m','r1y','tv'], m:[['RS-Ratio',function(r){ return fmt(r.rsr); }],['RS-Mom.',function(r){ return fmt(r.rsm); }],['3M',function(r){ return fmtPct((r.e.r || {})['3m']); }],['1Y',function(r){ return fmtPct((r.e.r || {})['1y']); }]]},
-  returns:{cols:['sym','cat','trend','r1m','r3m','r6m','ytd','r1y','r3y','r5y','si'], m:[['1Y',function(r){ return fmtPct((r.e.r || {})['1y']); }],['3Y',function(r){ return fmtPct((r.e.r || {})['3y']); }],['5Y',function(r){ return fmtPct((r.e.r || {})['5y']); }],['YTD',function(r){ return fmtPct((r.e.r || {}).ytd); }]]},
-  risk:{cols:['sym','cat','trend','ter','aum','prem','vol','mdd','beta','rr3','tv'], m:[['TER',function(r){ return fmtTer((r.e.x || {}).ter); }],['Size',function(r){ return fmtAum((r.e.x || {}).aum); }],['Vol.',function(r){ return r.e.vol != null ? fmtNum(r.e.vol, 1) + '%' : '–'; }],['Prem',function(r){ return fmtPrem(r.e.prem); }]]}
+  momentum:{cols:['sym','cat','mode','trend','rating','rsr','rsm','r1m','r3m','r1y','tv'], m:[['RS-Ratio',function(r){ return fmt(r.rsr); }],['RS-Mom.',function(r){ return fmt(r.rsm); }],['3M',function(r){ return fmtPct((r.e.r || {})['3m']); }],['1Y',function(r){ return fmtPct((r.e.r || {})['1y']); }]]},
+  returns:{cols:['sym','cat','trend','rating','vscore','r1m','r3m','r6m','ytd','r1y','r3y','r5y','si'], m:[['1Y',function(r){ return fmtPct((r.e.r || {})['1y']); }],['3Y',function(r){ return fmtPct((r.e.r || {})['3y']); }],['5Y',function(r){ return fmtPct((r.e.r || {})['5y']); }],['YTD',function(r){ return fmtPct((r.e.r || {}).ytd); }]]},
+  risk:{cols:['sym','cat','trend','rating','ter','aum','prem','vol','mdd','beta','rr3','tv'], m:[['TER',function(r){ return fmtTer((r.e.x || {}).ter); }],['Size',function(r){ return fmtAum((r.e.x || {}).aum); }],['Vol.',function(r){ return r.e.vol != null ? fmtNum(r.e.vol, 1) + '%' : '–'; }],['Prem',function(r){ return fmtPrem(r.e.prem); }]]}
 };
 function filtered(){
   var rows = compute(state.bench).rows, f = state.filter.trim().toUpperCase(), minLiq = +state.liq || 0;
@@ -1141,6 +1249,7 @@ function filtered(){
       if (state.trend === 'all' && !(T.st.t === 'pos' && T.mt.t === 'pos' && T.lt.t === 'pos')) return false; }
     if (minLiq && liqLevel(r.e.tv) < minLiq + 1) return false;
     if (state.amc && r.e.a !== state.amc) return false;
+    if (state.rate){ var ox = exOf(r.e.s); if (!ox || !ox.rt || ox.rt.st < +state.rate) return false; }
     if (state.hist && yearsOf(r.e) < +state.hist) return false;
     if (state.ter && !(r.e.x && r.e.x.ter != null && r.e.x.ter <= +state.ter)) return false;
     if (f && (r.e.s + ' ' + r.e.n + ' ' + (r.e.u || '') + ' ' + (r.e.a || '')).toUpperCase().indexOf(f) < 0) return false;
@@ -1224,7 +1333,7 @@ function renderTable(){
   $('cardsM').innerHTML = show.map(function(r){
     var e = r.e;
     return '<div class="mc' + (sel === e.s ? ' sel-row' : '') + '" data-s="' + esc(e.s) + '" tabindex="0"><div class="mc-top"><span class="t-sym">' + nseLink(e.s) + '</span>' + pill(r) + '</div>' +
-      '<div class="mc-name">' + esc(e.n) + '</div><div class="mc-tags">' + roleTag(e) + trendChips(e) + '</div><div class="mc-row">' + V.m.map(function(m){ return '<div>' + m[0] + '<b>' + m[1](r) + '</b></div>'; }).join('') + '</div></div>';
+      '<div class="mc-name">' + esc(e.n) + '</div><div class="mc-tags">' + roleTag(e) + trendChips(e) + (exOf(e.s) && exOf(e.s).rt ? '<span class="mc-rt">' + ratingCell(e) + '</span>' : '') + '</div><div class="mc-row">' + V.m.map(function(m){ return '<div>' + m[0] + '<b>' + m[1](r) + '</b></div>'; }).join('') + '</div></div>';
   }).join('');
   $('moreBtn').style.display = list.length > state.shown ? '' : 'none';
   $('moreBtn').textContent = 'Show more (' + (list.length - state.shown) + ' remaining)';
@@ -1455,6 +1564,196 @@ function glanceCard(e, x){
     '<div class="gl-chk">' + chk.map(function(c){ return '<div><span>' + c[0] + '</span><span>' + c[1] + '</span></div>'; }).join('') + '</div>' +
     '<div class="note" style="margin-top:12px"><span>ℹ️</span><span>Trends describe past price behaviour and can change quickly; they are an educational aid, not a buy or sell signal. Positive = price above its moving average and rising over the period; negative = below and falling; otherwise neutral.</span></div></div>';
 }
+/* ─────────── VilfinTV analytics: rating, scorecard, Factor DNA, holdings, trading chart ─────────── */
+var EX = null, EX_P = null, HOLD = null, HOLD_P = null, DAILY = {}, DAILY_P = {};
+function getJSON(url){ return fetch(url, {cache:'default'}).then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); }
+function loadEx(){ if (!EX_P) EX_P = getJSON('data/etf_extras.json?v=' + encodeURIComponent(D.generated)).then(function(j){ EX = j; return j; }).catch(function(e){ EX_P = null; throw e; }); return EX_P; }
+function loadHold(){ if (!HOLD_P) HOLD_P = getJSON('data/etf_holdings.json?v=' + encodeURIComponent(D.generated)).then(function(j){ HOLD = j.etfs || {}; return HOLD; }).catch(function(e){ HOLD_P = null; throw e; }); return HOLD_P; }
+function loadDaily(s){ if (!DAILY_P[s]) DAILY_P[s] = getJSON('data/etf/d/' + encodeURIComponent(s) + '.json?v=' + encodeURIComponent(D.generated)).then(function(j){ DAILY[s] = j; return j; }).catch(function(e){ delete DAILY_P[s]; throw e; }); return DAILY_P[s]; }
+function exOf(s){ return EX && EX.etfs ? EX.etfs[s] || null : null; }
+function starsHtml(n, big){ var h = '<span class="stars' + (big ? ' big' : '') + '" aria-label="' + n + ' out of 5 stars">'; for (var i = 1; i <= 5; i++) h += '<i' + (i <= n ? '' : ' class="off"') + '>★</i>'; return h + '</span>'; }
+function ratingCell(e){
+  if (!EX) return '<span class="muted">…</span>';
+  var o = exOf(e.s); if (!o || !o.rt) return '<span class="muted" title="' + esc(notRatedWhy(e)) + '">Not rated</span>';
+  return starsHtml(o.rt.st) + ' <b class="rt-n">' + o.rt.s + '</b>';
+}
+function scoreCell(e){
+  if (!EX) return '<span class="muted">…</span>';
+  var o = exOf(e.s), c = o && o.sc && o.sc['3'];
+  return c ? '<b class="rt-n">' + Math.round(c.o) + '</b><span class="muted"> #' + c.rk + '/' + c.n + '</span>' : '<span class="muted">–</span>';
+}
+function notRatedWhy(e){
+  var o = exOf(e.s), g = o && EX.groups[o.g];
+  if (yearsOf(e) < 1) return 'Needs at least 1 year of trading history.';
+  if ((e.tv || 0) < 0.01) return 'Too thinly traded to compare fairly.';
+  if (!e.r || e.r['1y'] == null) return 'Needs a 1-year return.';
+  if (g && g.n < 5) return 'Too few comparable ETFs to rank.';
+  return 'Not enough comparable data yet.';
+}
+var RT_PARTS = [['cost','Cost','Expense ratio vs peers — lower is better'],['liq','Liquidity','Average traded value per day — easier to buy and sell near fair value'],['trk','Tracking & pricing','Closing premium / discount to NAV and tracking error vs ETFs on the same index'],['ret','Returns','1-, 3- and 5-year returns vs peers'],['risk','Risk','Volatility, worst fall and return per unit of risk'],['size','Size & track record','Fund size and years since listing']];
+function meter(label, v, sub, med, hint){
+  return '<div class="mt"><div class="mt-k"><span>' + label + (hint ? ' <span class="hint" tabindex="0" data-tip="' + esc(hint) + '">?</span>' : '') + '</span><b>' + (v == null ? '–' : Math.round(v)) + '<small>/100</small></b></div>' +
+    '<div class="mt-bar"><i style="width:' + (v == null ? 0 : Math.max(2, Math.min(100, v))) + '%"></i>' + (med != null ? '<em style="left:' + Math.max(0, Math.min(100, med)) + '%" title="Peer median ' + Math.round(med) + '"></em>' : '') + '</div>' +
+    (sub ? '<div class="mt-s">' + sub + '</div>' : '') + '</div>';
+}
+function ratingCard(e){
+  var h = '<div class="card dcard"><div class="sec-title">VilfinTV Rating</div><div class="dsub">Cost, liquidity, tracking, returns, risk and size — ranked against comparable ETFs</div>';
+  if (!EX) return h + '<div class="skel" style="height:220px"></div></div>';
+  var o = exOf(e.s), rt = o && o.rt, g = o && EX.groups[o.g], W = EX.ratingW || {};
+  if (!rt) return h + '<div class="rt-none"><b>Not rated</b><span>' + esc(notRatedWhy(e)) + '</span></div></div>';
+  h += '<div class="rt-hero"><div>' + starsHtml(rt.st, true) + '<div class="rt-s"><b>' + rt.s + '</b><small>/100</small></div></div>' +
+    '<div class="rt-rk">Rank <b>#' + rt.rk + '</b> of ' + rt.n + '<small>' + esc(g ? g.name : '') + '</small></div></div>';
+  h += RT_PARTS.map(function(p){ var v = rt.p[p[0]]; return v == null ? '' : meter(p[1] + ' <span class="muted">· ' + W[p[0]] + '%</span>', v, null, null, p[2]); }).join('');
+  var missing = RT_PARTS.filter(function(p){ return rt.p[p[0]] == null; }).map(function(p){ return p[1].toLowerCase(); });
+  if (o.te) h += '<div class="rt-te">Tracking error <b>' + fmtNum(o.te.te) + '%</b> a year vs ' + (o.te.n - 1) + ' other ETF' + (o.te.n > 2 ? 's' : '') + ' on the same index' + (o.te.td1 != null ? ' · 1-year tracking difference <b class="' + (o.te.td1 >= 0 ? 'pos' : 'neg') + '">' + (o.te.td1 >= 0 ? '+' : '') + fmtNum(o.te.td1) + '%</b>' : '') + '</div>';
+  h += '<div class="note" style="margin-top:12px"><span>ℹ️</span><span>Stars follow a bell curve within ' + esc(g ? g.name.toLowerCase() : 'peers') + ': top 10% ★★★★★, next 22.5% ★★★★, middle 35% ★★★, next 22.5% ★★, bottom 10% ★.' + (missing.length ? ' Not available for this ETF: ' + esc(missing.join(', ')) + ' (weights re-balanced).' : '') + ' Educational comparison, not a recommendation.</span></div></div>';
+  return h;
+}
+function scoreCard(e){
+  var h = '<div class="card dcard wide"><div class="pc-top"><div><div class="sec-title">VilfinTV Scorecard</div><div class="dsub">Consistency, recency and volatility vs comparable ETFs · weekly prices</div></div>' +
+    '<div class="pc-seg" id="scSeg">' + [['3','3 years'],['5','5 years']].map(function(x){ return '<button type="button" data-sv="' + x[0] + '"' + (state.scv === x[0] ? ' class="on"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div></div>';
+  if (!EX) return h + '<div class="skel" style="height:220px"></div></div>';
+  var o = exOf(e.s), c = o && o.sc && o.sc[state.scv], g = o && EX.groups[o.g];
+  if (!c){
+    var why = roleOf(e) === 'debt' ? 'Liquid and bond ETFs are not scored — their returns differ too little for a fair ranking. Compare their cost, liquidity and tracking in the rating instead.'
+      : (o && o.sc && o.sc[state.scv === '3' ? '5' : '3']) ? 'No ' + state.scv + '-year score — switch to the ' + (state.scv === '3' ? '5' : '3') + '-year view.'
+      : 'Needs ' + (state.scv === '5' ? 'about 4' : '3') + ' years of weekly prices and at least 5 comparable ETFs.';
+    return h + '<div class="rt-none"><b>Not scored</b><span>' + esc(why) + '</span></div></div>';
+  }
+  h += '<div class="sc-top"><div class="sc-ov"><div class="sc-ring" style="--v:' + c.o + '"><b>' + Math.round(c.o) + '</b><small>/100</small></div><div><div class="sc-ov-k">VilfinTV score · ' + state.scv + 'Y</div><div class="sc-ov-r">Rank <b>#' + c.rk + '</b> of ' + c.n + '</div><div class="sc-ov-m">' + esc(g ? g.name : '') + ' · peer median ' + Math.round(c.med.o) + '</div></div></div>' +
+    '<div class="sc-ms">' +
+    meter('Consistency <span class="muted">· 40%</span>', c.c, 'Rank #' + c.rkc + ' of ' + c.n + ' · in the top half of peers at ' + Math.round(c.c) + '% of month-ends (rolling 1-year return)', c.med.c, 'Share of month-ends over the last ' + state.scv + ' years when its rolling 1-year return was in the top half of its peers.') +
+    meter('Recency <span class="muted">· 30%</span>', c.r, 'Rank #' + c.rkr + ' of ' + c.n + ' · 3- and 6-month return rank', c.med.r, 'Average percentile rank of its 3-month and 6-month returns among peers.') +
+    meter('Low volatility <span class="muted">· 30%</span>', c.v, 'Rank #' + c.rkv + ' of ' + c.n + ' · ' + fmtNum(c.sd) + '% a year (weekly returns)', c.med.v, 'Percentile rank of the annualised standard deviation of weekly returns over ' + state.scv + ' years — calmer ETFs score higher.') +
+    '</div></div>';
+  // leaders
+  var key = state.scl, KN = {o:'Overall', c:'Consistency', r:'Recency', v:'Low volatility'};
+  var peers = Object.keys(EX.etfs).filter(function(s){ var x = EX.etfs[s]; return x.g === o.g && x.sc && x.sc[state.scv]; }).map(function(s){ return {s:s, c:EX.etfs[s].sc[state.scv]}; });
+  peers.sort(function(a, b){ return b.c[key] - a.c[key] || b.c.o - a.c.o || (a.s < b.s ? -1 : 1); });
+  var top = peers.slice(0, 5), me = -1; peers.forEach(function(p, i){ if (p.s === e.s) me = i; });
+  if (me >= 5) top.push(peers[me]);
+  h += '<div class="sc-lead"><div class="pc-top"><div class="sc-ov-k">Category leaders · ' + esc(g ? g.name : '') + '</div><div class="pc-seg" id="scLead">' + ['o','c','r','v'].map(function(k){ return '<button type="button" data-sl="' + k + '"' + (key === k ? ' class="on"' : '') + '>' + KN[k] + '</button>'; }).join('') + '</div></div>' +
+    '<div class="ptbl-wrap"><div class="ptbl"><table class="xt"><thead><tr><th class="num">#</th><th>ETF</th><th class="num">' + KN[key] + '</th>' + (key !== 'o' ? '<th class="num">Overall</th>' : '') + '<th class="num xt-rt">Rating</th></tr></thead><tbody>' +
+    top.map(function(p){ var i = peers.indexOf(p), en = bySym[p.s] || {}; return '<tr class="go' + (p.s === e.s ? ' me' : '') + '" data-go="' + esc(p.s) + '"><td class="num">' + (i + 1) + '</td><td><b>' + esc(p.s) + '</b><div class="t-name">' + esc(en.n || '') + '</div></td><td class="num"><b>' + Math.round(p.c[key]) + '</b></td>' + (key !== 'o' ? '<td class="num">' + Math.round(p.c.o) + '</td>' : '') + '<td class="num xt-rt">' + ratingCell(en) + '</td></tr>'; }).join('') +
+    '</tbody></table></div></div></div>';
+  h += '<div class="note" style="margin-top:12px"><span>ℹ️</span><span>Overall score = 40% consistency + 30% recency + 30% low volatility, the same method as the VilfinTV mutual fund scorecard. Based on market prices, so premiums / discounts to NAV are included. Past consistency does not guarantee future returns.</span></div></div>';
+  return h;
+}
+var FX_N = {core:'Market (Nifty 50)', mid:'Mid cap', small:'Small cap', mom:'Momentum', val:'Value', qual:'Quality', lowvol:'Low volatility', us:'US / global', cash:'Cash-like'};
+function factorCard(e){
+  var h = '<div class="card dcard"><div class="sec-title">Factor DNA</div><div class="dsub">What drives this ETF — style analysis of 3 years of weekly returns</div>';
+  if (!EX) return h + '<div class="skel" style="height:220px"></div></div>';
+  var o = exOf(e.s), f = o && o.f, rk = roleOf(e);
+  if (!f) return h + '<div class="rt-none"><b>Not available</b><span>' + (rk === 'debt' || rk === 'com' ? 'Factor DNA describes equity ETFs; this ETF holds ' + (rk === 'com' ? 'precious metal' : 'bonds or overnight money') + '.' : 'Needs 2 years of weekly prices.') + '</span></div></div>';
+  var weak = f.r2 < 60, keys = Object.keys(f.w).sort(function(a, b){ return f.w[b] - f.w[a]; });
+  h += '<div class="fx-chips"><div><small>Style</small><b>' + esc(f.primary) + (f.secondary && f.secondary.length ? ' · ' + esc(f.secondary.join(', ')) : '') + '</b></div><div><small>Size</small><b>' + esc(f.size || '–') + '</b></div><div><small>Explained</small><b>' + Math.round(f.r2) + '%</b></div></div>';
+  h += '<div class="fx-bars">' + keys.map(function(k){ var v = f.w[k]; return '<div class="fx-b' + (v < 0.5 ? ' z' : '') + '"><span>' + FX_N[k] + '</span><div><i style="width:' + Math.max(v > 0 ? 1.5 : 0, v) + '%"></i></div><b>' + fmtNum(v, 1) + '%</b></div>'; }).join('') + '</div>';
+  h += '<div class="note" style="margin-top:12px"><span>' + (weak ? '⚠️' : 'ℹ️') + '</span><span>' + (weak ? 'Only ' + Math.round(f.r2) + '% of its weekly moves are explained by these broad factors — its returns come mainly from its own sector or theme, so read the weights as a loose guide.' : 'Each weight shows how much of its weekly returns behaves like that factor index; together they explain ' + Math.round(f.r2) + '% of its moves.') + ' Factors are measured with ETFs tracking the matching indices.</span></div></div>';
+  return h;
+}
+function holdCard(e){
+  return '<div class="card dcard wide"><div class="sec-title">Holdings</div><div class="dsub" id="hoSub">Latest monthly portfolio</div><div id="hoBox"><div class="skel" style="height:200px"></div></div></div>';
+}
+function fillHold(e){
+  var box = $('hoBox'); if (!box || !HOLD) return;
+  var rk = roleOf(e), p = HOLD[e.s];
+  if (!p){
+    box.innerHTML = '<div class="rt-none"><b>' + (rk === 'com' || rk === 'debt' ? 'No company holdings' : 'Not available yet') + '</b><span>' + (rk === 'com' ? 'This ETF holds physical ' + (e.k === 'Silver' ? 'silver' : 'gold') + ' of standard purity in a vault, plus a little cash — its price follows the domestic ' + (e.k === 'Silver' ? 'silver' : 'gold') + ' price.' : rk === 'debt' ? 'This ETF holds government securities, bonds or overnight lending (TREPS); the full list is in the fund house\'s monthly portfolio and the scheme document.' : 'The fund house\'s monthly portfolio for this ETF is not available in a readable form yet — see the scheme documents below.') + '</span></div>';
+    $('hoSub').textContent = 'Latest monthly portfolio'; return;
+  }
+  var ym = p.asOf.split('-'), mo = new Date(Date.UTC(+ym[0], +ym[1] - 1, 1)).toLocaleDateString('en-IN', {month:'long', year:'numeric', timeZone:'UTC'});
+  $('hoSub').innerHTML = (p.src === 'own' ? 'Official monthly portfolio' : 'Index holdings') + ' · as of end ' + esc(mo);
+  var mx = p.top.length ? p.top[0][2] : 1, h = '';
+  if (p.src === 'index') h += '<div class="note" style="margin:0 0 12px"><span>🔁</span><span>This ETF tracks an index, so it holds the same stocks in the same weights as other funds on that index. Shown: the official portfolio of <b>' + esc(p.proxyName) + '</b>, the largest fund tracking the same index. This ETF\'s own weights can differ slightly (cash, timing).</span></div>';
+  h += '<div class="ho-k">' + [['Stocks', p.n], ['Top 10 share', fmtNum(p.top10, 1) + '%'], ['Equity', fmtNum((p.mix.equity || 0) + (p.mix.overseas || 0), 1) + '%'], ['Cash & other', fmtNum(p.mix.cashOther, 1) + '%']].map(function(x){ return '<div><small>' + x[0] + '</small><b>' + x[1] + '</b></div>'; }).join('') + '</div>';
+  h += '<div class="ho-grid"><div><div class="ho-h">Top holdings</div><div class="ho-list">' + p.top.map(function(t, i){ return '<div class="ho-r"><span class="ho-i">' + (i + 1) + '</span><span class="ho-n"><b>' + esc(t[0]) + '</b><small>' + esc(t[1] || '') + '</small></span><span class="ho-w"><i style="width:' + (t[2] / mx * 100) + '%"></i></span><b class="ho-v">' + fmtNum(t[2]) + '%</b></div>'; }).join('') + '</div></div>';
+  var sm = p.sectors && p.sectors.length ? p.sectors[0][1] : 1;
+  h += '<div><div class="ho-h">Sectors</div><div class="ho-list">' + (p.sectors || []).slice(0, 10).map(function(s){ return '<div class="ho-r s"><span class="ho-n"><b>' + esc(s[0]) + '</b></span><span class="ho-w"><i style="width:' + (s[1] / sm * 100) + '%"></i></span><b class="ho-v">' + fmtNum(s[1], 1) + '%</b></div>'; }).join('') + '</div>';
+  if (p.cap){ var cp = p.cap, tot = (cp.large || 0) + (cp.mid || 0) + (cp.small || 0) || 1;
+    h += '<div class="ho-h" style="margin-top:14px">Market cap</div><div class="cap-bar">' + [['large','Large'],['mid','Mid'],['small','Small']].map(function(k){ var v = (cp[k[0]] || 0) / tot * 100; return v > 0.5 ? '<i class="' + k[0] + '" style="width:' + v + '%" title="' + k[1] + ' cap ' + v.toFixed(1) + '%"></i>' : ''; }).join('') + '</div><div class="cap-leg">' + [['large','Large'],['mid','Mid'],['small','Small']].map(function(k){ return '<span><i class="' + k[0] + '"></i>' + k[1] + ' ' + fmtNum((cp[k[0]] || 0) / tot * 100, 1) + '%</span>'; }).join('') + '</div>'; }
+  h += '</div></div>';
+  box.innerHTML = h;
+}
+/* trading chart — daily candles or line, 20/50/200-day averages, volume */
+function tradeCard(e){
+  return '<div class="card dcard wide"><div class="pc-top"><div><div class="sec-title">Trading Chart</div><div class="dsub" id="trSub">Daily prices · NSE closing session</div></div><div class="tr-ctl">' +
+    '<div class="pc-seg" id="trType">' + [['c','Candles'],['l','Line']].map(function(x){ return '<button type="button" data-tt="' + x[0] + '"' + (state.tct === x[0] ? ' class="on"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>' +
+    '<div class="pc-seg" id="trSeg">' + ['1M','3M','6M','1Y'].map(function(k){ return '<button type="button" data-tr="' + k + '"' + (state.trg === k ? ' class="on"' : '') + '>' + k + '</button>'; }).join('') + '</div></div></div>' +
+    '<div class="pc-box tr-box" id="trBox"><div class="skel" style="height:100%"></div></div>' +
+    '<div class="pc-leg"><span><i style="background:var(--pos)"></i>Up day</span><span><i style="background:var(--neg)"></i>Down day</span><span><i class="ln ma20"></i>20-day avg</span><span><i class="ln ma50"></i>50-day avg</span><span><i class="ln ma200"></i>200-day avg</span><span><i style="background:var(--text3);opacity:.5"></i>Volume</span></div>' +
+    '<div class="note" style="margin-top:10px"><span>ℹ️</span><span>End-of-day prices after the exchange close; for live prices and the live iNAV during market hours use <a href="' + nseUrl(e.s) + '" target="_blank" rel="noopener noreferrer">Live quote &amp; iNAV ↗</a>.</span></div></div>';
+}
+function drawTrade(){
+  var box = $('trBox'), B = DAILY[state.sel]; if (!box || !B) return;
+  var n = B.t.length, len = {'1M':22, '3M':63, '6M':126, '1Y':n}[state.trg] || 126, i0 = Math.max(0, n - len), N = n - i0;
+  if (N < 5){ box.innerHTML = '<div class="empty">Not enough daily prices yet.</div>'; return; }
+  function ma(p){ var out = [], s = 0; for (var i = 0; i < n; i++){ s += B.c[i]; if (i >= p) s -= B.c[i - p]; out.push(i >= p - 1 ? s / p : null); } return out; }
+  var M = {ma20:ma(20), ma50:ma(50), ma200:ma(200)}, candle = state.tct === 'c';
+  var lo = Infinity, hi = -Infinity, vmax = 1;
+  for (var i = i0; i < n; i++){ lo = Math.min(lo, candle ? B.l[i] : B.c[i]); hi = Math.max(hi, candle ? B.h[i] : B.c[i]); vmax = Math.max(vmax, B.v[i]);
+    ['ma20','ma50','ma200'].forEach(function(k){ var v = M[k][i]; if (v != null && N > 30){ lo = Math.min(lo, v); hi = Math.max(hi, v); } }); }
+  var pad = (hi - lo) * 0.06 || hi * 0.01 || 1; lo -= pad; hi += pad;
+  var Wd = box.clientWidth || 600, Ht = box.clientHeight || 340, L = 54, R = 10, T = 10, B0 = 22, VH = Math.round((Ht - T - B0) * 0.2), PH = Ht - T - B0 - VH - 8;
+  var bw = (Wd - L - R) / N;
+  function X(i){ return L + bw * (i - i0 + 0.5); }
+  function Y(v){ return T + PH * (1 - (v - lo) / (hi - lo)); }
+  function VY(v){ return T + PH + 8 + VH * (1 - v / vmax); }
+  function dstr(t){ t = String(t); return t.slice(0, 4) + '-' + t.slice(4, 6) + '-' + t.slice(6); }
+  var g = '';
+  for (var k = 0; k <= 4; k++){ var v = lo + (hi - lo) * k / 4, y = Y(v); g += '<line x1="' + L + '" x2="' + (Wd - R) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '" stroke="var(--grid)"/><text x="' + (L - 6) + '" y="' + (y + 4).toFixed(1) + '" text-anchor="end" font-size="10.5" fill="var(--text3)">' + (v >= 1000 ? Math.round(v).toLocaleString('en-IN') : v.toFixed(v < 10 ? 2 : 1)) + '</text>'; }
+  var step = Math.max(1, Math.round(N / 6));
+  for (var j = i0; j < n; j += step) g += '<text x="' + X(j).toFixed(1) + '" y="' + (Ht - 6) + '" text-anchor="middle" font-size="10.5" fill="var(--text3)">' + fmtDate(dstr(B.t[j]), true) + '</text>';
+  var body = '', vol = '', w = Math.max(1, Math.min(9, bw * 0.68));
+  for (var i2 = i0; i2 < n; i2++){
+    var up = B.c[i2] >= (candle ? B.o[i2] : (i2 ? B.c[i2 - 1] : B.c[i2])), col = up ? 'var(--pos)' : 'var(--neg)', x = X(i2);
+    if (candle){
+      body += '<line x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + Y(B.h[i2]).toFixed(1) + '" y2="' + Y(B.l[i2]).toFixed(1) + '" stroke="' + col + '" stroke-width="1"/>';
+      var y1 = Y(Math.max(B.o[i2], B.c[i2])), y2 = Y(Math.min(B.o[i2], B.c[i2]));
+      body += '<rect x="' + (x - w / 2).toFixed(1) + '" y="' + y1.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + Math.max(1, y2 - y1).toFixed(1) + '" fill="' + col + '" rx="' + (w > 4 ? 1 : 0) + '"/>';
+    }
+    if (B.v[i2] > 0) vol += '<rect x="' + (x - w / 2).toFixed(1) + '" y="' + VY(B.v[i2]).toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + (T + PH + 8 + VH - VY(B.v[i2])).toFixed(1) + '" fill="' + col + '" opacity=".35"/>';
+  }
+  function path(arr){ var d = '', pen = false; for (var i = i0; i < n; i++){ var v = arr[i]; if (v == null){ pen = false; continue; } d += (pen ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1); pen = true; } return d; }
+  var lines = (candle ? '' : '<path d="' + path(B.c) + '" fill="none" stroke="var(--accent2)" stroke-width="2" stroke-linejoin="round"/>') +
+    (N > 30 ? '<path class="ma20" d="' + path(M.ma20) + '" fill="none" stroke-width="1.5"/><path class="ma50" d="' + path(M.ma50) + '" fill="none" stroke-width="1.5"/><path class="ma200" d="' + path(M.ma200) + '" fill="none" stroke-width="1.5"/>' : '');
+  box.innerHTML = '<svg viewBox="0 0 ' + Wd + ' ' + Ht + '" preserveAspectRatio="none" role="img" aria-label="Daily price chart of ' + esc(state.sel) + '">' + g +
+    '<line x1="' + L + '" x2="' + (Wd - R) + '" y1="' + (T + PH + 4) + '" y2="' + (T + PH + 4) + '" stroke="var(--border)"/>' + vol + body + lines +
+    '<line id="trX" x1="0" x2="0" y1="' + T + '" y2="' + (Ht - B0) + '" stroke="var(--border2)" visibility="hidden"/></svg><div class="pc-tip" id="trTip"></div>';
+  var c0 = B.c[i0 > 0 ? i0 - 1 : 0], cN = B.c[n - 1], ch = (cN / c0 - 1) * 100;
+  $('trSub').innerHTML = 'Daily · ' + state.trg + ' change <b class="' + (ch >= 0 ? 'pos' : 'neg') + '">' + (ch >= 0 ? '+' : '') + ch.toFixed(2) + '%</b> · last close ' + fmtPx(cN) + ' on ' + fmtDate(dstr(B.t[n - 1]));
+  var svg = box.querySelector('svg'), tip = $('trTip');
+  function move(ev){
+    var rc = svg.getBoundingClientRect(), cx = ((ev.touches ? ev.touches[0].clientX : ev.clientX) - rc.left) * Wd / rc.width;
+    var i = i0 + Math.floor((cx - L) / bw); i = Math.max(i0, Math.min(n - 1, i));
+    var px = X(i), pc = i ? (B.c[i] / B.c[i - 1] - 1) * 100 : null;
+    $('trX').setAttribute('x1', px); $('trX').setAttribute('x2', px); $('trX').setAttribute('visibility', 'visible');
+    tip.innerHTML = '<div style="color:var(--text3);margin-bottom:3px">' + fmtDate(dstr(B.t[i])) + '</div><div class="tr-ohlc"><span>O</span><b>' + fmtPx(B.o[i]) + '</b><span>H</span><b>' + fmtPx(B.h[i]) + '</b><span>L</span><b>' + fmtPx(B.l[i]) + '</b><span>C</span><b>' + fmtPx(B.c[i]) + '</b></div>' +
+      (pc != null ? '<div>Change ' + fmtPct(pc) + '</div>' : '') + '<div>Volume ' + Number(B.v[i]).toLocaleString('en-IN') + '</div>' +
+      ['ma20','ma50','ma200'].filter(function(k){ return M[k][i] != null; }).map(function(k){ return '<div class="muted">' + k.slice(2) + '-day avg ' + fmtPx(M[k][i]) + '</div>'; }).join('');
+    var tx = px * rc.width / Wd + 12; if (tx > rc.width - 180) tx = px * rc.width / Wd - 190;
+    tip.style.left = Math.max(0, tx) + 'px'; tip.style.top = '8px'; tip.classList.add('on');
+  }
+  function leave(){ tip.classList.remove('on'); $('trX').setAttribute('visibility', 'hidden'); }
+  svg.addEventListener('mousemove', move); svg.addEventListener('touchmove', move, {passive:true}); svg.addEventListener('touchstart', move, {passive:true});
+  svg.addEventListener('mouseleave', leave);
+}
+/* "?" help: tap / click / Enter shows the explanation in a small popover (hover titles do not exist on phones) */
+(function(){
+  var pop = null;
+  function close(){ if (pop) { pop.remove(); pop = null; } }
+  function open(el){
+    close(); pop = document.createElement('div'); pop.className = 'hint-pop'; pop.setAttribute('role', 'tooltip'); pop.textContent = el.getAttribute('data-tip');
+    document.body.appendChild(pop);
+    var r = el.getBoundingClientRect(), w = Math.min(300, window.innerWidth - 24);
+    pop.style.width = w + 'px';
+    var left = Math.max(12, Math.min(window.innerWidth - w - 12, r.left + r.width / 2 - w / 2));
+    var top = r.bottom + 8; if (top + pop.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - pop.offsetHeight - 8);
+    pop.style.left = left + 'px'; pop.style.top = (top + window.scrollY) + 'px';
+  }
+  document.addEventListener('click', function(e){ var h = e.target.closest('.hint[data-tip]'); if (h) { e.preventDefault(); e.stopPropagation(); if (pop && pop._for === h) { close(); return; } open(h); pop._for = h; return; } if (!e.target.closest('.hint-pop')) close(); }, true);
+  document.addEventListener('keydown', function(e){ var h = e.target.closest && e.target.closest('.hint[data-tip]'); if (h && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(h); pop._for = h; } if (e.key === 'Escape') close(); });
+  window.addEventListener('scroll', close, {passive: true}); window.addEventListener('resize', close);
+})();
 function renderDeep(){
   var r = compute(state.bench).rows[state.sel];
   if (!r) return;
@@ -1462,6 +1761,10 @@ function renderDeep(){
   var per = [['1M','1m'],['3M','3m'],['6M','6m'],['YTD','ytd'],['1Y','1y'],['3Y','3y'],['5Y','5y'],['10Y','10y']].filter(function(p){ return rr[p[1]] != null || br[p[1]] != null; });
   var h = '<div class="deep-grid">';
   h += glanceCard(e, x);
+  h += tradeCard(e);
+  h += ratingCard(e) + factorCard(e);
+  h += scoreCard(e);
+  h += holdCard(e);
   // performance vs benchmark
   h += '<div class="card dcard wide"><div class="sec-title">Performance vs ' + esc(b.name || 'benchmark') + '</div><div class="dsub">As of ' + fmtDate(e.d) + ' · up to 1 year: market-price returns (absolute); 3 years and longer: ' + (e.lb === 'nav' ? 'official NAV returns' : 'market-price returns') + ', annualised (CAGR)' + (e.first ? ' · history from ' + fmtDate(e.first) : '') + '. Benchmark rows use the price index, which excludes dividends.</div>' +
     '<div class="ptbl-wrap"><div class="ptbl"><table><thead><tr><th></th>' + per.map(function(p){ return '<th class="num">' + p[0] + '</th>'; }).join('') + '</tr></thead><tbody>' +
@@ -1522,6 +1825,9 @@ function renderDeep(){
   $('deep').innerHTML = h;
   $('deep').classList.add('show');
   loadHist().then(drawPrice).catch(function(){ $('pcBox').innerHTML = '<div class="empty">Price history is temporarily unavailable.</div>'; });
+  var sym = state.sel;
+  loadDaily(sym).then(function(){ if (state.sel === sym) drawTrade(); }).catch(function(){ if ($('trBox')) $('trBox').innerHTML = '<div class="empty">Daily prices for this ETF are being prepared — the chart appears after the next data update.</div>'; });
+  loadHold().then(function(){ if (state.sel === sym) fillHold(e); }).catch(function(){ if ($('hoBox')) $('hoBox').innerHTML = '<div class="empty">Holdings are temporarily unavailable.</div>'; });
 }
 function drawPrice(){
   var box = $('pcBox'); if (!box || !HIST) return;
@@ -1621,9 +1927,18 @@ function bind(){
   $('tTrend').addEventListener('change', function(){ state.trend = this.value; state.shown = PAGE; renderTable(); });
   $('tCat').addEventListener('change', function(){ state.cat = this.value; state.shown = PAGE; renderTable(); if (state.sel && state.showAll) drawChart(); });
   $('tLiq').addEventListener('change', function(){ state.liq = this.value; state.shown = PAGE; renderTable(); });
-  [['tAmc','amc'],['tHist','hist'],['tTer','ter']].forEach(function(x){ $(x[0]).addEventListener('change', function(){ state[x[1]] = this.value; state.shown = PAGE; renderTable(); }); });
+  [['tAmc','amc'],['tHist','hist'],['tTer','ter'],['tRate','rate']].forEach(function(x){ $(x[0]).addEventListener('change', function(){ state[x[1]] = this.value; state.shown = PAGE; renderTable(); }); });
   $('vseg').addEventListener('click', function(e){ var b = e.target.closest('[data-v]'); if (!b) return; state.view = b.getAttribute('data-v'); store('viltv_etfm_view', state.view); renderTable(); });
-  $('deep').addEventListener('click', function(e){ var b = e.target.closest('#pcSeg [data-r]'); if (!b) return; state.range = b.getAttribute('data-r'); document.querySelectorAll('#pcSeg button').forEach(function(x){ x.classList.toggle('on', x === b); }); drawPrice(); });
+  $('deep').addEventListener('click', function(e){
+    var b = e.target.closest('#pcSeg [data-r]');
+    if (b){ state.range = b.getAttribute('data-r'); document.querySelectorAll('#pcSeg button').forEach(function(x){ x.classList.toggle('on', x === b); }); drawPrice(); return; }
+    b = e.target.closest('#trSeg [data-tr], #trType [data-tt]');
+    if (b){ if (b.hasAttribute('data-tr')) state.trg = b.getAttribute('data-tr'); else state.tct = b.getAttribute('data-tt'); b.parentNode.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x === b); }); store('viltv_etfm_tr', state.trg + '|' + state.tct); drawTrade(); return; }
+    b = e.target.closest('#scSeg [data-sv], #scLead [data-sl]');
+    if (b){ if (b.hasAttribute('data-sv')) state.scv = b.getAttribute('data-sv'); else state.scl = b.getAttribute('data-sl'); renderDeep(); return; }
+    b = e.target.closest('[data-go]');
+    if (b && b.getAttribute('data-go') !== state.sel) select(b.getAttribute('data-go'));
+  });
   $('tSort').addEventListener('change', function(){ state.sort = this.value; state.dir = LOW_FIRST[this.value] ? 1 : -1; renderTable(); });
   $('thead').addEventListener('click', function(e){
     var th = e.target.closest('th'); if (!th) return;
@@ -1649,7 +1964,7 @@ function bind(){
     }
   });
   document.addEventListener('click', function(e){ if (!e.target.closest('#chartBox')) $('tip').classList.remove('on'); });
-  var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(function(){ if (state.sel) { drawChart(); drawPrice(); } }, 150); });
+  var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(function(){ if (state.sel) { drawChart(); drawPrice(); drawTrade(); } }, 150); });
 }
 
 /* ─────────── boot ─────────── */
@@ -1667,6 +1982,8 @@ function boot(j){
   var amcs = {}; D.etfs.forEach(function(e){ if (e.a) amcs[e.a] = (amcs[e.a] || 0) + 1; });
   $('tAmc').innerHTML = '<option value="">All fund houses</option>' + Object.keys(amcs).sort().map(function(a){ return '<option value="' + esc(a) + '">' + esc(a) + ' (' + amcs[a] + ')</option>'; }).join('');
   var sv = load('viltv_etfm_view'); if (VIEWS[sv]) state.view = sv;
+  var tr = (load('viltv_etfm_tr') || '').split('|'); if (/^(1M|3M|6M|1Y)$/.test(tr[0])) state.trg = tr[0]; if (/^[cl]$/.test(tr[1] || '')) state.tct = tr[1];
+  loadEx().then(function(){ renderTable(); if (state.sel) renderDeep(); }).catch(function(){});
   $('quick').innerHTML = '<span>Popular:</span>' + QUICK.filter(function(s){ return bySym[s] && bySym[s].q !== 'nodata'; }).slice(0, 8).map(function(s){ return '<button class="qbtn" type="button" data-s="' + s + '">' + s + '</button>'; }).join('');
   $('q').disabled = false;
   renderCounts();

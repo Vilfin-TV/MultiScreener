@@ -112,6 +112,75 @@ if (fs.existsSync(histFile)) {
   for (const [s, a] of Object.entries(H.etfs || {})) if (a.length !== H.weeks.length) { fail(`etf_hist ${s} length`); break; }
   if (H.asOf !== D.asOf) fail(`etf_hist asOf ${H.asOf} != ${D.asOf}`);
 } else fail('etf_hist.json missing');
+// ── 3. ETF analytics (scorecard, rating, Factor DNA, holdings) and daily bars ──
+const root = path.dirname(dataPath);
+const exFile = path.join(root, 'etf_extras.json'), hoFile = path.join(root, 'etf_holdings.json');
+if (fs.existsSync(exFile)) {
+  const X = JSON.parse(fs.readFileSync(exFile, 'utf8')), XE = X.etfs || {};
+  if (X.asOf !== D.asOf) warn.push(`etf_extras asOf ${X.asOf} != ${D.asOf}`);
+  let nSc = 0, nRt = 0, nF = 0;
+  for (const [s, o] of Object.entries(XE)) {
+    if (!syms.has(s)) fail(`etf_extras: unknown ETF ${s}`);
+    for (const v of ['3', '5']) {
+      const c = o.sc && o.sc[v]; if (!c) continue; nSc++;
+      for (const k of ['c', 'r', 'v', 'o']) if (!(c[k] >= 0 && c[k] <= 100)) fail(`${s}: scorecard ${v}Y ${k} = ${c[k]}`);
+      if (Math.abs(0.4 * c.c + 0.3 * c.r + 0.3 * c.v - c.o) > 0.15) fail(`${s}: scorecard ${v}Y overall ${c.o} != 40/30/30 mix`);
+      if (!(c.rk >= 1 && c.rk <= c.n && c.n >= 5)) fail(`${s}: scorecard rank ${c.rk}/${c.n}`);
+    }
+    if (o.rt) { nRt++;
+      if (!(o.rt.st >= 1 && o.rt.st <= 5)) fail(`${s}: stars ${o.rt.st}`);
+      if (!(o.rt.s >= 0 && o.rt.s <= 100) || !(o.rt.rk >= 1 && o.rt.rk <= o.rt.n)) fail(`${s}: rating ${o.rt.s} rank ${o.rt.rk}/${o.rt.n}`);
+      const W8 = X.ratingW || {}, have = Object.keys(o.rt.p || {});
+      if (have.length < 4 || have.indexOf('ret') < 0) fail(`${s}: rating built from ${have.join(',')}`);
+      const mix = have.reduce((t, k) => t + W8[k] * o.rt.p[k], 0) / have.reduce((t, k) => t + W8[k], 0);
+      if (Math.abs(mix - o.rt.s) > 1.01) fail(`${s}: rating ${o.rt.s} != weighted parts ${mix.toFixed(1)}`);
+    }
+    if (o.f) { nF++;
+      const sum = Object.values(o.f.w).reduce((a, b) => a + b, 0);
+      if (Math.abs(sum - 100) > 1) fail(`${s}: factor weights sum ${sum}`);
+      if (!(o.f.r2 >= -50 && o.f.r2 <= 100)) fail(`${s}: factor R² ${o.f.r2}`);
+    }
+  }
+  const byStar = {}; Object.values(XE).forEach(o => { if (o.rt) byStar[o.rt.st] = (byStar[o.rt.st] || 0) + 1; });
+  if (nRt < 100) fail(`only ${nRt} ETFs rated`);
+  if (nSc < 60) fail(`only ${nSc} scorecards`);
+  if (nF < 60) fail(`only ${nF} ETFs with Factor DNA`);
+  console.log(`analytics: scorecards ${nSc} · ratings ${nRt} ${JSON.stringify(byStar)} · Factor DNA ${nF}`);
+  if (fs.existsSync(hoFile)) {
+    const HO = JSON.parse(fs.readFileSync(hoFile, 'utf8')).etfs || {};
+    const now = Date.parse(D.asOf);
+    for (const [s, h] of Object.entries(HO)) {
+      if (!syms.has(s)) fail(`etf_holdings: unknown ETF ${s}`);
+      for (let i = 1; i < (h.top || []).length; i++) if (h.top[i][2] > h.top[i - 1][2] + 1e-9) { fail(`${s}: holdings not sorted`); break; }
+      const eq = (h.mix.equity || 0) + (h.mix.overseas || 0);
+      if (eq < 60) fail(`${s}: holdings only ${eq}% equity`);
+      const [y, m] = h.asOf.split('-').map(Number), end = Date.UTC(y, m, 1);
+      if ((now - end) / 864e5 + 1 > 46) fail(`${s}: portfolio ${h.asOf} older than 45 days`);
+      if (h.src !== 'own' && h.src !== 'index') fail(`${s}: holdings source ${h.src}`);
+      if (h.src === 'index' && !h.proxyName) fail(`${s}: index holdings without a source fund`);
+    }
+    console.log(`holdings: ${Object.keys(HO).length} ETFs (own ${Object.values(HO).filter(h => h.src === 'own').length})`);
+  } else fail('etf_holdings.json missing');
+} else fail('etf_extras.json missing');
+const dDir = path.join(root, 'etf', 'd');
+if (fs.existsSync(dDir)) {
+  let nD = 0, cur = 0;
+  const last = {}; (D.etfs || []).forEach(e => { last[e.s] = e.d; });
+  for (const fn of fs.readdirSync(dDir)) {
+    if (!fn.endsWith('.json')) continue;
+    const B = JSON.parse(fs.readFileSync(path.join(dDir, fn), 'utf8')), n = B.t.length; nD++;
+    if (!syms.has(B.s)) fail(`daily bars for unknown ETF ${B.s}`);
+    if ([B.o, B.h, B.l, B.c, B.v].some(a => a.length !== n)) { fail(`${B.s}: daily bar arrays differ in length`); continue; }
+    for (let i = 0; i < n; i++) {
+      if (i && !(B.t[i] > B.t[i - 1])) { fail(`${B.s}: daily dates not increasing`); break; }
+      if (!(B.h[i] >= Math.max(B.o[i], B.c[i]) - 1e-6 && B.l[i] <= Math.min(B.o[i], B.c[i]) + 1e-6 && B.l[i] > 0)) { fail(`${B.s}: bad bar on ${B.t[i]}`); break; }
+    }
+    const ld = String(B.t[n - 1]); if (last[B.s] === ld.slice(0, 4) + '-' + ld.slice(4, 6) + '-' + ld.slice(6)) cur++;
+  }
+  if (nD < 100) fail(`daily bars for only ${nD} ETFs`);
+  else if (cur < nD * 0.9) fail(`daily bars current for only ${cur}/${nD} ETFs`);
+  console.log(`daily bars: ${nD} ETFs (${cur} current)`);
+} else warn.push('data/etf/d not built yet — trading chart unavailable until the next ETF build');
 if (jumps > (D.etfs || []).length * 0.05) fail(`too many suspicious weekly jumps: ${jumps}`);
 
 console.log(`ETFs: ${(D.etfs || []).length} · weeks: ${W} · benchmarks: ${[...benchIds].join(', ')}`);
