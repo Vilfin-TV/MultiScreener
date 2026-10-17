@@ -34,6 +34,7 @@ on:
       - 'scripts/mf_enrich.py'
       - 'scripts/build_mf_nfo.py'
       - 'scripts/build_smart_sip.py'
+      - 'scripts/audit_mf_holdings.py'
       - 'scripts/build_macro.py'
       - 'scripts/audit_mf_live.py'
       - 'scripts/verify_mf_screener.js'
@@ -132,6 +133,17 @@ jobs:
 
       - name: Smart SIP model plans
         run: python scripts/build_smart_sip.py
+
+      - name: Smart SIP accuracy audit (recompute every plan from the published data)
+        id: sipaudit
+        continue-on-error: true
+        run: python scripts/audit_mf_holdings.py --smartsip
+
+      - name: Smart SIP repair — rebuild once and re-audit (blocks publishing if errors remain)
+        if: steps.sipaudit.outcome == 'failure'
+        run: |
+          python scripts/build_smart_sip.py
+          python scripts/audit_mf_holdings.py --smartsip
 
       - name: Save NAV-history cache
         if: always()
