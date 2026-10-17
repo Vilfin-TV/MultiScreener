@@ -308,6 +308,26 @@ td.num{text-align:right;font-family:'JetBrains Mono',monospace;white-space:nowra
 .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--ms);color:var(--mc);white-space:nowrap}
 .pill::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--mc)}
 .pill.na{--mc:var(--text3);--ms:var(--surface3)}
+/* role tags + short / medium / long-term trend chips */
+.role{display:inline-flex;align-items:center;padding:2px 8px;border-radius:6px;font-size:10.5px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;border:1px solid var(--rc);color:var(--rc);background:var(--rs);white-space:nowrap;vertical-align:1px}
+.role.core{--rc:#3b82f6;--rs:rgba(59,130,246,.10)}.role.sat{--rc:#a855f7;--rs:rgba(168,85,247,.10)}.role.com{--rc:#d4a017;--rs:rgba(212,160,23,.12)}
+.role.debt{--rc:#14b8a6;--rs:rgba(20,184,166,.10)}.role.glob{--rc:#06b6d4;--rs:rgba(6,182,212,.10)}.role.hyb{--rc:#22c55e;--rs:rgba(34,197,94,.10)}
+.t-role{margin-top:4px}
+.trd{display:inline-flex;gap:4px;white-space:nowrap}
+.trd i{font-style:normal;display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:20px;padding:0 5px;border-radius:5px;font-size:10.5px;font-weight:800;letter-spacing:.2px;cursor:help}
+.trd i.pos{background:rgba(34,197,94,.14);color:var(--pos)}.trd i.neu{background:var(--surface3);color:var(--text2)}.trd i.neg{background:rgba(239,68,68,.13);color:var(--neg)}.trd i.na{background:var(--surface2);color:var(--text3)}
+.gl-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.gl-t{border:1px solid var(--border);border-radius:10px;padding:11px 12px;background:var(--surface2);min-width:0}
+.gl-t .k{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
+.gl-t .v{font-size:15px;font-weight:800;margin:3px 0 4px}
+.gl-t .v.pos{color:var(--pos)}.gl-t .v.neg{color:var(--neg)}.gl-t .v.neu{color:var(--text2)}.gl-t .v.na{color:var(--text3)}
+.gl-t .w{font-size:11.5px;line-height:1.5;color:var(--text2)}
+.gl-role{display:flex;gap:12px;align-items:flex-start;margin-top:4px}
+.gl-role p{margin:0;font-size:12.5px;line-height:1.55;color:var(--text2)}
+.gl-chk{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px;margin-top:12px;font-size:12.5px}
+.gl-chk div{display:flex;gap:8px;align-items:flex-start;color:var(--text2);line-height:1.45}
+.gl-chk b{color:var(--text)}
+@media (max-width:640px){.gl-grid,.gl-chk{grid-template-columns:minmax(0,1fr)}}
 .liq{display:inline-flex;gap:2px;vertical-align:middle}
 .liq i{width:4px;height:12px;border-radius:1px;background:var(--surface3)}
 .liq i.f{background:var(--accent2)}
@@ -442,6 +462,7 @@ footer a{color:var(--text2)}
   .mc.sel-row{border-color:var(--accent)}
   .mc-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
   .mc-name{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+  .mc-tags{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
   .mc-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:9px}
   .mc-row div{font-size:10.5px;color:var(--text3);font-weight:700;letter-spacing:.4px}
   .mc-row div b{display:block;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text);font-weight:600;letter-spacing:0}
@@ -641,6 +662,8 @@ details.faq ul+p{margin-top:8px}
     <div class="tools">
       <input class="tin" id="tFilter" type="search" placeholder="Filter list by symbol or name…" autocomplete="off"/>
       <select class="sel" id="tCat" aria-label="Category"><option value="">All categories</option></select>
+      <select class="sel sm" id="tRole" aria-label="Role"><option value="">All roles</option><option value="core">Core</option><option value="sat">Satellite</option><option value="com">Commodity</option><option value="debt">Debt</option><option value="glob">Global</option><option value="hyb">Hybrid</option></select>
+      <select class="sel sm" id="tTrend" aria-label="Trend"><option value="">Any trend</option><option value="lt">Long-term positive</option><option value="all">Positive on all three</option><option value="st">Short-term positive</option><option value="neg">Long-term negative</option></select>
       <select class="sel" id="tLiq" aria-label="Liquidity">
         <option value="">Any liquidity</option>
         <option value="1">Traded ≥ ₹10 lakh/day</option>
@@ -736,6 +759,10 @@ details.faq ul+p{margin-top:8px}
         <li><b>◤ Recovering</b> (still behind, but improving): an early turn — potentially higher reward with higher risk, as some recoveries fade. Wait for confirmation (two or three weeks of improvement, rising volume) or buy a small first lot.</li>
         <li><b>▼ Decelerating</b> (still ahead, but fading): a time to hold or book partial profits rather than add new money.</li>
         <li><b>◣ Underperforming</b> (behind and weakening): avoid for momentum. Long-term value buyers may accumulate slowly, but only for ETFs they want to own for years.</li></ul><p>A common rotation approach: add when an ETF moves from Recovering into Accelerating, hold while it stays Accelerating, and reduce when it turns Decelerating. Check the Confidence column, liquidity and premium to iNAV before acting. Broad core ETFs can be bought regularly whatever their mode.</p></details>
+      <details class="faq"><summary>What do the Trend S·M·L chips and the role tags mean?</summary><p>Each ETF shows three trend chips from its weekly closing prices:</p><ul>
+        <li><b>S — short term (1–3 months):</b> price vs its 10-week average and the 13-week return.</li>
+        <li><b>M — medium term (6–12 months):</b> price vs its 26-week average and the 6-month return.</li>
+        <li><b>L — long term (1–3 years):</b> price vs its 52-week average, whether that average is rising, and the 1-year return.</li></ul><p><b>▲ Positive</b> = price above the average and rising over the period; <b>▼ Negative</b> = below and falling; <b>● Neutral</b> = mixed. Liquid ETFs show "Stable" because their price barely moves. Tap an ETF for the exact figures behind each label.</p><p><b>Roles</b> show how an ETF is usually used in a portfolio: <b>Core</b> (broad Indian market — most of your long-term money), <b>Satellite</b> (sector, theme or factor — 5–15% each), <b>Commodity</b> (gold, silver), <b>Debt</b> (bonds, G-Secs, liquid), <b>Global</b> (international markets) and <b>Hybrid</b> (mixed assets). Use the Role and Trend filters above the list to narrow down. Trends describe past prices and can change quickly — they are an educational aid, not a buy or sell signal.</p></details>
       <details class="faq"><summary>What are iNAV, premium and discount?</summary><p>The <b>iNAV</b> (indicative NAV) is the live value of the ETF's holdings per unit, published during market hours. If the ETF's market price is above it, you pay a <b>premium</b>; below it, a <b>discount</b>. For liquid ETFs the gap is usually tiny; for thinly traded or international ETFs it can be several percent. Buy and sell close to iNAV with a limit order, and prefer ETFs with good daily trading volume.</p></details>
       <details class="faq"><summary>How are ETFs taxed?</summary><ul>
         <li><b>Equity ETFs</b> (Indian shares): 20% on gains within 12 months; 12.5% on gains above ₹1.25 lakh a year after 12 months.</li>
@@ -878,7 +905,7 @@ var PAGE = 40;
 /* ─────────── state ─────────── */
 var D = null, P = null;                  // data, params
 var bySym = {}, cache = {};              // computed per benchmark
-var state = {bench:null, sel:null, tab:'all', cat:'', liq:'', amc:'', hist:'', ter:'', view:'momentum', range:'3Y', filter:'', sort:'score', dir:-1, shown:PAGE, showAll:false};
+var state = {bench:null, sel:null, tab:'all', cat:'', role:'', trend:'', liq:'', amc:'', hist:'', ter:'', view:'momentum', range:'3Y', filter:'', sort:'score', dir:-1, shown:PAGE, showAll:false};
 var HIST = null, HIST_P = null;
 var LOW_FIRST = {sym:1, cat:1, ter:1, vol:1};
 var acIdx = -1, acList = [];
@@ -1055,6 +1082,7 @@ function sortVal(r, k){
   switch (k){
     case 'sym': return e.s;
     case 'cat': return e.k || '';
+    case 'trend': var T = trendOf(e), sc = {pos:1, neu:0, neg:-1, na:null}; return sc[T.lt.t] == null ? null : 4 * sc[T.lt.t] + 2 * sc[T.mt.t] + sc[T.st.t];
     case 'mode': return r.mode ? MODE_RANK[r.mode] : 0;
     case 'rsr': return r.rsr; case 'rsm': return r.rsm;
     case 'r1w': case 'r1m': case 'r3m': case 'r6m': case 'r1y': case 'r3y': case 'r5y': return e.r && e.r[k.slice(1)];
@@ -1071,7 +1099,8 @@ function fmtTer(t){ return t == null || !isFinite(t) ? '–' : Number(t).toFixed
 function fmtPrem(p){ if (p == null || !isFinite(p)) return '–'; var c = Math.abs(p) <= 0.25 ? '' : (p > 0 ? 'neg' : 'pos'); return '<span class="' + c + '" title="' + (p > 0 ? 'Premium' : p < 0 ? 'Discount' : 'At NAV') + ' to NAV">' + (p > 0 ? '+' : '') + p.toFixed(2) + '%</span>'; }
 function fmtNum(n, d){ return n == null || !isFinite(n) ? '–' : Number(n).toFixed(d == null ? 2 : d); }
 var COLS = {
-  sym:{n:'ETF', f:function(r){ return '<div class="t-sym">' + nseLink(r.e.s) + '</div><div class="t-name" title="' + esc(r.e.n) + '">' + esc(r.e.n) + '</div>'; }},
+  sym:{n:'ETF', f:function(r){ return '<div class="t-sym">' + nseLink(r.e.s) + '</div><div class="t-name" title="' + esc(r.e.n) + '">' + esc(r.e.n) + '</div><div class="t-role">' + roleTag(r.e) + '</div>'; }},
+  trend:{n:'Trend S·M·L', t:'Short (1–3 months) · Medium (6–12 months) · Long term (1–3 years): ▲ positive · ● neutral · ▼ negative', f:function(r){ return trendChips(r.e); }},
   cat:{n:'Category', cls:'t-cat', f:function(r){ return esc(r.e.k || '–'); }},
   mode:{n:'Mode', f:function(r){ return pill(r); }},
   rsr:{n:'RS-Ratio', num:1, f:function(r){ return fmt(r.rsr); }},
@@ -1095,15 +1124,21 @@ var COLS = {
   tv:{n:'Liquidity', num:1, t:'Avg. daily traded value (20 days)', f:function(r){ return liqBars(r.e.tv) + ' ' + fmtTv(r.e.tv); }}
 };
 var VIEWS = {
-  momentum:{cols:['sym','cat','mode','rsr','rsm','r1m','r3m','r1y','tv'], m:[['RS-Ratio',function(r){ return fmt(r.rsr); }],['RS-Mom.',function(r){ return fmt(r.rsm); }],['3M',function(r){ return fmtPct((r.e.r || {})['3m']); }],['1Y',function(r){ return fmtPct((r.e.r || {})['1y']); }]]},
-  returns:{cols:['sym','cat','r1m','r3m','r6m','ytd','r1y','r3y','r5y','si'], m:[['1Y',function(r){ return fmtPct((r.e.r || {})['1y']); }],['3Y',function(r){ return fmtPct((r.e.r || {})['3y']); }],['5Y',function(r){ return fmtPct((r.e.r || {})['5y']); }],['YTD',function(r){ return fmtPct((r.e.r || {}).ytd); }]]},
-  risk:{cols:['sym','cat','ter','aum','prem','vol','mdd','beta','rr3','tv'], m:[['TER',function(r){ return fmtTer((r.e.x || {}).ter); }],['Size',function(r){ return fmtAum((r.e.x || {}).aum); }],['Vol.',function(r){ return r.e.vol != null ? fmtNum(r.e.vol, 1) + '%' : '–'; }],['Prem',function(r){ return fmtPrem(r.e.prem); }]]}
+  momentum:{cols:['sym','cat','mode','trend','rsr','rsm','r1m','r3m','r1y','tv'], m:[['RS-Ratio',function(r){ return fmt(r.rsr); }],['RS-Mom.',function(r){ return fmt(r.rsm); }],['3M',function(r){ return fmtPct((r.e.r || {})['3m']); }],['1Y',function(r){ return fmtPct((r.e.r || {})['1y']); }]]},
+  returns:{cols:['sym','cat','trend','r1m','r3m','r6m','ytd','r1y','r3y','r5y','si'], m:[['1Y',function(r){ return fmtPct((r.e.r || {})['1y']); }],['3Y',function(r){ return fmtPct((r.e.r || {})['3y']); }],['5Y',function(r){ return fmtPct((r.e.r || {})['5y']); }],['YTD',function(r){ return fmtPct((r.e.r || {}).ytd); }]]},
+  risk:{cols:['sym','cat','trend','ter','aum','prem','vol','mdd','beta','rr3','tv'], m:[['TER',function(r){ return fmtTer((r.e.x || {}).ter); }],['Size',function(r){ return fmtAum((r.e.x || {}).aum); }],['Vol.',function(r){ return r.e.vol != null ? fmtNum(r.e.vol, 1) + '%' : '–'; }],['Prem',function(r){ return fmtPrem(r.e.prem); }]]}
 };
 function filtered(){
   var rows = compute(state.bench).rows, f = state.filter.trim().toUpperCase(), minLiq = +state.liq || 0;
   var list = Object.keys(rows).map(function(k){ return rows[k]; }).filter(function(r){
     if (state.tab === 'NA' ? r.mode : (state.tab !== 'all' && r.mode !== state.tab)) return false;
     if (state.cat && r.e.k !== state.cat) return false;
+    if (state.role && roleOf(r.e) !== state.role) return false;
+    if (state.trend){ var T = trendOf(r.e);
+      if (state.trend === 'lt' && T.lt.t !== 'pos') return false;
+      if (state.trend === 'st' && T.st.t !== 'pos') return false;
+      if (state.trend === 'neg' && T.lt.t !== 'neg') return false;
+      if (state.trend === 'all' && !(T.st.t === 'pos' && T.mt.t === 'pos' && T.lt.t === 'pos')) return false; }
     if (minLiq && liqLevel(r.e.tv) < minLiq + 1) return false;
     if (state.amc && r.e.a !== state.amc) return false;
     if (state.hist && yearsOf(r.e) < +state.hist) return false;
@@ -1120,6 +1155,54 @@ function filtered(){
     return dir * c || (a.e.s < b.e.s ? -1 : 1);
   });
   return list;
+}
+/* Role in a portfolio — from the ETF's category and name */
+var ROLES = {
+  core:{n:'Core', d:'Broad Indian market — suitable for most of your long-term money; buy regularly whatever the mode.'},
+  sat:{n:'Satellite', d:'Sector, theme or factor — higher return potential and higher risk; keep to 5–15% of the portfolio and use modes and trends for timing.'},
+  com:{n:'Commodity', d:'Gold or silver — a diversifier that often holds up when shares fall; usually 5–15% of a portfolio.'},
+  debt:{n:'Debt', d:'Bonds, government securities or liquid assets — stability, parking money and short-term goals.'},
+  glob:{n:'Global', d:'International markets — spreads risk beyond India and benefits when the rupee weakens; check the premium to iNAV before buying.'},
+  hyb:{n:'Hybrid', d:'A mix of asset classes in one ETF.'}
+};
+function roleOf(e){
+  var k = e.k || '', n = (e.n || '') + ' ' + (e.u || '');
+  if (/hybrid|balanced|multi.?asset/i.test(n)) return 'hyb';
+  if (k === 'Broad Market' || k === 'Next 50, Mid & Small Cap') return 'core';
+  if (k === 'Gold' || k === 'Silver') return 'com';
+  if (k === 'Liquid & Debt') return 'debt';
+  if (k === 'International' || /nasdaq|s&p 500|hang seng|nyse|ftse|msci|global|world/i.test(n)) return 'glob';
+  return 'sat';
+}
+function roleTag(e){ var k = roleOf(e); return '<span class="role ' + k + '" title="' + esc(ROLES[k].d) + '">' + ROLES[k].n + '</span>'; }
+/* Short (1–3 months), medium (6–12 months) and long-term (1–3 years) price trend from weekly closes:
+   positive = price above its moving average AND rising over the period; negative = below AND falling; else neutral. */
+var TREND_CACHE = {};
+function trendOf(e){
+  if (TREND_CACHE[e.s]) return TREND_CACHE[e.s];
+  var c = (e.c || []).filter(function(v){ return v != null && isFinite(v); }), n = c.length, p = c[n - 1];
+  var stable = roleOf(e) === 'debt' && (e.vol == null || e.vol < 1.5);
+  function sma(len, off){ off = off || 0; if (n - off < len) return null; var t = 0; for (var i = n - off - len; i < n - off; i++) t += c[i]; return t / len; }
+  function ret(w){ return n > w ? (p / c[n - 1 - w] - 1) * 100 : null; }
+  function judge(maLen, w, label, extra){
+    var ma = sma(maLen), r = ret(w);
+    if (stable) return {t:'na', l:'Stable', why:'Liquid / overnight-type ETF — its price barely moves, so trends do not apply.'};
+    if (ma == null || r == null) return {t:'na', l:'—', why:'Not enough price history yet.'};
+    var gap = (p / ma - 1) * 100, x = extra ? extra() : null, up = gap > 0 && r > 0 && (!x || x.ok !== false), dn = gap < 0 && r < 0 && (!x || x.okDown !== false);
+    var why = 'Price ' + (gap >= 0 ? '+' : '') + gap.toFixed(1) + '% vs its ' + maLen + '-week average · ' + label + ' ' + (r >= 0 ? '+' : '') + r.toFixed(1) + '%' + (x && x.txt ? ' · ' + x.txt : '');
+    return {t: up ? 'pos' : dn ? 'neg' : 'neu', l: up ? 'Positive' : dn ? 'Negative' : 'Neutral', why: why};
+  }
+  var st = judge(10, 13, '13-week return'), mt = judge(26, 26, '6-month return');
+  var lt = judge(52, 52, '1-year return', function(){
+    var now = sma(52), before = sma(52, 13); if (now == null || before == null) return null;
+    var slope = (now / before - 1) * 100, r3 = (e.r || {})['3y'];
+    return {ok: slope > 0, okDown: slope < 0, txt: '52-week average ' + (slope >= 0 ? 'rising' : 'falling') + (r3 != null ? ' · 3Y ' + (r3 >= 0 ? '+' : '') + Number(r3).toFixed(1) + '% a year' : '')};
+  });
+  return (TREND_CACHE[e.s] = {st:st, mt:mt, lt:lt});
+}
+function trendChips(e){
+  var t = trendOf(e), L = {st:'S', mt:'M', lt:'L'}, N = {st:'Short term (1–3 months)', mt:'Medium term (6–12 months)', lt:'Long term (1–3 years)'};
+  return '<span class="trd">' + ['st', 'mt', 'lt'].map(function(k){ var x = t[k]; return '<i class="' + x.t + '" title="' + esc(N[k] + ': ' + x.l + ' — ' + x.why) + '">' + L[k] + (x.t === 'pos' ? '▲' : x.t === 'neg' ? '▼' : x.t === 'neu' ? '●' : '') + '</i>'; }).join('') + '</span>';
 }
 function pill(r){ return r.mode ? '<span class="pill ' + MODES[r.mode].cls + '">' + MODES[r.mode].name + '</span>' : '<span class="pill na" title="' + esc(r.reason) + '">Not classified</span>'; }
 function renderTable(){
@@ -1141,7 +1224,7 @@ function renderTable(){
   $('cardsM').innerHTML = show.map(function(r){
     var e = r.e;
     return '<div class="mc' + (sel === e.s ? ' sel-row' : '') + '" data-s="' + esc(e.s) + '" tabindex="0"><div class="mc-top"><span class="t-sym">' + nseLink(e.s) + '</span>' + pill(r) + '</div>' +
-      '<div class="mc-name">' + esc(e.n) + '</div><div class="mc-row">' + V.m.map(function(m){ return '<div>' + m[0] + '<b>' + m[1](r) + '</b></div>'; }).join('') + '</div></div>';
+      '<div class="mc-name">' + esc(e.n) + '</div><div class="mc-tags">' + roleTag(e) + trendChips(e) + '</div><div class="mc-row">' + V.m.map(function(m){ return '<div>' + m[0] + '<b>' + m[1](r) + '</b></div>'; }).join('') + '</div></div>';
   }).join('');
   $('moreBtn').style.display = list.length > state.shown ? '' : 'none';
   $('moreBtn').textContent = 'Show more (' + (list.length - state.shown) + ' remaining)';
@@ -1354,12 +1437,31 @@ function loadHist(){
   return HIST_P;
 }
 function rkCell(k, v, c){ return '<div class="rk-cell"><div class="rk-k">' + k + '</div><div class="rk-v">' + v + '</div>' + (c ? '<div class="rk-c">' + c + '</div>' : '') + '</div>'; }
+function glanceCard(e, x){
+  var rk = roleOf(e), T = trendOf(e), N = {st:'Short term · 1–3 months', mt:'Medium term · 6–12 months', lt:'Long term · 1–3 years'};
+  var same = D.etfs.filter(function(o){ return o.k === e.k && o.x && o.x.ter > 0; }).map(function(o){ return o.x.ter; }).sort(function(a, b){ return a - b; });
+  var medTer = same.length ? same[Math.floor((same.length - 1) / 2)] : null, ter = x.ter > 0 ? x.ter : null, yrs = yearsOf(e), lq = liqLevel(e.tv);
+  var chk = [
+    [lq >= 3 ? '✅' : lq === 2 ? '⚠️' : '❌', '<b>Liquidity:</b> ' + fmtTv(e.tv) + ' traded a day' + (lq >= 3 ? ' — easy to buy and sell near fair value.' : lq === 2 ? ' — moderate; always use limit orders.' : ' — thin; prices can stray from the true value.')],
+    [e.prem == null ? 'ℹ️' : Math.abs(e.prem) <= 0.5 ? '✅' : '⚠️', '<b>Premium / discount:</b> ' + (e.prem == null ? 'not available' : (e.prem >= 0 ? '+' : '') + Number(e.prem).toFixed(2) + '% vs NAV' + (Math.abs(e.prem) <= 0.5 ? ' — close to fair value.' : ' — check the live iNAV before trading.'))],
+    [ter == null ? 'ℹ️' : medTer != null && ter <= medTer ? '✅' : '⚠️', '<b>Cost:</b> ' + (ter == null ? 'expense ratio not disclosed' : fmtTer(ter) + (medTer != null ? ' vs ' + fmtTer(medTer) + ' median for ' + esc(e.k) : ''))],
+    [yrs >= 3 ? '✅' : yrs >= 1 ? '⚠️' : '❌', '<b>Track record:</b> ' + (yrs ? yrs.toFixed(1) + ' years of price history' : 'new listing')],
+    [x.aum == null ? 'ℹ️' : x.aum >= 500 ? '✅' : x.aum >= 50 ? '⚠️' : '❌', '<b>Fund size:</b> ' + (x.aum == null ? 'not disclosed' : fmtAum(x.aum) + (x.aum >= 500 ? '' : ' — small funds can be merged or closed'))],
+    [e.mdd == null ? 'ℹ️' : e.mdd > -20 ? '✅' : e.mdd > -35 ? '⚠️' : '❌', '<b>Worst fall (3Y):</b> ' + (e.mdd == null ? '–' : fmtNum(e.mdd) + '% — be ready for falls of this size')]
+  ];
+  return '<div class="card dcard wide"><div class="sec-title">At a Glance</div><div class="dsub">Role in a portfolio, price trend over three horizons and a quick checklist · trends use weekly closes to ' + fmtDate(e.d) + '</div>' +
+    '<div class="gl-role">' + roleTag(e) + '<p>' + esc(ROLES[rk].d) + '</p></div>' +
+    '<div class="gl-grid">' + ['st', 'mt', 'lt'].map(function(k){ var t = T[k]; return '<div class="gl-t"><div class="k">' + N[k] + '</div><div class="v ' + t.t + '">' + (t.t === 'pos' ? '▲ ' : t.t === 'neg' ? '▼ ' : t.t === 'neu' ? '● ' : '') + t.l + '</div><div class="w">' + esc(t.why) + '</div></div>'; }).join('') + '</div>' +
+    '<div class="gl-chk">' + chk.map(function(c){ return '<div><span>' + c[0] + '</span><span>' + c[1] + '</span></div>'; }).join('') + '</div>' +
+    '<div class="note" style="margin-top:12px"><span>ℹ️</span><span>Trends describe past price behaviour and can change quickly; they are an educational aid, not a buy or sell signal. Positive = price above its moving average and rising over the period; negative = below and falling; otherwise neutral.</span></div></div>';
+}
 function renderDeep(){
   var r = compute(state.bench).rows[state.sel];
   if (!r) return;
   var e = r.e, rr = e.r || {}, b = compute(state.bench).bench || {}, br = b.r || {}, x = e.x || {};
   var per = [['1M','1m'],['3M','3m'],['6M','6m'],['YTD','ytd'],['1Y','1y'],['3Y','3y'],['5Y','5y'],['10Y','10y']].filter(function(p){ return rr[p[1]] != null || br[p[1]] != null; });
   var h = '<div class="deep-grid">';
+  h += glanceCard(e, x);
   // performance vs benchmark
   h += '<div class="card dcard wide"><div class="sec-title">Performance vs ' + esc(b.name || 'benchmark') + '</div><div class="dsub">As of ' + fmtDate(e.d) + ' · up to 1 year: market-price returns (absolute); 3 years and longer: ' + (e.lb === 'nav' ? 'official NAV returns' : 'market-price returns') + ', annualised (CAGR)' + (e.first ? ' · history from ' + fmtDate(e.first) : '') + '. Benchmark rows use the price index, which excludes dividends.</div>' +
     '<div class="ptbl-wrap"><div class="ptbl"><table><thead><tr><th></th>' + per.map(function(p){ return '<th class="num">' + p[0] + '</th>'; }).join('') + '</tr></thead><tbody>' +
@@ -1515,6 +1617,8 @@ function bind(){
   });
   $('tabs').addEventListener('click', function(e){ var t = e.target.closest('.tab'); if (!t) return; state.tab = t.getAttribute('data-t'); state.shown = PAGE; renderCounts(); renderTable(); });
   var ft; $('tFilter').addEventListener('input', function(){ var v = this.value; clearTimeout(ft); ft = setTimeout(function(){ state.filter = v; state.shown = PAGE; renderTable(); }, 120); });
+  $('tRole').addEventListener('change', function(){ state.role = this.value; state.shown = PAGE; renderTable(); });
+  $('tTrend').addEventListener('change', function(){ state.trend = this.value; state.shown = PAGE; renderTable(); });
   $('tCat').addEventListener('change', function(){ state.cat = this.value; state.shown = PAGE; renderTable(); if (state.sel && state.showAll) drawChart(); });
   $('tLiq').addEventListener('change', function(){ state.liq = this.value; state.shown = PAGE; renderTable(); });
   [['tAmc','amc'],['tHist','hist'],['tTer','ter']].forEach(function(x){ $(x[0]).addEventListener('change', function(){ state[x[1]] = this.value; state.shown = PAGE; renderTable(); }); });
