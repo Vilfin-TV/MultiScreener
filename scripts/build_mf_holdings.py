@@ -96,6 +96,22 @@ SOURCES = {
     "The Wealth Company": {"page": "https://www.wealthcompanyamc.in/literature-forms/portfolio-documents/monthly/",
                            "pick": r"/uploads/Monthly_Portfolio_", "date": "content", "scan": 30, "multi": True},
 }
+# a matched portfolio must fit the fund's category (same rule as verify) — otherwise it is skipped, not published
+FIT_EQUITY = {"large", "largemid", "mid", "small", "multi", "flexi", "focused", "value", "contra", "elss", "dividend",
+              "idx_large", "idx_midsmall", "idx_broad", "idx_factor", "idx_sector"}
+FIT_DEBT = {"overnight", "liquid", "money", "ultrashort", "lowdur", "shortdur", "meddur", "medlong", "longdur", "dynbond",
+            "corpbond", "credit", "bankpsu", "gilt", "gilt10", "floater", "target", "debtidx"}
+
+
+def fits_category(sub: str, mix: dict) -> bool:
+    eq = (mix.get("equity") or 0) + (mix.get("overseas") or 0) + (mix.get("reit") or 0)
+    if sub in FIT_EQUITY or re.match(r"(sec_|idx_)", sub or ""):
+        return eq >= 60
+    if sub in FIT_DEBT:
+        return (mix.get("equity") or 0) <= 5
+    return True
+
+
 MONTHS = {m: i for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
 
 
@@ -731,6 +747,10 @@ def main():
             sm = summarise(blk, large, mid)
             listed = 100 - sm["mix"]["cashOther"]
             if listed < 40 or listed > 130:          # sanity: a portfolio should add up to ~100 %
+                bad += 1
+                continue
+            if not fits_category(sub_of.get(code, ""), sm["mix"]):
+                log.warning("%s: %s portfolio does not fit its category (%s) — skipped", amc, code, sub_of.get(code))
                 bad += 1
                 continue
             sm["asOf"] = info["month"]
