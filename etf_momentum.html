@@ -435,6 +435,14 @@ table.xt{min-width:0!important}
 .cap-leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin-top:8px}
 .cap-leg span{display:inline-flex;align-items:center;gap:6px}.cap-leg i{width:10px;height:10px;border-radius:3px;display:inline-block}
 .tr-ctl{display:flex;gap:8px;flex-wrap:wrap}
+.ldot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--pos);margin-right:6px;vertical-align:1px;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:lpulse 1.8s infinite}
+.ldot.off{background:var(--text3);animation:none;box-shadow:none}
+@keyframes lpulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.55)}70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+@media (prefers-reduced-motion:reduce){.ldot{animation:none}}
+.lv-tag{font-weight:700;color:var(--text)}
+.etf-px .live-px{display:block;margin-top:3px;font-size:12px;color:var(--text2);white-space:nowrap}
+.etf-px .live-px b{display:inline;font-size:12.5px;font-family:'JetBrains Mono',monospace;color:var(--text)}
+.pc-leg i.ln.lvbox{height:10px;width:12px;background:none;border:1.5px dashed var(--accent2);border-radius:2px}
 .tr-box{height:360px}
 .tr-box .ma20{stroke:#f59e0b}.tr-box .ma50{stroke:#a855f7}.tr-box .ma200{stroke:var(--text2)}
 .pc-leg i.ln.ma20{background:#f59e0b}.pc-leg i.ln.ma50{background:#a855f7}.pc-leg i.ln.ma200{background:var(--text2)}
@@ -1425,7 +1433,7 @@ function renderResult(){
   var e = r.e, rr = e.r || {}, b = compute(state.bench).bench, M = r.mode ? MODES[r.mode] : null;
   var h = '<div class="etf-head"><div style="min-width:0"><div class="etf-sym">' + nseLink(e.s, 'NSE: ' + e.s) + '</div><div class="etf-name">' + esc(e.n) + '</div>' +
     '<div class="etf-meta">' + [e.a, e.k, e.u].filter(function(x, i, arr){ return x && arr.findIndex(function(y){ return String(y || '').toLowerCase() === String(x).toLowerCase(); }) === i; }).map(esc).join(' · ') + '</div></div>' +
-    '<div class="etf-px"><b>' + fmtPx(e.p) + '</b><small>Close ' + fmtDate(e.d) + '</small></div></div>';
+    '<div class="etf-px"><b>' + fmtPx(e.p) + '</b><small>Close ' + fmtDate(e.d) + '</small><small class="live-px" id="livePx" style="display:none"></small></div></div>';
   if (M){
     h += '<div class="mode-badge ' + M.cls + '"><div class="mb-ico">' + M.ico + '</div><div><div class="mb-k">Mode vs ' + esc(b.name) + '</div><div class="mb-v">' + M.name + '</div><div class="mb-d">' + M.desc + '</div></div></div>';
     var hd = r.heading ? MODES[r.heading] : null, dr = r.heading ? DIRS[r.heading] : null;
@@ -1589,6 +1597,32 @@ function getJSON(url){ return fetch(url, {cache:'default'}).then(function(r){ if
 function loadEx(){ if (!EX_P) EX_P = getJSON('data/etf_extras.json?v=' + encodeURIComponent(D.generated)).then(function(j){ EX = j; return j; }).catch(function(e){ EX_P = null; throw e; }); return EX_P; }
 function loadHold(){ if (!HOLD_P) HOLD_P = getJSON('data/etf_holdings.json?v=' + encodeURIComponent(D.generated)).then(function(j){ HOLD = j.etfs || {}; return HOLD; }).catch(function(e){ HOLD_P = null; throw e; }); return HOLD_P; }
 function loadDaily(s){ if (!DAILY_P[s]) DAILY_P[s] = getJSON('data/etf/d/' + encodeURIComponent(s) + '.json?v=' + encodeURIComponent(D.generated)).then(function(j){ DAILY[s] = j; return j; }).catch(function(e){ delete DAILY_P[s]; throw e; }); return DAILY_P[s]; }
+/* near-live: today's forming bar (data/etf_live.json, refreshed about every 30 minutes in market hours) */
+var LIVE = null, LIVE_T = -1;
+function loadLive(){
+  var bucket = Math.floor(Date.now() / 120000);
+  if (LIVE_T === bucket) return Promise.resolve(LIVE);
+  return fetch('data/etf_live.json?t=' + bucket, {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){ LIVE = j; LIVE_T = bucket; return j; }).catch(function(){ return LIVE; });
+}
+function liveOf(sym){
+  var B = DAILY[sym], x = LIVE && LIVE.bars && LIVE.bars[sym];
+  if (!B || !x || !B.t.length) return null;
+  var ses = +String(LIVE.session).replace(/-/g, '');
+  return ses > B.t[B.t.length - 1] ? {t:ses, o:x[0], h:x[1], l:x[2], c:x[3], v:x[4], prev:B.c[B.c.length - 1], at:String(LIVE.updated).slice(11, 16), closed:!!LIVE.closed} : null;
+}
+function withLive(sym){
+  var B = DAILY[sym], L = liveOf(sym); if (!L) return B;
+  return {t:B.t.concat(L.t), o:B.o.concat(L.o), h:B.h.concat(L.h), l:B.l.concat(L.l), c:B.c.concat(L.c), v:B.v.concat(L.v), live:L};
+}
+function istMarketOpen(){ var n = new Date(Date.now() + 19800000), d = n.getUTCDay(), m = n.getUTCHours() * 60 + n.getUTCMinutes(); return d > 0 && d < 6 && m >= 555 && m <= 955; }
+function paintLive(){
+  var el = $('livePx'), L = state.sel ? liveOf(state.sel) : null; if (!el) return;
+  if (!L){ el.innerHTML = ''; el.style.display = 'none'; return; }
+  var ch = (L.c / L.prev - 1) * 100;
+  el.style.display = '';
+  el.innerHTML = '<i class="ldot' + (L.closed ? ' off' : '') + '"></i>' + (L.closed ? 'Today ' : 'Today, ' + esc(L.at) + ' IST ') + '<b>' + fmtPx(L.c) + '</b> <span class="' + (ch >= 0 ? 'pos' : 'neg') + '">' + (ch >= 0 ? '+' : '') + ch.toFixed(2) + '%</span>';
+  el.title = 'Delayed up to about 30 minutes — refreshed during market hours. Use the exchange\'s live quote before placing an order.';
+}
 function exOf(s){ return EX && EX.etfs ? EX.etfs[s] || null : null; }
 function starsHtml(n, big){ var h = '<span class="stars' + (big ? ' big' : '') + '" aria-label="' + n + ' out of 5 stars">'; for (var i = 1; i <= 5; i++) h += '<i' + (i <= n ? '' : ' class="off"') + '>★</i>'; return h + '</span>'; }
 function ratingCell(e){
@@ -1699,11 +1733,12 @@ function tradeCard(e){
     '<div class="pc-seg" id="trType">' + [['c','Candles'],['l','Line']].map(function(x){ return '<button type="button" data-tt="' + x[0] + '"' + (state.tct === x[0] ? ' class="on"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>' +
     '<div class="pc-seg" id="trSeg">' + ['1M','3M','6M','1Y'].map(function(k){ return '<button type="button" data-tr="' + k + '"' + (state.trg === k ? ' class="on"' : '') + '>' + k + '</button>'; }).join('') + '</div></div></div>' +
     '<div class="pc-box tr-box" id="trBox"><div class="skel" style="height:100%"></div></div>' +
-    '<div class="pc-leg"><span><i style="background:var(--pos)"></i>Up day</span><span><i style="background:var(--neg)"></i>Down day</span><span><i class="ln ma20"></i>20-day avg</span><span><i class="ln ma50"></i>50-day avg</span><span><i class="ln ma200"></i>200-day avg</span><span><i style="background:var(--text3);opacity:.5"></i>Volume</span></div>' +
-    '<div class="note" style="margin-top:10px"><span>ℹ️</span><span>End-of-day prices after the exchange close; for live prices and the live iNAV during market hours use <a href="' + nseUrl(e.s) + '" target="_blank" rel="noopener noreferrer">Live quote &amp; iNAV ↗</a>.</span></div></div>';
+    '<div class="pc-leg"><span><i style="background:var(--pos)"></i>Up day</span><span><i style="background:var(--neg)"></i>Down day</span><span><i class="ln ma20"></i>20-day avg</span><span><i class="ln ma50"></i>50-day avg</span><span><i class="ln ma200"></i>200-day avg</span><span><i style="background:var(--text3);opacity:.5"></i>Volume</span><span><i class="ln lvbox"></i>Today so far (market hours)</span></div>' +
+    '<div class="note" style="margin-top:10px"><span>ℹ️</span><span>During market hours today\'s candle is refreshed about every 30 minutes (prices delayed up to ~30 minutes); after the close it is replaced by the official closing prices. For real-time prices and the live iNAV before placing an order use <a href="' + nseUrl(e.s) + '" target="_blank" rel="noopener noreferrer">Live quote &amp; iNAV ↗</a>.</span></div></div>';
 }
 function drawTrade(){
-  var box = $('trBox'), B = DAILY[state.sel]; if (!box || !B) return;
+  var box = $('trBox'); if (!box || !DAILY[state.sel]) return;
+  var B = withLive(state.sel), LV = B.live;
   var n = B.t.length, len = {'1M':22, '3M':63, '6M':126, '1Y':n}[state.trg] || 126, i0 = Math.max(0, n - len), N = n - i0;
   if (N < 5){ box.innerHTML = '<div class="empty">Not enough daily prices yet.</div>'; return; }
   function ma(p){ var out = [], s = 0; for (var i = 0; i < n; i++){ s += B.c[i]; if (i >= p) s -= B.c[i - p]; out.push(i >= p - 1 ? s / p : null); } return out; }
@@ -1730,6 +1765,7 @@ function drawTrade(){
       var y1 = Y(Math.max(B.o[i2], B.c[i2])), y2 = Y(Math.min(B.o[i2], B.c[i2]));
       body += '<rect x="' + (x - w / 2).toFixed(1) + '" y="' + y1.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + Math.max(1, y2 - y1).toFixed(1) + '" fill="' + col + '" rx="' + (w > 4 ? 1 : 0) + '"/>';
     }
+    if (LV && i2 === n - 1) body += '<rect x="' + (x - w / 2 - 2.5).toFixed(1) + '" y="' + (Y(B.h[i2]) - 3).toFixed(1) + '" width="' + (w + 5).toFixed(1) + '" height="' + (Y(B.l[i2]) - Y(B.h[i2]) + 6).toFixed(1) + '" fill="none" stroke="var(--accent2)" stroke-dasharray="3 2" rx="2"/>';
     if (B.v[i2] > 0) vol += '<rect x="' + (x - w / 2).toFixed(1) + '" y="' + VY(B.v[i2]).toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + (T + PH + 8 + VH - VY(B.v[i2])).toFixed(1) + '" fill="' + col + '" opacity=".35"/>';
   }
   function path(arr){ var d = '', pen = false; for (var i = i0; i < n; i++){ var v = arr[i]; if (v == null){ pen = false; continue; } d += (pen ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1); pen = true; } return d; }
@@ -1739,14 +1775,14 @@ function drawTrade(){
     '<line x1="' + L + '" x2="' + (Wd - R) + '" y1="' + (T + PH + 4) + '" y2="' + (T + PH + 4) + '" stroke="var(--border)"/>' + vol + body + lines +
     '<line id="trX" x1="0" x2="0" y1="' + T + '" y2="' + (Ht - B0) + '" stroke="var(--border2)" visibility="hidden"/></svg><div class="pc-tip" id="trTip"></div>';
   var c0 = B.c[i0 > 0 ? i0 - 1 : 0], cN = B.c[n - 1], ch = (cN / c0 - 1) * 100;
-  $('trSub').innerHTML = 'Daily · ' + state.trg + ' change <b class="' + (ch >= 0 ? 'pos' : 'neg') + '">' + (ch >= 0 ? '+' : '') + ch.toFixed(2) + '%</b> · last close ' + fmtPx(cN) + ' on ' + fmtDate(dstr(B.t[n - 1]));
+  $('trSub').innerHTML = (LV ? '<span class="lv-tag"><i class="ldot' + (LV.closed ? ' off' : '') + '"></i>' + (LV.closed ? 'Today, session closed' : 'Today as of ' + esc(LV.at) + ' IST') + '</span> delayed up to ~30 min · ' : 'Daily · ') + state.trg + ' change <b class="' + (ch >= 0 ? 'pos' : 'neg') + '">' + (ch >= 0 ? '+' : '') + ch.toFixed(2) + '%</b> · ' + (LV && !LV.closed ? 'latest price ' : 'last close ') + fmtPx(cN) + ' on ' + fmtDate(dstr(B.t[n - 1]));
   var svg = box.querySelector('svg'), tip = $('trTip');
   function move(ev){
     var rc = svg.getBoundingClientRect(), cx = ((ev.touches ? ev.touches[0].clientX : ev.clientX) - rc.left) * Wd / rc.width;
     var i = i0 + Math.floor((cx - L) / bw); i = Math.max(i0, Math.min(n - 1, i));
     var px = X(i), pc = i ? (B.c[i] / B.c[i - 1] - 1) * 100 : null;
     $('trX').setAttribute('x1', px); $('trX').setAttribute('x2', px); $('trX').setAttribute('visibility', 'visible');
-    tip.innerHTML = '<div style="color:var(--text3);margin-bottom:3px">' + fmtDate(dstr(B.t[i])) + '</div><div class="tr-ohlc"><span>O</span><b>' + fmtPx(B.o[i]) + '</b><span>H</span><b>' + fmtPx(B.h[i]) + '</b><span>L</span><b>' + fmtPx(B.l[i]) + '</b><span>C</span><b>' + fmtPx(B.c[i]) + '</b></div>' +
+    tip.innerHTML = '<div style="color:var(--text3);margin-bottom:3px">' + fmtDate(dstr(B.t[i])) + (LV && i === n - 1 ? ' · so far, ' + esc(LV.at) + ' IST' : '') + '</div><div class="tr-ohlc"><span>O</span><b>' + fmtPx(B.o[i]) + '</b><span>H</span><b>' + fmtPx(B.h[i]) + '</b><span>L</span><b>' + fmtPx(B.l[i]) + '</b><span>C</span><b>' + fmtPx(B.c[i]) + '</b></div>' +
       (pc != null ? '<div>Change ' + fmtPct(pc) + '</div>' : '') + '<div>Volume ' + Number(B.v[i]).toLocaleString('en-IN') + '</div>' +
       ['ma20','ma50','ma200'].filter(function(k){ return M[k][i] != null; }).map(function(k){ return '<div class="muted">' + k.slice(2) + '-day avg ' + fmtPx(M[k][i]) + '</div>'; }).join('');
     var tx = px * rc.width / Wd + 12; if (tx > rc.width - 180) tx = px * rc.width / Wd - 190;
@@ -1845,7 +1881,7 @@ function renderDeep(){
   $('deep').classList.add('show');
   loadHist().then(drawPrice).catch(function(){ $('pcBox').innerHTML = '<div class="empty">Price history is temporarily unavailable.</div>'; });
   var sym = state.sel;
-  loadDaily(sym).then(function(){ if (state.sel === sym) drawTrade(); }).catch(function(){ if ($('trBox')) $('trBox').innerHTML = '<div class="empty">Daily prices for this ETF are being prepared — the chart appears after the next data update.</div>'; });
+  Promise.all([loadDaily(sym), loadLive()]).then(function(){ if (state.sel === sym){ drawTrade(); paintLive(); } }).catch(function(){ if ($('trBox')) $('trBox').innerHTML = '<div class="empty">Daily prices for this ETF are being prepared — the chart appears after the next data update.</div>'; });
   loadHold().then(function(){ if (state.sel === sym) fillHold(e); }).catch(function(){ if ($('hoBox')) $('hoBox').innerHTML = '<div class="empty">Holdings are temporarily unavailable.</div>'; });
 }
 function drawPrice(){
@@ -1985,6 +2021,10 @@ function bind(){
     }
   });
   document.addEventListener('click', function(e){ if (!e.target.closest('#chartBox')) $('tip').classList.remove('on'); });
+  setInterval(function(){
+    if (!state.sel || document.hidden || !istMarketOpen()) return;
+    LIVE_T = -1; loadLive().then(function(){ drawTrade(); paintLive(); });
+  }, 300000);
   var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(function(){ if (state.sel) { drawChart(); drawPrice(); drawTrade(); } }, 150); });
 }
 
