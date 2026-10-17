@@ -264,6 +264,20 @@ def audit_smartsip() -> int:
                     E(f"{sid}: checklist fund size {v} vs screener {g(code, 'aum')}")
                 elif name == "Lump-sum minimum" and g(code, "lumpMin") is not None and not near(v, g(code, "lumpMin"), 0.5):
                     E(f"{sid}: checklist lump-sum minimum {v} vs screener {g(code, 'lumpMin')}")
+            up = s.get("upgrade")
+            if up:                                   # fund used when the investor's amount covers a higher minimum
+                uc = up.get("code")
+                if uc not in F:
+                    E(f"{sid}: upgrade fund {uc} is not in the screener")
+                else:
+                    if not all(c[1] for c in up.get("checks") or [[0, False]]):
+                        E(f"{sid}: upgrade fund {g(uc, 'name')} does not pass every check")
+                    if g(uc, "lumpMin") != up.get("min") or not (SS.LUMP_MAX < (up.get("min") or 0) <= SS.UPGRADE_MAX_MIN):
+                        E(f"{sid}: upgrade minimum {up.get('min')} vs screener {g(uc, 'lumpMin')}")
+                    if g(uc, "sub") != g(code, "sub") and g(uc, "sub") not in allowed_pools(SS, s["key"]):
+                        E(f"{sid}: upgrade fund {g(uc, 'name')} outside the slot's categories")
+                    if "L" not in (g(uc, "buy") or "") or "S" not in (g(uc, "buy") or ""):
+                        E(f"{sid}: upgrade fund {g(uc, 'name')} not open for lump sums and SIPs")
             for alt in s.get("alts") or []:
                 if alt not in F:
                     W(f"{sid}: alternate {alt} is no longer in the screener")

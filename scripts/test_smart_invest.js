@@ -12,6 +12,7 @@ const SC = [ // [hz, rk, fq, amt, stay, years, slab, forcePct]
   ['h3','c','m',1000,4,4,30], ['h3','b','y',50000,5,5,30], ['h3','a','l',200000,3,0,30,0.85], ['h3','v','w',1000,4,1,10],
   ['h1','c','m',5000,2,2,30], ['h1','b','l',500000,1,0,30], ['h1','a','q',10000,3,3,20], ['h1','c','y',20000,2,1,0],
   ['h10','v','m',100,15,15,30], ['h10','b','l',100,15,0,30], ['h10','a','m',9999999,40,40,30],
+  ['h5','v','m',40000,6,6,30], ['h5','v','m',20000,6,6,30], ['h3','v','l',30000,4,0,30], ['h1','c','m',10000,2,2,30],
 ];
 (async () => {
   const b = await chromium.launch({executablePath: process.env.CHROME || undefined});
@@ -58,6 +59,10 @@ const SC = [ // [hz, rk, fq, amt, stay, years, slab, forcePct]
           kInv: kp[0], kVal: kp[1], fmtInv: fmtCr(pr.invested), fmtVal: fmtCr(pr.value), entryCard, entryToday,
           stpParts: entry && entry.months ? entry.stp.map(x => [x.slot.amt, x.per * entry.months, x.same]) : [],
           overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth, merged: sized.merged,
+          upOk: sized.slots.every(s => { const up = (plan.slots.find(z => z.key === s.key) || {}).upgrade, uf = up && BY[up.code];
+            const eligible = !!(uf && !s.swapped && !(P.fq === 'w' && (uf.buy || '').indexOf('W') < 0) && s.amt >= sipMinOf(up.code));
+            return s.upFrom ? (eligible && s.code === up.code && s.amt >= sipMinOf(s.code)) : !eligible; }),
+          upN: sized.slots.filter(s => s.upFrom).length, upTags: [...document.querySelectorAll('.sip-tbl .tag')].filter(t => t.innerText === 'Upgraded for your amount').length,
         };
       });
       const checks = [];
@@ -82,10 +87,12 @@ const SC = [ // [hz, rk, fq, amt, stay, years, slab, forcePct]
         else checks.push(['invest at once when cheap', r.months === 0]);
       }
       if (!r.lump && r.years < r.stay) checks.push(['sub-heading mentions holding after instalments', /then left invested for/.test(r.sub)]);
+      checks.push(['upgrade used exactly when the amount covers its minimum', r.upOk]);
+      checks.push(['upgrade labelled on the page', r.upTags === r.upN]);
       checks.push(['no horizontal overflow', r.overflow <= 0]);
       const bad = checks.filter(c => !c[1]).map(c => c[0]);
       bad.length ? fail++ : pass++;
-      rows.push(`${dev.padEnd(7)} ${r.name.padEnd(9)} ₹${String(r.amt).padStart(8)} stay ${String(r.stay).padStart(2)} inv ${String(r.years).padStart(2)} slab ${String(slab).padStart(2)}${pct != null ? ' val ' + pct : '         '} | invested ${r.fmtInv.padStart(9)} value ${r.fmtVal.padStart(10)} tax ${fmt(r.tax)} | ${r.lump ? (r.months ? 'stagger ' + r.months + 'm' : 'at once  ') : '         '}${r.merged ? ' merged ' + r.merged : ''} | ${bad.length ? 'FAIL: ' + bad.join(', ') : 'ok (' + checks.length + ' checks)'}`);
+      rows.push(`${dev.padEnd(7)} ${r.name.padEnd(9)} ₹${String(r.amt).padStart(8)} stay ${String(r.stay).padStart(2)} inv ${String(r.years).padStart(2)} slab ${String(slab).padStart(2)}${pct != null ? ' val ' + pct : '         '} | invested ${r.fmtInv.padStart(9)} value ${r.fmtVal.padStart(10)} tax ${fmt(r.tax)} | ${r.lump ? (r.months ? 'stagger ' + r.months + 'm' : 'at once  ') : '         '}${r.merged ? ' merged ' + r.merged : ''}${r.upN ? ' upgraded ' + r.upN : ''} | ${bad.length ? 'FAIL: ' + bad.join(', ') : 'ok (' + checks.length + ' checks)'}`);
       if (['h10v/l', 'h10v/q'].includes(r.name) && !rows.some(x => x.startsWith('shot ' + dev + r.name))) { rows.push('shot ' + dev + r.name); await p.screenshot({path: `${OUT}/${dev}_${r.name.replace('/', '_')}.png`, fullPage: true}); }
     }
     if (errs.length) { fail++; rows.push(dev + ' PAGE ERRORS: ' + errs.join(' | ')); }
