@@ -2764,6 +2764,17 @@ function sizePlan(plan, amt, fq){
     s.amt = i === slots.length - 1 ? left : Math.round(amt * s.w / 100 / 10) * 10;
     left -= s.amt;
   });
+  // a larger amount per purchase unlocks the slot's "upgrade" fund: it passes every check but needs more than ₹1,000
+  slots.forEach(function(s){
+    var up = s.src.upgrade, uf = up && BY[up.code];
+    if (!uf || s.swapped || (fq === 'w' && (uf.buy || '').indexOf('W') < 0) || s.amt < sipMinOf(up.code)) return;
+    var orig = s.code, share = s.src.w / s.w;
+    s.upFrom = orig; s.code = up.code; s.tax = up.tax || s.tax;
+    s.er = isNum(up.er) && isNum(s.src.er) ? s.er + (up.er - s.src.er) * share : s.er;
+    s.src = Object.assign({}, s.src, {code:up.code, checks:up.checks, score:up.score,
+      why:(up.why || []).concat(['Chosen for your amount: scores ' + up.score + ' vs ' + up.vsScore + ' for ' + shortName((BY[orig] || {}).name || '') + ', and needs ' + inr(up.min) + ' or more per purchase']),
+      alts:[orig].concat((s.src.alts || []).filter(function(c){ return c !== up.code && c !== orig; })).slice(0, 2)});
+  });
   return {slots:slots, full:full, merged:plan.slots.length - paused.length - slots.length, paused:paused};
 }
 /* one-time investments: equity goes in at once when markets are fairly valued, otherwise it is parked in a liquid fund
@@ -2924,6 +2935,7 @@ function renderSip(){
     var f = BY[s.code] || {name:'Fund ' + s.code, amcName:'', subLabel:''}, src = s.src, col = 'var(--pie' + (i + 1) + ')';
     var flags = [];
     if (src.state === 'watch') flags.push('<span class="st st-un" title="' + esc(src.note) + '">On watch</span>');
+    if (s.upFrom) flags.push('<span class="tag" title="Your amount for this fund covers its ' + esc(inr((s.src.upgrade || {}).min || 0)) + ' minimum, so the higher-scoring fund is used instead of ' + esc((BY[s.upFrom] || {}).name || '') + '">Upgraded for your amount</span>');
     if (s.swapped) flags.push('<span class="tag" title="' + esc((BY[s.swapped] || {}).name || '') + ' does not offer weekly SIPs">Weekly-SIP alternate</span>');
     if (src.gate && src.w > 0) flags.push('<span class="tag" title="' + esc(src.gate.reason === 'fund' ? 'Expensive portfolio: ' + src.gate.index : src.gate.index + ' is expensive vs its 10-year history') + '">Reduced this month (−' + src.gate.cut + ' pts)</span>');
     if (s.merged.length) flags.push('<span class="tag" title="Includes the allocation for ' + esc(s.merged.join(', ')) + '">+ ' + esc(s.merged.join(', ')) + '</span>');

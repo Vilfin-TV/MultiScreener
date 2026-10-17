@@ -1203,6 +1203,36 @@ def choose(u, slot, ctx, chosen, amc_count, incumbent, review, cache):
     return new, cand[1:3], "new", ""
 
 
+UPGRADE_MAX_MIN = 25000      # an "upgrade" fund may need up to ₹25,000 per purchase
+UPGRADE_MARGIN = 3.0          # and must score clearly above the plan's fund
+
+
+def upgrade_for(u, slot, ctx, cache, chosen, amc_count, code, macro):
+    """Best fund for the slot when the investor's amount per purchase is larger: it passes every check except the
+    ₹1,000 lump-sum limit (minimum ≤ ₹25,000) and scores clearly above the plan's fund. The page swaps it in when
+    the slot's amount per purchase covers its minimum. None when no such fund exists."""
+    kind = SLOTS[slot][3]
+    if kind == "sector" or slot in ("metal", "intl"):
+        return None
+    ranked, sc, checks, subs = rank_pool(u, slot, ctx, cache)
+    cands = [c for c, ck in checks.items() if c != code and c not in chosen
+             and all(x[1] or x[0] == "Lump-sum minimum" for x in ck) and not all(x[1] for x in ck)
+             and (u.g(c, "lumpMin") or 0) <= UPGRADE_MAX_MIN
+             and amc_count.get(u.g(c, "amc"), 0) < 2]
+    if not cands:
+        return None
+    sc2 = scores(u, slot, cands + [code], kind, ctx.get("profile") == "growth")
+    best = max(cands, key=lambda c: sc2[c])
+    if sc2[best] < sc2[code] + UPGRADE_MARGIN:
+        return None
+    mn = u.g(best, "lumpMin")
+    ck = [([x[0], True, f"₹{mn:,.0f} per purchase — used when your amount for this fund covers it"] if x[0] == "Lump-sum minimum" else x)
+          for x in checks[best]]
+    return {"code": best, "min": mn, "score": round(sc2[best], 1), "vsScore": round(sc2[code], 1), "checks": ck,
+            "why": why(u, slot, best), "er": expected_return(u, slot, best, ctx, macro),
+            "tax": u.g(best, "tax") or ("equity" if SLOTS[slot][1] == "Equity" else "other")}
+
+
 SEGMENTS = [("large", "Large caps", "n50", ["core", "next50", "lmcore", "flexi"]), ("mid", "Mid caps", "mid150", ["mid"]), ("small", "Small caps", "sml250", ["small"])]
 
 
@@ -1479,6 +1509,9 @@ def main() -> int:
                     "vol": SLOTS[slot][6] if slot != "metal" else (25 if ctx["metal"] == "silver" else 14),
                     "tax": u.g(code, "tax") or ("equity" if SLOTS[slot][1] == "Equity" else "other"),
                 })
+                up = upgrade_for(u, slot, ctx, cache, chosen, amc_count, code, macro)
+                if up:
+                    slots[-1]["upgrade"] = up
                 if slot in cuts:
                     c = cuts[slot]
                     slots[-1]["gate"] = {**c, "toLabel": SLOTS[c["to"]][0]}
