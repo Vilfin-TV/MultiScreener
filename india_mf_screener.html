@@ -655,6 +655,22 @@ html[data-theme="silver"],html[data-theme="news-reader"]{--pie1:#2a78d6;--pie2:#
 .alloc-bar{grid-column:1/-1;position:relative;height:6px;background:var(--surface3);border-radius:3px}
 .alloc-bar i{position:absolute;top:0;bottom:0;border-radius:3px;background:var(--accent);opacity:.75}
 .mgr2{display:flex;flex-direction:column;gap:8px}
+.mgr-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.mgr-sum div{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 10px;min-width:0}
+.mgr-sum small,.mgr-k small{display:block;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text3)}
+.mgr-sum b{display:block;font-family:'JetBrains Mono',monospace;font-size:15px;margin-top:3px}
+.mgr3{display:flex;flex-direction:column;gap:10px}
+.mgr-card{border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--surface2)}
+.mgr-hd{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.mgr-hd i{width:36px;height:36px;flex:none;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-style:normal;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.mgr-hd b{display:block;font-size:14px}.mgr-hd small{font-size:11.5px;color:var(--text3)}
+.mgr-k{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.mgr-k div{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:8px 9px;min-width:0}
+.mgr-k b{display:block;font-family:'JetBrains Mono',monospace;font-size:14px;margin-top:2px}
+.mgr-k em{display:block;font-style:normal;font-size:11px;color:var(--text3);margin-top:1px;overflow-wrap:anywhere}
+.mgr-oth{margin-top:10px}.mgr-oth summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--accent)}
+.mgr-tbl{width:100%;margin-top:6px}.mgr-tbl td{padding:7px 4px;border-bottom:1px solid var(--border)}.mgr-tbl td.num{white-space:nowrap}
+.mgr-tbl small{display:block;font-size:10px;color:var(--text3)}.mgr-tbl .t-name{white-space:normal}
 .mgr2 div{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:center;padding:8px;border-radius:10px;background:var(--surface2);border:1px solid var(--border)}
 .mgr2 i{width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-style:normal;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .mgr2 b{font-size:13.5px;display:block}
@@ -1197,6 +1213,46 @@ function toast(msg){ var t = $('toast'); t.textContent = msg; t.classList.add('o
 function store(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
 function load(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
 function cssv(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+/* ── fund-manager directory: experience, tenure, funds managed, track record ── */
+function loadManagers(){ if (!CACHE.mgr) CACHE.mgr = getJSON('managers.json').catch(function(){ delete CACHE.mgr; return null; }); return CACHE.mgr; }
+function ymYears(ym){ if (!ym) return null; var p = ym.split('-'), a = (D.asOf || '').split('-'); var y = (+a[0] - +p[0]) + (+a[1] - +p[1]) / 12; return y >= 0 ? y : null; }
+function ymTxt(ym){ if (!ym) return ''; var p = ym.split('-'); return MON[+p[1] - 1] + ' ' + p[0]; }
+function yrsTxt(y){ return !isNum(y) ? '–' : y < 1 ? Math.max(1, Math.round(y * 12)) + ' mo' : fmt(y, 1) + ' yrs'; }
+function fillManagers(f, mg){
+  if (!mg.length) return;
+  loadManagers().then(function(M){
+    var box = $('mgrBox'); if (!box || !M || S.sel !== f.code) return;
+    var list = mg.map(function(m){
+      var name = (typeof m === 'string' ? m : m.name || '').replace(/^\s*(mr|ms|mrs|dr|shri|smt|ca)\.?\s+/i, '').replace(/\s+/g, ' ').trim();
+      var rec = M.m[name.toLowerCase().replace(/[^a-z]/g, '') + '|' + f.amc] || null;
+      var mine = rec ? (rec.f.filter(function(x){ return x[0] === f.code; })[0] || []) : [];
+      return {name: name, role: typeof m === 'string' ? '' : m.role, rec: rec, since: mine[1] || null};
+    });
+    var exps = list.map(function(x){ return x.rec && ymYears(x.rec.e); }).filter(isNum);
+    var tens = list.map(function(x){ return ymYears(x.since); }).filter(isNum);
+    var h = '<div class="mgr-sum">' +
+      '<div><small>Managers</small><b>' + list.length + '</b></div>' +
+      '<div><small>Experience range</small><b>' + (exps.length ? (exps.length > 1 && Math.max.apply(null, exps) - Math.min.apply(null, exps) >= 0.1 ? yrsTxt(Math.min.apply(null, exps)).replace(' yrs', '') + ' – ' + yrsTxt(Math.max.apply(null, exps)) : '≥ ' + yrsTxt(Math.max.apply(null, exps))) : '–') + '</b></div>' +
+      '<div><small>Avg. tenure on fund</small><b>' + (tens.length ? yrsTxt(tens.reduce(function(a, b){ return a + b; }, 0) / tens.length) : '–') + '</b></div></div>';
+    h += '<div class="mgr3">' + list.map(function(x){
+      var r = x.rec, ten = ymYears(x.since), exp = r && ymYears(r.e);
+      var others = r ? r.f.filter(function(z){ return z[0] !== f.code && BY[z[0]]; }) : [];
+      var chips = [
+        ['On this fund', ten != null ? yrsTxt(ten) : '–', x.since ? 'since ' + ymTxt(x.since) : 'start date not disclosed'],
+        ['Experience at ' + f.amcName, exp != null ? '≥ ' + yrsTxt(exp) : '–', r && r.e ? 'earliest fund since ' + ymTxt(r.e) : 'start dates not disclosed'],
+        ['Funds managed', r ? r.f.length : '–', r ? fmtAum(r.aum) + ' in assets' : ''],
+        ['3Y track record', r && isNum(r.p3) ? 'Top ' + Math.max(1, Math.round((1 - r.p3) * 100)) + '%' : '–', r && r.n3 ? 'avg. category rank of ' + r.n3 + ' fund' + (r.n3 > 1 ? 's' : '') + ' with 3 yrs' : 'needs 3-year records']
+      ];
+      return '<div class="mgr-card"><div class="mgr-hd"><i>' + esc(initials(x.name)) + '</i><span><b>' + esc(x.name) + '</b><small>' + esc(x.role || 'Fund manager') + '</small></span></div>' +
+        '<div class="mgr-k">' + chips.map(function(c){ return '<div><small>' + esc(c[0]) + '</small><b>' + c[1] + '</b><em>' + esc(c[2]) + '</em></div>'; }).join('') + '</div>' +
+        (others.length ? '<details class="mgr-oth"><summary>Other funds managed (' + others.length + ')</summary><table class="mgr-tbl"><tbody>' + others.slice(0, 12).map(function(z){ var o = BY[z[0]];
+          return '<tr class="clk" data-code="' + o.code + '"><td><div class="t-name">' + esc(o.name) + '</div><div class="t-meta">' + esc(o.subLabel) + (z[1] ? ' · since ' + ymTxt(z[1]) : '') + '</div></td><td class="num">' + fmtPct(o.r3y) + '<small>3Y</small></td></tr>'; }).join('') +
+          '</tbody></table>' + (others.length > 12 ? '<div class="note">+ ' + (others.length - 12) + ' more</div>' : '') + '</details>' : '') + '</div>';
+    }).join('') + '</div>' +
+    '<div class="note">Experience is counted from the earliest fund this manager is recorded as managing at ' + esc(f.amcName) + ' (a minimum — earlier roles elsewhere are not included). Track record = average category percentile of 3-year returns across the funds they manage.</div>';
+    box.innerHTML = h;
+  });
+}
 function initials(n){ return n.split(/\s+/).filter(Boolean).slice(0, 2).map(function(w){ return w[0]; }).join('').toUpperCase(); }
 function debounce(fn, ms){ var t; return function(){ var a = arguments, s = this; clearTimeout(t); t = setTimeout(function(){ fn.apply(s, a); }, ms); }; }
 var ST_CLS = {'In form':'st-in', 'On track':'st-on', 'Underperforming':'st-un', 'Out of track':'st-out'};
@@ -1701,6 +1757,7 @@ function renderPanel(f, det, tail){
   $('panels').innerHTML = '<div class="panel on">' + h + '</div>';
   if (S.tab === 'overview') { drawNavChart(); CACHE.dSync = {}; CACHE.dSync[f.code] = (det || {}).score; renderScorecard(f); }
   if (S.tab === 'sip') bindSipCalc(f, tail);
+  if (S.tab === 'info') fillManagers(f, (det.info || {}).managers || []);
   if (S.tab === 'portfolio') {
     var code = f.code;
     loadPf(f.sub).then(function(pf){ if (S.sel === code && S.tab === 'portfolio' && $('pfBox')) { $('pfBox').outerHTML = pPortfolio(f, pf[code]); bindDonuts(); } });
@@ -2180,6 +2237,7 @@ function pInfo(f, det){
       var name = typeof m === 'string' ? m : m.name, since = typeof m === 'string' ? '' : String(m.since || '').replace(/^since\s+/i, ''), role = typeof m === 'string' ? '' : m.role;
       return '<div><i>' + esc(initials(name)) + '</i><span><b>' + esc(name) + '</b><small>' + (since ? 'Managing since ' + esc(since) : '') + (since && role ? ' · ' : '') + esc(role || '') + '</small></span></div>';
     }).join('') + '</div>' : refDoc;
+  mgHtml = '<div id="mgrBox">' + mgHtml + '</div>';
   var allocHtml = (info.alloc || []).length ? '<div class="alloc">' + info.alloc.map(function(a){
       return '<div class="alloc-row"><span class="lbl">' + esc(a.label) + '</span><span class="rng">' + a.min + '–' + a.max + '%</span><div class="alloc-bar"><i style="left:' + a.min + '%;width:' + Math.max(1.5, a.max - a.min) + '%"></i></div></div>';
     }).join('') + '</div>' : refDoc;
