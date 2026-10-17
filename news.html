@@ -1084,13 +1084,22 @@ body{
 .story-body ul, .story-body ol{margin-bottom:16px;padding-left:24px;}
 .story-body li{margin-bottom:6px;color:var(--text);}
 .story-body h1{font-size:24px;font-weight:700;margin:24px 0 16px;color:var(--text);font-family:'Playfair Display',Georgia,serif;}
-.story-body h2{font-size:20px;font-weight:700;margin:20px 0 12px;color:var(--text);font-family:'Playfair Display',Georgia,serif;}
-.story-body h3{font-size:18px;font-weight:700;margin:16px 0 10px;color:var(--text);font-family:'Playfair Display',Georgia,serif;}
+.story-body h2{font-size:20px;font-weight:700;margin:20px 0 12px;color:#e2eeff;font-family:'Playfair Display',Georgia,serif;}
+.story-body h3{font-size:18px;font-weight:700;margin:16px 0 10px;color:#e2eeff;font-family:'Playfair Display',Georgia,serif;}
 .story-body a{color:var(--burn2,#3b82f6);text-decoration:none;}
 .story-body a:hover{text-decoration:underline;}
-/* table/td/th don't inherit font-family or strong color in iOS/Telegram — must be explicit */
-.story-body table,.story-body th,.story-body td{font-family:'Noto Sans Malayalam','DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;}
-.story-body td strong,.story-body th strong{color:inherit;}
+/* table/td/th don't inherit font-family in iOS Safari — must be explicit.
+   color-scheme:dark on every table element prevents Safari/Telegram dark-mode
+   adaptation from overriding the dark row backgrounds and light text colors. */
+.story-body table,.story-body th,.story-body td{
+  font-family:'Noto Sans Malayalam','DM Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  color-scheme:dark;
+}
+/* Fallback text colors for any cell that loses its inline color */
+.story-body th{color:#94a3b8;}
+.story-body td{color:#e2eeff;}
+/* strong inside cells must inherit cell color — !important so Telegram UA can't override */
+.story-body td strong,.story-body th strong{color:inherit!important;}
 .story-body .ql-align-center{text-align:center;}
 .story-body .ql-align-right{text-align:right;}
 .story-body .ql-align-justify{text-align:justify;}
