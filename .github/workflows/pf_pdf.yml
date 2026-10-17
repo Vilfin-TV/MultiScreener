@@ -1,0 +1,40 @@
+name: LIC factsheet fetch (temporary)
+on:
+  push:
+    branches: [claude/festive-bell-an714y]
+    paths: [.github/workflows/pf_pdf.yml]
+permissions: {contents: write}
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: claude/festive-bell-an714y}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: |
+          pip install --upgrade pip requests playwright==1.48.0
+          python -m playwright install --with-deps chromium
+      - run: |
+          mkdir -p .probe
+          cat > /tmp/f.py <<'P'
+          from playwright.sync_api import sync_playwright
+          import requests
+          UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/129.0 Safari/537.36"
+          with sync_playwright() as pw:
+              b = pw.chromium.launch(headless=False); ctx = b.new_context(user_agent=UA)
+              p = ctx.new_page(); p.goto("https://www.licmf.com/downloads/factsheet", wait_until="domcontentloaded", timeout=60000); p.wait_for_timeout(5000)
+              for u, n in (("https://www.licmf.com/assets/downloads/monthly_fact_sheet/2026-2027/10/lic-mf-factsheet-30th-september-2026-275881603.pdf", "lic_sep.pdf"),
+                           ("https://www.licmf.com/assets/downloads/monthly_fact_sheet/2026-2027/09/lic-mf-factsheet-31st-august-2026-637762107.pdf", "lic_aug.pdf")):
+                  r = ctx.request.get(u, headers={"Referer": "https://www.licmf.com/downloads/factsheet"}, timeout=120000)
+                  open(".probe/" + n, "wb").write(r.body()); print(n, r.status, len(r.body()))
+              b.close()
+          r = requests.get("https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv", headers={"User-Agent": UA}, timeout=60)
+          open(".probe/EQUITY_L.csv", "wb").write(r.content); print("equity list", r.status_code, len(r.content))
+          P
+          xvfb-run -a python /tmp/f.py
+      - run: |
+          git config user.name "github-actions[bot]"; git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add .probe && git commit -m "chore(dev): LIC factsheet sample [skip ci]"
+          for i in 1 2 3 4 5; do git pull --rebase --autostash && git push && break; sleep $((i*7)); done
