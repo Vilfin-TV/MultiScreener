@@ -2052,9 +2052,9 @@ function pPortfolio(f, pf){
 /* ── peers ── */
 function pPeers(f){
   var keys = [['r1y','1Y'],['r3y','3Y'],['r5y','5Y'],['sip3','SIP 3Y'],['sharpe','Sharpe'],['ter','TER'],['aum','AUM']];
-  var k = S.peerSort, lower = k === 'ter';
+  var k = S.peerSort, dir = S.peerDir || (k === 'ter' ? 1 : -1);      // −1 = high to low, +1 = low to high
   var list = SUBSTAT[f.sub].funds.slice().sort(function(a, b){
-    var x = a[k], y = b[k]; if (!isNum(x) && !isNum(y)) return 0; if (!isNum(x)) return 1; if (!isNum(y)) return -1; return lower ? x - y : y - x;
+    var x = a[k], y = b[k]; if (!isNum(x) && !isNum(y)) return 0; if (!isNum(x)) return 1; if (!isNum(y)) return -1; return dir > 0 ? x - y : y - x;
   });
   var rows = list.map(function(p, i){
     return '<tr class="clk' + (p.code === f.code ? ' cur' : '') + '" data-code="' + p.code + '"><td class="mut">' + (i + 1) + '</td><td class="t-fund"><div class="t-name">' + esc(p.name) + '</div><div class="t-meta">' + esc(p.amcName) + '</div></td><td>' + stars(p.rating) + '</td>' +
@@ -2062,7 +2062,7 @@ function pPeers(f){
   }).join('');
   return '<div class="card pcard"><div class="pc-head"><div><div class="sec-title">' + esc(f.subLabel) + ' peers</div><div class="sec-sub">' + list.length + ' Direct-Growth funds · tap a fund to open it</div></div>' +
     '<select class="sel" id="peerSort" style="width:auto;min-width:180px" aria-label="Rank peers by">' + keys.map(function(c){ return '<option value="' + c[0] + '"' + (c[0] === k ? ' selected' : '') + '>Rank by ' + c[1] + '</option>'; }).join('') + '</select></div>' +
-    '<div class="tbl-scroll" style="display:block;max-height:640px;overflow:auto"><table style="min-width:860px"><thead><tr><th>#</th><th>Fund</th><th>Rating</th>' + keys.map(function(c){ return '<th class="num' + (c[0] === k ? ' sorted' : '') + '">' + c[1] + '</th>'; }).join('') + '</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+    '<div class="tbl-scroll" style="display:block;max-height:640px;overflow:auto"><table style="min-width:860px"><thead><tr><th>#</th><th>Fund</th><th>Rating</th>' + keys.map(function(c){ var on = c[0] === k; return '<th class="num sortable' + (on ? ' sorted' : '') + '" data-pk="' + c[0] + '" title="Sort by ' + c[1] + '" aria-sort="' + (on ? (dir > 0 ? 'ascending' : 'descending') : 'none') + '">' + c[1] + '<span class="s">' + (on ? (dir > 0 ? '▲' : '▼') : '↕') + '</span></th>'; }).join('') + '</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
 }
 
 /* ── info ── */
@@ -2226,7 +2226,15 @@ function bindUI(){
     var am = t.closest('[data-amc]'); if (am) { S.f.amc = am.getAttribute('data-amc'); $('fAmc').value = S.f.amc; S.asset = BY[S.sel].asset; S.sub = ''; S.sort = null; setView('explore'); return; }
     var pr = t.closest('#panels tr[data-code]'); if (pr) { openFund(+pr.getAttribute('data-code')); return; }
   });
-  $('detail').addEventListener('change', function(e){ if (e.target.id === 'peerSort') { S.peerSort = e.target.value; renderDetail(); } });
+  // peers: re-sort in place (no reload) from the dropdown or by clicking a column header (click again to reverse)
+  function sortPeers(k, toggle){
+    S.peerDir = toggle && S.peerSort === k ? -(S.peerDir || (k === 'ter' ? 1 : -1)) : (k === 'ter' ? 1 : -1);
+    S.peerSort = k;
+    var box = $('panels'), sc = box.querySelector('.tbl-scroll'), top = sc ? sc.scrollTop : 0;
+    if (BY[S.sel] && S.tab === 'peers') { box.innerHTML = '<div class="panel on">' + pPeers(BY[S.sel]) + '</div>'; var n = box.querySelector('.tbl-scroll'); if (n) n.scrollTop = top; }
+  }
+  $('detail').addEventListener('change', function(e){ if (e.target.id === 'peerSort') sortPeers(e.target.value, false); });
+  $('detail').addEventListener('click', function(e){ var th = e.target.closest('th[data-pk]'); if (th) { e.stopPropagation(); sortPeers(th.getAttribute('data-pk'), true); } });
   document.querySelectorAll('[data-goview]').forEach(function(a){ a.addEventListener('click', function(e){ e.preventDefault(); setView(a.getAttribute('data-goview')); window.scrollTo({top:0, behavior:'smooth'}); }); });
   bindNfo(); bindSip();
   hsInit($('subsHs'));
