@@ -599,6 +599,12 @@ td.sorted-col{background:rgba(127,127,127,.05)}
 .sc-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;margin-bottom:12px;align-items:stretch}
 .sc-top .status-box{margin:0}
 .sc-ov{display:flex;gap:14px;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px}
+.etf-alt{display:flex;align-items:center;gap:12px;padding:12px 16px;margin:14px 0;font-size:13px;color:var(--text2);text-decoration:none;line-height:1.45}
+.etf-alt:hover{border-color:var(--accent)}
+.etf-alt b{color:var(--text)}
+.etf-alt-i{font-size:20px;flex-shrink:0}
+.etf-alt-go{margin-left:auto;font-weight:700;color:var(--accent2);white-space:nowrap;flex-shrink:0}
+@media (max-width:640px){.etf-alt{flex-wrap:wrap}.etf-alt-go{margin-left:32px}}
 .sc-ring{--v:0;flex:none;width:78px;height:78px;border-radius:50%;display:flex;align-items:baseline;justify-content:center;padding-top:22px;background:radial-gradient(closest-side,var(--surface2) 78%,transparent 80% 100%),conic-gradient(var(--accent) calc(var(--v)*1%),var(--surface3) 0)}
 .sc-ring b{font-family:'JetBrains Mono',monospace;font-size:24px}.sc-ring small{font-size:11px;color:var(--text3)}
 .sc-ov-k{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);display:flex;gap:6px;align-items:center}
@@ -1219,6 +1225,7 @@ footer a{color:var(--text2)}
       <div class="note">Projections use today's yields, valuation-adjusted long-run equity returns and each fund's expense ratio, <b>compounded</b> every month at each fund's expected yearly return (CAGR). Regular investments run for the years you choose and then stay invested until the end of your holding period; a one-time amount stays invested for the whole holding period. Tax assumes everything is redeemed at the end under current capital-gains rules.</div>
     </div>
     <div id="sipBody"><div class="card"><div class="skel" style="height:260px"></div></div></div>
+    <a class="card etf-alt" href="etf_momentum.html#smart"><span class="etf-alt-i">📈</span><span><b>Prefer ETFs with a demat account?</b> The same plan built with low-cost ETFs — Indian equity, debt, gold and global — in ETF Smart Invest.</span><span class="etf-alt-go">Open ETF Smart Invest →</span></a>
     <div class="card sip-guide" id="sipGuide">
       <div class="sec-title">How to invest with this plan — a beginner's guide</div>
       <p class="gd-lead">Smart Invest is a plan <b>you carry out yourself</b>. On each investment day you open this page, check the plan and buy <b>every fund in it as a one-time (lump-sum) purchase</b> for the amount shown in the plan table. It is <b>not an automatic SIP</b> — nothing is debited from your bank account unless you place the orders. Buying this way means each new instalment always follows the latest monthly review of the plan, and every fund in it accepts one-time purchases from ₹1,000 or less.</p>
@@ -1399,6 +1406,15 @@ footer a{color:var(--text2)}
         <li><b>Protect it:</b> keep a small emergency fund first, never stop during market falls, and do not withdraw for non-goal spending.</li></ul></details>
       <details class="faq"><summary>How many mutual funds should I own?</summary><p>For most people <b>3 to 5 funds</b> are enough: for example an index or large-cap fund, a flexi-cap fund, a mid- or small-cap fund for long horizons, a debt or hybrid fund for stability, and optionally gold. Owning 10–15 funds rarely adds diversification — they end up holding the same stocks (check overlap in Compare) and become hard to track. Smart Invest plans use up to eight funds because they also cover debt, gold and international markets.</p></details>
       <details class="faq"><summary>Mutual funds or ETFs — what is the difference?</summary><p>An <b>ETF</b> is a fund that trades on the stock exchange like a share, at live prices during market hours, and needs a demat account; a <b>mutual fund</b> is bought from the fund house at the day's NAV, with no demat needed and easy automatic SIPs. ETFs usually have the lowest costs; index mutual funds are simpler for regular monthly investing. Compare NSE ETFs on <a href="etf_momentum.html">ETF Momentum Mode</a>.</p></details>
+      <details class="faq"><summary>Smart Invest with ETFs or with mutual funds — which should I use?</summary><p>Both use the <b>same monthly market rules</b> (valuation, interest-rate cycle, gold vs silver, value vs momentum, sector choice) and the same asset mix for each goal and risk level. Choose by how you like to invest:</p>
+        <table class="faq-ex"><thead><tr><th></th><th>ETF Smart Invest</th><th>Mutual fund Smart Invest</th></tr></thead><tbody>
+        <tr><td>Account</td><td>Demat &amp; trading account</td><td>Direct mutual fund account (no demat needed)</td></tr>
+        <tr><td>Cost</td><td>Lowest expense ratios, plus brokerage per trade</td><td>Slightly higher expense ratios, no brokerage</td></tr>
+        <tr><td>How you buy</td><td>Whole units at live prices, limit orders near iNAV</td><td>Any rupee amount at the day's NAV</td></tr>
+        <tr><td>Active funds</td><td>Index ETFs only</td><td>Includes proven active funds, arbitrage, balanced advantage and multi-asset funds</td></tr>
+        <tr><td>Short goals (under 3 years)</td><td>Liquid ETFs — taxed at your slab</td><td>Arbitrage funds — taxed like equity, often better after tax</td></tr>
+        <tr><td>Best for</td><td>Hands-on investors who already trade and want the lowest cost</td><td>Beginners, small amounts, fully hands-off investing</td></tr></tbody></table>
+        <p>Open <a href="etf_momentum.html#smart">ETF Smart Invest</a> or <a href="?view=sip">mutual fund Smart Invest</a>.</p></details>
       <details class="faq"><summary>Is the data on this site accurate?</summary><p>We work hard to keep it accurate, but please treat it as a research aid — not the final word.</p><ul>
         <li><b>Official sources:</b> NAVs, fund details, expense ratios, minimum amounts and exit loads come from official industry and fund-house disclosures; portfolios come from each fund house's statutory monthly portfolio statement.</li>
         <li><b>Automated checks every day:</b> every return is recalculated independently and reconciled against the official NAV history; unit splits and one-day price errors are corrected; portfolios are checked to add up and to fit the fund's category. If a check fails, the update is not published and the previous data stays.</li>

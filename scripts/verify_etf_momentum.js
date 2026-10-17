@@ -162,6 +162,39 @@ if (fs.existsSync(exFile)) {
     console.log(`holdings: ${Object.keys(HO).length} ETFs (own ${Object.values(HO).filter(h => h.src === 'own').length})`);
   } else fail('etf_holdings.json missing');
 } else fail('etf_extras.json missing');
+// ── 4. Smart Invest for ETFs ──
+const smFile = path.join(root, 'etf_smart.json');
+if (fs.existsSync(smFile)) {
+  const SMJ = JSON.parse(fs.readFileSync(smFile, 'utf8'));
+  const etfBy = {}; (D.etfs || []).forEach(e => { etfBy[e.s] = e; });
+  for (const [k, sl] of Object.entries(SMJ.slots || {})) {
+    const e = etfBy[sl.sym];
+    if (!e) { fail(`smart: slot ${k} uses unknown ETF ${sl.sym}`); continue; }
+    if (!(e.tv > 0)) fail(`smart: ${k} ${sl.sym} has no trading`);
+    const ck = Object.fromEntries((sl.checks || []).map(c => [c[0], c[1]]));
+    if (sl.state === 'ok' && (sl.checks || []).some(c => !c[1])) fail(`smart: ${k} ${sl.sym} marked ok but fails a check`);
+    if (!ck['Liquidity'] || !ck['Traded every day'] || !ck['Price close to NAV']) fail(`smart: ${k} ${sl.sym} fails liquidity / trading / price-vs-NAV`);
+    if (!(sl.er > 0 && sl.er < 20)) fail(`smart: ${k} expected return ${sl.er}`);
+    if (!['equity', 'other', 'debt'].includes(sl.tax)) fail(`smart: ${k} tax class ${sl.tax}`);
+  }
+  const plans = Object.entries(SMJ.plans || {});
+  if (plans.length !== 20) fail(`smart: ${plans.length} plans (expected 20)`);
+  for (const [pid, p] of plans) {
+    const tot = p.slots.reduce((t, s) => t + s.w, 0);
+    if (tot !== 100) fail(`smart: ${pid} weights add up to ${tot}`);
+    for (const s of p.slots) {
+      if (!SMJ.slots[s.id]) fail(`smart: ${pid} slot ${s.id} missing`);
+      if (s.w % 5 || s.w <= 0) fail(`smart: ${pid} ${s.id} weight ${s.w}`);
+    }
+    const mix = p.mix || {};
+    if (pid.slice(0, 2) !== 'h1' && (!(mix.Equity >= 5) || !(mix.Debt >= 5) || !(mix.Commodity >= 5))) fail(`smart: ${pid} not diversified ${JSON.stringify(mix)}`);
+    const er = p.slots.reduce((t, s) => t + s.w * SMJ.slots[s.id].er, 0) / 100;
+    if (Math.abs(er - p.er) > 0.02) fail(`smart: ${pid} expected return ${p.er} != weighted ${er.toFixed(2)}`);
+  }
+  const eqOf = pid => (SMJ.plans[pid] || {}).mix ? (SMJ.plans[pid].mix.Equity || 0) + (SMJ.plans[pid].mix.Global || 0) : 0;
+  for (const hz of ['h3', 'h5', 'h7', 'h10']) if (!(eqOf(hz + 'c') <= eqOf(hz + 'b') && eqOf(hz + 'b') <= eqOf(hz + 'a') + 5)) fail(`smart: ${hz} equity not rising with risk`);
+  console.log(`smart invest: ${plans.length} plans · ${Object.keys(SMJ.slots || {}).length} ETF slots`);
+} else fail('etf_smart.json missing');
 const dDir = path.join(root, 'etf', 'd');
 if (fs.existsSync(dDir)) {
   let nD = 0, cur = 0;
