@@ -1,0 +1,44 @@
+name: Holdings source test (temporary)
+on:
+  push:
+    branches: [claude/festive-bell-an714y]
+    paths: [.github/workflows/pf_hold_test.yml]
+permissions: {contents: write}
+env:
+  ONLY: "Bank of India"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: claude/festive-bell-an714y}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '20'}
+      - run: |
+          pip install --upgrade pip requests openpyxl xlrd playwright==1.48.0
+          python -m playwright install --with-deps chromium
+      - run: |
+          mkdir -p .mfcache/holdings .probe/hold_test
+          xvfb-run -a python scripts/build_mf_holdings.py "--only=$ONLY" --force > .probe/hold_test/build.log 2>&1 || echo "build exit $?" >> .probe/hold_test/build.log
+          python scripts/audit_mf_holdings.py > .probe/hold_test/audit.log 2>&1 || true
+          node scripts/verify_mf_screener.js --holdings > .probe/hold_test/verify.log 2>&1 || true
+          cp data/mf/p/_audit.json data/mf/p/_meta.json .probe/hold_test/ || true
+          git status --short data/mf/p > .probe/hold_test/changed.txt
+          python - <<'P'
+          import json, glob
+          out = {}
+          for f in glob.glob("data/mf/p/*.json"):
+              if "/_" in f: continue
+              d = json.load(open(f))
+              for code, v in d.items():
+                  if isinstance(v, dict) and v.get("amc") in (None,) : pass
+              out[f] = len(d)
+          json.dump(out, open(".probe/hold_test/files.json", "w"), indent=1)
+          P
+      - run: |
+          git config user.name "github-actions[bot]"; git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add .probe/hold_test && git commit -m "chore(dev): holdings source test [skip ci]"
+          git checkout -- data 2>/dev/null; git clean -fdq data; for i in 1 2 3 4 5; do git pull --rebase && git push && break; sleep $((i*5)); done

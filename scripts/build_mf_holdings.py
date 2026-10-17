@@ -91,6 +91,8 @@ SOURCES = {
                 "pick": r"monthly[-_ ]?portfolio|portfolio[-_ ]?monthly", "multi": True},
     "Motilal Oswal": {"page": "https://www.motilaloswalmf.com/downloads/scheme-portfolio-details",
                       "pick": r"month-end-portfolio/.*scheme(?:%20| |-|_)portfolio(?:%20| |-|_)details", "skip": SKIP_DEFAULT + r"|copy"},
+    "Bank of India": {"page": "https://www.boimf.in/investor-corner#t2",
+                      "pick": r"/investorcorner/monthly-portfolio/monthly-portfolio"},
     # file names carry no date: the portfolio month is read from inside each file (date: content)
     "Quantum": {"page": "https://www.quantumamc.com/portfolio/combined/-1/1/0/0", "pick": r"/FileCDN/FactSheet/", "date": "content", "scan": 4},
     "The Wealth Company": {"page": "https://www.wealthcompanyamc.in/literature-forms/portfolio-documents/monthly/",
