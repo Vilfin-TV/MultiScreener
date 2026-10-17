@@ -277,7 +277,7 @@ def clean_underlying(u: str) -> str:
 
 # ── Price download ────────────────────────────────────────────────────────────
 def download(tickers: list[str], period: str = "2y", chunk: int = 60) -> dict:
-    """Return {ticker: pandas.DataFrame(Close, Volume)} for tickers that returned data."""
+    """Return {ticker: pandas.DataFrame(Open, High, Low, Close, Volume)} for tickers that returned data."""
     import pandas as pd
     import yfinance as yf
 
@@ -295,7 +295,7 @@ def download(tickers: list[str], period: str = "2y", chunk: int = 60) -> dict:
         for t in batch:
             try:
                 sub = df[t] if isinstance(df.columns, pd.MultiIndex) else df
-                sub = sub[["Close", "Volume"]].copy()
+                sub = sub[[k for k in ("Open", "High", "Low", "Close", "Volume") if k in sub.columns]].copy()
                 sub = sub[pd.to_numeric(sub["Close"], errors="coerce") > 0].dropna(subset=["Close"])
                 if len(sub) >= 5:
                     result[t] = sub
@@ -321,7 +321,7 @@ def download(tickers: list[str], period: str = "2y", chunk: int = 60) -> dict:
         try:
             h = yf.Ticker(t).history(period=period, interval="1d", auto_adjust=True)
             if h is not None and len(h) > len(result[t]) + 5:
-                h = h[["Close", "Volume"]].copy()
+                h = h[[k for k in ("Open", "High", "Low", "Close", "Volume") if k in h.columns]].copy()
                 h = h[pd.to_numeric(h["Close"], errors="coerce") > 0].dropna(subset=["Close"])
                 if len(h) > len(result[t]):
                     result[t] = h
@@ -341,7 +341,7 @@ def refresh_latest(raw: dict, tk: str) -> None:
         h = yf.Ticker(tk).history(period="1mo", interval="1d", auto_adjust=True)
         if h is None or h.empty:
             return
-        h = h[["Close", "Volume"]]
+        h = h[[k for k in ("Open", "High", "Low", "Close", "Volume") if k in h.columns]]
         h = h[pd.to_numeric(h["Close"], errors="coerce") > 0].dropna(subset=["Close"])
         cur = raw[tk]
         last = cur.index[-1].date()
@@ -596,6 +596,49 @@ def load_facts() -> dict:
         return {}
 
 
+DAILY_DIR = os.path.join(ROOT, "data", "etf", "d")
+DAILY_BARS = 260            # ~1 year of daily bars per ETF for the page's trading chart (loaded on demand)
+
+
+def daily_bars(d: list, c: list[float], v: list[float], raw: dict) -> dict | None:
+    """Last DAILY_BARS sessions as compact OHLCV. Open / high / low are put on the same (split-repaired) basis as the
+    cleaned close; a missing or implausible value (outside ±20% of the close — the exchange's widest band) falls back
+    to the close so one bad print never distorts the chart."""
+    if len(c) < 20:
+        return None
+    t, o, h, lo, cl, vv = [], [], [], [], [], []
+    for dt, px, vol in zip(d[-DAILY_BARS:], c[-DAILY_BARS:], v[-DAILY_BARS:]):
+        r = raw.get(dt)
+        f = px / r[3] if r and r[3] and r[3] > 0 else 1.0
+        vals = []
+        for x in (r[:3] if r else (px, px, px)):
+            x = x * f if x == x and x and x > 0 else px
+            vals.append(x if 0.8 * px <= x <= 1.2 * px else px)
+        op, hi, low = vals
+        hi, low = max(hi, op, px), min(low, op, px)
+        t.append(int(dt.strftime("%Y%m%d")))
+        o.append(to_rounded(op)); h.append(to_rounded(hi)); lo.append(to_rounded(low)); cl.append(to_rounded(px))
+        vv.append(int(vol) if vol == vol and vol > 0 else 0)
+    return {"t": t, "o": o, "h": h, "l": lo, "c": cl, "v": vv}
+
+
+def write_daily(daily: dict, as_of: str, listed: set) -> None:
+    """data/etf/d/<SYMBOL>.json — one small file per ETF; files of ETFs no longer listed are removed."""
+    if len(daily) < 50:
+        log.warning(f"daily bars for only {len(daily)} ETFs — keeping the previous files")
+        return
+    os.makedirs(DAILY_DIR, exist_ok=True)
+    for sym, bars in daily.items():
+        path = os.path.join(DAILY_DIR, f"{sym}.json")
+        with open(path + ".tmp", "w", encoding="utf-8") as fh:
+            json.dump({"s": sym, "asOf": as_of, **bars}, fh, separators=(",", ":"))
+        os.replace(path + ".tmp", path)
+    for fn in os.listdir(DAILY_DIR):
+        if fn.endswith(".json") and fn[:-5] not in listed:
+            os.remove(os.path.join(DAILY_DIR, fn))
+    log.info(f"daily bars          : {len(daily)} ETFs → {DAILY_DIR}")
+
+
 HIST_OUT = os.path.join(ROOT, "data", "etf_hist.json")
 HIST_WEEKS = 262            # ~5 years of weekly closes for the page's long-term chart
 
@@ -657,6 +700,7 @@ def main() -> int:
 
     # ── benchmarks (Nifty 50 defines the trading calendar) ──
     series: dict[str, tuple[list, list, list]] = {}
+    ohlc: dict[str, dict] = {}                   # raw daily open / high / low (+ raw close) for the trading chart
 
     def prep(tk: str):
         if tk in series:
@@ -674,6 +718,10 @@ def main() -> int:
         vol_map = dict(zip(dates, vols))
         v = [vol_map.get(x, 0.0) for x in d]
         series[tk] = (d, c, v, flags)
+        cols = [k for k in ("Open", "High", "Low") if k in df.columns]
+        if len(cols) == 3:
+            ohlc[tk] = {dt: (float(o), float(hh), float(lo), rc) for dt, o, hh, lo, rc in
+                        zip(dates, df["Open"].tolist(), df["High"].tolist(), df["Low"].tolist(), closes)}
         return series[tk]
 
     bench_out = []
@@ -746,6 +794,7 @@ def main() -> int:
 
     # ── ETFs ──
     etfs, failed, insufficient = [], [], 0
+    daily: dict[str, dict] = {}
     stale_cut = datetime.strptime(last_trade, "%Y-%m-%d")
     for sym in universe:
         name, amc, und = nice_name(sym, master, nse, prev_names)
@@ -805,6 +854,9 @@ def main() -> int:
                     rec["prem"] = round(prem, 2)
                     rec["premD"] = fx["navDate"]
         hist["etfs"][sym] = align5(weekly_last(d, c))
+        bars = daily_bars(d, c, v, ohlc.get(f"{sym}.NS") or {})
+        if bars:
+            daily[sym] = bars
         yr = c[-250:]
         rec["h52"] = to_rounded(max(yr)); rec["l52"] = to_rounded(min(yr))
         tv = [px * vv for px, vv in zip(c[-20:], v[-20:])]
@@ -880,6 +932,7 @@ def main() -> int:
     with open(HIST_OUT + ".tmp", "w", encoding="utf-8") as fh:
         json.dump(hist, fh, separators=(",", ":"))
     os.replace(HIST_OUT + ".tmp", HIST_OUT)
+    write_daily(daily, last_trade, {e["s"] for e in etfs})
     tmp = args.out + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
         json.dump(payload, fh, separators=(",", ":"), ensure_ascii=False)

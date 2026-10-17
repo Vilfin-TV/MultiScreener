@@ -625,6 +625,9 @@ SYN = [(r"\bmid\s*cap\b", " midcap "), (r"\bsmall\s*cap\b", " smallcap "), (r"\b
        (r"\bpsu\b", " psu "), (r"\bs\s*&\s*p\b", " sp "), (r"\bbse\b|\bnifty\b|\bnse\b", " "), (r"&", " and ")]
 
 
+ETF_NON_EQUITY = r"gold|silver|liquid|gilt|g-?sec|bond|1 ?d rate|overnight|money market|sdl|debt|treasury|t-?bill|crisil"
+
+
 def tokens(n: str) -> set:
     n = n.lower()
     n = re.sub(r"\((?:formerly|erstwhile|earlier).*?(\)|$)", " ", n)
@@ -695,6 +698,18 @@ def main():
         sub_of[code] = r[C["sub"]]
         name_of[code], aum_of[code] = r[C["name"]], r[C["aum"]]
         funds_by_amc[amc].append({"code": code, "amfi": (det.get(str(code)) or {}).get("info", {}).get("amfiName") or r[C["name"]]})
+    # equity ETFs: matched in a second pass on the tables no mutual fund claimed (so fund matches never change)
+    etf_by_amc, etf_isin = defaultdict(list), {}
+    try:
+        for isin, f in json.load(open(ROOT / "data" / "mf" / "etf_facts.json"))["etfs"].items():
+            if f.get("code") and not re.search(ETF_NON_EQUITY, f.get("name", ""), re.I):
+                etf_by_amc[f.get("amc", "")].append({"code": f["code"], "amfi": f["name"]})
+                etf_isin[f["code"]] = isin
+    except Exception as e:  # noqa: BLE001
+        log.warning("ETF list unavailable (%s) — ETF portfolios skipped", e)
+    etf_path = ROOT / "data" / "mf" / "etf_p.json"
+    etf_prev = json.load(open(etf_path)) if etf_path.exists() else {}
+    etf_new = {}
     meta_path = OUT / "_meta.json"
     meta = json.load(open(meta_path)) if meta_path.exists() else {}
     S = requests.Session()
@@ -714,7 +729,8 @@ def main():
             log.warning("%s: latest portfolio file is for %s — too old, skipped", amc, info["month"])
             continue
         if (meta.get(amc, {}).get("month") == info["month"] and meta[amc].get("funds", 0) > 0
-                and not meta[amc].get("dlFail") and "--force" not in sys.argv):
+                and not meta[amc].get("dlFail") and "--force" not in sys.argv
+                and (meta[amc].get("etfMonth") == info["month"] or not etf_by_amc.get(amc))):
             log.info("%s: %s already processed", amc, info["month"])
             continue
         blocks, dl_fail = [], 0
@@ -789,8 +805,18 @@ def main():
                 continue
             sm["asOf"] = info["month"]
             results[code] = sm
+        etf_n = 0
+        if etf_by_amc.get(amc):
+            for code, blk in match_blocks([b for b in blocks if id(b) not in hit], etf_by_amc[amc]).items():
+                sm = summarise(blk, large, mid)
+                eq = (sm["mix"].get("equity") or 0) + (sm["mix"].get("overseas") or 0)
+                if 40 <= 100 - sm["mix"]["cashOther"] <= 130 and eq >= 60 and sm["top"]:
+                    sm["asOf"] = info["month"]
+                    etf_new[etf_isin[code]] = sm
+                    etf_n += 1
         meta[amc] = {"month": info["month"], "files": len(info["files"]), "blocks": len(blocks),
-                     "funds": len(matched) - bad, "rejected": bad, "dlFail": dl_fail, "updated": date.today().isoformat()}
+                     "funds": len(matched) - bad, "rejected": bad, "dlFail": dl_fail, "updated": date.today().isoformat(),
+                     "etfs": etf_n, "etfMonth": info["month"]}
         log.info("%s: %d sheet blocks parsed, %d funds matched, %d rejected by sanity checks",
                  amc, len(blocks), len(matched) - bad, bad)
     # fund houses read from their fund pages (one portfolio per fund page)
@@ -867,6 +893,10 @@ def main():
     meta["_proxies"] = proxies
     for sub, d in by_sub.items():
         (OUT / f"{sub}.json").write_text(json.dumps(d, separators=(",", ":"), ensure_ascii=False))
+    etf_all = {k: v for k, v in {**etf_prev, **etf_new}.items() if pf_age_days(v["asOf"]) <= MAX_AGE_DAYS}
+    etf_path.write_text(json.dumps(etf_all, separators=(",", ":"), ensure_ascii=False))
+    log.info("ETF portfolios: %d (%d new this run)", len(etf_all), len(etf_new))
+    meta["_etfs"] = len(etf_all)
     meta["_generated"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     meta["_funds"] = sum(len(d) for d in by_sub.values())
     meta_path.write_text(json.dumps(meta, indent=1))

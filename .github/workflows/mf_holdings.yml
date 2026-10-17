@@ -51,7 +51,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install --upgrade pip requests openpyxl xlrd pdfplumber playwright==1.48.0
+          pip install --upgrade pip requests openpyxl xlrd pdfplumber numpy scipy playwright==1.48.0
           python -m playwright install --with-deps chromium
 
       - name: Set up Node 20
@@ -97,6 +97,11 @@ jobs:
       - name: Verify holdings
         run: node scripts/verify_mf_screener.js --holdings
 
+      - name: ETF page analytics (holdings, scores, rating, Factor DNA)
+        run: |
+          # a failed check never blocks the holdings publish — the ETF files then simply stay as they were
+          { python scripts/build_etf_extras.py && node scripts/verify_etf_momentum.js; } || git checkout -- data/etf_extras.json data/etf_holdings.json
+
       - name: Commit (with rebase-and-retry)
         env:
           BRANCH: ${{ github.ref_name }}
@@ -104,6 +109,7 @@ jobs:
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add -A data/mf/p
+          git add data/mf/etf_p.json data/etf_extras.json data/etf_holdings.json 2>/dev/null || true
           git add data/mf/exitload_extra.json data/mf/scheme_pages.json 2>/dev/null || true
           if git diff --staged --quiet; then
             echo "No changes to holdings data."
