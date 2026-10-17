@@ -1181,7 +1181,7 @@ var ASSET_INFO = {
   Solution:{d:'Retirement & children',c:'#f97316'}
 };
 var PRESETS = [
-  {id:'top', n:'Top performers', ic:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>'},
+  {id:'top', n:'Highest returns', ic:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>'},
   {id:'sip', n:'Best SIP returns', ic:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>'},
   {id:'consistent', n:'Most consistent', ic:'<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/>'},
   {id:'riskadj', n:'Best risk-adjusted', ic:'<path d="M12 3v18M5 7h14M7 7l-3 7h6zM17 7l-3 7h6z"/>'},
@@ -1190,7 +1190,8 @@ var PRESETS = [
   {id:'inform', n:'In form', ic:'<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>'},
   {id:'steady', n:'Most steady', ic:'<path d="M3 12h4l3-8 4 16 3-8h4"/>'},
   {id:'rated', n:'Highest rated', ic:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>'},
-  {id:'mom3', n:'Best momentum 3M', ic:'<path d="M3 17l5-5 4 3 9-9"/><path d="M15 6h6v6"/><path d="M3 21h18"/>'}
+  {id:'mom3', n:'Best momentum 3M', ic:'<path d="M3 17l5-5 4 3 9-9"/><path d="M15 6h6v6"/><path d="M3 21h18"/>'},
+  {id:'value', n:'Best value', ic:'<path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/>'}
 ];
 var PERIODS = {r1y:'1Y', r3y:'3Y', r5y:'5Y'};
 var RET_KEYS = [['r1d','1D'],['r1w','1W'],['r1m','1M'],['r3m','3M'],['r6m','6M'],['ytd','YTD'],['r1y','1Y'],['r3y','3Y'],['r5y','5Y'],['r10y','10Y']];
@@ -1554,6 +1555,7 @@ function presetSort(){
     case 'inform': return {k:'rec', dir:-1};
     case 'steady': return {k:'cons', dir:-1, alt:'vols'};
     case 'mom3': return {k:'r3m', dir:-1, alt:'r1m'};
+    case 'value': return {k:'valW', dir:-1, alt:'peCheap'};
     default: return {k:S.per, dir:-1};
   }
 }
@@ -1588,6 +1590,31 @@ function sortList(list){
     return dir * (x - y);
   });
 }
+/* value data: Factor DNA value exposure (detail files) + portfolio P/E vs category median (fund_pe.json), loaded per category in view */
+var VALUE_SUBS = {}, VALUE_PE = null;
+function cellFmt(k, v){
+  if (k === 'valW') return isNum(v) ? Math.round(v) + '%' : '–';
+  if (k === 'pe') return isNum(v) ? fmt(v, 1) : '–';
+  if (k === 'peRel') return isNum(v) ? fmt(v, 2) + '×' : '–';
+  return fmtPct(v);
+}
+function valueReady(){ return VALUE_PE && scope().every(function(f){ return VALUE_SUBS[f.sub] === true; }); }
+function loadValueData(){
+  if (!VALUE_PE) VALUE_PE = getJSON('fund_pe.json').then(function(d){
+    var pe = (d || {}).funds || {}, bySub = {};
+    Object.keys(pe).forEach(function(c){ var f = BY[c]; if (f && isNum(pe[c][0])) { f.pe = pe[c][0]; (bySub[f.sub] = bySub[f.sub] || []).push(f.pe); } });
+    Object.keys(bySub).forEach(function(sb){ var v = bySub[sb].sort(function(a, b){ return a - b; }), m = v[Math.floor(v.length / 2)];
+      if (v.length >= 4) FUNDS.forEach(function(f){ if (f.sub === sb && isNum(f.pe)) { f.peRel = f.pe / m; f.peCheap = Math.round(100 / f.peRel); } }); });
+  }).catch(function(){});
+  var subs = scope().map(function(f){ return f.sub; }).filter(function(v, i, a){ return a.indexOf(v) === i && !VALUE_SUBS[v]; });
+  return Promise.all([VALUE_PE].concat(subs.map(function(sb){
+    VALUE_SUBS[sb] = loadSub(sb).then(function(r){
+      var d = r[0] || {}; Object.keys(d).forEach(function(c){ var f = BY[c], fc = (d[c] || {}).factor; if (f && fc && fc.w && isNum(fc.w.val)) f.valW = fc.w.val; });
+      VALUE_SUBS[sb] = true;
+    }).catch(function(){ VALUE_SUBS[sb] = true; });
+    return VALUE_SUBS[sb];
+  })));
+}
 function renderTable(){
   var list = sortList(filtered()), s = S.sort || presetSort();
   var title = S.sub ? D.subs[S.sub][1] : 'All ' + S.asset;
@@ -1596,7 +1623,10 @@ function renderTable(){
   $('listSub').textContent = (S.sort ? 'Custom sort' : pre.n) + ' · tap any fund for full analysis';
   $('tblCount').textContent = list.length.toLocaleString('en-IN') + ' fund' + (list.length === 1 ? '' : 's');
   $('tblNote').textContent = 'Returns as of ' + fmtDate(D.asOf) + ' · 3Y+ returns annualised';
-  var MOMK = {r1m:1, r3m:1, r6m:1}, retK = MOMK[s.k] ? [['r1m','1M'],['r3m','3M'],['r6m','6M'],['r1y','1Y']] : [['r1y','1Y'],['r3y','3Y'],['r5y','5Y'],['sip3','SIP 3Y']];
+  var MOMK = {r1m:1, r3m:1, r6m:1}, VALK = {valW:1, pe:1, peRel:1, peCheap:1};
+  if (S.preset === 'value' && !S.sort) $('tblNote').textContent = 'Value tilt = share of the fund\u2019s return pattern explained by value stocks · P/E vs cat. = portfolio P/E \u00f7 category median (below 1\u00d7 = cheaper) · as of ' + fmtDate(D.asOf);
+  var retK = MOMK[s.k] ? [['r1m','1M'],['r3m','3M'],['r6m','6M'],['r1y','1Y']] : (VALK[s.k] || S.preset === 'value') ? [['valW','Value tilt'],['pe','P/E'],['peRel','P/E vs cat.'],['r3y','3Y']] : [['r1y','1Y'],['r3y','3Y'],['r5y','5Y'],['sip3','SIP 3Y']];
+  if (S.preset === 'value' && !valueReady()) loadValueData().then(function(){ if (S.preset === 'value' && valueReady()) renderTable(); });
   var cols = TCOLS.filter(function(c){ return !/^(r1y|r3y|r5y|sip3)$/.test(c.k); });
   cols.splice(3, 0, {k:retK[0][0], n:retK[0][1], num:1}, {k:retK[1][0], n:retK[1][1], num:1}, {k:retK[2][0], n:retK[2][1], num:1}, {k:retK[3][0], n:retK[3][1], num:1});
   $('fthead').innerHTML = '<tr><th style="width:36px">#</th>' + cols.map(function(c){
@@ -1613,7 +1643,7 @@ function renderTable(){
         '<td class="t-fund"><div class="t-name">' + esc(f.name) + '</div><div class="t-meta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + (f.style && f.style !== 'Blend' ? ' · ' + esc(f.style) : '') + '</div>' + (buyPill(f, f.asset === 'Global') ? '<div style="margin-top:4px">' + buyPill(f, f.asset === 'Global') + '</div>' : '') + '</td>' +
         '<td>' + stars(f.rating) + '</td>' +
         '<td>' + statusPill(f.status) + '</td>' +
-        retK.map(function(x){ return x[0]; }).map(function(k){ return '<td class="num' + (s.k === k ? ' sorted-col' : '') + '">' + fmtPct(f[k]) + '</td>'; }).join('') +
+        retK.map(function(x){ return x[0]; }).map(function(k){ return '<td class="num' + (s.k === k ? ' sorted-col' : '') + '">' + cellFmt(k, f[k]) + '</td>'; }).join('') +
         '<td class="num' + (s.k === 'sharpe' ? ' sorted-col' : '') + '">' + fmt(f.sharpe) + '</td>' +
         '<td class="num' + (s.k === 'ter' ? ' sorted-col' : '') + '">' + (isNum(f.ter) ? fmt(f.ter) + '%' : '–') + '</td>' +
         '<td class="num' + (s.k === 'aum' ? ' sorted-col' : '') + '">' + fmtAum(f.aum) + '</td>' +
@@ -1621,8 +1651,9 @@ function renderTable(){
     }).join('');
     $('fcards').innerHTML = show.map(function(f){
       var sk = s.k, extra = sk === 'sharpe' ? ['Sharpe', fmt(f.sharpe)] : sk === 'ter' ? ['TER', isNum(f.ter) ? fmt(f.ter) + '%' : '–'] : sk === 'aum' ? ['AUM', fmtAum(f.aum)] : sk === 'sip3' ? ['SIP 3Y', pctTxt(f.sip3)] : MOMK[sk] ? [{r1m:'1M', r3m:'3M', r6m:'6M'}[sk], pctTxt(f[sk])] : ['TER', isNum(f.ter) ? fmt(f.ter) + '%' : '–'];
+      var cells = (VALK[sk] || (S.preset === 'value' && !S.sort)) ? [['Value tilt', cellFmt('valW', f.valW)], ['P/E vs cat.', cellFmt('peRel', f.peRel)], ['3Y', fmtPct(f.r3y)], ['P/E', cellFmt('pe', f.pe)]] : [['1Y', fmtPct(f.r1y)], ['3Y', fmtPct(f.r3y)], ['5Y', fmtPct(f.r5y)], extra];
       return '<div class="mc" data-code="' + f.code + '"><div class="mc-top"><div style="min-width:0"><div class="mc-name">' + esc(f.name) + '</div><div class="mc-meta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + '</div>' + (buyPill(f, f.asset === 'Global') ? '<div style="margin-top:5px">' + buyPill(f, f.asset === 'Global') + '</div>' : '') + '</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">' + stars(f.rating) + (f.status ? statusPill(f.status) : '') + '</div></div>' +
-        '<div class="mc-row"><div>1Y<b>' + fmtPct(f.r1y) + '</b></div><div>3Y<b>' + fmtPct(f.r3y) + '</b></div><div>5Y<b>' + fmtPct(f.r5y) + '</b></div><div>' + extra[0] + '<b>' + extra[1] + '</b></div></div></div>';
+        '<div class="mc-row">' + cells.map(function(c){ return '<div>' + c[0] + '<b>' + c[1] + '</b></div>'; }).join('') + '</div></div>';
     }).join('');
   }
   $('more').hidden = list.length <= S.shown;
