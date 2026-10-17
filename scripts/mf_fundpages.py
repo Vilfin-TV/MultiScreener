@@ -304,4 +304,180 @@ def read_dom(ctx, funds: list[dict], pages: dict, res: Resolver, budget_s: int =
     return out
 
 
+# ─────────────────────────── monthly factsheet PDFs ───────────────────────────
+LINE_RX = re.compile(r"^(.*?[A-Za-z&).].*?)\s+(-?\d{1,3}(?:\.\d+)?)\s*%$")
+STOP_RX = re.compile(r"^(top\s*10|scheme\s*performance|value\s*of|note|\*|for\s+detailed|sector\s*allocation|asset\s*allocation|"
+                     r"maturity\s*profile|rating\s*profile|returns?\s+are)", re.I)
+
+
+def _factsheet_index(pdf) -> dict[int, str]:
+    """{printed page number: scheme name} from the factsheet's INDEX page(s)."""
+    out = {}
+    for pg in pdf.pages[:6]:
+        txt = pg.extract_text() or ""
+        if not re.search(r"\bINDEX\b|contents", txt, re.I):
+            continue
+        for line in txt.splitlines():
+            m = re.match(r"^\s*\d+\.\s*(.+?)\s*\.{3,}\s*(\d{1,3})\s*$", line)
+            if m and re.search(r"fund|plan|etf|fof", m.group(1), re.I):
+                out[int(m.group(2))] = m.group(1).strip()
+    return out
+
+
+def _printed_page(pg) -> int | None:
+    """The page number printed in the footer (a lone number at the bottom of the page)."""
+    words = [w for w in pg.extract_words() if w["top"] > pg.height - 70 and re.fullmatch(r"\d{1,3}", w["text"])]
+    return int(max(words, key=lambda w: w["top"])["text"]) if words else None
+
+
+def _split_sectors(lines: list[tuple[str, float]]) -> list[tuple[str, str, float]]:
+    """[(name, pct)] in reading order → [(name, industry, pct)]: a line whose weight equals the sum of the lines right
+    after it is a sector heading for them (factsheets list 'Banks 24.67%' then each bank)."""
+    out, i = [], 0
+    while i < len(lines):
+        name, pct = lines[i]
+        acc, k, end = 0.0, i + 1, None
+        while k < len(lines) and acc <= pct + 0.05:
+            acc += lines[k][1]
+            k += 1
+            if abs(acc - pct) <= 0.006 * (k - i - 1) + 0.011:      # each figure is rounded to 2 decimals
+                end = k
+                break
+        if end:
+            out += [(n, name, p) for n, p in lines[i + 1:end]]
+            i = end
+        else:
+            out.append((name, "", pct))
+            i += 1
+    return out
+
+
+def equity_total(pg) -> float | None:
+    """The page's own 'Equity Holdings Total' figure, used to check the parsed holdings."""
+    m = re.search(r"equity\s*(?:&\s*equity\s*related\s*)?holdings?\s*total\s*(\d{1,3}(?:\.\d+)?)\s*%", pg.extract_text() or "", re.I)
+    return float(m.group(1)) if m else None
+
+
+def parse_portfolio_page(pg) -> tuple[str | None, list[tuple[str, str, float]]]:
+    """One factsheet page with a 'PORTFOLIO as on dd/mm/yyyy' box laid out in 'Company · % of NAV' columns."""
+    words = pg.extract_words()
+    head = next((w for w in words if w["text"] == "PORTFOLIO"), None)
+    if not head:
+        return None, []
+    text = pg.crop((head["x0"] - 2, head["top"] - 2, pg.width, head["bottom"] + 2)).extract_text() or ""
+    month = month_of(text)
+    cols = sorted({round(w["x0"]) for w in words if w["text"] == "Company" and 0 <= w["top"] - head["top"] < 40})
+    if not cols:
+        return month, []
+    top = min(w["top"] for w in words if w["text"] == "Company" and 0 <= w["top"] - head["top"] < 40)
+    lines, done = [], False
+    for j, x in enumerate(cols):
+        x1 = cols[j + 1] - 6 if j + 1 < len(cols) else pg.width
+        for raw in (pg.crop((x - 6, top - 1, x1, pg.height)).extract_text() or "").splitlines():
+            raw = raw.strip()
+            if not raw or re.match(r"^company\b", raw, re.I):
+                continue
+            if STOP_RX.match(raw) or re.match(r"^grand\s*total", raw, re.I):
+                done = bool(re.match(r"^grand\s*total", raw, re.I)) or done
+                break
+            m = LINE_RX.match(raw)
+            if not m:
+                continue
+            name, pct = m.group(1).strip(), float(m.group(2))
+            if re.search(r"\btotal\b", name, re.I):
+                if CASH_RX.search(name):
+                    lines.append(("Cash & other receivables", pct))   # residual cash, net of payables
+                continue
+            lines.append((name, pct))
+        if done:
+            break
+    return month, _split_sectors(lines)
+
+
+def match_scheme(name: str, funds: list[dict]) -> int | None:
+    """Fund code whose official name best matches a factsheet scheme name (unique best only)."""
+    stop = {"lic", "mf", "fund", "the", "direct", "plan", "growth", "option", "regular", "scheme", "of", "s"}
+
+    def tok(s):
+        s = (s or "").lower().replace("&", " and ").replace("'", "")
+        s = re.sub(r"\b(multi|large|mid|small|flexi)\s+cap\b", r"\1cap", s)       # "Multi Cap" = "MultiCap"
+        return {t for t in re.sub(r"[^a-z0-9 ]+", " ", s).split() if t not in stop}
+    want = tok(name)
+    if not want:
+        return None
+    scored = []
+    for f in funds:
+        have = tok(f.get("amfi"))
+        if want <= have:
+            scored.append((len(want) / len(have | want), f["code"]))
+    scored.sort(reverse=True)
+    if not scored or (len(scored) > 1 and scored[0][0] == scored[1][0]):
+        return None
+    return scored[0][1]
+
+
+def read_factsheet_pdf(blob: bytes, funds: list[dict], res: Resolver) -> dict:
+    """{fund code: (month, block)} from a fund house's monthly factsheet PDF."""
+    import pdfplumber
+    out = {}
+    with pdfplumber.open(io.BytesIO(blob)) as pdf:
+        idx = _factsheet_index(pdf)
+        for i, pg in enumerate(pdf.pages):
+            if "PORTFOLIO" not in (pg.extract_text() or ""):
+                continue
+            month, rows = parse_portfolio_page(pg)
+            name = idx.get(_printed_page(pg) or -1) or idx.get(i + 1)
+            if not (month and rows and name):
+                continue
+            code = match_scheme(name, funds)
+            if code is None:
+                log.info("    factsheet page %d (%s): no unique fund match", i + 1, name)
+                continue
+            # equity-oriented portfolios only, and the parsed stocks must add up to the page's own equity total
+            eq_tot = equity_total(pg)
+            eq_sum = sum(p for n, _, p in rows if kind_of(n) == "equity")
+            if eq_tot is None or eq_tot < 60 or abs(eq_sum - eq_tot) > 0.15:
+                log.info("    factsheet page %d (%s): parsed equity %.2f%% vs stated %s — skipped", i + 1, name, eq_sum, eq_tot)
+                continue
+            blk = build_block([(n, ind, p, "") for n, ind, p in rows], res)
+            if blk:
+                blk["title"] = name
+                out[code] = (month, blk)
+    return out
+
+
+FACTSHEETS = {"lic": {"page": "https://www.licmf.com/downloads/factsheet", "pick": r"monthly_fact_sheet/.+factsheet.+\.pdf"}}
+
+
+def read_factsheet(ctx, kind: str, funds: list[dict], res: Resolver) -> dict:
+    """Find the latest monthly factsheet on the fund house's download page (browser) and read it."""
+    cfg = FACTSHEETS[kind]
+    p = ctx.new_page()
+    try:
+        p.goto(cfg["page"], wait_until="domcontentloaded", timeout=90000)
+        try:
+            p.wait_for_load_state("networkidle", timeout=20000)
+        except Exception:  # noqa: BLE001
+            pass
+        links = p.eval_on_selector_all("a", "as => as.map(a => a.href)")
+    finally:
+        p.close()
+    dated = []
+    for l in dict.fromkeys(links):
+        if re.search(cfg["pick"], l, re.I):
+            mo = month_of(re.sub(r"[-_]", " ", l.rsplit("/", 1)[-1]))
+            if mo:
+                dated.append((mo, l))
+    if not dated:
+        log.warning("factsheet (%s): no dated factsheet links found", kind)
+        return {}
+    mo, url = max(dated)
+    r = ctx.request.get(url, headers={"Referer": cfg["page"]}, timeout=180000)
+    if not r.ok or not r.body().startswith(b"%PDF"):
+        log.warning("factsheet (%s): download failed (%s)", kind, r.status)
+        return {}
+    log.info("factsheet (%s): %s · %s", kind, mo, url.rsplit("/", 1)[-1])
+    return read_factsheet_pdf(r.body(), funds, res)
+
+
 READERS = {"trust": read_trust, "pgim": read_pgim}
