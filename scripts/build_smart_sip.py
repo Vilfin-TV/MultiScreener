@@ -197,6 +197,11 @@ SECTORS = [
     ("mnc", "MNC", ["mnc"], ["sec_mnc"], None, r"conglomerate"),
     ("conglo", "Conglomerates", ["conglo"], THEME_SUBS, r"conglomerate", None),
 ]
+# international-slot backup: Indian funds with an overseas sleeve, used only while no pure international fund is
+# open and passes every check (overseas funds pause purchases whenever the industry overseas limit is reached).
+# Evidence = a published portfolio with ≥10 % overseas, or a known overseas (Nasdaq 100) sleeve listed here.
+RX_INTL_BACKUP = re.compile(r"\bkotak pioneer\b", re.I)
+INTL_BACKUP_MIN_OVERSEAS = 10.0
 RX_MOMENTUM = re.compile(r"momentum", re.I)
 RX_NEXT50 = re.compile(r"\bnext 50\b", re.I)
 RX_NIFTY50 = re.compile(r"\bnifty 50\b(?!\s*(equal|value|quality|low|momentum|alpha|shariah|arbitrage))", re.I)
@@ -826,6 +831,11 @@ def fund_checks(u, slot, code, ctx):
     if kind == "arb":
         r1, m1 = g("r1y"), cs.get("r1y")
         chk("1Y return vs category", r1 is None or m1 is None or r1 >= m1 - 0.3, f"{r1:.2f}% vs median {m1:.2f}%" if r1 is not None and m1 is not None else "–")
+    if slot == "intl" and ctx.get("intl_backup"):
+        ov = ((u.pf.get(code) or {}).get("mix") or {}).get("overseas")
+        chk("International exposure", ov is not None and ov >= INTL_BACKUP_MIN_OVERSEAS or bool(RX_INTL_BACKUP.search(name)),
+            (f"{ov:.0f}% held overseas" if ov is not None else "Indian innovation fund with an overseas (Nasdaq 100) sleeve")
+            + " — used while international funds are closed to new money")
     if slot == "intl":
         core = re.sub(r"\b(invesco|nippon|franklin|bank of) india\b", "", name, flags=re.I)   # fund-house brands are not mandates
         chk("Diversified mandate", not RX_INTL_THEME.search(core), "broad overseas market" if not RX_INTL_THEME.search(core) else "narrow theme or single region")
@@ -1013,6 +1023,16 @@ def rank_pool(u, slot, ctx, cache):
         sc = {**(scores(u, slot, act, "active", ctx.get("profile") == "growth") if act else {}), **(scores(u, slot, idx, "index") if idx else {})}
     else:
         sc = scores(u, slot, ok, kind, ctx.get("profile") == "growth") if ok else {}
+    if slot == "intl" and not ok:                       # every international fund closed or failing → backup pool
+        bsubs = list(subs) + ["sec_innov"]
+        backup = [c for c in u.by_subs(["sec_innov"])
+                  if ((u.pf.get(c) or {}).get("mix") or {}).get("overseas", 0) >= INTL_BACKUP_MIN_OVERSEAS
+                  or RX_INTL_BACKUP.search(u.g(c, "name") or "")]
+        bctx = {**ctx, "subs": bsubs, "intl_backup": True}
+        checks.update({c: fund_checks(u, slot, c, bctx) for c in backup})
+        ok = [c for c in backup if all(x[1] for x in checks[c])]
+        sc = scores(u, slot, ok, "active", ctx.get("profile") == "growth") if ok else {}
+        subs = bsubs
     ranked = sorted(ok, key=lambda c: -sc[c])
     cache[key] = (ranked, sc, checks, subs)
     return cache[key]

@@ -245,6 +245,9 @@ def audit_smartsip() -> int:
                 if sec is None or g(code, "sub") not in sec[3] or (sec[4] and not re.search(sec[4], name, re.I)) \
                         or (sec[5] and re.search(sec[5], name, re.I)):
                     E(f"{sid}: {name} is not a fund of the chosen sector {sip.get('sector')}")
+            elif s["key"] == "intl" and any(c[0] == "International exposure" and c[1] for c in s.get("checks") or []):
+                if g(code, "sub") != "sec_innov":                 # backup pool: Indian funds with an overseas sleeve
+                    E(f"{sid}: international backup {name} is not an innovation / opportunities fund")
             else:
                 pools = allowed_pools(SS, s["key"])
                 if pools and g(code, "sub") not in pools:
