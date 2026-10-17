@@ -591,6 +591,19 @@ td.sorted-col{background:rgba(127,127,127,.05)}
 .sc-ov-r{font-size:16px;margin-top:4px}.sc-ov-r b{font-family:'JetBrains Mono',monospace}
 .sc-ov-m{font-size:12px;color:var(--text2);margin-top:3px}
 .sc-lead{margin-top:14px}
+.fh-row{border-bottom:1px solid var(--border)}
+.fh-row summary{list-style:none;display:grid;grid-template-columns:40px minmax(0,1fr) 20px;gap:12px;align-items:center;padding:12px 2px;cursor:pointer}
+.fh-row summary::-webkit-details-marker{display:none}
+.fh-ic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+.fh-ic.g{background:rgba(34,197,94,.14);color:var(--pos)}.fh-ic.b{background:rgba(239,68,68,.12);color:var(--neg)}.fh-ic.m{background:rgba(232,163,23,.15);color:var(--warn)}.fh-ic.n{background:var(--surface3);color:var(--text3)}
+.fh-t b{font-size:15px}.fh-t small{display:block;font-size:13px;color:var(--text2);margin-top:3px;line-height:1.4}
+.fh-b{display:inline-block;margin-left:6px;padding:1px 9px;border-radius:6px;font-size:11.5px;font-weight:700;vertical-align:2px}
+.fh-b.g{background:rgba(34,197,94,.14);color:var(--pos)}.fh-b.b{background:rgba(239,68,68,.12);color:var(--neg)}.fh-b.m{background:rgba(232,163,23,.15);color:var(--warn)}.fh-b.n{background:var(--surface3);color:var(--text3)}
+.fh-ch{color:var(--text3);font-size:18px;transition:transform .15s}.fh-row[open] .fh-ch{transform:rotate(180deg)}
+.fh-d{padding:0 2px 14px 52px}
+.fh-tbl{width:100%;font-size:12.5px}.fh-tbl th,.fh-tbl td{padding:7px 6px;border-bottom:1px solid var(--border)}.fh-tbl .fh-c{color:var(--text3);font-size:11.5px}
+.fh-flags{margin:0;padding-left:18px;font-size:13px;line-height:1.7;color:var(--text2)}
+@media (max-width:600px){.fh-d{padding-left:2px}.fh-tbl .fh-c{display:none}.fh-tbl th:last-child{display:none}}
 .sc-lead-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .sc-tbl tr.cur td{background:var(--accent-soft)}
 .sc-tbl{min-width:0;width:100%}
@@ -1784,7 +1797,6 @@ function pOverview(f, det, tail){
 /* themed sectoral funds are scored against the whole sectoral / thematic universe */
 function grpLabel(f){ return /^sec_/.test(f.sub) ? 'Sectoral / Thematic' : (f.sub === 'target' || f.sub === 'debtidx') ? 'Target Maturity & Debt Index' : f.subLabel; }
 function scorecardCard(f, det){
-  if (f.asset === 'Index') return '';
   return '<div class="card pcard sc-card" id="scCard"><div class="skel" style="height:260px"></div></div>';
 }
 /* ── VilfinTV scorecard: 3- or 5-year view, overall score & rank, peer medians and category leaders ── */
@@ -1809,6 +1821,10 @@ function scorePeers(f){
 }
 function renderScorecard(f){
   var box = $('scCard'); if (!box) return;
+  if (f.asset === 'Index') {                                   // index funds: no peer scores, but a full health check
+    box.innerHTML = '<div class="pc-head"><div><div class="sec-title">Fund health</div><div class="sec-sub">Compared with ' + esc(f.subLabel) + ' funds · tap a row for details</div></div></div><div id="fhBox" class="fh"></div>';
+    renderHealth(f); return;
+  }
   scorePeers(f).then(function(rows){
     if (!$('scCard') || S.sel !== f.code) return;
     var P = S.scP === '5' ? 'p5' : 'p3', yrs = S.scP === '5' ? 5 : 3, me = rows.filter(function(r){ return r.f.code === f.code; })[0] || {p3: {}, p5: {}, sc: {}};
@@ -1844,6 +1860,7 @@ function renderScorecard(f){
         '<div class="meter-rk">' + (r.rank ? 'Rank <b>#' + r.rank + '</b> of ' + r.n : 'Not ranked') + (isNum(r.med) ? ' · median ' + Math.round(r.med) : '') + '</div>' +
         '<div class="meter-d">' + desc[m[0]] + '</div></div>';
     }).join('') + '</div>';
+    h += '<div id="fhBox" class="fh"></div>';
     var K = S.scK || 'ov', L = rankOf(K), top = L.list.slice(0, 5), mine = L.rank && L.rank > 5 ? L.list[L.rank - 1] : null;
     var tr = function(r, i){ var x = r.f; return '<tr class="clk' + (x.code === f.code ? ' cur' : '') + '" data-code="' + x.code + '"><td class="mut">' + (i + 1) + '</td><td class="t-fund"><div class="t-name">' + esc(x.name) + '</div><div class="t-meta">' + esc(x.amcName) + '</div></td>' +
       '<td class="num"><b>' + Math.round(r[P][K]) + '</b></td><td class="num hide-m">' + scoreN(r[P].cons) + '</td><td class="num hide-m">' + scoreN(r[P].rec) + '</td><td class="num hide-m">' + scoreN(r[P].vol) + '</td><td class="num">' + fmtPct(yrs === 5 ? x.r5y : x.r3y) + '</td></tr>'; };
@@ -1854,6 +1871,85 @@ function renderScorecard(f){
       (mine ? '<tr class="sc-gap"><td colspan="7">⋯</td></tr>' + tr(mine, L.rank - 1) : '') + '</tbody></table></div>' +
       '<div class="note">' + (yrs === 5 ? '5-year view: consistency over the last 60 month-ends and 5-year volatility; recency is always short-term.' : '3-year view: consistency over the last 36 month-ends and 3-year volatility.') + ' Scores are percentiles within the category (100 = best); tap a fund to open it.</div></div>';
     box.innerHTML = h;
+    renderHealth(f);
+  });
+}
+/* ── fund health (Tickertape-style): performance · risk · cost · composition · red flags, each expandable ── */
+function pctIn(list, key, v, lowerBetter){
+  var vals = list.map(function(x){ return x[key]; }).filter(isNum);
+  if (!isNum(v) || vals.length < 4) return null;
+  var below = vals.filter(function(x){ return lowerBetter ? x > v : x < v; }).length, eq = vals.filter(function(x){ return x === v; }).length;
+  return (below + (eq - 1) / 2) / (vals.length - 1);
+}
+function medOf(list, key){ var v = list.map(function(x){ return x[key]; }).filter(isNum).sort(function(a, b){ return a - b; }); return v.length ? v[Math.floor(v.length / 2)] : null; }
+function renderHealth(f){
+  var box = $('fhBox'); if (!box) return;
+  var peers = SUBSTAT[f.sub].funds, isDebt = f.asset === 'Debt', isEq = f.asset === 'Equity' || f.asset === 'Hybrid';
+  Promise.all([loadPf(f.sub), loadManagers()]).then(function(r){
+    if (!$('fhBox') || S.sel !== f.code) return;
+    var pf = (r[0] || {})[f.code] || null, M = r[1];
+    var L = {hi:'High', av:'Average', lo:'Low', na:'Not rated'};
+    function lvl(p, good){ if (p == null) return 'na'; return p >= 0.67 ? (good ? 'hi' : 'lo') : p >= 0.34 ? 'av' : (good ? 'lo' : 'hi'); }
+    function row(label, val, med, txt, better){ return '<tr><td>' + label + '</td><td class="num"><b>' + val + '</b></td><td class="num">' + med + '</td><td class="fh-c">' + (txt || '') + '</td></tr>'; }
+    function tbl(rows){ return '<table class="fh-tbl"><thead><tr><th></th><th class="num">This fund</th><th class="num">Category median</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table>'; }
+    function beat(p){ return p == null ? '' : 'better than ' + Math.round(p * 100) + '% of peers'; }
+    var items = [];
+    // performance
+    var pr = [['r1y', '1Y'], ['r3y', '3Y'], ['r5y', '5Y'], ['roll3', '3Y rolling avg']].map(function(k){ return {k: k, p: pctIn(peers, k[0], f[k[0]])}; });
+    var main = pr[2].p != null ? pr[2].p : pr[1].p != null ? pr[1].p : pr[0].p;
+    var perf = lvl(main, true);
+    items.push({k: 'Performance', lv: perf, good: perf === 'hi' ? 1 : perf === 'lo' ? -1 : 0,
+      s: perf === 'hi' ? 'Among the top performers in its category' : perf === 'av' ? 'Middle of the pack in its category' : perf === 'lo' ? 'Has lagged most funds in its category' : 'Not enough history to judge',
+      d: tbl(pr.map(function(x){ return row(x.k[1] + ' return', fmtPct(f[x.k[0]]), fmtPct(medOf(peers, x.k[0])), beat(x.p)); }).concat([row('Benchmark beaten (rolling 3Y)', isNum(f.beat3) ? Math.round(f.beat3) + '%' : '–', isNum(medOf(peers, 'beat3')) ? Math.round(medOf(peers, 'beat3')) + '%' : '–', 'share of 3-year periods')]))});
+    // risk (lower is better)
+    var rk = [['std', 'Volatility (3Y)', true, '%'], ['mdd', 'Max drawdown (3Y)', false, '%'], ['beta', 'Beta', true, ''], ['sharpe', 'Sharpe ratio', false, '']];
+    var rp = rk.map(function(k){ return pctIn(peers, k[0], f[k[0]], k[2]); });
+    var safe = [rp[0], rp[1]].filter(function(x){ return x != null; }), sp = safe.length ? safe.reduce(function(a, b){ return a + b; }, 0) / safe.length : null;
+    var risk = sp == null ? 'na' : sp >= 0.67 ? 'lo' : sp >= 0.34 ? 'av' : 'hi';
+    items.push({k: 'Risk', lv: risk, good: risk === 'lo' ? 1 : risk === 'hi' ? -1 : 0,
+      s: risk === 'lo' ? 'Calmer than most funds in its category' : risk === 'av' ? 'Average risk vs others in its category' : risk === 'hi' ? 'Swings more than most peers — expect bigger falls' : 'Needs a 3-year record',
+      d: tbl(rk.map(function(k, i){ var v = f[k[0]], m = medOf(peers, k[0]); return row(k[1], isNum(v) ? fmt(v) + k[3] : '–', isNum(m) ? fmt(m) + k[3] : '–', k[0] === 'sharpe' ? beat(rp[i]) : (rp[i] == null ? '' : 'calmer than ' + Math.round(rp[i] * 100) + '% of peers')); }))});
+    // cost (lower is better)
+    var cp = pctIn(peers, 'ter', f.ter, true), tm = medOf(peers, 'ter');
+    var cost = cp == null ? 'na' : cp >= 0.67 ? 'lo' : cp >= 0.34 ? 'av' : 'hi';
+    items.push({k: 'Cost', lv: cost, good: cost === 'lo' ? 1 : cost === 'hi' ? -1 : 0,
+      s: cost === 'lo' ? 'Cheaper than most funds in its category' : cost === 'av' ? 'Typical cost for its category' : cost === 'hi' ? 'Costs more than most peers' : 'Expense ratio not available',
+      d: tbl([row('Expense ratio (Direct)', isNum(f.ter) ? fmt(f.ter) + '%' : '–', isNum(tm) ? fmt(tm) + '%' : '–', cp == null ? '' : 'cheaper than ' + Math.round(cp * 100) + '% of peers'),
+              row('Annual cost on ₹1 lakh', isNum(f.ter) ? inr(f.ter * 1000) : '–', isNum(tm) ? inr(tm * 1000) : '–', ''),
+              row('Exit load', f.exitNil === true ? 'Nil' : f.exitNil === false ? 'Applicable' : '–', '', 'see Fund Info for the schedule')])});
+    // composition (portfolio quality)
+    if (pf) {
+      var top10 = pf.top10, n = pf.n, cash = (pf.mix || {}).cashOther, cred = pf.credit || [];
+      var safeCr = cred.filter(function(c){ return /AAA|Sovereign|A1\+|Cash/i.test(c[0]); }).reduce(function(a, c){ return a + c[1]; }, 0);
+      var tot = cred.reduce(function(a, c){ return a + c[1]; }, 0), q = tot ? safeCr / tot * 100 : null;
+      var pts = 0, rows = [];
+      if (isEq && isNum(top10)) { pts += top10 <= 35 ? 1 : top10 >= 55 ? -1 : 0; rows.push(row('Top-10 holdings', fmt(top10, 1) + '%', '', top10 <= 35 ? 'well diversified' : top10 >= 55 ? 'concentrated' : 'moderately concentrated')); }
+      if (isEq && isNum(n)) { pts += n >= 40 ? 1 : n < 20 ? -1 : 0; rows.push(row('Number of holdings', n, '', n < 20 ? 'focused portfolio' : '')); }
+      if (isNum(cash)) { pts += cash > 10 && isEq ? -1 : 0; rows.push(row('Cash & others', fmt(cash, 1) + '%', '', cash > 10 && isEq ? 'large cash buffer' : '')); }
+      if ((isDebt || f.asset === 'Hybrid') && q != null) { pts += q >= 90 ? 1 : q < 70 ? -1 : 0; rows.push(row('AAA / sovereign / A1+', fmt(q, 0) + '%', '', q >= 90 ? 'high credit quality' : q < 70 ? 'meaningful lower-rated exposure' : '')); }
+      if (pf.cap && isEq) rows.push(row('Large / Mid / Small', [pf.cap.large, pf.cap.mid, pf.cap.small].map(function(x){ return isNum(x) ? Math.round(x) : '–'; }).join(' / ') + '%', '', ''));
+      var comp = rows.length ? (pts >= 1 ? 'hi' : pts <= -1 ? 'lo' : 'av') : 'na';
+      items.push({k: 'Composition', lv: comp, good: comp === 'hi' ? 1 : comp === 'lo' ? -1 : 0,
+        s: comp === 'hi' ? 'Well diversified, good-quality portfolio' : comp === 'av' ? 'Reasonably built portfolio' : comp === 'lo' ? 'Portfolio is concentrated or carries extra risk' : 'Portfolio data not available',
+        d: (rows.length ? tbl(rows) : '') + '<div class="note">Portfolio as of ' + esc(pf.asOf || '') + ' — open the Portfolio tab for holdings and sectors.</div>'});
+    } else items.push({k: 'Composition', lv: 'na', good: 0, s: 'Monthly portfolio not yet available for this fund', d: '<div class="note">We read portfolio disclosures from a growing list of fund houses; this fund\'s will appear once covered.</div>'});
+    // red flags
+    var flags = [];
+    if (isNum(f.aum) && f.aum < 100) flags.push('Small fund size (' + fmtAum(f.aum) + ') — higher cost and liquidity risk');
+    if (f.buy === '') flags.push('Fresh investments currently paused by the fund house');
+    if (f.status === 'Out of track' || f.status === 'Underperforming') flags.push('Status: ' + f.status + ' versus its category');
+    if (isNum(f.ter) && isNum(tm) && f.ter > tm * 1.5 && f.ter - tm > 0.3) flags.push('Expense ratio well above the category median');
+    if (pf && isEq && isNum(pf.top10) && pf.top10 > 60) flags.push('Top-10 holdings above 60% of the portfolio');
+    if (pf && (isDebt) && (pf.credit || []).length) { var lo = (pf.credit || []).filter(function(c){ return /\bA\b|BBB|BB|below|unrated/i.test(c[0]) && !/AAA|A1\+/.test(c[0]); }).reduce(function(a, c){ return a + c[1]; }, 0); if (lo > 10) flags.push(fmt(lo, 0) + '% in lower-rated (A or below) papers'); }
+    if (isNum(f.mdd) && isNum(medOf(peers, 'mdd')) && f.mdd < medOf(peers, 'mdd') - 10) flags.push('Worst fall much deeper than the category (' + fmt(f.mdd) + '%)');
+    if (f.inc && ymYears(f.inc.slice(0, 7)) < 1) flags.push('Less than a year of track record');
+    var rf = flags.length >= 2 ? 'hi' : flags.length === 1 ? 'av' : 'lo';
+    items.push({k: 'Red flags', lv: rf, good: rf === 'lo' ? 1 : rf === 'hi' ? -1 : 0, s: flags.length ? flags.length + ' point' + (flags.length > 1 ? 's' : '') + ' to watch' : 'No major red flags identified',
+      d: flags.length ? '<ul class="fh-flags">' + flags.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '<div class="note" style="margin:0">Checked: fund size, purchase status, category status, cost, concentration, credit quality, drawdown and track record.</div>'});
+    box.innerHTML = (f.asset === 'Index' ? '' : '<div class="sec-title" style="font-size:15px;margin:16px 0 4px">Fund health</div><div class="sec-sub" style="margin-bottom:6px">Compared with ' + esc(f.subLabel) + ' funds · tap a row for details</div>') + items.map(function(it, i){
+      var cls = it.good > 0 ? 'g' : it.good < 0 ? 'b' : it.lv === 'na' ? 'n' : 'm';
+      return '<details class="fh-row"' + (i === 0 ? '' : '') + '><summary><span class="fh-ic ' + cls + '">' + (cls === 'g' ? '✓' : cls === 'b' ? '!' : cls === 'n' ? '–' : '≈') + '</span><span class="fh-t"><b>' + it.k + '</b> <span class="fh-b ' + cls + '">' + L[it.lv] + '</span><small>' + esc(it.s) + '</small></span><span class="fh-ch">⌄</span></summary><div class="fh-d">' + it.d + '</div></details>';
+    }).join('');
   });
 }
 function scoreN(v){ return isNum(v) ? Math.round(v) : '–'; }
