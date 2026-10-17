@@ -24,7 +24,7 @@ import sys
 import time
 import zipfile
 from collections import Counter, defaultdict
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
@@ -85,6 +85,16 @@ SOURCES = {
                 "pick": r"monthly[-_ ]?portfolio|portfolio[-_ ]?monthly", "multi": True},
 }
 MONTHS = {m: i for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
+
+
+MAX_AGE_DAYS = 45      # a portfolio is shown for at most 45 days after its month-end (~1.5 months)
+
+
+def pf_age_days(month: str, today: date | None = None) -> int:
+    """Days from the end of a portfolio month ("YYYY-MM") to today."""
+    y, m = map(int, month.split("-"))
+    end = date(y + (m == 12), m % 12 + 1, 1) - timedelta(days=1)
+    return ((today or date.today()) - end).days
 
 
 def link_month(url: str) -> tuple[int, int] | None:
@@ -561,8 +571,7 @@ def main():
     large, mid = cap_sets(S)
     results, report = {}, {}
     for amc, info in found.items():
-        y, m = map(int, info["month"].split("-"))
-        if (date.today().year - y) * 12 + date.today().month - m > 4:
+        if pf_age_days(info["month"]) > MAX_AGE_DAYS:
             log.warning("%s: latest portfolio file is for %s — too old, skipped", amc, info["month"])
             continue
         if meta.get(amc, {}).get("month") == info["month"] and meta[amc].get("funds", 0) > 0 and "--force" not in sys.argv:
@@ -646,7 +655,7 @@ def main():
             continue
         for code, v in json.load(open(p)).items():
             y, m = map(int, v["asOf"].split("-"))
-            if int(code) in sub_of and (date.today().year - y) * 12 + date.today().month - m <= 4:
+            if int(code) in sub_of and pf_age_days(v["asOf"]) <= MAX_AGE_DAYS:
                 by_sub[sub_of[int(code)]][code] = v
     for code, v in results.items():
         by_sub[sub_of[code]][str(code)] = v

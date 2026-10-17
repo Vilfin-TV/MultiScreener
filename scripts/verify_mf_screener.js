@@ -392,8 +392,9 @@ function verifyHoldings() {
       const id = `holdings ${sub}/${code}`;
       ok(subOf[code] === sub, `${id}: fund not in this category file`);
       ok(/^\d{4}-\d{2}$/.test(h.asOf || ''), `${id}: bad month ${h.asOf}`);
-      const age = (now.getUTCFullYear() - +h.asOf.slice(0, 4)) * 12 + now.getUTCMonth() + 1 - +h.asOf.slice(5, 7);
-      ok(age >= 0 && age <= 4, `${id}: portfolio month ${h.asOf} is ${age} months old`);
+      const mEnd = new Date(Date.UTC(+h.asOf.slice(0, 4), +h.asOf.slice(5, 7), 0));     // last day of the portfolio month
+      const age = Math.round((now - mEnd) / 864e5);
+      ok(age >= 0 && age <= 45, `${id}: portfolio month ${h.asOf} is ${age} days past month-end (limit 45)`);
       const listed = Object.entries(h.mix || {}).filter(([k]) => k !== 'cashOther').reduce((a, [, v]) => a + v, 0);
       ok(listed >= 40 && listed <= 130, `${id}: holdings add up to ${listed.toFixed(1)}%`);
       ok(Array.isArray(h.top) && h.top.length >= 1, `${id}: no holdings`);

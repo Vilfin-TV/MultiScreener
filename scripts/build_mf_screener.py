@@ -1066,15 +1066,20 @@ def merged_facts(r, f):
     return m
 
 
-def rebucket_portfolios(sub_of: dict) -> None:
-    """Portfolio files (data/mf/p/<sub>.json, built monthly) follow each fund's current category."""
+PF_MAX_AGE_DAYS = 45   # same limit as build_mf_holdings.MAX_AGE_DAYS
+
+
+def rebucket_portfolios(sub_of: dict, asof: date) -> None:
+    """Portfolio files (data/mf/p/<sub>.json, built monthly) follow each fund's current category; portfolios more
+    than 45 days past their month-end are dropped."""
     pdir = OUT / "p"
     if not pdir.exists():
         return
     by_sub, files = defaultdict(dict), [f for f in pdir.glob("*.json") if not f.name.startswith("_")]
     for f in files:
         for code, v in json.loads(f.read_text()).items():
-            if int(code) in sub_of:
+            y, m = map(int, v["asOf"].split("-"))
+            if int(code) in sub_of and (asof - C.month_end(y, m)).days <= PF_MAX_AGE_DAYS:
                 by_sub[sub_of[int(code)]][code] = v
     for f in files:
         if f.stem not in by_sub:
@@ -1088,7 +1093,7 @@ def rebucket_portfolios(sub_of: dict) -> None:
 
 def write_outputs(universe, work, results, facts, bench, asof, risk_asof, series, rating, stale, fac_keys):
     OUT.mkdir(parents=True, exist_ok=True)
-    rebucket_portfolios({r["code"]: r["sub"] for r in work})
+    rebucket_portfolios({r["code"]: r["sub"] for r in work}, asof)
     amcs = sorted({r["amcName"] for r in work})
     amc_i = {a: i for i, a in enumerate(amcs)}
     subs_used = sorted({r["sub"] for r in work}, key=lambda k: list(C.SUBS).index(k))
