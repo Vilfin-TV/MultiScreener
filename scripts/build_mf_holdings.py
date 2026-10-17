@@ -44,7 +44,7 @@ UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like 
 
 # fund house (as named in screener.json "amcs") → disclosure page + link filter
 # fund houses whose monthly portfolio is read from each fund's own page (no machine-readable monthly file)
-PAGE_SOURCES = {"Trust": "trust", "PGIM India": "pgim", "Baroda BNP Paribas": "dom"}
+PAGE_SOURCES = {"Trust": "trust", "PGIM India": "pgim", "Baroda BNP Paribas": "dom", "LIC": "factsheet:lic"}
 # fund-page tables can be truncated: an equity fund must show ≥90 % invested (index funds ≥95 %) to be used
 PAGE_MIN_LISTED = {"index": 95.0, "equity": 90.0}
 EQUITY_SUBS = {"large", "largemid", "mid", "small", "multi", "flexi", "focused", "value", "contra", "elss", "dividend"}
@@ -804,12 +804,13 @@ def main():
             kind, funds = PAGE_SOURCES[amc], funds_by_amc[amc]
             log.info("%s: reading %d fund pages (%s)", amc, len(funds), kind)
             try:
-                if kind == "dom":
+                if kind == "dom" or kind.startswith("factsheet:"):
                     if pw_ctx is None:
                         from playwright.sync_api import sync_playwright
                         pw_ctx = sync_playwright().start()
                         b, bctx = browser(pw_ctx)
-                    got = FP.read_dom(bctx, funds, pages, res)
+                    got = (FP.read_factsheet(bctx, kind.split(":", 1)[1], funds, res) if kind.startswith("factsheet:")
+                           else FP.read_dom(bctx, funds, pages, res))
                 else:
                     got = FP.READERS[kind](S, funds, pages, res)
             except Exception as e:  # noqa: BLE001
@@ -825,15 +826,22 @@ def main():
                     continue
                 sub = sub_of.get(code, "")
                 need = PAGE_MIN_LISTED["index"] if sub.startswith("idx_") else PAGE_MIN_LISTED["equity"] if (sub in EQUITY_SUBS or sub.startswith("sec_")) else 0
+                if kind.startswith("factsheet:"):
+                    need = 0          # factsheet portfolios are already checked against the page's own equity total
+                if not fits_category(sub, sm["mix"]):
+                    continue
                 if listed < need:
                     log.info("    %s: page lists only %.0f%% of the portfolio — incomplete, skipped", code, listed)
                     continue
                 sm["asOf"] = month
+                if kind.startswith("factsheet:"):
+                    sm["src"] = "factsheet"
                 results[code] = sm
                 ok_n += 1
                 months.append(month)
             entry = {"month": max(months) if months else (meta.get(amc, {}).get("month")), "files": 0, "blocks": len(got),
-                     "funds": ok_n, "rejected": len(got) - ok_n, "dlFail": 0, "source": "fund pages", "updated": date.today().isoformat()}
+                     "funds": ok_n, "rejected": len(got) - ok_n, "dlFail": 0,
+                     "source": "factsheet" if kind.startswith("factsheet:") else "fund pages", "updated": date.today().isoformat()}
             if not ok_n:
                 entry = {**meta.get(amc, {}), "discoveryFail": date.today().isoformat()}
             meta[amc] = entry
