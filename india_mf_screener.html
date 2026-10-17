@@ -767,6 +767,14 @@ details.faq summary::-webkit-details-marker{display:none}
 details.faq summary::after{content:'+';color:var(--accent2);font-size:18px;line-height:1}
 details.faq[open] summary::after{content:'–'}
 details.faq p{margin-top:8px}
+.rt-pa{display:inline-block;margin-left:4px;font-size:10px;font-weight:700;letter-spacing:.2px;color:var(--text3);border:1px solid var(--border);border-radius:5px;padding:0 5px;vertical-align:1px}
+.rt-pa.on{color:var(--accent2);border-color:var(--accent2)}
+@media (max-width:640px){.rt-pa:not(.on){display:none}.rt-pa{margin-left:3px;padding:0 4px}.dtbl td:first-child{white-space:nowrap}}
+.th-pa{display:block;font-size:9.5px;font-weight:600;color:var(--text3);letter-spacing:.2px;text-transform:none}
+.faq-ex{width:100%;max-width:520px;border-collapse:collapse;margin:10px 0 4px;font-size:12.5px}
+.faq-ex th,.faq-ex td{border:1px solid var(--border);padding:6px 9px;text-align:left}
+.faq-ex td.num,.faq-ex th.num{text-align:right;font-variant-numeric:tabular-nums}
+.faq-ex th{background:var(--surface2);color:var(--text)}
 details.faq ul{margin:8px 0 0;padding-left:20px}
 details.faq li{margin:5px 0;line-height:1.6}
 details.faq ul+p{margin-top:8px}
@@ -1192,7 +1200,7 @@ footer a{color:var(--text2)}
       <div class="fld"><label for="sipStay">Stay invested (years)</label><input class="tin" id="sipStay" type="number" inputmode="numeric" min="1" max="30" step="1" value="15" aria-label="Years you stay invested before redeeming"/></div>
       <div class="fld" id="sipYrsFld"><label for="sipYrs">Invest for (years)</label><input class="tin" id="sipYrs" type="number" inputmode="numeric" min="1" max="30" step="1" value="15" aria-label="Years you keep investing every month"/></div>
       <div class="fld"><label for="sipSlab">Your income-tax slab</label><select class="sel" id="sipSlab" aria-label="Income-tax slab"><option value="0">0% (income below taxable limit)</option><option value="5">5%</option><option value="10">10%</option><option value="15">15%</option><option value="20">20%</option><option value="30" selected>30%</option></select></div>
-      <div class="note">Projections use today's yields, valuation-adjusted long-run equity returns and each fund's expense ratio. Regular investments run for the years you choose and then stay invested until the end of your holding period; a one-time amount stays invested for the whole holding period. Tax assumes everything is redeemed at the end under current capital-gains rules.</div>
+      <div class="note">Projections use today's yields, valuation-adjusted long-run equity returns and each fund's expense ratio, <b>compounded</b> every month at each fund's expected yearly return (CAGR). Regular investments run for the years you choose and then stay invested until the end of your holding period; a one-time amount stays invested for the whole holding period. Tax assumes everything is redeemed at the end under current capital-gains rules.</div>
     </div>
     <div id="sipBody"><div class="card"><div class="skel" style="height:260px"></div></div></div>
     <div class="card sip-guide" id="sipGuide">
@@ -1324,7 +1332,7 @@ footer a{color:var(--text2)}
     <div class="card info">
       <div class="sec-title">How to read this screener</div>
       <ul>
-        <li><b>Returns</b> up to 1 year are absolute; 3, 5 and 10 year returns are annualised (CAGR). Since-inception returns start from the launch of the Direct plan.</li>
+        <li><b>Returns</b> up to 1 year are absolute; 3, 5 and 10 year returns are <b>per year, compounded (CAGR)</b> — marked <i>p.a.</i>. Since-launch returns start from the launch of the Direct plan and are per year once the fund is more than a year old.</li>
         <li><b>SIP returns</b> assume ₹10,000 invested on the same date every month and are annualised (XIRR).</li>
         <li><b>Rolling returns</b> show every possible holding period — the best, the worst and how often the fund beat its benchmark. They reveal consistency that point-to-point returns hide.</li>
         <li><b>Risk ratios</b> use 36 monthly returns to the last month-end. Higher Sharpe / Sortino means more return per unit of risk; a downside capture below 100 means the fund fell less than its benchmark in falling months.</li>
@@ -1338,6 +1346,22 @@ footer a{color:var(--text2)}
       <details class="faq"><summary>How are categories assigned?</summary><p>Funds follow their official SEBI category. Fund-of-funds and index funds are further grouped by what they actually hold: gold and silver funds under <b>Commodity</b>, overseas funds under <b>Global</b>, debt index and target-maturity funds under <b>Debt</b>, and passive equity funds under <b>Index</b>.</p></details>
       <details class="faq"><summary>When is the data updated?</summary><p>Every morning, once fund houses have published the previous business day's NAV. Risk ratios, rolling returns and Factor DNA are computed as of the last month-end, the convention used in fund factsheets.</p></details>
       <details class="faq"><summary>Which benchmark is used?</summary><p>Equity funds are compared with the index matching their category (Nifty 100 for large caps, Nifty Midcap 150, Nifty Smallcap 250, Nifty LargeMidcap 250, otherwise Nifty 500). Benchmark returns include dividends: each index is tracked through its longest-running Direct-plan index fund, so the comparison is like-for-like after costs. Hybrid funds show equity sensitivity against the Nifty 50. Debt, commodity and international funds are compared with their category peers.</p></details>
+      <details class="faq"><summary>Are 3-year and 5-year returns per year? What is CAGR (compounding)?</summary><p>Yes — every return longer than one year on this site is a <b>compounded annual return (CAGR)</b>, i.e. the steady yearly rate that would turn the starting value into the ending value. Returns of up to one year (1D, 1W, 1M, 3M, 6M, YTD, 1Y) are <b>absolute</b> — the plain change over that period. "Since launch" is per year (CAGR) once the fund is more than a year old. Tables mark these as <i>p.a.</i> (per year) or <i>absolute</i>.</p>
+        <p><b>Formula:</b> CAGR = (ending value ÷ starting value)<sup>1 ÷ years</sup> − 1. Each year's gain earns gains of its own in the following years — that is compounding.</p>
+        <table class="faq-ex"><thead><tr><th>₹1,00,000 at 12% a year (CAGR)</th><th class="num">Value</th><th class="num">Total gain</th></tr></thead><tbody>
+          <tr><td>After 1 year</td><td class="num">₹1,12,000</td><td class="num">12%</td></tr>
+          <tr><td>After 3 years</td><td class="num">₹1,40,493</td><td class="num">40%</td></tr>
+          <tr><td>After 5 years</td><td class="num">₹1,76,234</td><td class="num">76%</td></tr>
+          <tr><td>After 10 years</td><td class="num">₹3,10,585</td><td class="num">211%</td></tr>
+        </tbody></table>
+        <ul>
+          <li>A 5-year CAGR of 12% is a <b>76% total gain</b>, not 60% (12 × 5) — compounding adds the extra 16%.</li>
+          <li>The reverse also holds: a 76% total gain over 5 years is 12% a year, not 15.2% (76 ÷ 5).</li>
+          <li><b>Rule of 72:</b> money roughly doubles in 72 ÷ yearly return years — about 6 years at 12%, 10 years at 7%.</li>
+          <li>CAGR is a smoothed average: the actual yearly returns go up and down (see Calendar-year returns on each fund).</li>
+          <li><b>SIP returns</b> use <b>XIRR</b>, the compounded yearly return that accounts for each instalment's own date, since each instalment is invested for a different length of time.</li>
+          <li><b>Smart Invest projections</b> compound each fund's expected yearly return every month on every instalment until the end of your holding period, then deduct tax.</li>
+        </ul></details>
       <details class="faq"><summary>How is the risk-free rate chosen?</summary><p>Sharpe and Sortino ratios subtract the overnight money-market return for the same months, so they adapt automatically as interest rates change.</p></details>
       <details class="faq"><summary>What do the scores and status mean?</summary><p><b>Consistency</b> is the share of the last 36 month-ends in which the fund ranked in the top half of its category on rolling 1-year return. <b>Recency</b> blends 3-month, 6-month and 1-year returns (20/30/50) into a category percentile. <b>Volatility</b> ranks 3-year volatility within the category (100 = calmest). <b>Status</b>: <i>In form</i> — recency in the top 30%; <i>On track</i> — recency between the 40th and 70th percentile; <i>Underperforming</i> — recency in the bottom 40% but a top-half long-term record; <i>Out of track</i> — both recent and long-term returns in the bottom half. Index funds are not scored, since they track an index by design.</p></details>
       <details class="faq"><summary>How is taxation shown?</summary><p>Each fund is mapped to its capital-gains treatment from its SEBI category and stated asset allocation: equity-oriented, specified (debt-oriented), or other. Rates exclude surcharge and cess and may change with each Union Budget — please confirm with a tax professional.</p></details>
@@ -1929,7 +1953,8 @@ function renderTable(){
   var retK = (TRK[s.k] || (S.preset === 'trend' && !S.sort)) ? [['trend','Trend score'],['r1w','1W'],['r1m','1M'],['r3m','3M']] : MOMK[s.k] ? [['r1m','1M'],['r3m','3M'],['r6m','6M'],['r1y','1Y']] : (VALK[s.k] || S.preset === 'value') ? [['valW','Value tilt'],['pe','P/E'],['peRel','P/E vs cat.'],['r3y','3Y']] : [['r1y','1Y'],['r3y','3Y'],['r5y','5Y'],['sip3','SIP 3Y']];
   if (S.preset === 'value' && !valueReady()) loadValueData().then(function(){ if (S.preset === 'value' && valueReady()) renderTable(); });
   var cols = TCOLS.filter(function(c){ return !/^(r1y|r3y|r5y|sip3)$/.test(c.k); });
-  cols.splice(3, 0, {k:retK[0][0], n:retK[0][1], num:1}, {k:retK[1][0], n:retK[1][1], num:1}, {k:retK[2][0], n:retK[2][1], num:1}, {k:retK[3][0], n:retK[3][1], num:1});
+  var PA = {r3y:1, r5y:1, r10y:1, sip3:1};          // multi-year returns are compounded per year (CAGR / XIRR)
+  cols.splice.apply(cols, [3, 0].concat(retK.map(function(x){ return {k:x[0], n:x[1] + (PA[x[0]] ? '<small class="th-pa">p.a.</small>' : ''), num:1}; })));
   $('fthead').innerHTML = '<tr><th style="width:36px">#</th>' + cols.map(function(c){
     var on = s.k === c.k;
     return '<th class="sortable' + (c.num ? ' num' : '') + (on ? ' sorted' : '') + '" data-k="' + c.k + '" aria-sort="' + (on ? (s.dir > 0 ? 'ascending' : 'descending') : 'none') + '">' + c.n + '<span class="s">' + (on ? (s.dir > 0 ? '▲' : '▼') : '↕') + '</span></th>';
@@ -1952,7 +1977,7 @@ function renderTable(){
     }).join('');
     $('fcards').innerHTML = show.map(function(f){
       var sk = s.k, extra = sk === 'sharpe' ? ['Sharpe', fmt(f.sharpe)] : sk === 'ter' ? ['TER', isNum(f.ter) ? fmt(f.ter) + '%' : '–'] : sk === 'aum' ? ['AUM', fmtAum(f.aum)] : sk === 'sip3' ? ['SIP 3Y', pctTxt(f.sip3)] : MOMK[sk] ? [{r1m:'1M', r3m:'3M', r6m:'6M'}[sk], pctTxt(f[sk])] : ['TER', isNum(f.ter) ? fmt(f.ter) + '%' : '–'];
-      var cells = (TRK[sk] || (S.preset === 'trend' && !S.sort)) ? [['Trend', cellFmt('trend', f.trend)], ['1M', fmtPct(f.r1m)], ['3M', fmtPct(f.r3m)], ['1W', fmtPct(f.r1w)]] : (VALK[sk] || (S.preset === 'value' && !S.sort)) ? [['Value tilt', cellFmt('valW', f.valW)], ['P/E vs cat.', cellFmt('peRel', f.peRel)], ['3Y', fmtPct(f.r3y)], ['P/E', cellFmt('pe', f.pe)]] : [['1Y', fmtPct(f.r1y)], ['3Y', fmtPct(f.r3y)], ['5Y', fmtPct(f.r5y)], extra];
+      var cells = (TRK[sk] || (S.preset === 'trend' && !S.sort)) ? [['Trend', cellFmt('trend', f.trend)], ['1M', fmtPct(f.r1m)], ['3M', fmtPct(f.r3m)], ['1W', fmtPct(f.r1w)]] : (VALK[sk] || (S.preset === 'value' && !S.sort)) ? [['Value tilt', cellFmt('valW', f.valW)], ['P/E vs cat.', cellFmt('peRel', f.peRel)], ['3Y p.a.', fmtPct(f.r3y)], ['P/E', cellFmt('pe', f.pe)]] : [['1Y', fmtPct(f.r1y)], ['3Y p.a.', fmtPct(f.r3y)], ['5Y p.a.', fmtPct(f.r5y)], extra];
       return '<div class="mc" data-code="' + f.code + '"><div class="mc-top"><div style="min-width:0"><div class="mc-name">' + esc(f.name) + '</div><div class="mc-meta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + '</div>' + (buyPill(f, f.asset === 'Global') ? '<div style="margin-top:5px">' + buyPill(f, f.asset === 'Global') + '</div>' : '') + '</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">' + stars(f.rating) + (f.status ? statusPill(f.status) : '') + '</div></div>' +
         '<div class="mc-row">' + cells.map(function(c){ return '<div>' + c[0] + '<b>' + c[1] + '</b></div>'; }).join('') + '</div></div>';
     }).join('');
@@ -2476,12 +2501,13 @@ function pReturns(f, det, tail){
   var rows = RET_KEYS.concat([['si','Since launch']]).map(function(k){
     var rk = k[0] !== 'si' ? rankIn(f, k[0]) : null;
     var b = bk && bmap[k[0]] ? bk.r[bmap[k[0]]] : null;
-    return '<tr><td>' + k[1] + '</td><td class="num">' + fmtPct(f[k[0]]) + '</td><td class="num">' + fmtPct(ss[k[0]]) + '</td>' + (bk ? '<td class="num">' + fmtPct(b) + '</td>' : '') +
+    var pa = k[0] === 'si' ? (f.ageY >= 1 ? 'p.a.' : 'absolute') : (/^r(3y|5y|10y)$/.test(k[0]) ? 'p.a.' : 'absolute');
+    return '<tr><td>' + k[1] + ' <span class="rt-pa' + (pa === 'p.a.' ? ' on' : '') + '">' + pa + '</span></td><td class="num">' + fmtPct(f[k[0]]) + '</td><td class="num">' + fmtPct(ss[k[0]]) + '</td>' + (bk ? '<td class="num">' + fmtPct(b) + '</td>' : '') +
       '<td class="num">' + (rk ? rk.r + ' / ' + rk.n + ' ' + quart(rk) : '<span class="mut">–</span>') + '</td></tr>';
   }).join('');
   var extra = tail.r || {};
   var cal = det.cal || {}, years = Object.keys(cal).sort();
-  return ('<div class="card pcard"><div class="pc-head"><div><div class="sec-title">Trailing returns</div><div class="sec-sub">As of ' + fmtDate(f.navDate) + ' · periods above 1 year are annualised (CAGR)</div></div></div>' +
+  return ('<div class="card pcard"><div class="pc-head"><div><div class="sec-title">Trailing returns</div><div class="sec-sub">As of ' + fmtDate(f.navDate) + ' · up to 1 year: absolute return · 3, 5 and 10 years and since launch (when over a year old): <b>compounded annual return (CAGR, per year)</b></div></div></div>' +
     '<div class="tbl-scroll" style="display:block"><table class="dtbl"><thead><tr><th>Period</th><th class="num">Fund</th><th class="num">Category avg</th>' + (bk ? '<th class="num">' + esc(bk.name) + '</th>' : '') + '<th class="num">Rank in category</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
     (isNum(extra['2y']) || isNum(extra['7y']) ? '<div class="note">Also: 2Y CAGR ' + pctTxt(extra['2y']) + ' · 7Y CAGR ' + pctTxt(extra['7y']) + ' · launched ' + fmtDate(f.inc) + '</div>' : '') + '</div>' +
     '<div class="card pcard"><div class="pc-head"><div><div class="sec-title">Calendar-year returns</div><div class="sec-sub">Fund vs category average for each completed year</div></div></div>' +
