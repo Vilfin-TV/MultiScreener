@@ -1001,6 +1001,18 @@ footer a{color:var(--text2)}
 .gd-key{margin-top:12px;font-size:12.5px;line-height:1.55;border-radius:9px;padding:10px 12px;background:rgba(232,163,23,.12);border:1px solid rgba(232,163,23,.35);color:var(--text)}
 @media (max-width:1100px){.gd-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:640px){.gd-steps,.gd-day,.gd-cols{grid-template-columns:minmax(0,1fr)}.sip-guide{padding:14px}.gd-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.gd-tabs button{padding:8px 4px}}
+/* Share VilfinTV — same networks as the home page, sharing the exact page being viewed */
+.shr{margin:22px 0 4px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius,14px);box-shadow:var(--shadow)}
+.shr h2{margin:0;font-size:18px;letter-spacing:.2px;color:var(--text)}
+.shr-lead{margin:6px 0 14px;font-size:13.5px;line-height:1.6;color:var(--text2);max-width:900px}
+.shr-btns{display:flex;flex-wrap:wrap;gap:10px}
+.shr-b{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:8px 16px;border-radius:8px;border:none;color:#fff!important;font-size:13px;font-weight:700;text-decoration:none!important;cursor:pointer;transition:opacity .15s,transform .15s;font-family:inherit;line-height:1}
+.shr-b:hover{opacity:.88;transform:translateY(-1px)}
+.shr-b:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.shr-wa{background:#25D366}.shr-tg{background:#229ED9}.shr-fb{background:#1877F2}.shr-x{background:#000;border:1px solid #3a3a3a}
+.shr-li{background:#0A66C2}.shr-em{background:#EA4335}.shr-cp{background:#4b5563}.shr-nt{background:#238636}
+.shr-url{margin:12px 0 0;font-size:12px;color:var(--text3);overflow-wrap:anywhere}
+@media (max-width:640px){.shr{padding:16px}.shr-btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.shr-b{width:100%}}
 .brk{margin:22px 0 4px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius,14px);box-shadow:var(--shadow)}
 .brk-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .brk-head h2{margin:0;font-size:18px;letter-spacing:.2px;color:var(--text)}
@@ -1342,6 +1354,11 @@ footer a{color:var(--text2)}
     </div>
     <div class="card info">
       <div class="sec-title">Methodology &amp; FAQ</div>
+      <details class="faq"><summary>Why did we build VilfinTV — and how can you help?</summary><p>VilfinTV is a <b>free, educational initiative</b> — a charitable learning project built so that anyone, from a first-time investor to an experienced one, can understand mutual funds and ETFs, compare them honestly and learn to invest with discipline. There is no subscription and no paywall, and every tool on this page is open to all.</p><ul>
+        <li><b>Our motivation is your learning.</b> Most people start investing without guidance, chase recent returns or stop at the first fall. We want to change that with clear data, plain-language guides and honest answers.</li>
+        <li><b>How you can help:</b> if VilfinTV helped you, please <a href="#share">share it with your friends and family</a> — on WhatsApp, Telegram, Facebook, X, LinkedIn or by email. Every share helps someone you care about make better money decisions, and keeps this project going.</li>
+        <li><b>Running costs:</b> some partner links in Best Brokers &amp; Apps are referral links; signing up through them may give you a welcome benefit at no extra cost and helps cover the running costs of this free platform.</li>
+        <li><b>Feedback:</b> tell us what to add or improve through the feedback option on the <a href="index.html">VilfinTV home page</a> — your suggestions shape what we build next.</li></ul><p>VilfinTV is for education only and does not give investment advice.</p></details>
       <details class="faq"><summary>Is the data on this site accurate?</summary><p>We work hard to keep it accurate, but please treat it as a research aid — not the final word.</p><ul>
         <li><b>Official sources:</b> NAVs, fund details, expense ratios, minimum amounts and exit loads come from official industry and fund-house disclosures; portfolios come from each fund house's statutory monthly portfolio statement.</li>
         <li><b>Automated checks every day:</b> every return is recalculated independently and reconciled against the official NAV history; unit splits and one-day price errors are corrected; portfolios are checked to add up and to fit the fund's category. If a check fails, the update is not published and the previous data stays.</li>
@@ -1425,6 +1442,21 @@ footer a{color:var(--text2)}
     </div>
   </section>
 
+  <section class="shr" id="share" aria-labelledby="shrTitle">
+    <h2 id="shrTitle">📣 Share VilfinTV with friends &amp; family</h2>
+    <p class="shr-lead">Found this India Mutual Fund Screener useful? VilfinTV is a free, educational initiative built to help everyone learn to invest wisely. If it helped you, please share it — every share helps someone you care about make better money decisions.</p>
+    <div class="shr-btns">
+      <a class="shr-b shr-wa" data-net="whatsapp" href="https://api.whatsapp.com/send" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+      <a class="shr-b shr-tg" data-net="telegram" href="https://t.me/share/url" target="_blank" rel="noopener noreferrer">Telegram</a>
+      <a class="shr-b shr-fb" data-net="facebook" href="https://www.facebook.com/sharer/sharer.php" target="_blank" rel="noopener noreferrer">Facebook</a>
+      <a class="shr-b shr-x" data-net="x" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer">X (Twitter)</a>
+      <a class="shr-b shr-li" data-net="linkedin" href="https://www.linkedin.com/sharing/share-offsite/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      <a class="shr-b shr-em" data-net="email" href="mailto:">Email</a>
+      <button type="button" class="shr-b shr-cp" id="shrCopy">Copy Link</button>
+      <button type="button" class="shr-b shr-nt" id="shrNative" hidden>More Options…</button>
+    </div>
+    <p class="shr-url" id="shrUrl"></p>
+  </section>
   <section class="brk" id="brokers" aria-labelledby="brkTitle">
     <div class="brk-head"><div><h2 id="brkTitle">💼 Best Brokers &amp; Apps</h2><p>Open the accounts you need to invest in the funds above — platforms we use and recommend.</p></div>
     <a class="brk-all" href="https://vilfintv.com/market_sentiment_score.html#brokers">Compare all features →</a></div>
@@ -3475,6 +3507,50 @@ loadSub = function(sub){
 $('yr').textContent = new Date().getFullYear();
 initTheme();
 boot();
+</script>
+<script>
+/* Share VilfinTV: every button shares the page exactly as it is being viewed (a fund page shares that fund) */
+(function(){
+  function info(){
+    var url = location.href.split('#')[0], t = document.title.split(' — ')[0].split(' | ')[0];
+    var text = /[?&]fund=/.test(location.search) && t ? t + ' — returns, risk, portfolio & fund health on the VilfinTV India Mutual Fund Screener (free & educational)' : /view=sip/.test(location.search) ? 'Smart Invest by VilfinTV — a diversified mutual fund plan for your horizon and risk level, with a beginner\u2019s guide (free & educational)' : 'VilfinTV India Mutual Fund Screener — compare every direct mutual fund: returns, risk, portfolios, Smart Invest plans and FAQs (free & educational)';
+    return {url:url, text:text, title:document.title};
+  }
+  function link(net){
+    var s = info(), u = encodeURIComponent(s.url), t = encodeURIComponent(s.text);
+    switch (net) {
+      case 'whatsapp': return 'https://api.whatsapp.com/send?text=' + encodeURIComponent(s.text + ' ' + s.url);
+      case 'telegram': return 'https://t.me/share/url?url=' + u + '&text=' + t;
+      case 'facebook': return 'https://www.facebook.com/sharer/sharer.php?u=' + u;
+      case 'x':        return 'https://twitter.com/intent/tweet?text=' + t + '&url=' + u;
+      case 'linkedin': return 'https://www.linkedin.com/sharing/share-offsite/?url=' + u;
+      case 'email':    return 'mailto:?subject=' + encodeURIComponent(s.title) + '&body=' + encodeURIComponent(s.text + '\n\n' + s.url);
+    }
+    return s.url;
+  }
+  function refresh(){
+    document.querySelectorAll('.shr-b[data-net]').forEach(function(a){ a.href = link(a.getAttribute('data-net')); });
+    var el = document.getElementById('shrUrl'); if (el) el.textContent = 'Shares this page: ' + info().url;
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    refresh();
+    // the page URL changes as you browse (fund pages, tabs, filters): rebuild each link right before it opens
+    document.querySelectorAll('.shr-b[data-net]').forEach(function(a){
+      ['pointerdown', 'focus', 'click'].forEach(function(ev){ a.addEventListener(ev, function(){ a.href = link(a.getAttribute('data-net')); }); });
+    });
+    var sec = document.getElementById('share');
+    if (sec && 'IntersectionObserver' in window) new IntersectionObserver(function(es){ if (es[0].isIntersecting) refresh(); }).observe(sec);
+    var cp = document.getElementById('shrCopy');
+    if (cp) cp.addEventListener('click', function(){
+      var url = info().url, done = function(){ var o = 'Copy Link'; cp.textContent = 'Copied!'; setTimeout(function(){ cp.textContent = o; }, 2000); };
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(done, function(){ fallback(url); done(); });
+      else { fallback(url); done(); }
+    });
+    function fallback(v){ var ta = document.createElement('textarea'); ta.value = v; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch(e) {} document.body.removeChild(ta); }
+    var nt = document.getElementById('shrNative');
+    if (nt && navigator.share) { nt.hidden = false; nt.addEventListener('click', function(){ var s = info(); navigator.share({title:s.title, text:s.text, url:s.url}).catch(function(){}); }); }
+  });
+})();
 </script>
 </body>
 </html>
