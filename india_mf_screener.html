@@ -376,6 +376,7 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 
 /* ═══════════════ EXPLORE ═══════════════ */
 .assets{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.trs{display:inline-block;min-width:44px;padding:2px 8px;border-radius:999px;font-weight:700;text-align:center;background:linear-gradient(90deg,var(--accent-soft) var(--t),transparent var(--t)),var(--surface2,rgba(127,127,127,.08));border:1px solid var(--border)}
 .asset{position:relative;padding:13px 14px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);text-align:left;transition:transform .15s,border-color .15s,box-shadow .15s;overflow:hidden;min-width:0}
 .asset::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ac,var(--accent));opacity:.9}
 .asset:hover{transform:translateY(-2px);box-shadow:var(--shadow-s);border-color:var(--ac,var(--accent))}
@@ -1191,7 +1192,8 @@ var PRESETS = [
   {id:'steady', n:'Most steady', ic:'<path d="M3 12h4l3-8 4 16 3-8h4"/>'},
   {id:'rated', n:'Highest rated', ic:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>'},
   {id:'mom3', n:'Best momentum 3M', ic:'<path d="M3 17l5-5 4 3 9-9"/><path d="M15 6h6v6"/><path d="M3 21h18"/>'},
-  {id:'value', n:'Best value', ic:'<path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/>'}
+  {id:'value', n:'Best value', ic:'<path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/>'},
+  {id:'trend', n:'Trending', ic:'<path d="M12 2c1 3 4 5 4 9a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 0-8z"/><path d="M6 15a6 6 0 0 0 12 0"/>'}
 ];
 var PERIODS = {r1y:'1Y', r3y:'3Y', r5y:'5Y'};
 var RET_KEYS = [['r1d','1D'],['r1w','1W'],['r1m','1M'],['r3m','3M'],['r6m','6M'],['ytd','YTD'],['r1y','1Y'],['r3y','3Y'],['r5y','5Y'],['r10y','10Y']];
@@ -1392,6 +1394,7 @@ function index(){
     return f;
   });
   BY = {}; FUNDS.forEach(function(f){ BY[f.code] = f; });
+  calcTrend();
   SUBSTAT = {};
   var keys = ['r1d','r1w','r1m','r3m','r6m','ytd','r1y','r3y','r5y','r10y','si','sip1','sip3','sip5','ter','std','sharpe','sortino','beta','alpha','mdd','roll3','beat3','pos1','aum'];
   FUNDS.forEach(function(f){ (SUBSTAT[f.sub] = SUBSTAT[f.sub] || {funds:[]}).funds.push(f); AMC_AUM[f.amcName] = (AMC_AUM[f.amcName] || 0) + (f.aum || 0); });
@@ -1556,6 +1559,7 @@ function presetSort(){
     case 'steady': return {k:'cons', dir:-1, alt:'vols'};
     case 'mom3': return {k:'r3m', dir:-1, alt:'r1m'};
     case 'value': return {k:'valW', dir:-1, alt:'peCheap'};
+    case 'trend': return {k:'trend', dir:-1, alt:'r1m'};
     default: return {k:S.per, dir:-1};
   }
 }
@@ -1590,9 +1594,32 @@ function sortList(list){
     return dir * (x - y);
   });
 }
+/* trend score 0–100: recent momentum (1W 20%, 1M 40%, 3M 40%) ranked half within the category and half across the
+   asset class, plus up to 10 pts when the last month runs ahead of the 6-month pace. A fund needs positive 1M and 3M
+   returns to score above 49. Needs 1W/1M/3M and 5+ peers. */
+function calcTrend(){
+  var rank = function(g){
+    var pr = function(k){ var v = g.map(function(f){ return f[k]; }).sort(function(a, b){ return a - b; }); return function(x){ var lo = 0, hi; while (lo < v.length && v[lo] < x) lo++; hi = lo; while (hi < v.length && v[hi] === x) hi++; return ((lo + hi) / 2) / v.length; }; };
+    var p1w = pr('r1w'), p1m = pr('r1m'), p3m = pr('r3m'), out = {};
+    g.forEach(function(f){ out[f.code] = 0.2 * p1w(f.r1w) + 0.4 * p1m(f.r1m) + 0.4 * p3m(f.r3m); });
+    return out;
+  };
+  var bySub = {}, byAsset = {}, cat = {}, cls = {};
+  FUNDS.forEach(function(f){ f.trend = null; if (isNum(f.r1w) && isNum(f.r1m) && isNum(f.r3m)) { (bySub[f.sub] = bySub[f.sub] || []).push(f); (byAsset[f.asset] = byAsset[f.asset] || []).push(f); } });
+  Object.keys(bySub).forEach(function(k){ if (bySub[k].length >= 5) Object.assign(cat, rank(bySub[k])); });
+  Object.keys(byAsset).forEach(function(k){ Object.assign(cls, rank(byAsset[k])); });
+  FUNDS.forEach(function(f){
+    if (!isNum(cat[f.code])) return;
+    var sc = 90 * (0.5 * cat[f.code] + 0.5 * cls[f.code]);
+    if (isNum(f.r6m) && f.r1m > 0 && f.r1m > f.r6m / 6) sc += Math.min(10, 10 * (f.r1m - f.r6m / 6) / Math.max(1, Math.abs(f.r6m / 6)));
+    if (!(f.r1m > 0 && f.r3m > 0)) sc = Math.min(sc, 49);
+    f.trend = Math.round(Math.max(0, Math.min(100, sc)));
+  });
+}
 /* value data: Factor DNA value exposure (detail files) + portfolio P/E vs category median (fund_pe.json), loaded per category in view */
 var VALUE_SUBS = {}, VALUE_PE = null;
 function cellFmt(k, v){
+  if (k === 'trend') return isNum(v) ? '<span class="trs" style="--t:' + v + '%">' + v + '</span>' : '–';
   if (k === 'valW') return isNum(v) ? Math.round(v) + '%' : '–';
   if (k === 'pe') return isNum(v) ? fmt(v, 1) : '–';
   if (k === 'peRel') return isNum(v) ? fmt(v, 2) + '×' : '–';
@@ -1624,8 +1651,10 @@ function renderTable(){
   $('tblCount').textContent = list.length.toLocaleString('en-IN') + ' fund' + (list.length === 1 ? '' : 's');
   $('tblNote').textContent = 'Returns as of ' + fmtDate(D.asOf) + ' · 3Y+ returns annualised';
   var MOMK = {r1m:1, r3m:1, r6m:1}, VALK = {valW:1, pe:1, peRel:1, peCheap:1};
+  if (S.preset === 'trend' && !S.sort) $('tblNote').textContent = 'Trend score 0\u2013100 = recent momentum (1W 20%, 1M 40%, 3M 40%) ranked within the category and the asset class, plus a boost when the last month runs ahead of the 6-month pace; positive 1M and 3M returns needed for 50+ \u00b7 as of ' + fmtDate(D.asOf);
   if (S.preset === 'value' && !S.sort) $('tblNote').textContent = 'Value tilt = share of the fund\u2019s return pattern explained by value stocks · P/E vs cat. = portfolio P/E \u00f7 category median (below 1\u00d7 = cheaper) · as of ' + fmtDate(D.asOf);
-  var retK = MOMK[s.k] ? [['r1m','1M'],['r3m','3M'],['r6m','6M'],['r1y','1Y']] : (VALK[s.k] || S.preset === 'value') ? [['valW','Value tilt'],['pe','P/E'],['peRel','P/E vs cat.'],['r3y','3Y']] : [['r1y','1Y'],['r3y','3Y'],['r5y','5Y'],['sip3','SIP 3Y']];
+  var TRK = {trend:1};
+  var retK = (TRK[s.k] || (S.preset === 'trend' && !S.sort)) ? [['trend','Trend score'],['r1w','1W'],['r1m','1M'],['r3m','3M']] : MOMK[s.k] ? [['r1m','1M'],['r3m','3M'],['r6m','6M'],['r1y','1Y']] : (VALK[s.k] || S.preset === 'value') ? [['valW','Value tilt'],['pe','P/E'],['peRel','P/E vs cat.'],['r3y','3Y']] : [['r1y','1Y'],['r3y','3Y'],['r5y','5Y'],['sip3','SIP 3Y']];
   if (S.preset === 'value' && !valueReady()) loadValueData().then(function(){ if (S.preset === 'value' && valueReady()) renderTable(); });
   var cols = TCOLS.filter(function(c){ return !/^(r1y|r3y|r5y|sip3)$/.test(c.k); });
   cols.splice(3, 0, {k:retK[0][0], n:retK[0][1], num:1}, {k:retK[1][0], n:retK[1][1], num:1}, {k:retK[2][0], n:retK[2][1], num:1}, {k:retK[3][0], n:retK[3][1], num:1});
@@ -1651,7 +1680,7 @@ function renderTable(){
     }).join('');
     $('fcards').innerHTML = show.map(function(f){
       var sk = s.k, extra = sk === 'sharpe' ? ['Sharpe', fmt(f.sharpe)] : sk === 'ter' ? ['TER', isNum(f.ter) ? fmt(f.ter) + '%' : '–'] : sk === 'aum' ? ['AUM', fmtAum(f.aum)] : sk === 'sip3' ? ['SIP 3Y', pctTxt(f.sip3)] : MOMK[sk] ? [{r1m:'1M', r3m:'3M', r6m:'6M'}[sk], pctTxt(f[sk])] : ['TER', isNum(f.ter) ? fmt(f.ter) + '%' : '–'];
-      var cells = (VALK[sk] || (S.preset === 'value' && !S.sort)) ? [['Value tilt', cellFmt('valW', f.valW)], ['P/E vs cat.', cellFmt('peRel', f.peRel)], ['3Y', fmtPct(f.r3y)], ['P/E', cellFmt('pe', f.pe)]] : [['1Y', fmtPct(f.r1y)], ['3Y', fmtPct(f.r3y)], ['5Y', fmtPct(f.r5y)], extra];
+      var cells = (TRK[sk] || (S.preset === 'trend' && !S.sort)) ? [['Trend', cellFmt('trend', f.trend)], ['1M', fmtPct(f.r1m)], ['3M', fmtPct(f.r3m)], ['1W', fmtPct(f.r1w)]] : (VALK[sk] || (S.preset === 'value' && !S.sort)) ? [['Value tilt', cellFmt('valW', f.valW)], ['P/E vs cat.', cellFmt('peRel', f.peRel)], ['3Y', fmtPct(f.r3y)], ['P/E', cellFmt('pe', f.pe)]] : [['1Y', fmtPct(f.r1y)], ['3Y', fmtPct(f.r3y)], ['5Y', fmtPct(f.r5y)], extra];
       return '<div class="mc" data-code="' + f.code + '"><div class="mc-top"><div style="min-width:0"><div class="mc-name">' + esc(f.name) + '</div><div class="mc-meta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + '</div>' + (buyPill(f, f.asset === 'Global') ? '<div style="margin-top:5px">' + buyPill(f, f.asset === 'Global') + '</div>' : '') + '</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">' + stars(f.rating) + (f.status ? statusPill(f.status) : '') + '</div></div>' +
         '<div class="mc-row">' + cells.map(function(c){ return '<div>' + c[0] + '<b>' + c[1] + '</b></div>'; }).join('') + '</div></div>';
     }).join('');
