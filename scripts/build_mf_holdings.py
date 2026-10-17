@@ -89,7 +89,29 @@ SOURCES = {
              "pick": r"/mutual-funds/portfolios/document-\d{8}/", "multi": True},
     "360 ONE": {"page": "https://www.360.one/asset/mutual-funds/downloads/",
                 "pick": r"monthly[-_ ]?portfolio|portfolio[-_ ]?monthly", "multi": True},
+    "Motilal Oswal": {"page": "https://www.motilaloswalmf.com/downloads/scheme-portfolio-details",
+                      "pick": r"month-end-portfolio/.*scheme(?:%20| |-|_)portfolio(?:%20| |-|_)details", "skip": SKIP_DEFAULT + r"|copy"},
+    # file names carry no date: the portfolio month is read from inside each file (date: content)
+    "Quantum": {"page": "https://www.quantumamc.com/portfolio/combined/-1/1/0/0", "pick": r"/FileCDN/FactSheet/", "date": "content", "scan": 4},
+    "The Wealth Company": {"page": "https://www.wealthcompanyamc.in/literature-forms/portfolio-documents/monthly/",
+                           "pick": r"/uploads/Monthly_Portfolio_", "date": "content", "scan": 30, "multi": True},
 }
+# a matched portfolio must fit the fund's category (same rule as verify) — otherwise it is skipped, not published
+FIT_EQUITY = {"large", "largemid", "mid", "small", "multi", "flexi", "focused", "value", "contra", "elss", "dividend",
+              "idx_large", "idx_midsmall", "idx_broad", "idx_factor", "idx_sector"}
+FIT_DEBT = {"overnight", "liquid", "money", "ultrashort", "lowdur", "shortdur", "meddur", "medlong", "longdur", "dynbond",
+            "corpbond", "credit", "bankpsu", "gilt", "gilt10", "floater", "target", "debtidx"}
+
+
+def fits_category(sub: str, mix: dict) -> bool:
+    eq = (mix.get("equity") or 0) + (mix.get("overseas") or 0) + (mix.get("reit") or 0)
+    if sub in FIT_EQUITY or re.match(r"(sec_|idx_)", sub or ""):
+        return eq >= 60
+    if sub in FIT_DEBT:
+        return (mix.get("equity") or 0) <= 5
+    return True
+
+
 MONTHS = {m: i for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
 
 
@@ -283,6 +305,56 @@ def browser_fetch(items: list[tuple[str, str]]) -> dict[str, bytes]:
     return out
 
 
+DATE_TXT = re.compile(r"(?:(\d{1,2})(?:st|nd|rd|th)?[\s\-/,.]*)?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*[\s\-/,.']*(?:(\d{1,2})(?:st|nd|rd|th)?,?\s+)?(20\d{2})", re.I)
+DATE_NUM = re.compile(r"\b(\d{1,2})[./-](\d{1,2})[./-](20\d{2})\b")
+
+
+def content_month(blob: bytes, fname: str) -> tuple[int, int] | None:
+    """Portfolio month written inside a file ("as on 30 September 2026", "period ended 30/09/2026") —
+    the most frequent plausible month in the first lines of each sheet."""
+    seen = Counter()
+    today = date.today()
+    try:
+        for _, rows in read_book(blob, fname):
+            for row in rows[:12]:
+                line = " ".join(_s(c) for c in row if c is not None)
+                for m in DATE_TXT.finditer(line):
+                    y, mo = int(m.group(4)), MONTHS[m.group(2).lower()[:3]]
+                    if (y, mo) <= (today.year, today.month) and y >= today.year - 2:
+                        seen[(y, mo)] += 1
+                for m in DATE_NUM.finditer(line):
+                    y, mo = int(m.group(3)), int(m.group(2))
+                    if 1 <= mo <= 12 and (y, mo) <= (today.year, today.month) and y >= today.year - 2:
+                        seen[(y, mo)] += 1
+                for c in row:                                    # real date cells
+                    if isinstance(c, datetime) and today.year - 2 <= c.year and (c.year, c.month) <= (today.year, today.month):
+                        seen[(c.year, c.month)] += 1
+    except Exception:  # noqa: BLE001
+        return None
+    return max(seen, key=lambda k: (seen[k], k)) if seen else None
+
+
+def content_dated(ctx, cfg, links: list[str]) -> dict | None:
+    """Download the first few candidate files (pages list newest first) and date each from its contents."""
+    dated = []
+    for l in links[: cfg.get("scan", 6)]:
+        try:
+            r = ctx.request.get(l, headers={"Referer": cfg["page"]}, timeout=120000)
+            if not r.ok:
+                continue
+            ym = content_month(r.body(), l.split("?")[0])
+        except Exception as e:  # noqa: BLE001
+            log.warning("content date failed %s (%s)", l[:100], str(e)[:100])
+            continue
+        if ym:
+            dated.append((ym, l))
+    if not dated:
+        return None
+    latest = max(d for d, _ in dated)
+    pick = [l for d, l in dated if d == latest]
+    return {"month": f"{latest[0]}-{latest[1]:02d}", "files": pick if cfg.get("multi") else pick[:1]}
+
+
 def discover(sources: dict) -> dict[str, list[str]]:
     from playwright.sync_api import sync_playwright
     found = {}
@@ -310,6 +382,14 @@ def discover(sources: dict) -> dict[str, list[str]]:
             allx = [l for l in dict.fromkeys(links) if re.search(r"\.(xlsx?|zip|xlsm)(\?|#|$)", l, re.I)]
             links = [l for l in allx if re.search(cfg["pick"], l, re.I)
                      and not re.search(cfg.get("skip", SKIP_DEFAULT), l, re.I)]
+            if cfg.get("date") == "content":
+                got = content_dated(ctx, cfg, links) if links else None
+                if got:
+                    found[amc] = got
+                    log.info("%s: %s · %d file(s) (dated from contents)", amc, got["month"], len(got["files"]))
+                else:
+                    log.warning("%s: no dated portfolio files found (%d candidate links)", amc, len(links))
+                continue
             dated = [(link_month(l), l) for l in links]
             dated = [(d, l) for d, l in dated if d]
             if not dated:
@@ -667,6 +747,10 @@ def main():
             sm = summarise(blk, large, mid)
             listed = 100 - sm["mix"]["cashOther"]
             if listed < 40 or listed > 130:          # sanity: a portfolio should add up to ~100 %
+                bad += 1
+                continue
+            if not fits_category(sub_of.get(code, ""), sm["mix"]):
+                log.warning("%s: %s portfolio does not fit its category (%s) — skipped", amc, code, sub_of.get(code))
                 bad += 1
                 continue
             sm["asOf"] = info["month"]
