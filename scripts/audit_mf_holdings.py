@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Portfolio-holdings audit for the India MF Screener → data/mf/p/_audit.json.
+"""Data audit for the India MF Screener: portfolio holdings (default) and Smart SIP accuracy (--smartsip).
+
+Holdings → data/mf/p/_audit.json.
 
 Run after every holdings build (and again after the repair pass). For every fund house with a configured source
 (`build_mf_holdings.SOURCES`) it checks:
@@ -14,6 +16,18 @@ Fund houses that are behind / failed / dropped are written to the `retry` list (
 which the workflow re-processes once with `--force`. Funds of fund houses without a source are listed as
 `uncovered`. The audit itself never edits portfolio data; it always exits 0 so a failed re-check never blocks the
 verified data from publishing.
+
+Smart SIP (--smartsip) → data/mf/smartsip_audit.json. Recomputes every plan from the published screener data and
+compares it with data/mf/smartsip.json:
+  errors (exit 1 — the workflow rebuilds the planner once, re-audits, and blocks publishing if any remain):
+    · plan built from an older screener date than the screener; weights not summing to 100; asset mix, expense
+      ratio, expected return or past return of the mix not matching the slot figures / screener data;
+    · a recommended fund missing from the screener, closed to lump sums or SIPs, above the ₹1,000 lump-sum limit,
+      or in the wrong category for its slot; figures quoted in a fund's checklist (expense ratio, 3-year return,
+      fund size, lump-sum minimum) not matching the screener; a paused slot without gate details;
+  warnings (reported, never blocking): stale market inputs (yields, index valuations, global series, stock P/E),
+    implausible one-day moves in yields, recommended funds without a current portfolio (credit-quality and fund
+    P/E checks then fall back to category rules), alternates no longer in the screener.
 """
 from __future__ import annotations
 
@@ -114,5 +128,157 @@ def main() -> int:
     return 0
 
 
+# ═════════════════════════════ SMART SIP ═════════════════════════════
+SIP_OUT = MF / "smartsip_audit.json"
+
+
+def _num(txt: str) -> float | None:
+    import re
+    m = re.search(r"-?[\d,]+(?:\.\d+)?", txt or "")
+    return float(m.group(0).replace(",", "")) if m else None
+
+
+def allowed_pools(SS, key: str) -> set:
+    """Every category a slot may draw from: its own pools, the rate-regime debt pools and its fallback slots' pools."""
+    out = set()
+    for k in [key] + list(SS.FALLBACK.get(key, [])):
+        out |= set((SS.SLOTS.get(k) or (None, None, []))[2] or [])
+        for pools in (SS.DEBT_POOLS.get(k) or {}).values():
+            out |= set(pools)
+    return out
+
+
+def audit_smartsip() -> int:
+    import re
+    import build_smart_sip as SS
+    from build_mf_holdings import MAX_AGE_DAYS, pf_age_days
+    scr = json.loads((MF / "screener.json").read_text())
+    C = {c: i for i, c in enumerate(scr["cols"])}
+    F = {r[C["code"]]: r for r in scr["rows"]}
+    g = lambda code, col: (F.get(code) or [None] * len(C))[C[col]]  # noqa: E731
+    sip = json.loads((MF / "smartsip.json").read_text())
+    macro = json.loads((MF / "macro.json").read_text()) if (MF / "macro.json").exists() else {}
+    fpe = json.loads((MF / "fund_pe.json").read_text()) if (MF / "fund_pe.json").exists() else {}
+    have_pf = set()
+    for f in P.glob("*.json"):
+        if not f.name.startswith("_"):
+            have_pf |= {int(c) for c, v in json.loads(f.read_text()).items() if pf_age_days(v["asOf"]) <= MAX_AGE_DAYS}
+    asof = date.fromisoformat(scr["asOf"])
+    errors, warns = [], []
+    E = lambda m: errors.append(m)  # noqa: E731
+    W = lambda m: warns.append(m)   # noqa: E731
+    near = lambda a, b, tol: a is not None and b is not None and abs(a - b) <= tol  # noqa: E731
+
+    # ── freshness of the plan and its inputs
+    if sip.get("asOf") != scr["asOf"]:
+        E(f"planner built for {sip.get('asOf')} but screener is {scr['asOf']}")
+    def days(d):
+        try:
+            return (asof - date.fromisoformat(str(d)[:10])).days
+        except Exception:  # noqa: BLE001
+            return 999
+    if days(macro.get("valuationAsOf")) > 5:
+        W(f"index valuations are from {macro.get('valuationAsOf')} ({days(macro.get('valuationAsOf'))} days old)")
+    hist = macro.get("rateHist") or []
+    if hist and days(hist[-1].get("d")) > 10:
+        W(f"interest-rate data last updated {hist[-1].get('d')}")
+    if len(hist) >= 2:
+        a, b = hist[-2], hist[-1]
+        for k, lim in (("g10", 0.30), ("tb91", 0.50), ("tb182", 0.50), ("tb364", 0.50), ("repo", 0.50)):
+            if a.get(k) is not None and b.get(k) is not None and abs(b[k] - a[k]) > lim:
+                W(f"{k} moved {a[k]} → {b[k]} between {a['d']} and {b['d']} — check the source")
+    for key, ser in (macro.get("global") or {}).items():
+        if days(ser.get("d")) > 7:
+            W(f"global series {ser.get('label', key)} last value {ser.get('d')}")
+    if days(fpe.get("asOf")) > 5:
+        W(f"stock P/E data is from {fpe.get('asOf')}")
+
+    # ── every plan
+    pf_missing = set()
+    for pid, pl in sip["plans"].items():
+        slots = pl["slots"]
+        tw = sum(s["w"] for s in slots)
+        if tw != 100:
+            E(f"{pid}: weights add up to {tw}")
+        mix = defaultdict(int)
+        for s in slots:
+            mix[s["asset"]] += s["w"]
+        if {k: v for k, v in mix.items() if v} != {k: v for k, v in (pl.get("mix") or {}).items() if v}:
+            E(f"{pid}: asset mix {dict(pl.get('mix') or {})} does not match the slots {dict(mix)}")
+        ter = round(sum((g(s["code"], "ter") or 0) * s["w"] for s in slots) / 100, 2)
+        if not near(ter, pl.get("ter"), 0.011):
+            E(f"{pid}: plan expense ratio {pl.get('ter')} vs {ter} from the screener")
+        er = round(sum(s["er"] * s["w"] for s in slots) / 100, 2)
+        if not near(er, pl.get("er"), 0.011):
+            E(f"{pid}: plan expected return {pl.get('er')} vs {er} from its slots")
+        for col in ("r3y", "r5y"):
+            have = [(s["w"], g(s["code"], col)) for s in slots if g(s["code"], col) is not None]
+            w = sum(x for x, _ in have)
+            calc = round(sum(x * r for x, r in have) / w, 2) if w >= 70 else None
+            pub = ((pl.get("hist") or {}).get(col) or {}).get("v")
+            if (calc is None) != (pub is None) or (calc is not None and not near(calc, pub, 0.011)):
+                E(f"{pid}: past {col} of the mix {pub} vs {calc} recomputed")
+        for s in slots:
+            code, sid = s["code"], f"{pid}/{s['key']}"
+            if code not in F:
+                E(f"{sid}: fund {code} is not in the screener")
+                continue
+            if s["w"] == 0 and not s.get("gate"):
+                E(f"{sid}: weight 0 without gate details")
+            if s["w"] > 0:
+                buy = g(code, "buy") or ""
+                if "L" not in buy or "S" not in buy:
+                    E(f"{sid}: {g(code, 'name')} is not open for both lump sums and SIPs (status '{buy}')")
+                if (g(code, "lumpMin") or 0) > SS.LUMP_MAX:
+                    E(f"{sid}: lump-sum minimum ₹{g(code, 'lumpMin')} above ₹{SS.LUMP_MAX}")
+            name = g(code, "name") or ""
+            fallback_ok = g(code, "sub") in allowed_pools(SS, s["key"])     # filled from a fallback slot's pool
+            if s["key"] in ("metal", "theme") and fallback_ok:
+                pass
+            elif s["key"] == "metal":
+                ok = g(code, "sub") in ("gold", "silver") and g(code, "sub") == (sip.get("metal") or {}).get("applied", g(code, "sub"))
+                if not ok:
+                    E(f"{sid}: {name} ({g(code, 'sub')}) does not match the chosen metal {(sip.get('metal') or {}).get('applied')}")
+            elif s["key"] == "theme":
+                sec = next((x for x in SS.SECTORS if x[0] == sip.get("sector")), None)
+                if sec is None or g(code, "sub") not in sec[3] or (sec[4] and not re.search(sec[4], name, re.I)) \
+                        or (sec[5] and re.search(sec[5], name, re.I)):
+                    E(f"{sid}: {name} is not a fund of the chosen sector {sip.get('sector')}")
+            else:
+                pools = allowed_pools(SS, s["key"])
+                if pools and g(code, "sub") not in pools:
+                    E(f"{sid}: {name} is in category {g(code, 'sub')}, not one of {sorted(pools)}")
+                if s["key"] == "momentum" and g(code, "sub") in (SS.SLOTS["momentum"][2] or []) and not SS.RX_MOMENTUM.search(name):
+                    E(f"{sid}: {name} is not a momentum index fund")
+            for name, ok, txt in s.get("checks") or []:
+                v = _num(txt)
+                if name == "Expense ratio" and g(code, "ter") is not None and not near(v, g(code, "ter"), 0.006):
+                    E(f"{sid}: checklist expense ratio {v} vs screener {g(code, 'ter')}")
+                elif name == "3-year record" and g(code, "r3y") is not None and not near(v, g(code, "r3y"), 0.006):
+                    E(f"{sid}: checklist 3-year return {v} vs screener {g(code, 'r3y')}")
+                elif name == "Fund size" and g(code, "aum") is not None and not near(v, g(code, "aum"), 1.0):
+                    E(f"{sid}: checklist fund size {v} vs screener {g(code, 'aum')}")
+                elif name == "Lump-sum minimum" and g(code, "lumpMin") is not None and not near(v, g(code, "lumpMin"), 0.5):
+                    E(f"{sid}: checklist lump-sum minimum {v} vs screener {g(code, 'lumpMin')}")
+            for alt in s.get("alts") or []:
+                if alt not in F:
+                    W(f"{sid}: alternate {alt} is no longer in the screener")
+            if s["w"] > 0 and code not in have_pf:
+                pf_missing.add((code, g(code, "name"), g(code, "amc")))
+    if pf_missing:
+        amcs = scr["amcs"]
+        W(f"{len(pf_missing)} recommended funds have no current portfolio (credit-quality / fund P/E checks use "
+          f"category rules): " + "; ".join(f"{n} ({amcs[a]})" for _, n, a in sorted(pf_missing, key=lambda x: x[1])))
+    out = {"v": 1, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "asOf": scr["asOf"],
+           "plans": len(sip["plans"]), "errors": errors, "warnings": warns}
+    SIP_OUT.write_text(json.dumps(out, indent=1, ensure_ascii=False))
+    print(f"Smart SIP audit: {len(sip['plans'])} plans · {len(errors)} error(s) · {len(warns)} warning(s)")
+    for m in errors:
+        print("  ✗ " + m)
+    for m in warns:
+        print("  ! " + m)
+    return 1 if errors else 0
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(audit_smartsip() if "--smartsip" in sys.argv else main())
