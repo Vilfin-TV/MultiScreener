@@ -56,7 +56,8 @@ def expected_month(today: date) -> str:
 
 
 def main() -> int:
-    from build_mf_holdings import SOURCES, MAX_AGE_DAYS, pf_age_days
+    from build_mf_holdings import SOURCES as FILE_SOURCES, PAGE_SOURCES, MAX_AGE_DAYS, pf_age_days
+    SOURCES = {**FILE_SOURCES, **PAGE_SOURCES}
     today = date.today()
     scr = json.loads((MF / "screener.json").read_text())
     C = {c: i for i, c in enumerate(scr["cols"])}

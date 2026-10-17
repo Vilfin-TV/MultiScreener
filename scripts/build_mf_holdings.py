@@ -31,6 +31,7 @@ import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mf_enrich as E  # noqa: E402
+import mf_fundpages as FP  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "mf" / "p"
@@ -42,6 +43,8 @@ log = logging.getLogger("hold")
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
 
 # fund house (as named in screener.json "amcs") → disclosure page + link filter
+# fund houses whose monthly portfolio is read from each fund's own page (no machine-readable monthly file)
+PAGE_SOURCES = {"Trust": "trust", "PGIM India": "pgim", "Edelweiss": "dom", "Zerodha": "dom", "Baroda BNP Paribas": "dom", "Axis": "dom"}
 SKIP_DEFAULT = r"fortnight|debt-portfolio|risk-param|half|annual|commission|aaum|votes|riskometer|weblink"
 SOURCES = {
     "SBI": {"page": "https://www.sbimf.com/portfolios",
@@ -95,6 +98,15 @@ def pf_age_days(month: str, today: date | None = None) -> int:
     y, m = map(int, month.split("-"))
     end = date(y + (m == 12), m % 12 + 1, 1) - timedelta(days=1)
     return ((today or date.today()) - end).days
+
+
+def expected_month(today: date | None = None) -> str:
+    """Latest portfolio month every fund house should have published (fund houses publish within 10 days)."""
+    t = today or date.today()
+    y, m = t.year, t.month - (1 if t.day >= 11 else 2)
+    while m < 1:
+        y, m = y - 1, m + 12
+    return f"{y:04d}-{m:02d}"
 
 
 def link_month(url: str) -> tuple[int, int] | None:
@@ -453,7 +465,7 @@ def summarise(blk: dict, large: set, mid: set) -> dict:
         h["ind"] = NOTE_MARKS.sub("", h["ind"])
     kinds = defaultdict(float)
     for h in hs:
-        h["kind"] = classify_holding(h)
+        h["kind"] = h.get("kind") or classify_holding(h)        # fund-page holdings arrive already classified
         kinds[h["kind"]] += h["pct"]
     listed = sum(kinds.values())
     eq = [h for h in hs if h["kind"] == "equity"]
@@ -466,12 +478,16 @@ def summarise(blk: dict, large: set, mid: set) -> dict:
     cap = {"large": 0.0, "mid": 0.0, "small": 0.0}
     if large or mid:
         for h in eq:
-            cap["large" if h["isin"] in large else "mid" if h["isin"] in mid else "small"] += h["pct"]
+            if h["isin"]:
+                cap["large" if h["isin"] in large else "mid" if h["isin"] in mid else "small"] += h["pct"]
+        mapped, eq_w = sum(cap.values()), sum(h["pct"] for h in eq)
+        if 0 < mapped < eq_w:                                    # holdings without an ISIN: spread pro rata
+            cap = {k: v * eq_w / mapped for k, v in cap.items()}
     credit = defaultdict(float)
     for h in hs:
         if h["kind"] == "debt":
             credit[credit_bucket(h["ind"] + " " + h["name"])] += h["pct"]
-    top = sorted(hs, key=lambda h: -h["pct"])[:15]
+    top = sorted([h for h in hs if h["isin"]], key=lambda h: -h["pct"])[:15]
     return {
         "n": len(eq), "nAll": len(hs),
         "mix": {k: round(v, 2) for k, v in kinds.items()} | {"cashOther": round(max(0.0, 100 - listed), 2)},
@@ -656,6 +672,50 @@ def main():
                      "funds": len(matched) - bad, "rejected": bad, "dlFail": dl_fail, "updated": date.today().isoformat()}
         log.info("%s: %d sheet blocks parsed, %d funds matched, %d rejected by sanity checks",
                  amc, len(blocks), len(matched) - bad, bad)
+    # fund houses read from their fund pages (one portfolio per fund page)
+    want_page = [a for a in PAGE_SOURCES if a in funds_by_amc and (not only or a in only)
+                 and ("--force" in sys.argv or (meta.get(a, {}).get("month") or "") < expected_month())]
+    if want_page:
+        pages = json.load(open(ROOT / "data" / "mf" / "scheme_pages.json"))
+        res = FP.Resolver(S)
+        pw_ctx = None
+        for amc in want_page:
+            kind, funds = PAGE_SOURCES[amc], funds_by_amc[amc]
+            log.info("%s: reading %d fund pages (%s)", amc, len(funds), kind)
+            try:
+                if kind == "dom":
+                    if pw_ctx is None:
+                        from playwright.sync_api import sync_playwright
+                        pw_ctx = sync_playwright().start()
+                        b, bctx = browser(pw_ctx)
+                    got = FP.read_dom(bctx, funds, pages, res)
+                else:
+                    got = FP.READERS[kind](S, funds, pages, res)
+            except Exception as e:  # noqa: BLE001
+                log.warning("%s: fund-page reader failed (%s)", amc, str(e)[:160])
+                got = {}
+            ok_n, months = 0, []
+            for code, (month, blk) in got.items():
+                if pf_age_days(month) > MAX_AGE_DAYS:
+                    continue
+                sm = summarise(blk, large, mid)
+                listed = 100 - sm["mix"]["cashOther"]
+                if listed < 40 or listed > 130 or not sm["top"]:
+                    continue
+                sm["asOf"] = month
+                results[code] = sm
+                ok_n += 1
+                months.append(month)
+            entry = {"month": max(months) if months else (meta.get(amc, {}).get("month")), "files": 0, "blocks": len(got),
+                     "funds": ok_n, "rejected": len(got) - ok_n, "dlFail": 0, "source": "fund pages", "updated": date.today().isoformat()}
+            if not ok_n:
+                entry = {**meta.get(amc, {}), "discoveryFail": date.today().isoformat()}
+            meta[amc] = entry
+            log.info("%s: %d fund portfolios from fund pages (%d read, %d rejected)", amc, ok_n, len(got), len(got) - ok_n)
+        if pw_ctx is not None:
+            b.close()
+            pw_ctx.stop()
+
     # merge into per-sub files (keep other fund houses' last good data)
     by_sub = defaultdict(dict)
     for p in OUT.glob("*.json"):
