@@ -62,7 +62,7 @@ SLOTS = {
     "core":   ("Large-cap core (Nifty 50 index)", "Equity", ["idx_large"], "index", 3, 500, 15),
     "next50": ("Large-cap growth (Nifty Next 50 index)", "Equity", ["idx_large"], "index", 3, 500, 20),
     "lmcore": ("Large & mid cap core", "Equity", ["largemid"], "active", 5, 1000, 17),
-    "flexi":  ("Diversified equity (flexi / multi / large & mid)", "Equity", ["flexi", "multi", "largemid"], "active", 5, 1000, 16),
+    "flexi":  ("Diversified equity (flexi / multi / large & mid / focused)", "Equity", ["flexi", "multi", "largemid", "focused"], "active", 5, 1000, 16),
     "mid":    ("Mid cap", "Equity", ["mid"], "active", 5, 1000, 19),
     "small":  ("Small cap", "Equity", ["small"], "active", 5, 1000, 23),
     "baf":    ("Balanced advantage (dynamic)", "Hybrid", ["baf"], "active", 5, 1000, 9),
