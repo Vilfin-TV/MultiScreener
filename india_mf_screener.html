@@ -592,6 +592,18 @@ td.sorted-col{background:rgba(127,127,127,.05)}
 .sc-ov-m{font-size:12px;color:var(--text2);margin-top:3px}
 .sc-lead{margin-top:14px}
 .fh-row{border-bottom:1px solid var(--border)}
+.sc-lb{height:30px;padding:0 12px;font-size:12px;margin-top:6px}
+.trk-hero{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;margin-bottom:12px}
+.trk-rank{border-radius:12px;padding:14px;text-align:center;background:linear-gradient(160deg,var(--accent-soft),var(--surface2));border:1px solid var(--border);display:flex;flex-direction:column;justify-content:center}
+.trk-rank small{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text3)}
+.trk-rank b{font-family:'JetBrains Mono',monospace;font-size:34px;line-height:1.1;margin:4px 0}.trk-rank b span{font-size:16px;color:var(--text3)}
+.trk-rank em{font-style:normal;font-size:12px;color:var(--text2)}
+.trk-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.trk-k div{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 10px;min-width:0}
+.trk-k small{display:block;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text3)}
+.trk-k b{display:block;font-family:'JetBrains Mono',monospace;font-size:15px;margin-top:3px}
+.trk-k em{display:block;font-style:normal;font-size:11px;color:var(--text3);margin-top:1px}
+@media (max-width:760px){.trk-hero{grid-template-columns:minmax(0,1fr)}.trk-k{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .fh-row summary{list-style:none;display:grid;grid-template-columns:40px minmax(0,1fr) 20px;gap:12px;align-items:center;padding:12px 2px;cursor:pointer}
 .fh-row summary::-webkit-details-marker{display:none}
 .fh-ic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
@@ -1768,7 +1780,7 @@ function renderPanel(f, det, tail){
     case 'info': h = pInfo(f, det); break;
   }
   $('panels').innerHTML = '<div class="panel on">' + h + '</div>';
-  if (S.tab === 'overview') { drawNavChart(); CACHE.dSync = {}; CACHE.dSync[f.code] = (det || {}).score; renderScorecard(f); }
+  if (S.tab === 'overview') { drawNavChart(); CACHE.dSync = {}; CACHE.dSync[f.code] = (det || {}).score; CACHE.dRisk = {}; CACHE.dRisk[f.code] = (det || {}).risk; renderScorecard(f); }
   if (S.tab === 'sip') bindSipCalc(f, tail);
   if (S.tab === 'info') fillManagers(f, (det.info || {}).managers || []);
   if (S.tab === 'portfolio') {
@@ -1821,9 +1833,9 @@ function scorePeers(f){
 }
 function renderScorecard(f){
   var box = $('scCard'); if (!box) return;
-  if (f.asset === 'Index') {                                   // index funds: no peer scores, but a full health check
-    box.innerHTML = '<div class="pc-head"><div><div class="sec-title">Fund health</div><div class="sec-sub">Compared with ' + esc(f.subLabel) + ' funds · tap a row for details</div></div></div><div id="fhBox" class="fh"></div>';
-    renderHealth(f); return;
+  if (f.asset === 'Index') {                                   // index funds: tracking quality vs funds on the same index + health
+    box.innerHTML = '<div id="trkBox"><div class="skel" style="height:200px"></div></div><div class="pc-head" style="margin-top:16px"><div><div class="sec-title" style="font-size:15px">Fund health</div><div class="sec-sub">Compared with ' + esc(f.subLabel) + ' funds · tap a row for details</div></div></div><div id="fhBox" class="fh"></div>';
+    renderTracking(f); renderHealth(f); return;
   }
   scorePeers(f).then(function(rows){
     if (!$('scCard') || S.sel !== f.code) return;
@@ -1843,7 +1855,7 @@ function renderScorecard(f){
       '<div class="seg" id="scPer" role="group" aria-label="Scorecard period"><button data-p="3"' + (S.scP !== '5' ? ' class="on"' : '') + '>3 years</button><button data-p="5"' + (S.scP === '5' ? ' class="on"' : '') + '>5 years</button></div></div>';
     h += '<div class="sc-top"><div class="sc-ov"><div class="sc-ring" style="--v:' + (isNum(ov) ? Math.round(ov) : 0) + '"><b>' + (isNum(ov) ? Math.round(ov) : '–') + '</b><small>/100</small></div>' +
       '<div><div class="sc-ov-k">VilfinTV score ' + hint(M[0][2]) + '</div><div class="sc-ov-r">' + (ovR.rank ? 'Rank <b>#' + ovR.rank + '</b> of ' + ovR.n : 'Not ranked yet') + '</div>' +
-      '<div class="sc-ov-m">' + (ovR.rank ? (ovR.rank <= Math.ceil(ovR.n / 4) ? 'Top quarter of the category' : ovR.rank <= Math.ceil(ovR.n / 2) ? 'Upper half of the category' : ovR.rank <= Math.ceil(ovR.n * 3 / 4) ? 'Lower half of the category' : 'Bottom quarter of the category') + ' · median peer ' + (isNum(ovR.med) ? Math.round(ovR.med) : '–') : (yrs === 5 ? 'Needs a 5-year record for the 5-year view' : 'Needs a 1-year record')) + '</div></div></div>' +
+      (ovR.rank ? '<button class="btn sc-lb" type="button" id="scLbBtn">View leaderboard</button>' : '') + '<div class="sc-ov-m">' + (ovR.rank ? (ovR.rank <= Math.ceil(ovR.n / 4) ? 'Top quarter of the category' : ovR.rank <= Math.ceil(ovR.n / 2) ? 'Upper half of the category' : ovR.rank <= Math.ceil(ovR.n * 3 / 4) ? 'Lower half of the category' : 'Bottom quarter of the category') + ' · median peer ' + (isNum(ovR.med) ? Math.round(ovR.med) : '–') : (yrs === 5 ? 'Needs a 5-year record for the 5-year view' : 'Needs a 1-year record')) + '</div></div></div>' +
       (st ? '<div class="status-box ' + ST_CLS[st] + '"><div><b>' + esc(st) + '</b><p>' + ST_DESC[st] + '</p></div></div>' : '<div class="note" style="margin:0">A status is assigned once the fund has a 1-year record in a category of five or more funds.</div>') + '</div>';
     var sc = me.sc || {}, ss = SUBSTAT[f.sub].avg;
     var desc = {
@@ -1952,6 +1964,67 @@ function renderHealth(f){
     }).join('');
   });
 }
+/* ── index funds: how well each fund delivers its index, against the funds tracking the same index ── */
+function idxKey(name){
+  var n = String(name || '').toLowerCase().replace(/\(.*?\)/g, ' ').replace(/\b(nifty|midcap|smallcap)(\d)/g, '$1 $2');
+  var m = n.match(/\b((?:nifty|bse|s&p bse|sensex|crisil|msci|nasdaq|s&p)\b.*?)(?=\s+(?:index|etf|fund|fof|plan)\b|$)/);
+  return (m ? m[1] : n).replace(/\s+/g, ' ').trim();
+}
+function weeklyRets(sr, grid){
+  var out = [], j = 0, prev = null;
+  grid.forEach(function(t){ while (j + 1 < sr.d.length && sr.d[j + 1] <= t) j++; var v = sr.d[j] <= t ? sr.v[j] : null; out.push(prev != null && v != null ? v / prev - 1 : null); prev = v; });
+  return out;
+}
+function renderTracking(f){
+  var key = idxKey(f.name);
+  var peers = FUNDS.filter(function(x){ return x.asset === 'Index' && idxKey(x.name) === key; }).sort(function(a, b){ return (b.aum || 0) - (a.aum || 0); });
+  if (peers.indexOf(f) < 0) peers.unshift(f);
+  var use = peers.slice(0, 14); if (use.indexOf(f) < 0) use.push(f);
+  Promise.all(use.map(function(x){ return fullSeries(x.code).catch(function(){ return null; }); })).then(function(ss){
+    var box = $('trkBox'); if (!box || S.sel !== f.code) return;
+    var me = ss[use.indexOf(f)];
+    var label = key.replace(/\b\w/g, function(c){ return c.toUpperCase(); }).replace(/\bS&p\b/, 'S&P').replace(/\bBse\b/, 'BSE');
+    var te = {};
+    if (me && me.d.length > 20 && use.length >= 3) {
+      var end = me.d[me.d.length - 1], grid = me.d.filter(function(t){ return t >= end - 3 * 365; });
+      var R = use.map(function(x, i){ return ss[i] && ss[i].d.length > 20 && ss[i].d[0] <= grid[0] ? weeklyRets(ss[i], grid) : null; });
+      var med = grid.map(function(_, k){ var v = R.filter(Boolean).map(function(r){ return r[k]; }).filter(isNum).sort(function(a, b){ return a - b; }); return v.length >= 3 ? v[Math.floor(v.length / 2)] : null; });
+      use.forEach(function(x, i){ if (!R[i]) return; var d = []; R[i].forEach(function(v, k){ if (isNum(v) && isNum(med[k])) d.push(v - med[k]); });
+        if (d.length >= 52) { var m = d.reduce(function(a, b){ return a + b; }, 0) / d.length; te[x.code] = Math.sqrt(d.reduce(function(a, b){ return a + (b - m) * (b - m); }, 0) / (d.length - 1)) * Math.sqrt(52) * 100; } });
+    }
+    var m1 = medOf(use, 'r1y'), m3 = medOf(use, 'r3y');
+    var rows = use.map(function(x){ return {f: x, te: te[x.code], td1: isNum(x.r1y) && isNum(m1) ? x.r1y - m1 : null, td3: isNum(x.r3y) && isNum(m3) ? x.r3y - m3 : null}; });
+    function pr(list, k, low){ var v = list.map(function(r){ return r[k]; }).filter(isNum); return function(x){ if (!isNum(x) || v.length < 2) return null; return v.filter(function(y){ return low ? y > x : y < x; }).length / (v.length - 1); }; }
+    var pTe = pr(rows, 'te', true), pTd = pr(rows, rows.some(function(r){ return isNum(r.td3); }) ? 'td3' : 'td1', false), pTer = pr(rows.map(function(r){ return {t: r.f.ter}; }), 't', true);
+    rows.forEach(function(r){ var parts = [[pTe(r.te), .4], [pTd(isNum(r.td3) ? r.td3 : r.td1), .3], [pTer(r.f.ter), .3]].filter(function(p){ return p[0] != null; });
+      r.sc = parts.length >= 2 ? parts.reduce(function(a, p){ return a + p[0] * p[1]; }, 0) / parts.reduce(function(a, p){ return a + p[1]; }, 0) * 100 : null; });
+    var ranked = rows.filter(function(r){ return isNum(r.sc); }).sort(function(a, b){ return b.sc - a.sc; });
+    var rk = ranked.findIndex(function(r){ return r.f.code === f.code; }) + 1, mine = rows.filter(function(r){ return r.f.code === f.code; })[0];
+    var off = (det_risk(f) || {}), offOk = isNum(off.te) && f.bench && D.bench[f.bench] && idxKey(D.bench[f.bench].name) === key;
+    var terR = use.filter(function(x){ return isNum(x.ter); }).sort(function(a, b){ return a.ter - b.ter; }).indexOf(f) + 1;
+    var aumR = use.indexOf(f) + 1;
+    var h = '<div class="pc-head"><div><div class="sec-title">Index tracking</div><div class="sec-sub">' + use.length + ' fund' + (use.length > 1 ? 's' : '') + ' tracking ' + esc(label) + (peers.length > use.length ? ' (largest ' + use.length + ' compared)' : '') + ' · peer median used as the index proxy</div></div></div>';
+    h += '<div class="trk-hero"><div class="trk-rank"><small>Tracking rank</small><b>' + (rk ? rk + '<span>/' + ranked.length + '</span>' : '–') + '</b><em>' + esc(label) + '</em></div>' +
+      '<div class="trk-k">' +
+        (offOk ? kv('Tracking error (3Y)', fmt(off.te) + '%', (off.te <= 0.15 ? 'tight' : off.te <= 0.4 ? 'acceptable' : 'loose') + ' · vs ' + D.bench[f.bench].name + ' TRI')
+               : kv('Tracking error (3Y)', isNum(mine.te) ? fmt(mine.te) + '%' : '–', isNum(mine.te) ? (mine.te <= 0.15 ? 'tight' : mine.te <= 0.4 ? 'acceptable' : 'loose') + ' · vs peer median' : 'needs 1+ year and 3 peers')) +
+        kv('Tracking difference 1Y', isNum(mine.td1) ? (mine.td1 >= 0 ? '+' : '') + fmt(mine.td1) + ' pt' : '–', 'return vs peer median') +
+        kv('Tracking difference 3Y', isNum(mine.td3) ? (mine.td3 >= 0 ? '+' : '') + fmt(mine.td3) + ' pt' : '–', 'a year, vs peer median') +
+        kv('Expense ratio', isNum(f.ter) ? fmt(f.ter) + '%' : '–', terR ? '#' + terR + ' cheapest of ' + use.filter(function(x){ return isNum(x.ter); }).length : '') +
+        kv('Fund size', fmtAum(f.aum), aumR ? '#' + aumR + ' largest of ' + use.length : '') +
+        (offOk ? kv('Fit to ' + D.bench[f.bench].name + ' TRI', 'R² ' + (isNum(off.r2) ? fmt(off.r2) : '–'), 'beta ' + (isNum(off.beta) ? fmt(off.beta, 3) : '–') + ' · peer-based TE ' + (isNum(mine.te) ? fmt(mine.te) + '%' : '–')) : '') +
+      '</div></div>';
+    h += '<div class="tbl-scroll" style="display:block"><table class="sc-tbl trk-tbl"><thead><tr><th>#</th><th>Fund</th><th class="num" title="Tracking error vs the peer median">TE</th><th class="num">TD 1Y</th><th class="num hide-m">TD 3Y</th><th class="num">TER</th><th class="num hide-m">AUM</th></tr></thead><tbody>' +
+      ranked.concat(rows.filter(function(r){ return !isNum(r.sc); })).map(function(r, i){ var x = r.f;
+        return '<tr class="clk' + (x.code === f.code ? ' cur' : '') + '" data-code="' + x.code + '"><td class="mut">' + (isNum(r.sc) ? i + 1 : '–') + '</td><td class="t-fund"><div class="t-name">' + esc(x.name) + '</div><div class="t-meta">' + esc(x.amcName) + '</div></td>' +
+          '<td class="num">' + (isNum(r.te) ? fmt(r.te) + '%' : '–') + '</td><td class="num">' + (isNum(r.td1) ? (r.td1 >= 0 ? '+' : '') + fmt(r.td1) : '–') + '</td><td class="num hide-m">' + (isNum(r.td3) ? (r.td3 >= 0 ? '+' : '') + fmt(r.td3) : '–') + '</td>' +
+          '<td class="num">' + (isNum(x.ter) ? fmt(x.ter) + '%' : '–') + '</td><td class="num hide-m">' + fmtAum(x.aum) + '</td></tr>'; }).join('') + '</tbody></table></div>' +
+      '<div class="note">Tracking error = annualised spread of weekly returns around the peer median over 3 years (lower = closer to the index). Tracking difference = return minus the peer median (positive = delivered more of the index). Rank blends tracking error 40%, tracking difference 30% and cost 30%.</div>';
+    box.innerHTML = h;
+  });
+}
+function kv(k, v, d){ return '<div><small>' + esc(k) + '</small><b>' + v + '</b><em>' + esc(d || '') + '</em></div>'; }
+function det_risk(f){ var d = (CACHE.dRisk || {})[f.code]; return d; }
 function scoreN(v){ return isNum(v) ? Math.round(v) : '–'; }
 function det_cons(f){ var d = (CACHE.dSync || {})[f.code]; return d && d.consN ? 'Top half of the category in <b>' + d.consTop + ' of ' + d.consN + '</b> month-ends (rolling 1-year return).' : ''; }
 function quickRisk(f, det){
@@ -2473,6 +2546,7 @@ function bindUI(){
     var tb = t.closest('.pcard [data-tab]'); if (tb) { S.tab = tb.getAttribute('data-tab'); writeURL(); renderDetail(); return; }
     if (t.closest('#cmpAdd')) { toggleCmp(S.sel); return; }
     if (t.closest('#shareBtn')) { share(); return; }
+    if (t.closest('#scLbBtn')) { var lb = document.querySelector('.sc-lead'); if (lb) lb.scrollIntoView({behavior:'smooth', block:'start'}); return; }
     var sp = t.closest('#scPer [data-p]'); if (sp) { S.scP = sp.getAttribute('data-p'); renderScorecard(BY[S.sel]); return; }
     var sk = t.closest('#scLead [data-k]'); if (sk) { S.scK = sk.getAttribute('data-k'); renderScorecard(BY[S.sel]); return; }
     var rb = t.closest('#rangeSeg [data-r]'); if (rb) { S.range = rb.getAttribute('data-r'); document.querySelectorAll('#rangeSeg button').forEach(function(x){ x.classList.toggle('on', x === rb); }); drawNavChart(); return; }
