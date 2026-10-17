@@ -2,13 +2,15 @@ name: India MF Holdings Data
 
 # Builds data/mf/p/ (portfolio holdings, sector allocation and market-cap split) for
 # india_mf_screener.html from each fund house's statutory monthly portfolio
-# disclosure. Fund houses publish within 10 days of month-end, so this runs daily
-# during the first half of each month (plus a weekly catch-up). Fund houses whose
-# latest month is already processed are skipped, so most runs finish quickly.
+# disclosure. Fund houses publish within 10 days of month-end. Runs daily: fund houses
+# whose latest month is already processed are skipped, then scripts/audit_mf_holdings.py
+# flags fund houses that are behind / failed / dropped funds and a repair pass re-checks
+# them once (--force). The audit is committed as data/mf/p/_audit.json.
 on:
   schedule:
-    - cron: '20 3 1-16 * *'   # 08:50 IST, 1st–16th of each month
-    - cron: '40 4 * * 1'      # 10:10 IST every Monday (catch-up)
+    - cron: '20 3 * * *'      # 08:50 IST daily — fund houses already processed for the month are skipped quickly;
+                              # the audit re-checks missing / failed portfolios every day
+    - cron: '40 4 * * 1'      # 10:10 IST every Monday (weekly fund-house page refresh)
   workflow_dispatch:
     inputs:
       force:
@@ -19,6 +21,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/build_mf_holdings.py'
+      - 'scripts/audit_mf_holdings.py'
       - 'scripts/fetch_fundhouse_loads.py'
       - 'scripts/fetch_scheme_pages.py'
       - '.github/workflows/mf_holdings.yml'
@@ -56,7 +59,8 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Exit loads from fund houses missing in the scheme master
+      - name: Exit loads from fund houses missing in the scheme master (weekly — Mondays, manual runs and script changes)
+        if: github.event_name != 'schedule' || github.event.schedule == '40 4 * * 1'
         continue-on-error: true
         run: xvfb-run -a python scripts/fetch_fundhouse_loads.py
 
@@ -71,6 +75,24 @@ jobs:
           mkdir -p .mfcache/holdings
           # a virtual display lets the browser run headed — some fund-house sites refuse headless clients
           xvfb-run -a python scripts/build_mf_holdings.py ${{ github.event.inputs.force == 'true' && '--force' || '' }}
+
+      - name: Audit holdings (missing / behind / failed fund houses)
+        id: audit
+        run: python scripts/audit_mf_holdings.py
+
+      - name: Repair pass — re-check fund houses flagged by the audit
+        if: steps.audit.outputs.retry != ''
+        continue-on-error: true
+        timeout-minutes: 30
+        env:
+          RETRY: ${{ steps.audit.outputs.retry }}
+        run: |
+          echo "Re-checking: $RETRY"
+          xvfb-run -a python scripts/build_mf_holdings.py "--only=$RETRY" --force
+
+      - name: Re-audit after repair
+        if: steps.audit.outputs.retry != ''
+        run: python scripts/audit_mf_holdings.py
 
       - name: Verify holdings
         run: node scripts/verify_mf_screener.js --holdings

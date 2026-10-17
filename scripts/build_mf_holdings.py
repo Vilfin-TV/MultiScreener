@@ -568,16 +568,23 @@ def main():
     S.headers.update({"User-Agent": UA, "Accept-Language": "en-IN,en;q=0.9"})
     only = next((a.split("=", 1)[1].split(",") for a in sys.argv if a.startswith("--only=")), None)
     found = discover({k: v for k, v in SOURCES.items() if k in funds_by_amc and (not only or k in only)})
+    for amc in SOURCES:                       # remember fund houses whose files could not be found this run (for the audit)
+        if amc in funds_by_amc and (not only or amc in only):
+            if amc in found:
+                meta.setdefault(amc, {}).pop("discoveryFail", None)
+            else:
+                meta.setdefault(amc, {})["discoveryFail"] = date.today().isoformat()
     large, mid = cap_sets(S)
     results, report = {}, {}
     for amc, info in found.items():
         if pf_age_days(info["month"]) > MAX_AGE_DAYS:
             log.warning("%s: latest portfolio file is for %s — too old, skipped", amc, info["month"])
             continue
-        if meta.get(amc, {}).get("month") == info["month"] and meta[amc].get("funds", 0) > 0 and "--force" not in sys.argv:
+        if (meta.get(amc, {}).get("month") == info["month"] and meta[amc].get("funds", 0) > 0
+                and not meta[amc].get("dlFail") and "--force" not in sys.argv):
             log.info("%s: %s already processed", amc, info["month"])
             continue
-        blocks = []
+        blocks, dl_fail = [], 0
         contents, retry = {}, []
         for url in info["files"]:
             clean = re.sub(r"[?&]_scheme=[^&]*$", "", url)
@@ -601,6 +608,7 @@ def main():
                     contents[url] = got[c]
                 else:
                     log.warning("%s: download failed %s", amc, c[:100])
+                    dl_fail += 1
         for url in info["files"]:
             if url not in contents:
                 continue
@@ -645,7 +653,7 @@ def main():
             sm["asOf"] = info["month"]
             results[code] = sm
         meta[amc] = {"month": info["month"], "files": len(info["files"]), "blocks": len(blocks),
-                     "funds": len(matched) - bad, "rejected": bad, "updated": date.today().isoformat()}
+                     "funds": len(matched) - bad, "rejected": bad, "dlFail": dl_fail, "updated": date.today().isoformat()}
         log.info("%s: %d sheet blocks parsed, %d funds matched, %d rejected by sanity checks",
                  amc, len(blocks), len(matched) - bad, bad)
     # merge into per-sub files (keep other fund houses' last good data)
