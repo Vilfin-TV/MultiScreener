@@ -293,7 +293,8 @@ function verifyFiles() {
       if (r[C.sub] === 'elss') ok(r[C.tax] === 'elss' && r[C.lock] >= 3, `${code} ELSS tax / lock-in`);
       if (asset === 'Debt') ok(r[C.tax] === 'debt' || r[C.sub] === 'globaldebt', `${code} debt fund tax class ${r[C.tax]}`);
       ok(r[C.aum] == null || (r[C.aum] >= 0 && r[C.aum] < 500000), `${code} AUM ${r[C.aum]} Cr looks wrong`);
-      ok(r[C.sipMin] == null || (r[C.sipMin] >= 0 && r[C.sipMin] <= 1e6), `${code} SIP minimum ${r[C.sipMin]}`);
+      ok(r[C.sipMin] == null || (r[C.sipMin] >= 50 && r[C.sipMin] <= 1e5), `${code} SIP minimum ${r[C.sipMin]} outside ₹50–₹1,00,000`);
+      ok(r[C.lumpMin] == null || (r[C.lumpMin] >= 50 && r[C.lumpMin] <= 1e5), `${code} lump-sum minimum ${r[C.lumpMin]} outside ₹50–₹1,00,000`);
     }
   }
   verifyAgainstPrevious(J, C);

@@ -1005,6 +1005,34 @@ def _num(x):
         return None
 
 
+MIN_LO, MIN_HI = 50, 100000          # plausible minimum SIP / lump sum for a retail direct plan (₹)
+
+
+def plausible_min(v) -> bool:
+    return v is not None and MIN_LO <= v <= MIN_HI
+
+
+def min_amount(txt, sip: bool = False):
+    """Smallest retail minimum in an official text such as "Rs. 5,000 and in multiples of Re. 1 thereafter",
+    "Ws Gr/Div Rs 1Cr, Ret-Gr Rs 5k" or "Monthly: Rs 500 x 12 instalments" (instalment counts and the
+    'multiples of / thereafter / additional' part are ignored)."""
+    if not txt:
+        return None
+    t = str(txt).replace(",", "")
+    t = re.split(r"multiples?\s+of|thereafter|additional|subsequent", t, maxsplit=1, flags=re.I)[0]
+    if sip:                                                  # prefer the monthly option
+        mm = re.search(r"monthly(.{0,80})", t, re.I | re.S)
+        if mm and min_amount(mm.group(1)) is not None:
+            return min_amount(mm.group(1))
+    out = []
+    for m in re.finditer(r"(?:rs\.?|inr|₹|re\.?)?\s*(\d+(?:\.\d+)?)\s*(cr(?:ore)?|lakhs?|lacs?|k)?\b(?!\s*(?:instal|install|months|days|years|%))",
+                         t, re.I):
+        v = float(m.group(1)) * {"cr": 1e7, "crore": 1e7, "lakh": 1e5, "lakhs": 1e5, "lac": 1e5, "lacs": 1e5, "k": 1e3}.get((m.group(2) or "").lower(), 1)
+        if v >= MIN_LO:
+            out.append(v)
+    return min(out) if out else None
+
+
 def buy_flags(f):
     """Purchase status: "L" lump sum accepted, "S" SIP accepted, "W" weekly SIP offered; "" = closed to fresh
     money (e.g. overseas schemes paused at the industry overseas-investment limit); None = not known yet."""
@@ -1030,13 +1058,17 @@ def merged_facts(r, f):
     rk = (ssd.get("riskometer") or (f.get("crisil_rating") or "").replace(" Risk", "")).strip()
     rk = re.sub(r"\s+risk$", "", rk, flags=re.I).strip().title().replace(" To ", " to ")
     m["risk"] = RISKOMETER.index(rk) if rk in RISKOMETER else None
-    m["sipMin"] = _num(f.get("sip_min"))
-    if m["sipMin"] is None:
-        mm = re.search(r"monthly\s*[-:]?\s*(?:rs\.?|₹)?\s*([\d,]+(?:\.\d+)?)", ssd.get("sipMin") or "", re.I)
-        m["sipMin"] = _num(mm.group(1)) if mm else None
-    m["lumpMin"] = _num(f.get("lump_min"))
-    if m["lumpMin"] is None:
-        m["lumpMin"] = _num(ssd.get("minApp"))
+    # minimum amounts: scheme facts first (they carry the fund houses' recent cuts to ₹100), then the official scheme
+    # documents; values outside a plausible range (instalment counts, wholesale-plan amounts, typos) are rejected
+    off_lump = min_amount(det.get("minAmt")) or min_amount(ssd.get("minApp"))
+    lump = _num(f.get("lump_min"))
+    m["lumpMin"] = lump if plausible_min(lump) else (off_lump if plausible_min(off_lump) else None)
+    sip = _num(f.get("sip_min"))
+    if sip == 0 and f.get("sip_available") != "Y":
+        m["sipMin"] = None                                   # SIP not offered — the purchase status says so
+    else:
+        off_sip = min_amount(ssd.get("sipMin"), sip=True)
+        m["sipMin"] = sip if plausible_min(sip) else (off_sip if plausible_min(off_sip) else None)
     lock = f.get("lock_in_period")
     if not lock:
         lock = 3 if r["sub"] == "elss" else (5 if r["sub"] in ("retire", "child") else 0)
