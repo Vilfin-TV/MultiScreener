@@ -282,6 +282,14 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .tab.tAll.on{color:var(--accent-ink)}
 .tab.tNA{--mc:var(--text3)}
 .tools{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.acls{display:flex;gap:6px;margin-top:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+.acls::-webkit-scrollbar{display:none}
+.acls button{flex-shrink:0;border:1px solid var(--border);background:var(--surface);border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:700;color:var(--text2);cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;transition:all .15s}
+.acls button:hover{border-color:var(--accent2);color:var(--text)}
+.acls button .n{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)}
+.acls button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--text)}
+.acls button.on .n{color:var(--accent2)}
+.acls .k{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text3);align-self:center;margin-right:4px;flex-shrink:0}
 .tools .sel,.tools .tin{height:40px;font-size:13px;border-radius:10px;width:auto;min-width:170px}
 .tin{padding:0 12px;border:1.5px solid var(--border2);background:var(--surface2);outline:none;border-radius:10px;flex:1;min-width:180px}
 .tin:focus{border-color:var(--accent);box-shadow:var(--focus)}
@@ -660,6 +668,7 @@ details.faq ul+p{margin-top:8px}
     <a class="vt-sn" href="https://vilfintv.com/blog_intelligence_hub.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>Blog</span></a>
     <a class="vt-sn" href="https://vilfintv.com/india_mf_screener.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/></svg><span>India MF Screener</span></a>
     <a class="vt-sn on" href="https://vilfintv.com/etf_momentum.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg><span>ETF Momentum</span></a>
+    <a class="vt-sn" href="https://vilfintv.com/market_sentiment_score.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/><circle cx="12" cy="18" r="1.3"/></svg><span>Market Sentiment</span></a>
     </div>
   </nav>
 </header>
@@ -739,6 +748,7 @@ details.faq ul+p{margin-top:8px}
       <div class="vseg" id="vseg" role="group" aria-label="Columns"><button data-v="momentum" class="on">Momentum</button><button data-v="returns">Returns</button><button data-v="risk">Risk &amp; Cost</button></div>
     </div>
     <div class="tabs" id="tabs"></div>
+    <div class="acls" id="acls" role="group" aria-label="Asset class"></div>
     <div class="tools">
       <input class="tin" id="tFilter" type="search" placeholder="Filter list by symbol or name…" autocomplete="off"/>
       <select class="sel" id="tCat" aria-label="Category"><option value="">All categories</option></select>
@@ -930,7 +940,7 @@ details.faq ul+p{margin-top:8px}
 <footer>
   <div class="wrap">
     <span>© <span id="yr"></span> VilfinTV · ETF Momentum Mode</span>
-    <span><a href="index.html">Multiscreener</a> · <a href="https://vilfintv.com/news.html">News</a> · <a href="https://vilfintv.com/story.html">Stories</a> · <a href="https://vilfintv.com/education.html">Academy</a> · <a href="https://vilfintv.com/blog_intelligence_hub.html">Blog</a> · <a href="india_mf_screener.html">India MF Screener</a> · <a href="market_sentiment_score.html">Market Sentiment</a> · <a href="legal.html">Legal</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></span>
+    <span><a href="index.html">Multiscreener</a> · <a href="https://vilfintv.com/news.html">News</a> · <a href="https://vilfintv.com/story.html">Stories</a> · <a href="https://vilfintv.com/education.html">Academy</a> · <a href="https://vilfintv.com/blog_intelligence_hub.html">Blog</a> · <a href="india_mf_screener.html">India MF Screener</a> · <a href="etf_momentum.html">ETF Momentum</a> · <a href="market_sentiment_score.html">Market Sentiment</a> · <a href="legal.html">Legal</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></span>
   </div>
 </footer>
 <div class="toast" id="toast"></div>
@@ -1009,7 +1019,7 @@ var PAGE = 40;
 /* ─────────── state ─────────── */
 var D = null, P = null;                  // data, params
 var bySym = {}, cache = {};              // computed per benchmark
-var state = {bench:null, sel:null, tab:'all', cat:'', role:'', trend:'', liq:'', amc:'', hist:'', ter:'', view:'momentum', range:'3Y', scv:'3', scl:'o', trg:'6M', tct:'c', rate:'', filter:'', sort:'score', dir:-1, shown:PAGE, showAll:false};
+var state = {bench:null, sel:null, tab:'all', cat:'', role:'', trend:'', liq:'', amc:'', hist:'', ter:'', view:'momentum', asset:'', range:'3Y', scv:'3', scl:'o', trg:'6M', tct:'c', rate:'', filter:'', sort:'score', dir:-1, shown:PAGE, showAll:false};
 var HIST = null, HIST_P = null;
 var LOW_FIRST = {sym:1, cat:1, ter:1, vol:1};
 var acIdx = -1, acList = [];
@@ -1242,6 +1252,7 @@ function filtered(){
     if (state.tab === 'NA' ? r.mode : (state.tab !== 'all' && r.mode !== state.tab)) return false;
     if (state.cat && r.e.k !== state.cat) return false;
     if (state.role && roleOf(r.e) !== state.role) return false;
+    if (state.asset && assetOf(r.e) !== state.asset) return false;
     if (state.trend){ var T = trendOf(r.e);
       if (state.trend === 'lt' && T.lt.t !== 'pos') return false;
       if (state.trend === 'st' && T.st.t !== 'pos') return false;
@@ -1275,13 +1286,21 @@ var ROLES = {
   hyb:{n:'Hybrid', d:'A mix of asset classes in one ETF.'}
 };
 function roleOf(e){
-  var k = e.k || '', n = (e.n || '') + ' ' + (e.u || '');
-  if (/hybrid|balanced|multi.?asset/i.test(n)) return 'hyb';
+  var k = e.k || '', n = (e.n || '') + ' ' + (e.u || '') + ' ' + ((e.x || {}).benchmark || '');
+  if (/hybrid|balanced|multi.?asset|\bplus\b.*\bg-?sec\b|\bg-?sec\b.*\b\d{2}:\d{2}\b/i.test(n)) return 'hyb';
   if (k === 'Broad Market' || k === 'Next 50, Mid & Small Cap') return 'core';
   if (k === 'Gold' || k === 'Silver') return 'com';
   if (k === 'Liquid & Debt') return 'debt';
   if (k === 'International' || /nasdaq|s&p 500|hang seng|nyse|ftse|msci|global|world/i.test(n)) return 'glob';
   return 'sat';
+}
+/* Asset class — equity (core + satellite Indian equity), debt, commodities (gold, silver), global, hybrid */
+var ASSETS = [['eq','Equity','Indian shares: broad market, mid & small cap, sector, thematic and factor ETFs'],['debt','Debt','Liquid, overnight, gilt and bond ETFs'],['com','Commodities','Gold and silver ETFs'],['glob','Global','ETFs investing in international markets'],['hyb','Hybrid','ETFs mixing asset classes']];
+function assetOf(e){ var r = roleOf(e); return r === 'core' || r === 'sat' ? 'eq' : r; }
+function renderAssets(){
+  var c = {}; D.etfs.forEach(function(e){ var a = assetOf(e); c[a] = (c[a] || 0) + 1; });
+  $('acls').innerHTML = '<span class="k">Asset class</span><button type="button" data-a=""' + (state.asset ? '' : ' class="on"') + '>All <span class="n">' + D.etfs.length + '</span></button>' +
+    ASSETS.filter(function(a){ return c[a[0]]; }).map(function(a){ return '<button type="button" data-a="' + a[0] + '" title="' + esc(a[2]) + '"' + (state.asset === a[0] ? ' class="on"' : '') + '>' + a[1] + ' <span class="n">' + c[a[0]] + '</span></button>'; }).join('');
 }
 function roleTag(e){ var k = roleOf(e); return '<span class="role ' + k + '" title="' + esc(ROLES[k].d) + '">' + ROLES[k].n + '</span>'; }
 /* Short (1–3 months), medium (6–12 months) and long-term (1–3 years) price trend from weekly closes:
@@ -1879,6 +1898,7 @@ function updateURL(){
     var u = new URL(location.href);
     if (state.sel) u.searchParams.set('etf', state.sel); else u.searchParams.delete('etf');
     if (state.bench && state.bench !== P.defaultBench) u.searchParams.set('bench', state.bench); else u.searchParams.delete('bench');
+    if (state.asset) u.searchParams.set('asset', state.asset); else u.searchParams.delete('asset');
     history.replaceState(null, '', u.pathname + (u.search ? u.search : '') + u.hash);
   } catch(e){}
 }
@@ -1923,6 +1943,7 @@ function bind(){
   });
   $('tabs').addEventListener('click', function(e){ var t = e.target.closest('.tab'); if (!t) return; state.tab = t.getAttribute('data-t'); state.shown = PAGE; renderCounts(); renderTable(); });
   var ft; $('tFilter').addEventListener('input', function(){ var v = this.value; clearTimeout(ft); ft = setTimeout(function(){ state.filter = v; state.shown = PAGE; renderTable(); }, 120); });
+  $('acls').addEventListener('click', function(e){ var b = e.target.closest('[data-a]'); if (!b) return; state.asset = b.getAttribute('data-a'); state.shown = PAGE; renderAssets(); renderTable(); updateURL(); });
   $('tRole').addEventListener('change', function(){ state.role = this.value; state.shown = PAGE; renderTable(); });
   $('tTrend').addEventListener('change', function(){ state.trend = this.value; state.shown = PAGE; renderTable(); });
   $('tCat').addEventListener('change', function(){ state.cat = this.value; state.shown = PAGE; renderTable(); if (state.sel && state.showAll) drawChart(); });
@@ -1982,6 +2003,8 @@ function boot(j){
   var amcs = {}; D.etfs.forEach(function(e){ if (e.a) amcs[e.a] = (amcs[e.a] || 0) + 1; });
   $('tAmc').innerHTML = '<option value="">All fund houses</option>' + Object.keys(amcs).sort().map(function(a){ return '<option value="' + esc(a) + '">' + esc(a) + ' (' + amcs[a] + ')</option>'; }).join('');
   var sv = load('viltv_etfm_view'); if (VIEWS[sv]) state.view = sv;
+  var wa = params.get('asset') || ''; if (ASSETS.some(function(a){ return a[0] === wa; })) state.asset = wa;
+  renderAssets();
   var tr = (load('viltv_etfm_tr') || '').split('|'); if (/^(1M|3M|6M|1Y)$/.test(tr[0])) state.trg = tr[0]; if (/^[cl]$/.test(tr[1] || '')) state.tct = tr[1];
   loadEx().then(function(){ renderTable(); if (state.sel) renderDeep(); }).catch(function(){});
   $('quick').innerHTML = '<span>Popular:</span>' + QUICK.filter(function(s){ return bySym[s] && bySym[s].q !== 'nodata'; }).slice(0, 8).map(function(s){ return '<button class="qbtn" type="button" data-s="' + s + '">' + s + '</button>'; }).join('');
