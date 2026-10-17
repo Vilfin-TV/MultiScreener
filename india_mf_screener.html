@@ -1294,6 +1294,7 @@ function statusPill(st, title){ if (!st) return '<span class="st st-na" title="S
 function buyState(f){ if (f.buy == null) return null; if (f.buy === '') return 'paused'; return /L/.test(f.buy) && /S/.test(f.buy) ? 'open' : /S/.test(f.buy) ? 'sip' : 'lump'; }
 var BUY_TXT = {open:['Open for investment','buy-y','Accepting lump-sum and SIP investments'], sip:['SIP only','buy-p','Lump-sum purchases paused; SIPs accepted'], lump:['Lump sum only','buy-p','New SIP registrations paused; lump-sum purchases accepted'], paused:['Fresh investment paused','buy-x','The fund house has paused fresh purchases and new SIPs (overseas funds pause when the industry overseas-investment limit is reached)']};
 function buyPill(f, always){ var b = buyState(f); if (!b || (b === 'open' && !always)) return ''; var t = BUY_TXT[b]; return '<span class="buy ' + t[1] + '" title="' + esc(t[2]) + '">' + t[0] + '</span>'; }
+function sipMinTxt(f){ return isNum(f.sipMin) ? inr(f.sipMin) : (f.buy != null && !/S/.test(f.buy) ? 'Not offered' : '–'); }
 function scoreTxt(v){ return isNum(v) ? Math.round(v) + '<small>/100</small>' : '–'; }
 var TAX_SHORT = {equity:'Equity', elss:'Equity (ELSS)', debt:'Debt (slab)', other:'Non-equity'};
 function hint(t){ return '<span class="hint" role="button" tabindex="0" data-tip="' + esc(t) + '" title="' + esc(t) + '" aria-label="' + esc(t) + '">?</span>'; }
@@ -1814,7 +1815,7 @@ function renderSnap(f, det){
       kpi('Expense ratio', isNum(f.ter) ? fmt(f.ter) + '%' : '–', det && det.info && det.info.terDate ? 'as of ' + fmtDate(det.info.terDate) : '') +
       kpi('3Y return', fmtPct(f.r3y), r3 ? 'Rank ' + r3.r + ' of ' + r3.n : '') +
       kpi('1Y return', fmtPct(f.r1y), r1 ? 'Rank ' + r1.r + ' of ' + r1.n : '') +
-      kpi('Min. SIP', isNum(f.sipMin) ? inr(f.sipMin) : '–') +
+      kpi('Min. SIP', sipMinTxt(f)) +
       kpi('Min. lump sum', isNum(f.lumpMin) ? inr(f.lumpMin) : '–') +
       kpi('Lock-in', lock, '', true) +
       kpi('Launched', fmtDate(f.inc), f.ageY >= 1 ? f.ageY.toFixed(1) + ' years' : 'New fund', true) +
@@ -2485,7 +2486,7 @@ function pInfo(f, det){
     ['Expense ratio', (isNum(f.ter) ? fmt(f.ter) + '%' : '–') + (info.terDate ? ' <span class="mut">(as of ' + fmtDate(info.terDate) + ')</span>' : '')],
     ['Maximum TER (stated)', esc(ex.maxTer || '') || '–'],
     ['Fund size', fmtAum(f.aum) + (info.aumAsOf ? ' <span class="mut">(avg. ' + esc(info.aumAsOf.replace('-', ' ')) + ' quarter)</span>' : '')],
-    ['Minimum SIP', isNum(f.sipMin) ? inr(f.sipMin) : '–'],
+    ['Minimum SIP', sipMinTxt(f)],
     ['Minimum lump sum', isNum(f.lumpMin) ? inr(f.lumpMin) : (esc(ex.minText || '') || '–')],
     ['Lock-in', f.lock ? f.lock + ' year' + (f.lock > 1 ? 's' : '') : 'None'],
     ['Face value', ex.faceValue ? '₹' + esc(ex.faceValue) : '–'],
