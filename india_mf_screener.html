@@ -228,7 +228,19 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .tips ul{margin:10px 0 0;padding-left:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 26px;font-size:13px;color:var(--text2);line-height:1.55}
 
 /* ═══════════════ SMART SIP ═══════════════ */
-.sip-ctl{padding:18px;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1.35fr) minmax(0,.8fr) auto;gap:16px;align-items:end}
+.sip-ctl{padding:18px;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:end}
+.sip-ctl #sipFq{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+.sip-ctl #sipFq button{padding:8px 4px}
+.entry-tl{display:grid;gap:10px;margin-top:12px}
+.entry-step{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface2)}
+.entry-step .when{font-size:12px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.6px}
+.entry-step .when small{display:block;font-weight:600;color:var(--text3);text-transform:none;letter-spacing:0;margin-top:3px}
+.entry-step ul{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+.entry-step li{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.entry-step li span{min-width:0}
+.entry-step li b{font-family:'JetBrains Mono',monospace;font-weight:600;white-space:nowrap}
+.sip-tbl .tag,.sip-m .tag{white-space:normal;max-width:100%;overflow-wrap:anywhere;text-align:left;line-height:1.35}
+.entry-badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--border2);background:var(--accent-soft);color:var(--accent2)}
 .sip-ctl .fld label{margin-bottom:7px}
 .sip-ctl .seg{display:flex;width:100%;flex-wrap:wrap}
 .sip-ctl .seg button{flex:1 0 auto;padding:8px 6px;font-size:12.5px;white-space:nowrap}
@@ -268,8 +280,9 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .rules{margin:8px 0 0;padding-left:18px;font-size:12.5px;color:var(--text2);line-height:1.6}
 .alert{margin-top:12px;font-size:12.5px;display:flex;gap:8px;align-items:flex-start;border-radius:9px;padding:10px 12px;line-height:1.5;background:rgba(232,163,23,.12);border:1px solid rgba(232,163,23,.35);color:var(--text)}
 .sip-m{display:none}
-.sip-ctl2{padding:14px 18px;margin-top:-4px;display:grid;grid-template-columns:150px 190px minmax(0,1fr);gap:16px;align-items:end}
+.sip-ctl2{padding:14px 18px;margin-top:-4px;display:grid;grid-template-columns:150px 150px 190px minmax(0,1fr);gap:16px;align-items:end}
 .sip-ctl2 .note{margin:0;align-self:center}
+.sip-ctl2.lump{grid-template-columns:150px 190px minmax(0,1fr)}
 .proj{padding:18px;margin-bottom:14px}
 .proj-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
 .proj-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:12px}
@@ -846,9 +859,14 @@ footer a{color:var(--text2)}
   .nfo-grid{grid-template-columns:1fr}
   .nfo,.nfo-head,.tips,.sip-ctl{padding:14px}
   .sip-ctl{grid-template-columns:1fr}
+  .sip-ctl #sipFq{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .entry-step{grid-template-columns:1fr;gap:6px}
   .sip-ctl #sipRk{grid-template-columns:repeat(2,minmax(0,1fr))}
   .sip-ctl2{grid-template-columns:1fr 1fr;padding:14px}
   .sip-ctl2 .note{grid-column:1/-1}
+  .sip-ctl2 .fld:nth-child(3){grid-column:1/-1}
+  .sip-ctl2.lump{grid-template-columns:1fr 1fr}
+  .sip-ctl2.lump .fld:nth-child(3){grid-column:auto}
   .proj{padding:14px}
   .proj-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
   .taxrows{grid-template-columns:1fr}
@@ -984,7 +1002,7 @@ footer a{color:var(--text2)}
       <button class="vbtn" data-view="detail" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg><span class="lbl">Fund Detail</span></button>
       <button class="vbtn" data-view="compare" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v18M16 3v18"/><path d="M3 8h5M16 16h5"/></svg><span class="lbl">Compare</span><span class="n" id="cmpN" hidden>0</span></button>
       <button class="vbtn" data-view="nfo" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg><span class="lbl">NFO</span><span class="n" id="nfoN" hidden>0</span></button>
-      <button class="vbtn" data-view="sip" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12z"/><path d="M15 2.5A10 10 0 0 1 21.5 9H15z"/></svg><span class="lbl">Smart SIP</span><span class="new">New</span></button>
+      <button class="vbtn" data-view="sip" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12z"/><path d="M15 2.5A10 10 0 0 1 21.5 9H15z"/></svg><span class="lbl">Smart Invest</span><span class="new">New</span></button>
     </div>
     <div class="quick" id="quick"></div>
   </section>
@@ -1074,17 +1092,18 @@ footer a{color:var(--text2)}
   </section>
 
   <!-- ═════════ SMART SIP ═════════ -->
-  <section class="view" id="v-sip" aria-label="Smart SIP planner">
+  <section class="view" id="v-sip" aria-label="Smart Invest planner">
     <div class="card sip-ctl">
       <div class="fld"><label>Investment horizon</label><div class="seg" id="sipHz" role="group" aria-label="Investment horizon"></div></div>
       <div class="fld"><label>Risk level</label><div class="seg" id="sipRk" role="group" aria-label="Risk level"></div></div>
-      <div class="fld"><label for="sipAmt" id="sipAmtLbl">Amount per month</label><div class="amt"><span>₹</span><input class="tin" id="sipAmt" type="number" inputmode="numeric" min="500" step="500" value="10000" aria-label="SIP amount"/></div></div>
-      <div class="fld"><label>Frequency</label><div class="seg" id="sipFq" role="group" aria-label="SIP frequency"><button data-fq="m" class="on">Monthly</button><button data-fq="w">Weekly</button></div></div>
+      <div class="fld sip-fq"><label>How you invest</label><div class="seg" id="sipFq" role="group" aria-label="How you invest"><button data-fq="m" class="on">Monthly</button><button data-fq="w">Weekly</button><button data-fq="q">Quarterly</button><button data-fq="y">Yearly</button><button data-fq="l">One-time</button></div></div>
+      <div class="fld"><label for="sipAmt" id="sipAmtLbl">Amount per month</label><div class="amt"><span>₹</span><input class="tin" id="sipAmt" type="number" inputmode="numeric" min="100" step="500" value="10000" aria-label="Investment amount"/></div></div>
     </div>
     <div class="card sip-ctl2">
-      <div class="fld"><label for="sipYrs">Invest for (years)</label><input class="tin" id="sipYrs" type="number" inputmode="numeric" min="1" max="30" step="1" value="15" aria-label="Investment period in years"/></div>
+      <div class="fld"><label for="sipStay">Stay invested (years)</label><input class="tin" id="sipStay" type="number" inputmode="numeric" min="1" max="30" step="1" value="15" aria-label="Years you stay invested before redeeming"/></div>
+      <div class="fld" id="sipYrsFld"><label for="sipYrs">Invest for (years)</label><input class="tin" id="sipYrs" type="number" inputmode="numeric" min="1" max="30" step="1" value="15" aria-label="Years you keep investing every month"/></div>
       <div class="fld"><label for="sipSlab">Your income-tax slab</label><select class="sel" id="sipSlab" aria-label="Income-tax slab"><option value="0">0% (income below taxable limit)</option><option value="5">5%</option><option value="10">10%</option><option value="15">15%</option><option value="20">20%</option><option value="30" selected>30%</option></select></div>
-      <div class="note">Projections use today's yields, valuation-adjusted long-run equity returns and each fund's expense ratio. Tax assumes the full amount is redeemed at the end of the period under current capital-gains rules.</div>
+      <div class="note">Projections use today's yields, valuation-adjusted long-run equity returns and each fund's expense ratio. Regular investments run for the years you choose and then stay invested until the end of your holding period; a one-time amount stays invested for the whole holding period. Tax assumes everything is redeemed at the end under current capital-gains rules.</div>
     </div>
     <div id="sipBody"><div class="card"><div class="skel" style="height:260px"></div></div></div>
   </section>
@@ -1112,7 +1131,8 @@ footer a{color:var(--text2)}
       <details class="faq"><summary>What do the scores and status mean?</summary><p><b>Consistency</b> is the share of the last 36 month-ends in which the fund ranked in the top half of its category on rolling 1-year return. <b>Recency</b> blends 3-month, 6-month and 1-year returns (20/30/50) into a category percentile. <b>Volatility</b> ranks 3-year volatility within the category (100 = calmest). <b>Status</b>: <i>In form</i> — recency in the top 30%; <i>On track</i> — recency between the 40th and 70th percentile; <i>Underperforming</i> — recency in the bottom 40% but a top-half long-term record; <i>Out of track</i> — both recent and long-term returns in the bottom half. Index funds are not scored, since they track an index by design.</p></details>
       <details class="faq"><summary>How is taxation shown?</summary><p>Each fund is mapped to its capital-gains treatment from its SEBI category and stated asset allocation: equity-oriented, specified (debt-oriented), or other. Rates exclude surcharge and cess and may change with each Union Budget — please confirm with a tax professional.</p></details>
       <details class="faq"><summary>Where do portfolio holdings come from?</summary><p>From each fund house's statutory monthly portfolio disclosure, published within ten days of every month-end. The Portfolio tab shows the top holdings, sector allocation, asset mix and market-cap split as of that month-end. Market-cap buckets follow SEBI's ranking — Nifty 100 constituents are large cap, Nifty Midcap 150 constituents are mid cap and other listed stocks are small cap. Portfolios are being added fund house by fund house.</p></details>
-      <details class="faq"><summary>How does the Smart SIP planner work?</summary><p>Choose your investment horizon and risk level, and the planner builds a diversified plan of up to eight funds across equity, hybrid, debt and gold — with small thematic and international satellites only for aggressive plans of seven years or more. The Very aggressive level always combines equity, debt and gold or silver. Its core is an actively managed large & mid cap fund instead of a Nifty 50 index fund (3+ years). It holds more mid and small caps, and adds a value / contrarian fund (5–10 years), a rules-based momentum index fund (10+ years) and a medium-term corporate-bond or medium-duration debt fund. That spreads a growth-heavy plan across market caps, investing styles and asset classes. Funds must have a long record, beat their benchmark in most rolling periods, cost no more than their category median and hold low overlap with each other. Plans are reviewed monthly and stay stable: a fund is replaced only after failing two reviews in a row, and the number of funds never grows. A small market-condition tilt adds equity when prices are well below recent highs and trims it when valuations look stretched.</p></details>
+      <details class="faq"><summary>Can I invest a lump sum, or quarterly / yearly?</summary><p>Yes. Under <b>How you invest</b>, choose Monthly, Weekly, Quarterly, Yearly or One-time. The funds and weights are the same for every option, so the plan stays consistent however you invest; only the amounts, the projection and the tax change. For a one-time amount the planner adds an <b>entry plan</b>: when the Nifty 50 is fairly valued (below the 60th percentile of its 10-year valuation) everything is invested at once; when it is expensive, the equity share is parked in a liquid fund and moved in monthly over 6 months (12 months above the 80th percentile), using a systematic transfer plan within the same fund house where possible. Debt, hybrid and gold allocations are invested on day one.</p></details>
+      <details class="faq"><summary>How does the Smart Invest planner work?</summary><p>Choose your investment horizon and risk level, and the planner builds a diversified plan of up to eight funds across equity, hybrid, debt and gold — with small thematic and international satellites only for aggressive plans of seven years or more. The Very aggressive level always combines equity, debt and gold or silver. Its core is an actively managed large & mid cap fund instead of a Nifty 50 index fund (3+ years). It holds more mid and small caps, and adds a value / contrarian fund (5–10 years), a rules-based momentum index fund (10+ years) and a medium-term corporate-bond or medium-duration debt fund. That spreads a growth-heavy plan across market caps, investing styles and asset classes. Funds must have a long record, beat their benchmark in most rolling periods, cost no more than their category median and hold low overlap with each other. Plans are reviewed monthly and stay stable: a fund is replaced only after failing two reviews in a row, and the number of funds never grows. A small market-condition tilt adds equity when prices are well below recent highs and trims it when valuations look stretched.</p></details>
       <details class="faq"><summary>What does “Fresh investment paused” mean?</summary><p>Some funds — mostly overseas funds when the industry-wide overseas investment limit is reached — temporarily stop accepting new lump-sum purchases or SIPs. Existing investments are unaffected. Use the purchase-status filter in Explore to see which global funds are open for investment today.</p></details>
       <details class="faq"><summary>Where do new fund offers come from?</summary><p>The NFO tab lists schemes in their official new-fund-offer period, with offer dates, minimum investment, category and links to the offer document and fund house. Recently closed offers stay listed for 45 days.</p></details>
       <details class="faq"><summary>How is Factor DNA calculated?</summary><p>Three years of weekly returns are matched against NSE's Momentum, Value, Quality, Low-Volatility and size indices. The best-fitting combination (weights that are positive and add to 100%) shows the fund's style. A fund is labelled with a single style only when that style dominates and the fit is strong; otherwise it is a <b>Blend</b>.</p></details>
@@ -1207,7 +1227,7 @@ var D = null, FUNDS = [], BY = {}, SUBSTAT = {}, AMC_AUM = {};
 var S = {view:'explore', asset:'Equity', sub:'', preset:'top', per:'r3y', sort:null, shown:PAGE,
          f:{text:'', amc:'', rating:0, hist:0, ter:0, risk:'', status:'', buy:''}, sel:null, tab:'overview', range:'3Y', showBench:true,
          rollWin:'3', sipAmt:10000, cmp:[], cmpRange:'3Y', peerSort:'r3y', scP:'3', scK:'ov',
-         nfo:{text:'', asset:'', kind:'', status:'live'}, plan:{hz:'h10', rk:'b', amt:10000, fq:'m', yrs:0, slab:30}};
+         nfo:{text:'', asset:'', kind:'', status:'live'}, plan:{hz:'h10', rk:'b', amt:10000, fq:'m', yrs:0, stay:0, slab:30}};
 var NFO = null, SIP = null;
 var CACHE = {d:{}, t:{}, h:{}, p:{}};
 var acIdx = -1, acList = [];
@@ -1454,8 +1474,9 @@ function readURL(){
     if (/^h(1|3|5|7|10)$/.test(p.get('h') || '')) S.plan.hz = p.get('h');
     if (/^[cbav]$/.test(p.get('r') || '')) S.plan.rk = p.get('r');
     if (+p.get('amt') >= 100) S.plan.amt = Math.min(1e7, Math.round(+p.get('amt')));
-    if (p.get('fq') === 'w') S.plan.fq = 'w';
-    if (+p.get('y') >= 1 && +p.get('y') <= 30) S.plan.yrs = Math.round(+p.get('y'));
+    if (/^[wqyl]$/.test(p.get('fq') || '')) S.plan.fq = p.get('fq');
+    if (+p.get('y') >= 1 && +p.get('y') <= 40) S.plan.yrs = Math.round(+p.get('y'));
+    if (+p.get('st') >= 1 && +p.get('st') <= 40) S.plan.stay = Math.round(+p.get('st'));
     if (/^(0|5|10|15|20|30)$/.test(p.get('tx') || '')) S.plan.slab = +p.get('tx');
   }
 }
@@ -1464,7 +1485,7 @@ function writeURL(){
   if (S.view === 'detail' && S.sel) { p.set('fund', S.sel); if (S.tab !== 'overview') p.set('tab', S.tab); }
   else if (S.view === 'compare') { p.set('view', 'compare'); if (S.cmp.length) p.set('cmp', S.cmp.join(',')); }
   else if (S.view === 'nfo') p.set('view', 'nfo');
-  else if (S.view === 'sip') { p.set('view', 'sip'); p.set('h', S.plan.hz); p.set('r', S.plan.rk); p.set('amt', S.plan.amt); if (S.plan.fq === 'w') p.set('fq', 'w'); if (S.plan.yrs) p.set('y', S.plan.yrs); if (S.plan.slab !== 30) p.set('tx', S.plan.slab); }
+  else if (S.view === 'sip') { p.set('view', 'sip'); p.set('h', S.plan.hz); p.set('r', S.plan.rk); p.set('amt', S.plan.amt); if (S.plan.fq !== 'm') p.set('fq', S.plan.fq); if (S.plan.yrs) p.set('y', S.plan.yrs); if (S.plan.stay) p.set('st', S.plan.stay); if (S.plan.slab !== 30) p.set('tx', S.plan.slab); }
   else { if (S.sub) p.set('sub', S.sub); else if (S.asset !== 'Equity') p.set('asset', S.asset); }
   var q = p.toString();
   history.replaceState(null, '', location.pathname + (q ? '?' + q : ''));
@@ -2701,7 +2722,14 @@ var MERGE_TO = {theme:'flexi', intl:'flexi', small:'mid', mid:'flexi', flexi:'co
 var SIG_CLS = {Attractive:'st-in', Neutral:'st-on', Unattractive:'st-un', Avoid:'st-out'};
 var REGIME_TXT = {rising:'Rising yields — staying short', neutral:'Stable rates — high-quality accrual', easing:'Falling yields — adding duration'};
 function loadSip(){ if (!CACHE.sip) CACHE.sip = getJSON('smartsip.json').then(function(j){ SIP = j; return j; }).catch(function(e){ delete CACHE.sip; throw e; }); return CACHE.sip; }
+/* how the investor invests: instalments a year, wording; 'l' = one-time lump sum */
+var FQ = {w:{ppy:52, per:'week', ab:'wk', lbl:'Amount per week'}, m:{ppy:12, per:'month', ab:'mo', lbl:'Amount per month'},
+  q:{ppy:4, per:'quarter', ab:'qtr', lbl:'Amount per quarter'}, y:{ppy:1, per:'year', ab:'yr', lbl:'Amount per year'}, l:{ppy:0, per:'one-time', ab:'once', lbl:'Lump-sum amount'}};
+/* convert the amount when the investor switches how they invest: same yearly outlay; one-time = one year's outlay */
+function convAmt(amt, from, to){ var yr = from === 'l' ? amt : amt * FQ[from].ppy, v = to === 'l' ? yr : yr / FQ[to].ppy; return Math.max(100, Math.round(v / (v >= 1e5 ? 1000 : 100)) * (v >= 1e5 ? 1000 : 100)); }
 /* the larger of the fund's SIP and lump-sum minimum, so each month's amount can be invested either way */
+/* the horizon a holding period falls in: Under 3 · 3–5 · 5–7 · 7–10 · 10+ (a boundary year belongs to the longer band) */
+function hzForYears(y){ var hs = (SIP && SIP.horizons) || []; for (var i = hs.length - 1; i >= 0; i--) if (y >= hs[i].min) return hs[i].id; return hs.length ? hs[0].id : S.plan.hz; }
 function sipMinOf(code){ var f = BY[code] || {}; var m = Math.max(isNum(f.sipMin) ? f.sipMin : 0, isNum(f.lumpMin) ? f.lumpMin : 0); return m > 0 ? m : 500; }
 /* scale a model plan to the investor's amount: swap funds without weekly SIPs, combine slots below fund minimums */
 function sizePlan(plan, amt, fq){
@@ -2738,75 +2766,127 @@ function sizePlan(plan, amt, fq){
   });
   return {slots:slots, full:full, merged:plan.slots.length - paused.length - slots.length, paused:paused};
 }
+/* one-time investments: equity goes in at once when markets are fairly valued, otherwise it is parked in a liquid fund
+   and moved in monthly (a systematic transfer plan works only within one fund house, so each equity fund is paired
+   with a liquid fund of the same house where one is available) */
+var STP_ASSETS = {Equity:1, International:1};
+function liquidFor(amc, amt){
+  var pool = FUNDS.filter(function(f){ return f.sub === 'liquid' && f.buy != null && /L/.test(f.buy) && (!isNum(f.lumpMin) || f.lumpMin <= amt) && isNum(f.ter); });
+  var rank = function(a, b){ return (a.ter - b.ter) || ((b.aum || 0) - (a.aum || 0)); };
+  var same = pool.filter(function(f){ return f.amcName === amc && (f.aum || 0) >= 1000; }).sort(rank)[0];
+  return same || pool.filter(function(f){ return (f.aum || 0) >= 5000; }).sort(rank)[0] || null;
+}
+function entryPlan(sized, amt){
+  var n50 = ((SIP.market || {}).n50) || {}, pct = n50.pePct;
+  var months = !isNum(pct) ? 6 : pct >= 0.8 ? 12 : pct >= 0.6 ? 6 : 0;
+  var eq = sized.slots.filter(function(s){ return STP_ASSETS[s.asset]; });
+  var why = isNum(pct) ? 'Nifty 50 valuation is at the ' + Math.round(pct * 100) + 'th percentile of its 10-year history' : 'Market valuation data is unavailable';
+  if (months && eq.length) {                        // each monthly transfer must still cover the equity fund's minimum
+    var cap = Math.min.apply(null, eq.map(function(s){ return Math.floor(s.amt / sipMinOf(s.code)); }));
+    if (cap < months) months = cap >= 3 ? cap : 0;
+  }
+  var stp = months && eq.length ? eq.map(function(s){ var f = BY[s.code] || {}, lq = liquidFor(f.amcName, s.amt); return {slot:s, liquid:lq, same:!!(lq && lq.amcName === f.amcName), per:Math.round(s.amt / months)}; }) : [];
+  if (stp.some(function(x){ return !x.liquid; })) { stp = []; months = 0; }
+  return {months:stp.length ? months : 0, stp:stp, pct:pct, why:why, now:sized.slots.filter(function(s){ return !stp.some(function(x){ return x.slot === s; }); })};
+}
 /* expected outcome of a sized plan: per-fund compounding, capital-gains tax by fund type, likely range */
-function sipFV(amt, n, ppy, r){ var g = Math.pow(1 + r / 100, 1 / ppy), v = 0; for (var k = 0; k < n; k++) v += amt * Math.pow(g, n - k); return v; }
-function projectPlan(sized, P, years){
-  var A = SIP.assumptions || {}, ppy = P.fq === 'w' ? 52 : 12, n = Math.max(1, Math.round(years * ppy)), slab = (P.slab || 0) / 100, cess = 1 + (A.cess || 4) / 100;
-  var invested = 0, value = 0, g = {eqST:0, eqLT:0, debt:0, othST:0, othLT:0};
+/* value at the end of period T of n instalments paid at the start of periods 0..n-1 (T ≥ n: after the last
+   instalment the money stays invested until T) */
+function sipFV(amt, n, ppy, r, T){ var g = Math.pow(1 + r / 100, 1 / ppy), v = 0; T = Math.max(T || n, n); for (var k = 0; k < n; k++) v += amt * Math.pow(g, T - k); return v; }
+function projectPlan(sized, P, years, stay, entry){
+  stay = Math.max(stay || years, years);
+  var lump = P.fq === 'l', A = SIP.assumptions || {}, ppy = lump ? 12 : FQ[P.fq].ppy;
+  var n = lump ? 1 : Math.max(1, Math.round(years * ppy)), T = lump ? Math.max(1, Math.round(stay * 12)) : Math.max(n, Math.round(stay * ppy));
+  var slab = (P.slab || 0) / 100, cess = 1 + (A.cess || 4) / 100;
+  var invested = 0, value = 0, g = {eqST:0, eqLT:0, debt:0, othST:0, othLT:0, park:0};
+  function book(s, cost, v, months){
+    var gain = v - cost;
+    if (s.tax === 'equity' || s.tax === 'elss') g[months > (A.equityLtMonths || 12) ? 'eqLT' : 'eqST'] += gain;
+    else if (s.tax === 'debt') g.debt += gain;
+    else g[months > (A.otherLtMonths || 24) ? 'othLT' : 'othST'] += gain;
+  }
+  var stpOf = {};
+  (entry && entry.months ? entry.stp : []).forEach(function(x){ stpOf[x.slot.key] = x; });
   sized.slots.forEach(function(s){
-    var r = isNum(s.er) ? s.er : 8, gr = Math.pow(1 + r / 100, 1 / ppy);
+    var r = isNum(s.er) ? s.er : 8, gr = Math.pow(1 + r / 100, 1 / ppy), x = stpOf[s.key];
+    if (lump && x) {                                  // parked in the liquid fund, moved in over entry.months months
+      var rl = isNum(x.liquid.r1y) ? x.liquid.r1y : 6.5, gl = Math.pow(1 + rl / 100, 1 / 12), part = s.amt / entry.months;
+      invested += s.amt;
+      for (var j = 1; j <= entry.months; j++){
+        var moved = part * Math.pow(gl, j), v = moved * Math.pow(gr, T - j);
+        g.park += moved - part; value += v; book(s, moved, v, T - j);
+      }
+      return;
+    }
     for (var k = 0; k < n; k++){
-      var held = n - k, v = s.amt * Math.pow(gr, held), gain = v - s.amt, months = held / ppy * 12;
-      invested += s.amt; value += v;
-      if (s.tax === 'equity' || s.tax === 'elss') g[months > (A.equityLtMonths || 12) ? 'eqLT' : 'eqST'] += gain;
-      else if (s.tax === 'debt') g.debt += gain;
-      else g[months > (A.otherLtMonths || 24) ? 'othLT' : 'othST'] += gain;
+      var held = T - k, v2 = s.amt * Math.pow(gr, held);
+      invested += s.amt; value += v2; book(s, s.amt, v2, held / ppy * 12);
     }
   });
+  g.debt += g.park;                                   // gains on the liquid fund are taxed at the slab when transferred
   var tEq = (Math.max(0, g.eqST) * (A.stcgEquity || 20) + Math.max(0, g.eqLT - (A.ltcgExempt || 125000)) * (A.ltcgEquity || 12.5)) / 100 * cess;
   var tDebt = Math.max(0, g.debt) * slab * cess;
   var tOth = (Math.max(0, g.othLT) * (A.ltcgOther || 12.5) / 100 + Math.max(0, g.othST) * slab) * cess;
   var tax = tEq + tDebt + tOth, post = value - tax, total = P.amt;
+  var fvAt = function(r){ return lump ? total * Math.pow(1 + r / 100, stay) : sipFV(total, n, ppy, r, T); };
   // portfolio volatility from slot volatilities with simple asset correlations
   var w = sized.slots.map(function(s){ return s.w / 100; }), vol2 = 0;
   function rho(a, b){ var risky = {Equity:1, International:1}; if (a === b) return a === 'Debt' ? 0.5 : 0.85; if (risky[a] && risky[b]) return 0.75; if ((risky[a] && b === 'Hybrid') || (risky[b] && a === 'Hybrid')) return 0.7; return 0.1; }
   sized.slots.forEach(function(a, i){ sized.slots.forEach(function(b, j){ vol2 += w[i] * w[j] * (a.vol || 10) * (b.vol || 10) * (i === j ? 1 : rho(a.asset, b.asset)); }); });
-  var er = sized.slots.reduce(function(x, s){ return x + (s.er || 0) * s.w / 100; }, 0), sp = Math.sqrt(vol2) / Math.sqrt(Math.max(1, years / 2));
-  var low = sipFV(total, n, ppy, er - sp), high = sipFV(total, n, ppy, er + sp);
+  var er = sized.slots.reduce(function(x, s){ return x + (s.er || 0) * s.w / 100; }, 0), sp = Math.sqrt(vol2) / Math.sqrt(Math.max(1, lump ? stay : stay / 2));
+  var low = fvAt(er - sp), high = fvAt(er + sp);
   var lo = -50, hi = 60;                                   // post-tax annualised return (bisection on the SIP value)
-  for (var it = 0; it < 80; it++){ var mid = (lo + hi) / 2; if (sipFV(total, n, ppy, mid) > post) hi = mid; else lo = mid; }
-  return {invested:invested, value:value, tax:tax, post:post, low:low, high:high, er:er, xirr:(lo + hi) / 2, real:post / Math.pow(1 + (A.inflation || 5) / 100, years), gains:g, tEq:tEq, tDebt:tDebt, tOth:tOth, n:n};
+  for (var it = 0; it < 80; it++){ var mid = (lo + hi) / 2; if (fvAt(mid) > post) hi = mid; else lo = mid; }
+  return {invested:invested, value:value, tax:tax, post:post, low:low, high:high, er:er, xirr:(lo + hi) / 2, real:post / Math.pow(1 + (A.inflation || 5) / 100, stay), gains:g, tEq:tEq, tDebt:tDebt, tOth:tOth, n:n, stay:stay, years:years};
 }
 function fmtCr(v){ if (!isNum(v)) return '–'; if (v >= 1e7) return '₹' + (v / 1e7).toLocaleString('en-IN', {maximumFractionDigits:2}) + ' Cr'; if (v >= 1e5) return '₹' + (v / 1e5).toLocaleString('en-IN', {maximumFractionDigits:2}) + ' L'; return inr(v); }
 function renderSip(){
-  if (!SIP) { loadSip().then(renderSip).catch(function(){ $('sipBody').innerHTML = '<div class="card"><div class="err"><b>The Smart SIP planner is temporarily unavailable</b>Please refresh in a few minutes.</div></div>'; }); return; }
+  if (!SIP) { loadSip().then(renderSip).catch(function(){ $('sipBody').innerHTML = '<div class="card"><div class="err"><b>The Smart Invest planner is temporarily unavailable</b>Please refresh in a few minutes.</div></div>'; }); return; }
   var P = S.plan, plan = SIP.plans[P.hz + P.rk];
   $('sipHz').innerHTML = SIP.horizons.map(function(h){ return '<button data-hz="' + h.id + '"' + (h.id === P.hz ? ' class="on"' : '') + '>' + esc(h.label) + '</button>'; }).join('');
   $('sipRk').innerHTML = SIP.risks.map(function(r){ return '<button data-rk="' + r.id + '"' + (r.id === P.rk ? ' class="on"' : '') + '>' + esc(r.label) + '</button>'; }).join('');
   document.querySelectorAll('#sipFq button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-fq') === P.fq); });
-  $('sipAmtLbl').textContent = P.fq === 'w' ? 'Amount per week' : 'Amount per month';
+  var F = FQ[P.fq] || FQ.m, lump = P.fq === 'l';
+  $('sipAmtLbl').textContent = F.lbl;
+  $('sipYrsFld').hidden = lump; $('sipYrsFld').parentNode.classList.toggle('lump', lump);
   if (document.activeElement !== $('sipAmt')) $('sipAmt').value = P.amt;
   if (!plan) { $('sipBody').innerHTML = '<div class="card"><div class="empty">No plan available for this combination.</div></div>'; return; }
   var hzd = SIP.horizons.filter(function(h){ return h.id === P.hz; })[0] || {years:plan.years, min:1, max:30};
-  var years = P.yrs && P.yrs >= hzd.min && P.yrs <= hzd.max ? P.yrs : hzd.years;
-  var yi = $('sipYrs'); yi.min = hzd.min; yi.max = hzd.max; if (document.activeElement !== yi) yi.value = years;
+  // stay invested = the horizon (how long the money is held); invest for = how many years instalments are paid (≤ stay)
+  var stayMax = hzd.id === 'h10' ? 40 : hzd.max;
+  var stay = P.stay && P.stay >= hzd.min && P.stay <= stayMax ? P.stay : hzd.years;
+  var years = P.yrs && P.yrs >= 1 && P.yrs <= stay ? P.yrs : stay;
+  var si = $('sipStay'); si.min = hzd.min; si.max = stayMax; if (document.activeElement !== si) si.value = stay;
+  var yi = $('sipYrs'); yi.min = 1; yi.max = stay; if (document.activeElement !== yi) yi.value = years;
   $('sipSlab').value = String(P.slab);
-  var sized = sizePlan(plan, P.amt, P.fq), per = P.fq === 'w' ? 'week' : 'month';
-  var yearly = P.fq === 'w' ? P.amt * 52 : P.amt * 12;
+  var sized = sizePlan(plan, P.amt, P.fq), per = F.per;
+  var yearly = lump ? P.amt : P.amt * F.ppy, entry = lump ? entryPlan(sized, P.amt) : null;
+  var perTxt = lump ? 'one time' : 'per ' + per;
   var mix = {}; sized.slots.forEach(function(s){ mix[s.asset] = (mix[s.asset] || 0) + s.w; });
   var ter = sized.slots.reduce(function(a, s){ var f = BY[s.code]; return a + (f && isNum(f.ter) ? f.ter * s.w / 100 : 0); }, 0);
   var amcs = {}; sized.slots.forEach(function(s){ if (BY[s.code]) amcs[BY[s.code].amcName] = 1; });
   var nChecks = sized.slots.reduce(function(a, s){ return a + (s.src.checks || []).length; }, 0);
-  var m = SIP.market || {}, R = SIP.rates || {}, pr = projectPlan(sized, P, years);
+  var m = SIP.market || {}, R = SIP.rates || {}, pr = projectPlan(sized, P, years, stay, entry);
   var h = '';
   h += '<div class="sip-kpis">' +
     kpi('Funds in plan', sized.slots.length + (sized.merged ? ' <span class="mut" style="font-size:12px">of ' + plan.slots.length + '</span>' : ''), Object.keys(amcs).length + ' fund houses · ' + nChecks + ' checks passed') +
     kpi('Equity exposure', fmt((mix.Equity || 0) + (mix.International || 0), 0) + '%', 'incl. international') +
     kpi('Weighted expense ratio', fmt(ter) + '%', 'Direct plans') +
-    kpi('Invested per year', inr(yearly), inr(P.amt) + ' per ' + per) +
+    (lump ? kpi('Amount invested', inr(P.amt), entry.months ? 'equity staggered over ' + entry.months + ' months' : 'invested at once') : kpi('Invested per year', inr(yearly), inr(P.amt) + ' per ' + per)) +
     kpi('Rate cycle', esc((R.applied || 'neutral').replace(/^./, function(c){ return c.toUpperCase(); })), esc(REGIME_TXT[R.applied] || ''), true) + '</div>';
-  if (sized.merged) h += '<div class="alert">⚠ ' + inr(P.amt) + ' per ' + per + ' is below the minimum purchase for every fund in this plan, so ' + sized.merged + ' smaller allocation' + (sized.merged > 1 ? 's were' : ' was') + ' combined into related funds. Invest ' + inr(sized.full) + ' or more per ' + per + ' for the complete ' + (plan.slots.length - sized.paused.length) + '-fund plan.</div>';
+  if (sized.merged) h += '<div class="alert">⚠ ' + inr(P.amt) + ' ' + perTxt + ' is below the minimum purchase for every fund in this plan, so ' + sized.merged + ' smaller allocation' + (sized.merged > 1 ? 's were' : ' was') + ' combined into related funds. Invest ' + inr(sized.full) + ' or more ' + perTxt + ' for the complete ' + (plan.slots.length - sized.paused.length) + '-fund plan.</div>';
   if (sized.paused.length) h += '<div class="alert">⏸ Paused this month on valuation: ' + sized.paused.map(function(s){ var g = s.gate || {}; return '<b>' + esc(s.label) + '</b> (' + (g.reason === 'fund' ? esc(g.index) + ' — at least 1.5× its peers' : esc(g.index || 'segment') + ' valued above ' + (isNum(g.pct) ? Math.round(g.pct * 100) + '% of' : 'most of') + ' its 10-year history') + '; this month\'s share goes to ' + esc((g.toLabel || 'other funds').toLowerCase()) + ')'; }).join('; ') + '. Units already held stay invested; buying resumes when valuations ease.</div>';
   // ── expected outcome ──
   var gain = Math.max(0, pr.value - pr.invested), postGain = Math.max(0, pr.post - pr.invested);
-  h += '<div class="card proj"><div class="proj-top"><div><div class="sec-title">Expected outcome after ' + years + ' year' + (years > 1 ? 's' : '') + '</div>' +
-    '<div class="sec-sub">' + inr(P.amt) + ' every ' + per + ' · ' + pr.n.toLocaleString('en-IN') + ' instalments · expected return ' + fmt(pr.er) + '% a year before tax (net of expense ratios)</div></div></div>' +
+  h += '<div class="card proj"><div class="proj-top"><div><div class="sec-title">Expected outcome after ' + stay + ' year' + (stay > 1 ? 's' : '') + '</div>' +
+    '<div class="sec-sub">' + (lump ? inr(P.amt) + ' invested once' + (entry.months ? ' (equity moved in over ' + entry.months + ' months)' : '') + ' and held for ' + stay + ' year' + (stay > 1 ? 's' : '')
+      : inr(P.amt) + ' every ' + per + ' for ' + years + ' year' + (years > 1 ? 's' : '') + ' (' + pr.n.toLocaleString('en-IN') + ' instalment' + (pr.n > 1 ? 's' : '') + ')' + (stay > years ? ', then left invested for ' + (stay - years) + ' more year' + (stay - years > 1 ? 's' : '') : '')) + ' · expected return ' + fmt(pr.er) + '% a year before tax (net of expense ratios)</div></div></div>' +
     '<div class="proj-kpis">' +
       kpi('Total invested', fmtCr(pr.invested)) +
       kpi('Expected value', '<span class="big">' + fmtCr(pr.value) + '</span>', 'likely ' + fmtCr(pr.low) + ' – ' + fmtCr(pr.high)) +
       kpi('Estimated tax', fmtCr(pr.tax), 'slab ' + P.slab + '% · incl. 4% cess') +
       kpi('Post-tax value', '<span class="pos">' + fmtCr(pr.post) + '</span>', 'gain ' + fmtCr(postGain)) +
-      kpi('Post-tax return', fmt(pr.xirr) + '% a year', 'annualised on your instalments') +
+      kpi('Post-tax return', fmt(pr.xirr) + '% a year', lump ? 'annualised on the amount invested' : 'annualised on your instalments') +
       kpi('In today\'s money', fmtCr(pr.real), 'after ' + ((SIP.assumptions || {}).inflation || 5) + '% inflation') + '</div>' +
     '<div class="stackbar" role="img" aria-label="Invested, post-tax gain and tax">' +
       '<i style="width:' + (pr.invested / pr.value * 100).toFixed(2) + '%;background:var(--pie1)"></i>' +
@@ -2814,10 +2894,24 @@ function renderSip(){
       '<i style="width:' + (pr.tax / pr.value * 100).toFixed(2) + '%;background:var(--pie2)"></i></div>' +
     '<div class="proj-leg"><span><i style="background:var(--pie1)"></i>Invested ' + fmtCr(pr.invested) + '</span><span><i style="background:var(--pie3)"></i>Post-tax gain ' + fmtCr(postGain) + '</span><span><i style="background:var(--pie2)"></i>Tax ' + fmtCr(pr.tax) + '</span></div>' +
     '<div class="taxrows">' +
-      '<div class="taxrow"><b>Equity-oriented funds · ' + fmtCr(pr.tEq) + '</b>Instalments held over 12 months: 12.5% on gains above ₹1.25 lakh (long-term gains ' + fmtCr(pr.gains.eqLT) + '). The last 12 months of instalments: 20% (short-term gains ' + fmtCr(pr.gains.eqST) + ').</div>' +
-      '<div class="taxrow"><b>Debt funds · ' + fmtCr(pr.tDebt) + '</b>Gains of ' + fmtCr(pr.gains.debt) + ' are added to income and taxed at your ' + P.slab + '% slab, whatever the holding period.</div>' +
+      '<div class="taxrow"><b>Equity-oriented funds · ' + fmtCr(pr.tEq) + '</b>Units held over 12 months: 12.5% on gains above ₹1.25 lakh (long-term gains ' + fmtCr(pr.gains.eqLT) + '). Units held 12 months or less: 20% (short-term gains ' + fmtCr(pr.gains.eqST) + ').</div>' +
+      '<div class="taxrow"><b>Debt funds · ' + fmtCr(pr.tDebt) + '</b>Gains of ' + fmtCr(pr.gains.debt) + (pr.gains.park > 0 ? ' (including ' + fmtCr(pr.gains.park) + ' earned in the liquid fund before each transfer, taxed in the year of transfer)' : '') + ' are added to income and taxed at your ' + P.slab + '% slab, whatever the holding period.</div>' +
       '<div class="taxrow"><b>Gold, silver &amp; international · ' + fmtCr(pr.tOth) + '</b>Held over 24 months: 12.5% (gains ' + fmtCr(pr.gains.othLT) + '); otherwise at your slab (gains ' + fmtCr(pr.gains.othST) + ').</div></div>' +
     '<div class="note">Illustrative only — markets do not move in straight lines and returns are not guaranteed. The likely range covers roughly two in three outcomes. Tax rates exclude surcharge and may change with each Union Budget; tax is lower if you redeem gradually across financial years.</div></div>';
+  if (lump) {
+    var tl = '<div class="entry-step"><div class="when">Today<small>' + (entry.months ? 'first purchase' : 'everything at once') + '</small></div><ul>' +
+      entry.now.map(function(s){ return '<li><span>' + esc(shortName((BY[s.code] || {name:s.label}).name)) + '</span><b>' + inr(s.amt) + '</b></li>'; }).join('') +
+      (function(){ var park = {}, order = [];               // one line per liquid fund, listing the equity funds it feeds
+        entry.stp.forEach(function(x){ var k = x.liquid.code; if (!park[k]) { park[k] = {f:x.liquid, amt:0, to:[]}; order.push(k); } park[k].amt += x.slot.amt; park[k].to.push(shortName((BY[x.slot.code] || {}).name || x.slot.label)); });
+        return order.map(function(k){ var z = park[k]; return '<li><span>' + esc(shortName(z.f.name)) + ' <span class="mut">(parking for ' + esc(z.to.join(', ')) + ')</span></span><b>' + inr(z.amt) + '</b></li>'; }).join(''); })() + '</ul></div>';
+    if (entry.months) tl += '<div class="entry-step"><div class="when">Every month<small>months 1–' + entry.months + '</small></div><ul>' +
+      entry.stp.map(function(x){ return '<li><span>' + esc(shortName(x.liquid.name)) + ' → ' + esc(shortName((BY[x.slot.code] || {}).name || x.slot.label)) + (x.same ? ' <span class="mut">· STP</span>' : ' <span class="mut">· redeem &amp; buy</span>') + '</span><b>' + inr(x.per) + '</b></li>'; }).join('') + '</ul></div>' +
+      '<div class="entry-step"><div class="when">Month ' + entry.months + '<small>fully invested</small></div><ul><li><span>The plan holds its target weights; review once a year</span><b>✓</b></li></ul></div>';
+    h += '<div class="card pcard"><div class="mi-top"><div class="sec-title">Entry plan</div><span class="entry-badge">' + (entry.months ? 'Stagger equity over ' + entry.months + ' months' : 'Invest at once') + '</span></div>' +
+      '<div class="sec-sub">' + esc(entry.why) + (entry.months ? ' — equity is moved in gradually to avoid buying everything at a high point.' : ' — markets are not expensive, so the full amount is invested today.') + '</div>' +
+      '<div class="entry-tl">' + tl + '</div>' +
+      '<div class="note">' + (entry.months ? 'A systematic transfer plan (STP) moves money automatically from a liquid fund to an equity fund of the same fund house; where the equity fund\'s house has no suitable liquid fund, redeem from the parking fund and buy the equity fund each month. Liquid funds charge a small exit load only in the first 7 days. ' : '') + 'Debt, hybrid and gold allocations are invested on day one. Paused allocations (see above) are already moved to other funds in this plan.</div></div>';
+  }
   // ── plan table ──
   var rows = sized.slots.map(function(s, i){
     var f = BY[s.code] || {name:'Fund ' + s.code, amcName:'', subLabel:''}, src = s.src, col = 'var(--pie' + (i + 1) + ')';
@@ -2851,10 +2945,10 @@ function renderSip(){
   });
   h += '<div class="sip-grid"><div class="card pcard" style="margin-bottom:0">' +
     '<div class="sec-title">Your ' + esc(plan.horizon) + ' · ' + esc(plan.risk) + ' plan</div>' +
-    '<div class="sec-sub">' + inr(P.amt) + ' per ' + per + ' split across ' + sized.slots.length + ' funds · reviewed monthly, last review ' + monthTxt(SIP.reviewed) + '</div>' +
+    '<div class="sec-sub">' + inr(P.amt) + ' ' + perTxt + ' split across ' + sized.slots.length + ' funds · reviewed monthly, last review ' + monthTxt(SIP.reviewed) + '</div>' +
     '<div class="mixbar">' + Object.keys(mix).map(function(a){ return '<i style="width:' + mix[a] + '%;background:' + (ASSET_COL[a] || 'var(--pieO)') + '" title="' + esc(a) + ' ' + mix[a] + '%"></i>'; }).join('') + '</div>' +
     '<div class="mixleg">' + Object.keys(mix).map(function(a){ return '<span><i style="background:' + (ASSET_COL[a] || 'var(--pieO)') + '"></i>' + esc(a) + ' <b>' + mix[a] + '%</b></span>'; }).join('') + '</div>' +
-    '<div class="tbl-scroll sip-tbl-wrap"><table class="sip-tbl"><thead><tr><th>Fund</th><th class="num">Weight</th><th class="num">Per ' + per + '</th><th class="num" title="Expected return a year, net of expense ratio">Exp. return</th><th class="num">3Y</th><th class="num">TER</th></tr></thead><tbody>' +
+    '<div class="tbl-scroll sip-tbl-wrap"><table class="sip-tbl"><thead><tr><th>Fund</th><th class="num">Weight</th><th class="num">' + (lump ? 'Amount' : 'Per ' + per) + '</th><th class="num" title="Expected return a year, net of expense ratio">Exp. return</th><th class="num">3Y</th><th class="num">TER</th></tr></thead><tbody>' +
     rows.map(function(r){
       return '<tr><td>' + r.body + '</td><td class="num">' + r.s.w + '%<div class="wbar"><i style="width:' + r.s.w + '%;background:' + r.col + '"></i></div></td>' +
         '<td><div class="sip-amt">' + inr(r.s.amt) + '<small>' + r.minTxt + '</small></div></td>' +
@@ -2862,12 +2956,12 @@ function renderSip(){
     }).join('') + '</tbody></table></div>' +
     '<div class="sip-m" style="margin-top:10px">' + rows.map(function(r){
       return '<div class="mc" style="cursor:default">' + r.body +
-        '<div class="mc-row"><div>Weight<b>' + r.s.w + '%</b></div><div>Per ' + per + '<b>' + inr(r.s.amt) + '</b></div><div>Exp.<b>' + (isNum(r.s.er) ? fmt(r.s.er, 1) + '%' : '–') + '</b></div><div>TER<b>' + (isNum(r.f.ter) ? fmt(r.f.ter) + '%' : '–') + '</b></div></div></div>';
+        '<div class="mc-row"><div>Weight<b>' + r.s.w + '%</b></div><div>' + (lump ? 'Amount' : 'Per ' + per) + '<b>' + inr(r.s.amt) + '</b></div><div>Exp.<b>' + (isNum(r.s.er) ? fmt(r.s.er, 1) + '%' : '–') + '</b></div><div>TER<b>' + (isNum(r.f.ter) ? fmt(r.f.ter) + '%' : '–') + '</b></div></div></div>';
     }).join('') + '</div>' +
-    '<div class="note">Invest in the Direct plan, Growth option of each fund — each month as a lump-sum purchase or through a SIP; every fund accepts both, and each amount covers the fund\'s minimum. Weekly SIP minimums and dates vary by fund house — confirm on the scheme page.</div>' +
+    '<div class="note">' + (lump ? 'Invest in the Direct plan, Growth option of each fund as a one-time purchase, following the entry plan above; each amount covers the fund\'s minimum.' : P.fq === 'q' || P.fq === 'y' ? 'Invest in the Direct plan, Growth option of each fund every ' + per + ' as a lump-sum purchase (a quarterly or yearly SIP where the fund house offers one); each amount covers the fund\'s minimum.' : 'Invest in the Direct plan, Growth option of each fund — each ' + per + ' as a lump-sum purchase or through a SIP; every fund accepts both, and each amount covers the fund\'s minimum. Weekly SIP minimums and dates vary by fund house — confirm on the scheme page.') + '</div>' +
     '</div>';
   // ── right column: allocation snapshot (sticky beside the plan) ──
-  var donut = donutCard('sipDonut', 'Allocation by fund', '', sized.slots.map(function(s){ return [shortName((BY[s.code] || {name:s.label}).name), s.w]; }), [sized.slots.length + ' funds', inr(P.amt) + '/' + (P.fq === 'w' ? 'wk' : 'mo')]);
+  var donut = donutCard('sipDonut', 'Allocation by fund', '', sized.slots.map(function(s){ return [shortName((BY[s.code] || {name:s.label}).name), s.w]; }), [sized.slots.length + ' funds', inr(P.amt) + (lump ? ' once' : '/' + F.ab)]);
   var rot = (m.rotation || {}), segName = function(k){ var x = (rot.segments || []).filter(function(z){ return z.key === k; })[0]; return x ? x.label.toLowerCase() : k; };
   var hs = plan.hist || {}, h3 = hs.r3y && hs.r3y.v, h5 = hs.r5y && hs.r5y.v;
   var snap = [['Expected return', fmt(pr.er) + '% a year', 'before tax, net of costs']].concat(isNum(h3) || isNum(h5) ? [['Past return of this mix', (isNum(h3) ? fmt(h3) + '% (3Y)' : '') + (isNum(h3) && isNum(h5) ? ' · ' : '') + (isNum(h5) ? fmt(h5) + '% (5Y)' : ''), 'a year, today\'s funds and weights · not a forecast']] : []).concat([['Weighted expense ratio', fmt(ter) + '%', 'Direct plans'],
@@ -2953,12 +3047,12 @@ function renderSip(){
       '<li>Next review: ' + fmtDate(SIP.nextReview) + '.</li>' +
     '</ul>' + ((plan.changes || []).length ? '<div class="pf-h" style="margin-top:12px">Recent changes</div><ul class="rules">' + plan.changes.map(function(c){ return '<li>' + fmtDate(c.date) + ': ' + esc((BY[c.from] || {name:'Previous fund'}).name) + ' → ' + esc((BY[c.to] || {name:'new fund'}).name) + (c.note ? ' — ' + esc(c.note) : '') + '</li>'; }).join('') + '</ul>' : '') + '</div>' +
     '</div>';
-  h += '<p class="disc" style="margin-top:14px"><strong>Important:</strong> Smart SIP plans and projections are model illustrations generated from historical data and current market indicators for educational purposes only. They are not personalised investment advice and do not consider your income, existing investments, tax position or goals. Returns are not guaranteed and past performance does not predict future results. We are not SEBI registered investment advisors — please consult a certified financial advisor before investing.</p>';
+  h += '<p class="disc" style="margin-top:14px"><strong>Important:</strong> Smart Invest plans and projections are model illustrations generated from historical data and current market indicators for educational purposes only. They are not personalised investment advice and do not consider your income, existing investments, tax position or goals. Returns are not guaranteed and past performance does not predict future results. We are not SEBI registered investment advisors — please consult a certified financial advisor before investing.</p>';
   $('sipBody').innerHTML = h;
   bindDonuts();
 }
 function bindSip(){
-  $('sipHz').addEventListener('click', function(e){ var b = e.target.closest('[data-hz]'); if (!b) return; S.plan.hz = b.getAttribute('data-hz'); S.plan.yrs = 0; renderSip(); writeURL(); });
+  $('sipHz').addEventListener('click', function(e){ var b = e.target.closest('[data-hz]'); if (!b) return; S.plan.hz = b.getAttribute('data-hz'); S.plan.yrs = 0; S.plan.stay = 0; renderSip(); writeURL(); });
   $('sipBody').addEventListener('click', function(e){
     if (e.target.id === 'secToggle') { S.secAll = !S.secAll; renderSip(); return; }
     var pill = e.target.closest('.olp'); if (!pill) return;
@@ -2972,9 +3066,11 @@ function bindSip(){
   });
   $('sipRk').addEventListener('click', function(e){ var b = e.target.closest('[data-rk]'); if (!b) return; S.plan.rk = b.getAttribute('data-rk'); renderSip(); writeURL(); });
   $('sipFq').addEventListener('click', function(e){ var b = e.target.closest('[data-fq]'); if (!b) return; var fq = b.getAttribute('data-fq'); if (fq === S.plan.fq) return;
-    S.plan.amt = Math.max(100, Math.round((fq === 'w' ? S.plan.amt * 12 / 52 : S.plan.amt * 52 / 12) / 100) * 100); S.plan.fq = fq; $('sipAmt').value = S.plan.amt; renderSip(); writeURL(); });
-  $('sipAmt').addEventListener('input', debounce(function(){ var v = Math.round(+this.value); if (v >= 100 && v <= 1e7) { S.plan.amt = v; renderSip(); writeURL(); } }, 300));
-  $('sipYrs').addEventListener('input', debounce(function(){ var v = Math.round(+this.value); if (v >= 1 && v <= 30) { S.plan.yrs = v; renderSip(); writeURL(); } }, 300));
+    S.plan.amt = convAmt(S.plan.amt, S.plan.fq, fq); S.plan.fq = fq; $('sipAmt').value = S.plan.amt; renderSip(); writeURL(); });
+  $('sipAmt').addEventListener('input', debounce(function(){ var v = Math.round(+this.value); if (v >= 100 && v <= 1e9) { S.plan.amt = v; renderSip(); writeURL(); } }, 300));
+  $('sipYrs').addEventListener('input', debounce(function(){ var v = Math.round(+this.value); if (v >= 1 && v <= 40) { S.plan.yrs = v; renderSip(); writeURL(); } }, 300));
+  $('sipStay').addEventListener('input', debounce(function(){ var v = Math.round(+this.value); if (v >= 1 && v <= 40) { S.plan.stay = v; if (S.plan.yrs > v) S.plan.yrs = v; S.plan.hz = hzForYears(v); renderSip(); writeURL(); } }, 300));
+  ['sipYrs', 'sipStay'].forEach(function(id){ $(id).addEventListener('blur', function(){ renderSip(); }); });   // show the value actually used
   $('sipSlab').addEventListener('change', function(){ S.plan.slab = +this.value; renderSip(); writeURL(); });
   $('sipBody').addEventListener('click', function(e){ var o = e.target.closest('[data-open]'); if (o) { e.preventDefault(); openFund(+o.getAttribute('data-open')); } });
 }
