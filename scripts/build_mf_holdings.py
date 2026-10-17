@@ -42,6 +42,7 @@ log = logging.getLogger("hold")
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
 
 # fund house (as named in screener.json "amcs") → disclosure page + link filter
+SKIP_DEFAULT = r"fortnight|debt-portfolio|risk-param|half|annual|commission|aaum|votes|riskometer|weblink"
 SOURCES = {
     "SBI": {"page": "https://www.sbimf.com/portfolios",
             "pick": r"all-schemes-monthly-portfolio"},
@@ -64,24 +65,55 @@ SOURCES = {
              "pick": r"hdfcfund\.com/.*Monthly", "skip": r"fortnight|overlap|half", "multi": True},
     "PPFAS": {"page": "https://amc.ppfas.com/downloads/portfolio-disclosure/",
               "pick": r"PPFAS_Monthly_Portfolio_Report_[A-Za-z]+_\d+_\d{4}\.xls|_PPFAS_Monthly_Portfolio_Report_", "multi": True},
+    "Abakkus": {"page": "https://www.abakkusmf.com/statutory-disclosures.html",
+                "pick": r"monthly[_-]?port(?:f)?olio", "skip": SKIP_DEFAULT + r"|overlap", "multi": True},
+    "Capitalmind": {"page": "https://capitalmindmf.com/statutory-disclosures.html",
+                    "pick": r"Monthly_Portfolio_Disclosure", "multi": True},
+    "Old Bridge": {"page": "https://www.oldbridgemf.com/statutory-disclosures.html",
+                   "pick": r"OBMF_.+_Portfolio_", "skip": SKIP_DEFAULT + r"|overlap", "multi": True},
+    "JM Financial": {"page": "https://www.jmfinancialmf.com/downloads/Portfolio-Disclosure",
+                     "pick": r"Monthly(?:%20| )Portfolio", "multi": True},
+    "Shriram": {"page": "https://www.shriramamc.in/investor-statutory-disclosures",
+                "pick": r"Monthly-Portfolio-Shriram", "multi": True},
+    "Trust": {"page": "https://www.trustmf.com/disclosures",
+              "pick": r"Monthly-Portfolio-Report", "multi": True},
+    "Samco": {"page": "https://www.samcomf.com/StatutoryDisclosure",
+              "pick": r"Portfolio[_-]Monthly|Monthly[_-]Portfolio", "multi": True},
+    "Helios": {"page": "https://www.heliosmf.in/portfolio-disclosure/",
+               "pick": r"monthly[-_]portfolio|portfolio[-_]as[-_]on", "skip": SKIP_DEFAULT + r"|overlap", "multi": True},
+    "Baroda BNP Paribas": {"pages": ["https://www.barodabnpparibasmf.in/downloads/monthly-factsheet",
+                                     "https://www.barodabnpparibasmf.in/downloads/monthly-portfolio"],
+                           "page": "https://www.barodabnpparibasmf.in/downloads/monthly-factsheet",
+                           "pick": r"Portfolio_Holdings|monthly[-_]portfolio", "multi": True},
+    "Zerodha": {"page": "https://www.zerodhafundhouse.com/resources/disclosures?source=footer",
+                "pick": r"monthly(?:%20| |_|-)portfolio", "skip": SKIP_DEFAULT + r"|top(?:%20| |-|_)10", "multi": True},
+    "360 ONE": {"page": "https://www.360.one/asset/mutual-funds/downloads/",
+                "pick": r"monthly[-_ ]?portfolio|portfolio[-_ ]?monthly", "multi": True},
+    "Unifi": {"page": "https://unifimf.com/statutory/", "pick": r"portfolio", "skip": SKIP_DEFAULT + r"|overlap", "multi": True},
+    "LIC": {"page": "https://www.licmf.com/downloads/monthly-portfolio", "pick": r"portfolio", "multi": True},
 }
-SKIP_DEFAULT = r"fortnight|debt-portfolio|risk-param|half|annual|commission|aaum|votes|riskometer|weblink"
 MONTHS = {m: i for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
 
 
 def link_month(url: str) -> tuple[int, int] | None:
-    """Best-effort (year, month) of a portfolio file from its URL."""
+    """Best-effort (year, month) of a portfolio file from its URL (implausible years are ignored)."""
     u = requests.utils.unquote(url).lower()
-    m = re.search(r"(\d{1,2})[-_ ]?(?:st|nd|rd|th)?[-_ ]*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*[-_ ,]*(\d{2,4})", u)
-    if m:
+    ok = lambda y, mo: 2015 <= y <= date.today().year and 1 <= mo <= 12 and (y, mo) <= (date.today().year, date.today().month)
+    M = "(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*"
+    for m in re.finditer(r"(\d{1,2})[-_ ]?(?:st|nd|rd|th)?[-_ ]*" + M + r"[-_ ,.]*(\d{4}|\d{2})(?!\d)", u):
         y = int(m.group(3)); y = y + 2000 if y < 100 else y
-        return y, MONTHS[m.group(2)]
-    m = re.search(r"(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*[-_ ]*(?:\d{1,2}[-_ ]*)?(\d{4})", u)
-    if m:
-        return int(m.group(2)), MONTHS[m.group(1)]
-    m = re.search(r"(\d{2})(\d{2})(20\d{2})", u)            # 30092026
-    if m and 1 <= int(m.group(2)) <= 12:
-        return int(m.group(3)), int(m.group(2))
+        if ok(y, MONTHS[m.group(2)]):
+            return y, MONTHS[m.group(2)]
+    for m in re.finditer(M + r"[-_ ,.]*(?:\d{1,2}(?:st|nd|rd|th)?[-_ ,.]+)?(\d{4})(?!\d)", u):
+        if ok(int(m.group(2)), MONTHS[m.group(1)]):
+            return int(m.group(2)), MONTHS[m.group(1)]
+    for m in re.finditer(M + r"[-_ ,.']*(\d{2})(?![\d])", u):          # Sept_26 · Jun'26
+        y = 2000 + int(m.group(2))
+        if ok(y, MONTHS[m.group(1)]):
+            return y, MONTHS[m.group(1)]
+    for m in re.finditer(r"(\d{2})[.\-_]?(\d{2})[.\-_]?(20\d{2})", u):       # 30092026 · 31.01.2026
+        if ok(int(m.group(3)), int(m.group(2))):
+            return int(m.group(3)), int(m.group(2))
     m = re.search(r"(20\d{2})-(\d{2})/", u)                 # /2026-10/ upload folder → previous month
     if m:
         y, mo = int(m.group(1)), int(m.group(2)) - 1
@@ -532,7 +564,8 @@ def main():
     meta = json.load(open(meta_path)) if meta_path.exists() else {}
     S = requests.Session()
     S.headers.update({"User-Agent": UA, "Accept-Language": "en-IN,en;q=0.9"})
-    found = discover({k: v for k, v in SOURCES.items() if k in funds_by_amc})
+    only = next((a.split("=", 1)[1].split(",") for a in sys.argv if a.startswith("--only=")), None)
+    found = discover({k: v for k, v in SOURCES.items() if k in funds_by_amc and (not only or k in only)})
     large, mid = cap_sets(S)
     results, report = {}, {}
     for amc, info in found.items():
