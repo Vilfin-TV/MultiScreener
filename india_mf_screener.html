@@ -931,10 +931,30 @@ footer a{color:var(--text2)}
 .pk-f a{display:block;font-size:12.5px;font-weight:700;color:var(--accent2);text-decoration:none;overflow-wrap:anywhere}
 .pk-f a:hover{text-decoration:underline}
 .pk-m{display:block;font-size:11.5px;color:var(--text3);margin-top:2px}
-.pk-stp{margin-top:14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.pk-y{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px}
+.pk-y span{font-size:11.5px;color:var(--text2);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px 8px}
+.pk-y b{color:var(--text)}
+.pk-extra{margin-top:12px;display:flex;gap:10px;align-items:flex-start;border:1px dashed var(--border2);border-radius:10px;padding:10px 14px;font-size:12.5px;line-height:1.55;color:var(--text2)}
+.pk-extra:empty{display:none}
+.pk-extra b{color:var(--text)}
+.pk-extra a{color:var(--accent2);font-weight:700;text-decoration:none}
+.pk-extra .pk-ic{font-size:16px}
+.pk-row{margin-top:14px;display:grid;grid-template-columns:240px minmax(0,1fr);gap:14px;align-items:center;border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:var(--surface2)}
+.pk-rh{display:flex;gap:10px;align-items:flex-start}
+.pk-ic{font-size:22px;line-height:1}
+.pk-rh b{display:block;font-size:14px;color:var(--text)}
+.pk-rh small{display:block;font-size:12px;color:var(--text3);margin-top:3px;line-height:1.45}
+.pk-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pk-tile{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px 12px;min-width:0}
+.pk-tile b{display:block;font-size:14px;color:var(--text);margin-bottom:2px}
+.pk-tile span{display:block;font-size:12px;line-height:1.5;color:var(--text2)}
+.pk-tiles.steps .pk-tile{padding-left:42px}
+.pk-tile i{position:absolute;left:12px;top:11px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-style:normal;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center}
+.pk-hint{grid-column:2;margin:0;font-size:12px;color:var(--text3)}
+.pk-hint b{color:var(--text)}
 .pk-note{margin-top:12px;font-size:12px;line-height:1.55;color:var(--text3)}
-@media (max-width:1100px){.pk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:640px){.pk-grid,.pk-stp{grid-template-columns:minmax(0,1fr)}.sip-park{padding:14px}}
+@media (max-width:1100px){.pk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pk-row{grid-template-columns:minmax(0,1fr)}.pk-hint{grid-column:1}}
+@media (max-width:640px){.pk-grid,.pk-tiles{grid-template-columns:minmax(0,1fr)}.sip-park{padding:14px}}
 /* Smart Invest — beginner's guide */
 .sip-guide{margin-top:14px;padding:18px}
 .gd-nri{margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:rgba(60,130,240,.06)}
@@ -1260,19 +1280,25 @@ footer a{color:var(--text2)}
       <div class="sec-title">Where to park short-term money</div>
       <p class="pk-lead">Money you may need within <b>3 years</b> — an emergency fund, a planned purchase, school fees, or a lump sum waiting to be invested — should not go into equity funds. Choose by <b>when you will need it</b>; the recommended option also depends on your income-tax slab (set above). Funds below are ranked on return, consistency, cost and size among high-quality funds of each type with at least 3 years of history, and are refreshed daily.</p>
       <div class="pk-grid" id="parkBody"><div class="skel" style="height:180px"></div></div>
-      <div class="pk-stp">
-        <div class="gd-col"><h4>🛟 Emergency fund</h4><ul>
-          <li>Keep <b>6 months of expenses</b> (12 months if your income is irregular) before investing for long-term goals.</li>
-          <li>Keep about one month's expenses in your savings account and the rest in a <b>liquid fund</b>: redemptions reach your bank the next working day, and many fund houses allow <b>instant redemption of up to ₹50,000 a day</b>.</li>
-          <li>Liquid funds charge a very small exit load only if you withdraw within 7 days.</li>
-        </ul></div>
-        <div class="gd-col"><h4>📈 Investing a lump sum with less risk (STP)</h4><ul>
-          <li>Park the amount in a <b>liquid fund</b> (or an <b>arbitrage fund</b> if you will move it over 12 months or more and are in a higher tax slab), then move a fixed amount into your equity funds every month through a <b>Systematic Transfer Plan (STP)</b> — over 6–12 months when markets look expensive.</li>
-          <li>A fund house's own STP moves money only <b>between its own funds</b>. Your plan's funds usually come from different fund houses, so a <b>demat-linked investment account</b> is recommended: you can hold every fund in one place and transfer between funds of different fund houses (or sell the liquid fund and buy the equity fund on the same day each month).</li>
-          <li>Select <b>One-time</b> under <i>How you invest</i> to see the entry plan for your amount.</li>
-        </ul></div>
+      <div class="pk-extra" id="parkExtra"></div>
+      <div class="pk-row">
+        <div class="pk-rh"><span class="pk-ic">🛟</span><div><b>Emergency fund</b><small>Set this aside before investing for long-term goals</small></div></div>
+        <div class="pk-tiles">
+          <div class="pk-tile"><b>6 months</b><span>of expenses (12 if your income is irregular)</span></div>
+          <div class="pk-tile"><b>1 month + rest</b><span>about one month in your savings account, the rest in a liquid fund</span></div>
+          <div class="pk-tile"><b>₹50,000 a day</b><span>instant redemption from many liquid funds; the rest reaches your bank the next working day</span></div>
+        </div>
       </div>
-      <p class="pk-note">Debt-fund gains (liquid, money market, low duration, corporate bond) are taxed at your income-tax slab however long you hold them. Arbitrage and equity savings funds are taxed as equity: 20% on gains within 12 months, 12.5% after 12 months, with ₹1.25 lakh of long-term gains tax-free each year. Arbitrage funds usually charge an exit load of about 0.25% within the first 15–30 days. Returns are after costs and are not guaranteed.</p>
+      <div class="pk-row">
+        <div class="pk-rh"><span class="pk-ic">📈</span><div><b>Investing a lump sum with less risk (STP)</b><small>Enter the market in steps instead of on one day</small></div></div>
+        <div class="pk-tiles steps">
+          <div class="pk-tile"><i>1</i><b>Park</b><span>the amount in a liquid fund — or a low-cost arbitrage fund if transfers run 12 months or more and you are in a higher slab</span></div>
+          <div class="pk-tile"><i>2</i><b>Transfer monthly</b><span>a fixed amount into each equity fund over 6–12 months (longer when markets look expensive)</span></div>
+          <div class="pk-tile"><i>3</i><b>Use a demat-linked account</b><span>a fund house's STP works only between its own funds; with all funds in one demat-linked account you can move money across fund houses, or sell the liquid fund and buy the equity fund on the same day</span></div>
+        </div>
+        <p class="pk-hint">Select <b>One-time</b> under <i>How you invest</i> to see the entry plan for your amount.</p>
+      </div>
+      <p class="pk-note">Debt-fund gains (liquid, money market, low duration, corporate bond) are taxed at your income-tax slab however long you hold them. Arbitrage and equity savings funds are taxed as equity: 20% on gains within 12 months, 12.5% after 12 months, with ₹1.25 lakh of long-term gains tax-free each year. Arbitrage funds usually charge an exit load of about 0.25% within the first 15–30 days, and only the lower-cost half of arbitrage funds is listed; arbitrage is recommended only when it beats the alternative after tax at your slab. “Typical return” is the average 1-year return of the funds shown (3-year for corporate bond and banking &amp; PSU funds), after costs; returns are not guaranteed.</p>
     </div>
     <div id="sipMarket"></div>
   </section>
@@ -1313,7 +1339,7 @@ footer a{color:var(--text2)}
       <details class="faq"><summary>Is my money safe with the platform?</summary><p>Mutual funds are regulated by SEBI. Units are held in your own name with the fund house (or your demat account), and your money goes directly to the fund. The platform is only the route for placing orders — if you ever change platforms, your investments stay with you.</p></details>
       <details class="faq"><summary>How and when should I sell (redeem)?</summary><p>Sell when you reach your goal or near the end of your chosen horizon, ideally in parts over a few months rather than all at once. Check each fund's exit load (usually only within the first year for equity funds) and remember that gains are taxed under capital-gains rules — the projection shows an estimate of the tax. Redemption money is credited to your registered bank account in 1–3 working days.</p></details>
       <details class="faq"><summary>Where should I keep my emergency fund?</summary><p>Keep 6 months of expenses (12 if your income is irregular) as an emergency fund before investing for long-term goals: about one month in your savings account and the rest in a <b>liquid fund</b>. Liquid funds invest in very short-term, high-quality debt, pay out the next working day, and many fund houses allow instant redemption of up to ₹50,000 a day. Gains are taxed at your income-tax slab. See <a href="?view=sip" data-gopark>Where to park short-term money</a> in Smart Invest for the best liquid funds today.</p></details>
-      <details class="faq"><summary>Where should I park money I need within 3 years?</summary><p>Match the fund to when you need the money: <b>0–6 months</b> — liquid funds (money market funds for 3–6 months); <b>6–12 months</b> — money market funds, or arbitrage funds if you are in the 30% slab; <b>1–2 years</b> — arbitrage funds for the 20–30% slabs (taxed at 12.5% after 12 months), low / ultra-short duration funds for lower slabs; <b>2–3 years</b> — arbitrage funds or high-quality corporate bond and banking &amp; PSU funds, with equity savings funds as an option if you can accept a small fall in a weak year. Avoid equity funds for money needed within 3 years. The recommended funds for each period are listed under <a href="?view=sip" data-gopark>Where to park short-term money</a> in Smart Invest and update daily.</p></details>
+      <details class="faq"><summary>Where should I park money I need within 3 years?</summary><p>Match the fund to when you need the money: <b>0–6 months</b> — liquid funds (money market funds for 3–6 months); <b>6–12 months</b> — money market funds or arbitrage funds; <b>1–2 years</b> — low / ultra-short duration funds or arbitrage funds; <b>2–3 years</b> — high-quality corporate bond and banking &amp; PSU funds or arbitrage funds, with equity savings funds as an option if you can accept a small fall in a weak year. Debt funds are taxed at your slab, while arbitrage funds are taxed as equity (20% within 12 months, 12.5% after), so arbitrage usually wins in the 20–30% slabs and debt funds in the lower slabs. Smart Invest compares both <b>after costs and tax at your slab</b>, lists only the lower-cost half of arbitrage funds, and recommends whichever is better today. Avoid equity funds for money needed within 3 years. See <a href="?view=sip" data-gopark>Where to park short-term money</a> in Smart Invest; the funds update daily.</p></details>
       <details class="faq"><summary>How can a lump-sum investor reduce risk with an STP?</summary><p>Instead of investing a large amount in equity funds on one day, park it in a liquid fund (or an arbitrage fund for transfers spread over 12 months or more) and move a fixed amount into each equity fund every month through a <b>Systematic Transfer Plan</b>, usually over 6–12 months. A fund house's STP works only between its own funds; since a diversified plan uses several fund houses, a <b>demat-linked investment account</b> is recommended — all funds sit in one place and you can transfer between funds of different fund houses, or sell the liquid fund and buy the equity fund on the same day each month. Select <b>One-time</b> in Smart Invest to see the entry plan for your amount.</p></details>
       <details class="faq"><summary>Can NRIs invest, and how does KYC work for them?</summary><p>Yes. Non-Resident Indians complete KYC with PAN, passport, overseas address proof and a FATCA / CRS declaration of their country of tax residence, and invest from an NRE (repatriable) or NRO (non-repatriable) bank account — not from a resident savings account or a foreign bank account. If you were registered as a resident, update your KYC status to NRI first. Not every platform supports NRI accounts, and some fund houses do not accept residents of the USA and Canada (others need an extra declaration), so check each fund in your plan before investing.</p></details>
       <details class="faq"><summary>How are NRIs taxed on mutual fund gains?</summary><p>Gains are taxed at the same rates as for residents, but tax is deducted at source (TDS) when you sell: 20% on short-term equity gains (held up to 12 months), 12.5% on long-term equity gains, and 30% on gains from debt funds bought after 1 April 2023, plus surcharge and cess. Long-term equity gains of up to ₹1.25 lakh a year are exempt; any excess TDS can be claimed back by filing an Indian income-tax return. Under India's tax treaties (DTAA), your country of residence usually gives credit for tax paid in India. Rates change with each Union Budget — please confirm with a tax professional.</p></details>
@@ -3039,15 +3065,20 @@ function fmtCr(v){ if (!isNum(v)) return '–'; if (v >= 1e7) return '₹' + (v 
 var PARK_OPTS = {
   liquid: {lbl:'Liquid funds', subs:['liquid'], aum:5000, mdd:-1, mode:'s', why:'Withdraw any working day — the safest home for an emergency fund. Taxed at your slab.'},
   money:  {lbl:'Money market funds', subs:['money'], aum:3000, mdd:-1, mode:'s', why:'Slightly higher yield than liquid funds for money not needed for 3+ months. Taxed at your slab.'},
-  arb:    {lbl:'Arbitrage funds', subs:['arbitrage'], aum:5000, mdd:-2, mode:'a', why:'Debt-like returns, taxed as equity — 20% within 12 months, 12.5% after. Better after tax for higher slabs.'},
+  arb:    {lbl:'Arbitrage funds', subs:['arbitrage'], aum:5000, mdd:-2, mode:'a', cheapHalf:true, eqTax:true, why:'Debt-like returns, taxed as equity — 20% within 12 months, 12.5% after. Better after tax for higher slabs.'},
   lowdur: {lbl:'Low & ultra-short duration funds', subs:['lowdur', 'ultrashort'], aum:3000, mdd:-1, mode:'s', why:'High-quality bonds maturing within about a year. Taxed at your slab.'},
   corp:   {lbl:'Corporate bond & banking / PSU funds', subs:['corpbond', 'bankpsu'], aum:5000, mdd:-3, mode:'l', why:'Top-rated bonds of 2–4 years; small ups and downs as interest rates move. Taxed at your slab.'},
-  eqsav:  {lbl:'Equity savings funds', subs:['eqsavings'], aum:500, mdd:-12, mode:'l', why:'About a third in shares, the rest hedged or in bonds; can fall in a weak year. Taxed as equity.'}
+  eqsav:  {lbl:'Equity savings funds', subs:['eqsavings'], aum:500, mdd:-12, mode:'l', eqTax:true, why:'About a third in shares, the rest hedged or in bonds; can fall in a weak year. Taxed as equity.'}
 };
 function parkPick(key, n){
   var o = PARK_OPTS[key];
   var P = FUNDS.filter(function(f){ return o.subs.indexOf(f.sub) >= 0 && f.buy != null && /L/.test(f.buy) && (f.aum || 0) >= o.aum && (f.ageY || 0) >= 3 &&
     f.status !== 'Out of track' && isNum(f.r1y) && isNum(f.r3y) && (!isNum(f.mdd) || f.mdd >= o.mdd); });
+  if (o.cheapHalf) {                    // drop the costlier half of the category
+    var ters = FUNDS.filter(function(f){ return o.subs.indexOf(f.sub) >= 0 && isNum(f.ter); }).map(function(f){ return f.ter; }).sort(function(a, b){ return a - b; });
+    var med = ters.length ? ters[Math.floor((ters.length - 1) / 2)] : null;
+    if (isNum(med)) P = P.filter(function(f){ return isNum(f.ter) && f.ter <= med; });
+  }
   if (!P.length) return [];
   var pr = function(k, hi){ var v = P.map(function(f){ return f[k]; }).filter(isNum).sort(function(a, b){ return a - b; });
     return function(f){ if (!isNum(f[k]) || v.length < 2) return 0.5; var c = v.filter(function(x){ return hi ? x < f[k] : x > f[k]; }).length; return c / (v.length - 1); }; };
@@ -3055,28 +3086,37 @@ function parkPick(key, n){
   var la = P.map(function(f){ return Math.log10(f.aum); }), lo = Math.min.apply(null, la), hi = Math.max.apply(null, la);
   var sz = function(f){ return hi > lo ? (Math.log10(f.aum) - lo) / (hi - lo) : 0.5; };
   var sc = function(f){ return o.mode === 's' ? .5 * r1(f) + .15 * r3(f) + .2 * te(f) + .15 * sz(f)
-    : o.mode === 'a' ? .5 * r1(f) + .35 * r3(f) + .15 * sz(f)            // published arbitrage costs include trading costs — returns are already net
+    : o.mode === 'a' ? .45 * r1(f) + .3 * r3(f) + .1 * te(f) + .15 * sz(f)
     : .4 * r3(f) + .25 * r1(f) + .2 * sd(f) + .15 * te(f); };
   return P.map(function(f){ return {f:f, s:sc(f)}; }).sort(function(a, b){ return b.s - a.s; }).slice(0, n).map(function(x){ return x.f; });
 }
 function renderPark(){
   var el = $('parkBody'); if (!el || !FUNDS.length) return;
-  var slab = S.plan.slab, hiTax = slab >= 20;
+  var slab = S.plan.slab;
+  // after-tax yield of an option = average return of its top funds (1Y; 3Y for bond funds), less tax for that holding period (4% cess)
+  var postTax = function(k, fs, longTerm){ if (!fs.length) return null; var col = PARK_OPTS[k].mode === 'l' ? 'r3y' : 'r1y', r = fs.reduce(function(a, f){ return a + f[col]; }, 0) / fs.length;   // bond funds held 2–3 yrs: 3-year return
+    var t = PARK_OPTS[k].eqTax ? (longTerm ? 12.5 : 20) : slab; return {pre:r, post:r * (1 - t * 1.04 / 100), tax:t}; };
   var B = [
-    {t:'0–6 months', u:'Emergency fund · money needed soon', o:['liquid', 'money']},
-    {t:'6–12 months', u:'Planned expenses within a year', o:slab >= 30 ? ['arb', 'money'] : ['money', 'arb']},
-    {t:'1–2 years', u:'Goals one to two years away', o:hiTax ? ['arb', 'lowdur'] : ['lowdur', 'arb']},
-    {t:'2–3 years', u:'Goals two to three years away', o:hiTax ? ['arb', 'corp', 'eqsav'] : ['corp', 'arb', 'eqsav']}
+    {t:'0–6 months', u:'Emergency fund · money needed soon', o:['liquid', 'money'], fixed:true},
+    {t:'6–12 months', u:'Planned expenses within a year', o:['money', 'arb']},
+    {t:'1–2 years', u:'Goals one to two years away', o:['lowdur', 'arb'], lt:true},
+    {t:'2–3 years', u:'Goals two to three years away', o:['corp', 'arb'], lt:true}
   ];
   var pct = function(v){ return isNum(v) ? v.toFixed(1) + '%' : '–'; };
   el.innerHTML = B.map(function(b){
-    return '<div class="pk-b"><div class="pk-t"><b>' + b.t + '</b><span>' + esc(b.u) + '</span></div>' + b.o.map(function(k, i){
-      var o = PARK_OPTS[k], fs = parkPick(k, i ? 2 : 3);
-      return '<div class="pk-o"><div class="pk-on">' + esc(o.lbl) + (i ? '<span class="pk-tag alt">Also consider</span>' : '<span class="pk-tag">Recommended' + (b.o.length > 1 && (k === 'arb' || b.o.indexOf('arb') >= 0) ? ' at ' + slab + '% slab' : '') + '</span>') + '</div>' +
+    var opts = b.o.map(function(k){ var fs = parkPick(k, 3); return {k:k, fs:fs, pt:postTax(k, fs, b.lt)}; });
+    if (!b.fixed) opts.sort(function(x, y){ return ((y.pt || {}).post || -1) - ((x.pt || {}).post || -1); });   // best after tax first
+    return '<div class="pk-b"><div class="pk-t"><b>' + b.t + '</b><span>' + esc(b.u) + '</span></div>' + opts.map(function(x, i){
+      var o = PARK_OPTS[x.k], fs = x.fs.slice(0, i ? 2 : 3);
+      return '<div class="pk-o"><div class="pk-on">' + esc(o.lbl) + '<span class="pk-tag' + (i ? ' alt">Alternative' : '">' + (b.fixed ? 'Recommended' : 'Best after tax at ' + slab + '% slab')) + '</span></div>' +
         '<div class="pk-why">' + esc(o.why) + '</div>' +
-        (fs.length ? '<ul class="pk-f">' + fs.map(function(f){ return '<li><a href="?fund=' + f.code + '" data-open="' + f.code + '">' + esc(f.name) + '</a><span class="pk-m">1Y ' + pct(f.r1y) + ' · 3Y ' + pct(f.r3y) + ' a yr · ₹' + Math.round(f.aum).toLocaleString('en-IN') + ' cr</span></li>'; }).join('') + '</ul>' : '<div class="pk-why">No fund passes the checks today.</div>') + '</div>';
+        (x.pt ? '<div class="pk-y"><span>Typical return <b>' + pct(x.pt.pre) + '</b></span><span>After tax <b>' + pct(x.pt.post) + '</b></span></div>' : '') +
+        (fs.length ? '<ul class="pk-f">' + fs.map(function(f){ return '<li><a href="?fund=' + f.code + '" data-open="' + f.code + '">' + esc(f.name) + '</a><span class="pk-m">1Y ' + pct(f.r1y) + ' · 3Y ' + pct(f.r3y) + ' a yr · Exp. ' + (isNum(f.ter) ? f.ter.toFixed(2) + '%' : '–') + ' · ₹' + Math.round(f.aum).toLocaleString('en-IN') + ' cr</span></li>'; }).join('') + '</ul>' : '<div class="pk-why">No fund passes the checks today.</div>') + '</div>';
     }).join('') + '</div>';
   }).join('');
+  var e = parkPick('eqsav', 2), eo = PARK_OPTS.eqsav;
+  $('parkExtra').innerHTML = e.length ? '<span class="pk-ic">💡</span><div><b>2–3 years and can accept a small fall in a weak year?</b> ' + esc(eo.lbl) + ' hold about a third in shares and are taxed as equity: ' +
+    e.map(function(f){ return '<a href="?fund=' + f.code + '" data-open="' + f.code + '">' + esc(f.name) + '</a> (3Y ' + pct(f.r3y) + ' a yr)'; }).join(' · ') + '</div>' : '';
 }
 function gdShow(fq){
   document.querySelectorAll('#gdTabs [data-gfq]').forEach(function(b){ var on = b.getAttribute('data-gfq') === fq; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
