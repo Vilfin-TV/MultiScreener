@@ -79,6 +79,11 @@ TAX_NOTE = {"equity": "Equity tax: 20% if sold within 12 months, 12.5% after (�
             "debt": "Gains taxed at your income-tax slab, whatever the holding period"}
 
 
+def X_ord(p: float) -> str:
+    n = int(round(p * 100))
+    return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
+
+
 def clamp(x, lo, hi):
     return max(lo, min(hi, x))
 
@@ -106,8 +111,20 @@ class ETFs:
         self.ex = ex.get("etfs", {})
         self.names = {e["s"]: X.index_names(e) for e in self.etfs}
         ad = datetime.strptime(self.asof, "%Y-%m-%d")
+        self._daily = {}
+        h = json.load(open(os.path.join(DATA, "etf_hist.json")))
+        self.hist = {k: [x for x in v if x is not None] for k, v in (h.get("etfs") or {}).items()}
         self.years = {e["s"]: ((ad - datetime.strptime(e["first"], "%Y-%m-%d")).days / 365.25 if e.get("first") else 0)
                       for e in self.etfs}
+
+    def daily(self, sym: str) -> dict | None:
+        if sym not in self._daily:
+            p = os.path.join(DATA, "etf", "d", f"{sym}.json")
+            self._daily[sym] = json.load(open(p)) if os.path.exists(p) else None
+        return self._daily[sym]
+
+    def weekly(self, sym: str) -> list:
+        return self.hist.get(sym) or []
 
     def pool(self, slot: str, pattern: str | None = None) -> list[dict]:
         if slot == "gold":
@@ -128,7 +145,18 @@ class ETFs:
         return out
 
 
-def checks_for(u: ETFs, slot: str, e: dict, pool: list[dict], min_tv: float, min_aum: float) -> list:
+COST_CAP = {"core": 0.50, "sat": 0.75, "global": 1.00, "com": 0.80, "debt": 0.40}
+CORE_SLOTS = ("n50", "next50", "mid", "small")
+DEBT_SLOTS = ("liquid", "gilt5", "gilt10", "tmat")
+
+
+def role_for(slot: str, pattern: str | None) -> str:
+    if slot in ("value", "momentum") or (slot == "n50" and pattern):
+        return "sat"                        # factor and sector ETFs (a sector pick uses the n50 kind with its own pattern)
+    return "core" if slot in CORE_SLOTS else "debt" if slot in DEBT_SLOTS else "com" if slot in ("gold", "silver") else slot
+
+
+def checks_for(u: ETFs, slot: str, e: dict, pool: list[dict], min_tv: float, min_aum: float, role: str = "core") -> list:
     x, ex = e.get("x") or {}, u.ex.get(e["s"], {})
     ters = sorted(p["x"]["ter"] for p in pool if (p.get("x") or {}).get("ter", 0) > 0)
     med_ter = ters[(len(ters) - 1) // 2] if ters else None
@@ -153,6 +181,36 @@ def checks_for(u: ETFs, slot: str, e: dict, pool: list[dict], min_tv: float, min
         ["Track record", yrs >= 1, f"{yrs:.1f} years of trading (needs 1+)"],
         ["VilfinTV rating", rt is None or rt["st"] >= 3, (f"{rt['st']}★ · {rt['s']}/100" if rt else "not rated yet")],
     ]
+    # ── deeper checks from the daily prices ──
+    B = u.daily(e["s"])
+    cap = COST_CAP.get(role, 0.75)
+    c.append(["Cost cap", not ter or ter <= cap, (f"{ter:.2f}% (limit {cap:.2f}% for this kind of ETF)" if ter else "expense ratio not disclosed — estimate used")])
+    if B and len(B["v"]) >= 20:
+        zero = sum(1 for v in B["v"][-20:] if v <= 0)
+        c.append(["Active every session", zero <= 1, f"{zero} of the last 20 sessions without trades (limit 1)"])
+        tv20 = sum(p * v for p, v in zip(B["c"][-20:], B["v"][-20:])) / 20
+        n60 = min(60, len(B["c"]))
+        tv60 = sum(p * v for p, v in zip(B["c"][-n60:], B["v"][-n60:])) / n60
+        c.append(["Liquidity steady", tv60 <= 0 or tv20 >= 0.4 * tv60,
+                  f"last 20 sessions {tv20 / 1e7:,.2f} cr/day vs {tv60 / 1e7:,.2f} cr over {n60} sessions (must not fall below 40%)"])
+    td = (ex.get("te") or {}).get("td1")
+    lim_td = 0.5 if role == "debt" else 1.5 if role == "global" else 1.0
+    c.append(["Tracking difference (1Y)", td is None or abs(td) <= lim_td,
+              (f"{td:+.2f}% vs ETFs on the same index over 1 year (limit ±{lim_td:g}%)" if td is not None else "no same-index ETFs to compare")])
+    fl = e.get("f") or []
+    broken = [f for f in fl if not f.startswith("split")]          # unit splits are adjusted corporate actions, not errors
+    c.append(["Clean price history", "reset" not in broken,
+              ("no breaks in the price series" if not fl else "unit split adjusted" if not broken else "price series: " + ", ".join(broken))])
+    if role == "sat":
+        hs = u.weekly(e["s"])
+        ok, why = True, "not enough history — not judged"
+        if hs and len(hs) >= 53:
+            avg52 = sum(hs[-52:]) / 52
+            r1 = (hs[-1] / hs[-53] - 1) * 100
+            gap = (hs[-1] / avg52 - 1) * 100
+            ok = not (gap <= -5 and r1 < 0)        # a falling knife: well below its 1-year average and down over the year
+            why = f"price {gap:+.1f}% vs its 52-week average · 1-year {r1:+.1f}% (broken if 5%+ below and down over the year)"
+        c.append(["Long-term trend intact", ok, why])
     return c
 
 
@@ -164,7 +222,7 @@ def pick(u: ETFs, slot: str, pattern: str | None, prev: str | None, min_tv=None,
     min_aum = SLOTS[slot][5] if min_aum is None else min_aum
     rows = []
     for e in pool:
-        ch = checks_for(u, slot, e, pool, min_tv, min_aum)
+        ch = checks_for(u, slot, e, pool, min_tv, min_aum, role_for(slot, pattern))
         rows.append((e, ch, all(c[1] for c in ch)))
     tv = X.pct_ranks([e.get("tv") for e, _, _ in rows])
     cost = X.pct_ranks([(e.get("x") or {}).get("ter") if ((e.get("x") or {}).get("ter") or 0) > 0 else None for e, _, _ in rows], False)
@@ -306,6 +364,26 @@ def main() -> int:
             return "gilt10"
         return tmat_for(years) or ("gilt5" if "gilt5" in slots_out else liquid_id)
 
+    # ── market-condition overlay: when Indian shares are expensive or overheated, move part of the equity into debt
+    # (the plan's rate-cycle debt ETF) and gold / silver. On top of the planner's own valuation tilt and gates. ──
+    ov_parts, ov_pts = [], 0
+    pe_pct = max((val.get("n50") or {}).get("pePct") or 0, (val.get("n500") or {}).get("pePct") or 0)
+    v_pts = 15 if pe_pct >= 0.9 else 10 if pe_pct >= 0.8 else 5 if pe_pct >= 0.7 else 0
+    ov_parts.append({"k": "Valuation (Nifty 50 / Nifty 500 vs 10 years)", "v": f"{X_ord(pe_pct)} percentile",
+                     "p": -v_pts, "rule": "≥70th: −5 · ≥80th: −10 · ≥90th: −15 points of equity"})
+    ov_pts += v_pts
+    nb = u.daily("NIFTYBEES") or {}
+    cs = nb.get("c") or []
+    if len(cs) >= 200:
+        gap200 = (cs[-1] / (sum(cs[-200:]) / 200) - 1) * 100
+        h_pts = 5 if gap200 > 12 else 0
+        ov_parts.append({"k": "Overheating (Nifty 50 vs its 200-day average)", "v": f"{gap200:+.1f}%", "p": -h_pts,
+                         "rule": "more than 12% above: −5 points"})
+        ov_pts += h_pts
+    ov_pts = min(ov_pts, 20)
+    TAKE_ORDER = lambda k: (0 if k.startswith("sector:") else 1 if k == "small" else 2 if k == "mid" else 3 if k in ("value", "momentum")
+                            else 4 if k == "next50" else 5 if k == "global" else 6)
+
     plans = {}
     for pid, p in ss["plans"].items():
         hz, rk, yrs = pid[:-1], pid[-1], p.get("years") or 5
@@ -368,6 +446,18 @@ def main() -> int:
                 w[d] = w.get(d, 0) + 5
         if hz in ("h5", "h7", "h10") and rk in ("b", "a", "v") and asset_w("Global") < 5 and global_id and take(5):
             w[global_id] = w.get(global_id, 0) + 5
+        overlay = None
+        if ov_pts and hz != "h1":
+            need, taken = ov_pts, 0
+            for k in sorted([k for k in w if slots_out[k]["asset"] in ("Equity", "Global")], key=TAKE_ORDER):
+                while need and w[k] >= 5:
+                    w[k] -= 5; need -= 5; taken += 5
+            metal_add = 5 * (taken // 10) if metal_id else 0
+            d = debt_for(yrs, False)
+            if metal_add:
+                w[metal_id] = w.get(metal_id, 0) + metal_add
+            w[d] = w.get(d, 0) + taken - metal_add
+            overlay = {"pts": taken, "debt": taken - metal_add, "metal": metal_add}
         w = {k: v for k, v in sorted(w.items(), key=lambda kv: (-kv[1], kv[0])) if v > 0}
         assets = {}
         for k, v in w.items():
@@ -376,7 +466,7 @@ def main() -> int:
         ter = sum(v * slots_out[k]["ter"] for k, v in w.items()) / 100
         plans[pid] = {"horizon": p["horizon"], "risk": p["risk"], "years": yrs, "yearsMin": p.get("yearsMin"),
                       "yearsMax": p.get("yearsMax"), "slots": [{"id": k, "w": v} for k, v in w.items()],
-                      "mix": assets, "er": round(er, 2), "ter": round(ter, 3)}
+                      "mix": assets, "er": round(er, 2), "ter": round(ter, 3), "overlay": overlay}
     used = {s["id"] for p in plans.values() for s in p["slots"]}
     slots_out = {k: v for k, v in slots_out.items() if k in used}
     for v in slots_out.values():
@@ -393,6 +483,7 @@ def main() -> int:
             "global": global_id is not None,
             "globalNote": None if global_id else global_note(u),
             "inflation": (ss.get("assumptions") or {}).get("inflation", 5.0),
+            "overlay": {"pts": ov_pts, "parts": ov_parts},
         },
         "horizons": ss.get("horizons"), "risks": ss.get("risks"), "assumptions": ss.get("assumptions"),
         "slots": slots_out, "plans": plans,
