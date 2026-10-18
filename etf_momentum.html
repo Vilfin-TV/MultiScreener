@@ -381,6 +381,47 @@ td.num{text-align:right;font-family:'JetBrains Mono',monospace;white-space:nowra
 .pc-tip.on{opacity:1}
 .pc-tip b{font-family:'JetBrains Mono',monospace}
 /* ═══════════════ SMART INVEST (ETF) ═══════════════ */
+.sm-guide{margin-top:14px;padding:18px}
+.gd-nri{margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:rgba(60,130,240,.06)}
+.gd-nri h4{margin:0 0 10px;font-size:14px;color:var(--text)}
+.gd-nri .gd-cols{margin-top:0}
+.gd-nri .gd-col{background:var(--surface)}
+.sm-guide .gd-lead{margin:8px 0 14px;font-size:13.5px;line-height:1.6;color:var(--text2)}
+.sm-guide .gd-lead b{color:var(--text)}
+.gd-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;counter-reset:gd}
+.gd-steps li{counter-increment:gd;position:relative;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 12px 12px 46px;font-size:12.5px;line-height:1.55;color:var(--text2);min-width:0}
+.gd-steps li::before{content:counter(gd);position:absolute;left:12px;top:13px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:12.5px;display:flex;align-items:center;justify-content:center}
+.gd-steps li b{color:var(--text)}
+.gd-steps li>b:first-child{display:block;font-size:13.5px;margin-bottom:4px}
+.gd-steps a,.sm-guide a{color:var(--accent2);font-weight:700;text-decoration:none}
+.gd-steps a:hover,.sm-guide a:hover{text-decoration:underline}
+.gd-sub{margin:18px 0 8px;font-size:14px;font-weight:800;color:var(--text)}
+.gd-tabs{display:flex;flex-wrap:wrap;width:100%}
+.gd-tabs button{flex:1 0 auto}
+.gd-pane{display:none;margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6;color:var(--text2)}
+.gd-pane.on{display:block}
+.gd-pane b{color:var(--text)}
+.gd-pane ul,.gd-col ul{margin:6px 0 0;padding-left:18px}
+.gd-pane li,.gd-col li{margin:4px 0}
+.gd-day{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.gd-day div{border:1px solid var(--border);border-radius:9px;padding:10px 12px;background:var(--surface)}
+.gd-day div b{display:block;margin-bottom:2px}
+.gd-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.gd-col{border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:12.8px;line-height:1.6;color:var(--text2);min-width:0}
+.gd-col h4{margin:0 0 4px;font-size:13.5px;color:var(--text)}
+.gd-col.do{background:rgba(34,166,90,.07)}
+.gd-col.dont{background:rgba(220,70,70,.06)}
+.gd-honest{margin-top:12px}
+.gd-key{margin-top:12px;font-size:12.5px;line-height:1.55;border-radius:9px;padding:10px 12px;background:rgba(232,163,23,.12);border:1px solid rgba(232,163,23,.35);color:var(--text)}
+.sm-guide{margin-top:18px;padding-top:18px;border-top:1px solid var(--border)}
+.sm-guide .gd-tabs{margin-top:2px}
+.sm-tax td:first-child{font-weight:600;white-space:normal}
+.sm-tax td{white-space:normal;line-height:1.45;font-size:12.5px}
+.sm-taxn{margin:10px 0 0;padding-left:18px;font-size:12.5px;line-height:1.6;color:var(--text2)}
+.sm-taxn li{margin:3px 0}.sm-taxn b{color:var(--text)}
+.sm-ov{margin:2px 0 12px}
+@media (max-width:1020px){.gd-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.gd-steps,.gd-day,.gd-cols{grid-template-columns:minmax(0,1fr)}}
 .sm-cta{margin-top:12px;height:40px}
 .smart{padding:20px;margin-bottom:18px;scroll-margin-top:120px}
 .sm-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
@@ -432,6 +473,11 @@ td.num{text-align:right;font-family:'JetBrains Mono',monospace;white-space:nowra
 .sm-alt button{border:1px solid var(--border2);background:var(--surface2);border-radius:8px;padding:4px 9px;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text);cursor:pointer}
 .sm-alt button:hover{border-color:var(--accent)}
 .sm-grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:14px}
+.sm-grid2.one{grid-template-columns:minmax(0,1fr)}
+.sm-grid2.one .sm-dec{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 24px}
+.sm-dec div.wide{grid-column:1/-1;grid-template-columns:120px minmax(0,1fr)}
+@media (max-width:760px){.sm-dec div.wide{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){.sm-grid2.one .sm-dec{grid-template-columns:minmax(0,1fr)}}
 .sm-box{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;min-width:0}
 .sm-box h3{font-size:13px;font-weight:800;margin:0 0 8px}
 .sm-box ol,.sm-box ul{margin:0;padding-left:18px;font-size:12.5px;color:var(--text2);line-height:1.6}
@@ -907,6 +953,116 @@ details.faq ul+p{margin-top:8px}
       <div class="sm-f sm-slab"><label for="smSlab">Your income-tax slab</label><select id="smSlab" class="sel sm-sel"><option value="0">0%</option><option value="5">5%</option><option value="10">10%</option><option value="15">15%</option><option value="20">20%</option><option value="30" selected>30%</option></select></div>
     </div>
     <div id="smBody"><div class="skel" style="height:260px"></div></div>
+    <div class="sm-guide" id="smGuide">
+      <div class="sec-title">How to invest with this ETF plan — a beginner's guide</div>
+      <p class="gd-lead">ETFs are bought and sold <b>on the stock exchange</b>, like shares, through a <b>demat &amp; trading account</b>. On each investment day you open this page, check the plan and place a <b>buy order for every ETF</b> in it for the units shown. Nothing is bought automatically — you stay in control of every order.</p>
+      <ol class="gd-steps">
+        <li><b>Open a demat &amp; trading account (once)</b>Keep your <b>PAN</b>, <b>Aadhaar</b> linked to your mobile number, a bank account in your own name and a cancelled cheque or bank statement ready. Account opening and KYC are online (e-sign with Aadhaar OTP) and usually take 1–3 working days. Choose a platform from <a href="#brokers">Best Brokers &amp; Apps</a>, add a <b>nominee</b>, and enable the <b>equity (cash) segment</b>.</li>
+        <li><b>Add money to your trading account</b>Transfer funds by UPI or net banking from your linked bank account before you buy. Purchases settle the next working day (T+1): the units appear in your demat account then.</li>
+        <li><b>Fix your investment day</b>Pick one day you will stick to — ideally <b>1–2 days after your salary arrives</b>. Buy every ETF in the plan in the same session, so the portfolio keeps its intended mix.</li>
+        <li><b>Place a limit order for each ETF</b>Search the exact <b>NSE symbol</b> shown in the plan, choose <b>Buy · Delivery (CNC)</b> — not intraday — enter the <b>quantity in units</b> from the plan and a <b>limit price</b> at or just above the current iNAV / best offer. Repeat for every ETF.</li>
+      </ol>
+
+      <div class="gd-sub">When and how much to invest</div>
+      <div class="sm-seg gd-tabs" id="smGdTabs" role="tablist" aria-label="Guide by way of investing"><button data-gfq="m" class="on" role="tab">Monthly</button><button data-gfq="w" role="tab">Weekly</button><button data-gfq="q" role="tab">Quarterly</button><button data-gfq="y" role="tab">Yearly</button><button data-gfq="l" role="tab">One-time</button></div>
+      <div class="gd-pane on" data-gfq="m">
+        <b>Invest once a month, on a day you choose.</b> Use the units shown with <i>Monthly</i> selected above.
+        <div class="gd-day">
+          <div><b>Option 1 — Salary day (simplest)</b>Buy on the same date every month, 1–2 days after your salary is credited. You never have to watch the market.</div>
+          <div><b>Option 2 — A down day within your window</b>From salary day, allow a window of up to 7 days. If the Nifty 50 is down 1% or more on any day in the window, buy that day; otherwise buy on the last day. Never skip a month waiting for a fall.</div>
+        </div>
+        <ul><li>Many platforms offer an <b>ETF SIP / basket order</b> that places the same orders every month — useful, but check the units still match the latest plan after each monthly review.</li></ul>
+      </div>
+      <div class="gd-pane" data-gfq="w">
+        <b>Invest a smaller amount every week</b> — spreads purchases across more market days. Use the units shown with <i>Weekly</i> selected above.
+        <div class="gd-day">
+          <div><b>Option 1 — Same weekday</b>Pick one weekday, for example Tuesday, and buy every week.</div>
+          <div><b>Option 2 — The weaker day of the week</b>Buy on the first day of the week the Nifty 50 is in the red; if it rises every day, buy on Friday.</div>
+        </div>
+        <ul><li>Small weekly amounts may buy fewer than one unit of a high-priced ETF — the plan then shows <i>"every N purchases"</i>: buy that ETF on alternate weeks.</li><li>Each order costs brokerage at some platforms — choose a zero-brokerage delivery plan if you buy weekly.</li></ul>
+      </div>
+      <div class="gd-pane" data-gfq="q">
+        <b>Invest once every three months.</b> Use the units shown with <i>Quarterly</i> selected above.
+        <div class="gd-day">
+          <div><b>Suggested days</b>The first week of January, April, July and October, or within a week of a quarterly payout or bonus.</div>
+          <div><b>On a market fall</b>If the Nifty 50 falls 5% or more from its recent high during the quarter, you can invest that quarter's amount early.</div>
+        </div>
+        <ul><li>Park the money in the plan's liquid ETF (or your savings account) until the investment day.</li></ul>
+      </div>
+      <div class="gd-pane" data-gfq="y">
+        <b>Invest once a year</b> — for an annual bonus or business income. Use the units shown with <i>Yearly</i> selected above.
+        <div class="gd-day">
+          <div><b>Suggested day</b>Within a week of your bonus, or every April at the start of the financial year.</div>
+          <div><b>When markets look expensive</b>If the plan shows a market-condition overlay, split the yearly amount into 3–6 monthly parts instead of investing it in one go.</div>
+        </div>
+        <ul><li>Use the yearly purchase to <b>rebalance</b>: put more of the new money into whichever asset class has fallen below its weight.</li></ul>
+      </div>
+      <div class="gd-pane" data-gfq="l">
+        <b>Invest a large one-time amount</b> — savings, a maturity or an inheritance.
+        <ul><li><b>Fairly valued market:</b> buy every ETF for its full units on day one.</li><li><b>Expensive market</b> (the plan shows a market-condition overlay, or the Nifty 50 is above the 80th valuation percentile): buy the plan's <b>liquid ETF</b> with the equity share first, then each month sell an equal part of it and buy the equity ETFs, over 6 to 12 months. This is a do-it-yourself transfer plan on the exchange.</li><li>Debt and gold / silver ETFs can be bought in full on day one.</li></ul>
+      </div>
+
+      <div class="gd-cols">
+        <div class="gd-col do"><h4>✅ Placing an order — checklist</h4><ul>
+          <li>Product type <b>Delivery (CNC)</b> — an intraday (MIS) order is squared off automatically the same day.</li>
+          <li>Use a <b>limit order</b> at or near the <b>live iNAV</b> (see "Live quote &amp; iNAV" on each ETF). Avoid market orders, especially in ETFs with lower trading volume.</li>
+          <li>Trade between <b>9:30 am and 3:00 pm</b> — spreads are widest in the first 15 minutes and the last few minutes of the session.</li>
+          <li>Check the <b>bid-ask spread</b>: under 0.3% for large ETFs is normal; a wide gap means you should wait or use a price closer to iNAV.</li>
+          <li>Enter <b>whole units</b> as shown; keep leftover cash for the next purchase.</li>
+          <li>Next day, check the <b>contract note</b> and that the units are in your demat holdings.</li>
+        </ul></div>
+        <div class="gd-col dont"><h4>⛔ Common mistakes</h4><ul>
+          <li><b>Buying far above iNAV</b> — global and gold ETFs sometimes trade at a premium in busy markets; the plan avoids ETFs trading far above NAV, but always check the live iNAV.</li>
+          <li><b>Market orders in thinly traded ETFs</b> — you can pay much more than the fair value.</li>
+          <li><b>Selecting intraday</b> instead of delivery.</li>
+          <li><b>Stopping in market falls</b> — falls are when each rupee buys the most units.</li>
+          <li><b>Selling an ETF because it was replaced</b> at a monthly review — existing units can stay; new money goes to the new ETF.</li>
+          <li><b>Owning several ETFs on the same index</b> — it adds cost, not diversification.</li>
+        </ul></div>
+      </div>
+
+      <div class="gd-sub">How ETFs are taxed (residents)</div>
+      <div class="ptbl-wrap"><div class="ptbl"><table class="xt sm-tax"><thead><tr><th>ETF type</th><th>Sold within 12 months</th><th>Sold after 12 months</th></tr></thead><tbody>
+        <tr><td>Equity ETFs (Nifty 50, Next 50, mid / small cap, sector, factor)</td><td>20%</td><td>12.5% on gains above ₹1.25 lakh a year (total of all equity gains)</td></tr>
+        <tr><td>Gold, silver and international ETFs</td><td>Your income-tax slab</td><td>12.5%</td></tr>
+        <tr><td>Debt ETFs (liquid, gilt, target-maturity bonds)</td><td>Your income-tax slab</td><td>Your income-tax slab</td></tr>
+      </tbody></table></div></div>
+      <ul class="sm-taxn"><li>Add 4% health &amp; education cess (and surcharge for high incomes). Each trade also carries small charges: brokerage, exchange and depository fees, stamp duty on purchases and securities transaction tax where applicable.</li>
+        <li><b>Tax harvesting:</b> selling and immediately re-buying equity ETFs each year to book up to ₹1.25 lakh of long-term gains tax-free resets your purchase price. Losses can be set off against gains and carried forward for 8 years if you file your return on time.</li>
+        <li>Rates follow current law and can change with each Union Budget — confirm with a tax professional.</li></ul>
+
+      <div class="gd-nri">
+        <h4>🌍 For NRI investors (Non-Resident Indians)</h4>
+        <div class="gd-cols">
+          <div class="gd-col"><h4>Account &amp; KYC</h4><ul>
+            <li>You need an <b>NRI demat &amp; trading account</b> linked to an <b>NRE</b> account (repatriable — money can go back abroad) or an <b>NRO</b> account (non-repatriable). A resident demat account must be converted when you become an NRI.</li>
+            <li>Buying ETFs on the exchange from an NRE account needs <b>PIS permission</b> (Portfolio Investment Scheme) from your bank's designated branch; many platforms arrange this when the account is opened. NRO investing is usually allowed without PIS.</li>
+            <li>Documents: <b>PAN</b>, <b>passport</b>, visa / OCI card, <b>overseas address proof</b>, a photo and the FATCA / CRS declaration of your country of tax residence. Verification may need a video call or attested copies.</li>
+            <li>Not every platform onboards NRIs, and several <b>do not accept residents of the USA or Canada</b> — check before you apply. NRIs can buy and sell on delivery only (no intraday).</li>
+          </ul></div>
+          <div class="gd-col"><h4>Tax for NRIs</h4><ul>
+            <li>Tax is <b>deducted at source (TDS)</b> by your broker / bank when you sell: equity ETFs 20% within 12 months and 12.5% after (gains above ₹1.25 lakh); gold, silver and international ETFs 12.5% after 12 months; debt ETFs and short-term gains taxed at the slab are usually deducted at 30% — plus surcharge and cess.</li>
+            <li>If more TDS is deducted than you owe, <b>file an Indian income-tax return to claim a refund</b>.</li>
+            <li>India's tax treaties (<b>DTAA</b>) can lower tax or give credit in your country of residence — keep a Tax Residency Certificate, Form 10F and your TDS certificates (Form 16A).</li>
+            <li>Sale proceeds go to the NRE / NRO account you invested from; NRE money can be repatriated freely. Confirm the details with a tax professional.</li>
+          </ul></div>
+        </div>
+      </div>
+
+      <div class="gd-cols gd-honest">
+        <div class="gd-col"><h4>📉 Expect red years</h4><ul>
+          <li>Returns are <b>not stable every year</b> — equity ETFs can fall 10–20% in a normal year and far more in a crisis. The expected return is a long-term average.</li>
+          <li>Stay invested for your full horizon and keep investing through falls; selling in a fall usually locks in the loss.</li>
+          <li>Need the money within 1–2 years? Move it gradually to the liquid ETF before then.</li>
+        </ul></div>
+        <div class="gd-col"><h4>🎓 Educational, not advice</h4><ul>
+          <li>VilfinTV is an educational platform. ETF Smart Invest is a model plan built from published data and rules — it does not know your personal situation.</li>
+          <li><b>Research every ETF yourself</b> before investing: read its scheme documents and check its index, cost, liquidity and iNAV.</li>
+          <li>When in doubt, consult a SEBI-registered investment adviser.</li>
+        </ul></div>
+      </div>
+      <p class="gd-key">💡 <b>Rule of thumb:</b> investing every time matters far more than the perfect day. Rebalance once a year with new money, check the plan monthly, and open your demat account through <a href="#brokers">Best Brokers &amp; Apps</a> below.</p>
+    </div>
   </section>
 
   <!-- methodology -->
@@ -984,7 +1140,7 @@ details.faq ul+p{margin-top:8px}
       <details class="faq" open><summary>How current is the data?</summary><p>Prices are end-of-day NSE closes, refreshed after market close every trading day. The latest week includes trading up to the date shown at the top of the page. Newly listed ETFs are added automatically once they have enough trading history.</p></details>
       <details class="faq"><summary>What does "Confidence" mean?</summary><p>It cross-checks the mode against simple relative returns: whether the ETF has actually beaten the benchmark over 13 weeks, whether its recent relative return is improving, and whether it trades actively. <b>High</b> means all checks agree.</p></details>
       <details class="faq"><summary>Why is an ETF "Not classified"?</summary><p>At least 20 weeks of clean trading history are needed. Recently listed, suspended or rarely traded ETFs are listed but not classified, to avoid misleading signals.</p></details>
-      <details class="faq"><summary>How does ETF Smart Invest pick the ETFs?</summary><p>Each plan starts from the same monthly decisions as our mutual fund planner, then fills every role with an ETF that does the same job — Nifty 50 for the core, Nifty Next 50 for breadth, Midcap 150, Smallcap 250, a value or momentum factor ETF, a sector ETF for the chosen sector, gold or silver, liquid or target-maturity bond ETFs depending on the interest-rate cycle, and a US-market ETF when one trades close to its NAV. Every plan from 3 years holds Indian equity, debt and gold or silver.</p><p>Within each role, every ETF tracking that index is checked for <b>liquidity, daily trading, expense ratio, price vs NAV, tracking error, fund size, track record and VilfinTV rating</b>, then ranked on liquidity 30% · cost 25% · tracking 20% · size 15% · track record 10%. An ETF trading far above its NAV is never chosen. The chosen ETF changes only at the monthly review, and only if it fails a check or a clearly better one appears — so you are not asked to switch often.</p></details>
+      <details class="faq"><summary>How does ETF Smart Invest pick the ETFs?</summary><p>Each plan starts from the same monthly decisions as our mutual fund planner, then fills every role with an ETF that does the same job — Nifty 50 for the core, Nifty Next 50 for breadth, Midcap 150, Smallcap 250, a value or momentum factor ETF, a sector ETF for the chosen sector, gold or silver, liquid or target-maturity bond ETFs depending on the interest-rate cycle, and a US-market ETF when one trades close to its NAV. Every plan from 3 years holds Indian equity, debt and gold or silver.</p><p>Within each role, every ETF tracking that index passes up to <b>14 checks</b>: liquidity, daily trading, expense ratio vs peers and an absolute cost cap, price vs NAV, tracking error and 1-year tracking difference, fund size, track record, VilfinTV rating, trades in every session, liquidity not drying up, a clean price history and — for sector and factor ETFs — a long-term trend that is not broken. The survivors are ranked on liquidity 30% · cost 25% · tracking 20% · size 15% · track record 10%. An ETF trading far above its NAV is never chosen.</p><p><b>Market-condition overlay:</b> when Indian shares are expensive (Nifty 50 / Nifty 500 valuation at the 70th, 80th or 90th percentile of 10 years) or overheated (Nifty 50 more than 12% above its 200-day average), plans of 3 years and more move 5–20 points out of equity — sector, small and mid caps first — into the plan's debt ETF and gold / silver. The money moves back automatically when valuations normalise. The chosen ETF changes only at the monthly review, and only if it fails a check or a clearly better one appears — so you are not asked to switch often.</p></details>
       <details class="faq"><summary>Smart Invest with ETFs or with mutual funds — which should I use?</summary><p>Both use the <b>same monthly market rules</b> (valuation, interest-rate cycle, gold vs silver, value vs momentum, sector choice) and the same asset mix for each goal and risk level. Choose by how you like to invest:</p>
         <table class="faq-ex"><thead><tr><th></th><th>ETF Smart Invest</th><th>Mutual fund Smart Invest</th></tr></thead><tbody>
         <tr><td>Account</td><td>Demat &amp; trading account</td><td>Direct mutual fund account (no demat needed)</td></tr>
@@ -1965,8 +2121,10 @@ function smProject(plan, A, fq, years, slab){
   var infl = ((SM.decisions || {}).inflation || 5) / 100;
   return {inv:tot.inv, fv:tot.fv, after:tot.fv - tax, real:(tot.fv - tax) / Math.pow(1 + infl, years), tax:tax};
 }
+function smGd(fq){ document.querySelectorAll('#smGdTabs [data-gfq]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-gfq') === fq); }); document.querySelectorAll('#smGuide .gd-pane').forEach(function(p){ p.classList.toggle('on', p.getAttribute('data-gfq') === fq); }); }
 function renderSmart(){
   if (!SM){ return; }
+  smGd(sm.fq);
   var hzs = (SM.horizons || []).map(function(h){ return [h.id, h.label]; }), rks = (SM.risks || []).map(function(r){ return [r.id, r.label]; });
   smSeg('smHz', hzs, sm.hz, 'hz'); smSeg('smRisk', rks, sm.rk, 'rk'); smSeg('smFq', SM_FQ, sm.fq, 'fq');
   $('smChip').textContent = 'Reviewed ' + (SM.reviewed || '') + ' · prices ' + fmtDate(SM.asOf);
@@ -1999,15 +2157,10 @@ function renderSmart(){
     '<div class="sm-t"><small>Average expense ratio</small><b>' + fmtNum(plan.ter, 2) + '%</b><em>weighted across the ETFs, plus brokerage on each trade</em></div>' +
     '<div class="sm-t"><small>' + (sm.fq === 'l' ? 'One-time ' + inrS(A) : inrS(A) + ' ' + fqN.toLowerCase()) + ' · ' + yrs + ' yrs</small><b>' + inrS(pr.after) + '</b><em>after tax, from ' + inrS(pr.inv) + ' invested · ≈ ' + inrS(pr.real) + ' in today\'s money</em></div></div>';
   h += '<div class="note sm-min"><span>💡</span><span>ETFs are bought in <b>whole units</b> on the exchange. To buy at least one unit of every ETF in each purchase you need about <b>' + inrS(Math.ceil(minAmt / 100) * 100) + '</b>' + (A < minAmt ? ' — with a smaller amount, buy the ETFs marked "every N purchases" on alternate dates (the plan shows how often).' : '.') + (A && left > 1 ? ' This purchase invests ' + inrS(spent) + '; carry the remaining ' + inrS(left) + ' to the next one.' : '') + '</span></div>';
+  if (plan.overlay && plan.overlay.pts) h += '<div class="note sm-ov"><span>🛡️</span><span><b>Markets look expensive:</b> this plan moved ' + plan.overlay.pts + ' points out of equity — ' + plan.overlay.debt + ' into debt' + (plan.overlay.metal ? ' and ' + plan.overlay.metal + ' into gold / silver' : '') + '. It moves back automatically when valuations normalise.</span></div>';
   h += '<div class="sm-list"><div class="sm-hd"><span>ETF</span><span>Weight</span><span>Amount</span><span>Units</span><span>Checks</span><span></span></div>' + rows + '</div>';
   var dc = SM.decisions || {}, rg = {rising:'Rates are rising — debt is kept in liquid / overnight ETFs, which do not lose value when yields go up.', neutral:'Rates are steady — debt uses target-maturity bond ETFs that mature within your horizon, locking in today\'s yields.', easing:'Rates are falling — longer government bond ETFs gain as yields fall.'}[dc.rates && dc.rates.regime] || '';
-  h += '<div class="sm-grid2"><div class="sm-box"><h3>How to buy this plan</h3><ol>' +
-    '<li><b>Open a demat & trading account</b> with KYC done — see <a href="#brokers">Best Brokers &amp; Apps</a>.</li>' +
-    '<li><b>Fix your day</b> — ' + (sm.fq === 'w' ? 'one weekday, e.g. every Monday' : sm.fq === 'l' ? 'invest once, or spread a large sum over 3–6 monthly parts if markets look expensive' : 'a day or two after salary credit') + '. Buy every ETF in the same session.</li>' +
-    '<li><b>Buy between 10:00 am and 3:00 pm</b> with a <b>limit order</b> at or near the live iNAV (see "Live quote &amp; iNAV" on each ETF) — never a market order in a thinly traded ETF.</li>' +
-    '<li><b>Buy whole units</b> as shown; carry any leftover cash to the next purchase.</li>' +
-    '<li><b>Rebalance once a year</b>: if any asset class drifts more than 5 points from its weight, top up the lagging ETFs with new money rather than selling.</li>' +
-    '<li><b>Check back monthly</b> — the plan is reviewed every month (next ' + esc(SM.nextReview || '') + '); an ETF is replaced only if it fails a check or a clearly better one appears.</li></ol></div>' +
+  h += '<div class="sm-grid2 one">' +
     '<div class="sm-box"><h3>Market rules applied this month</h3><div class="sm-dec">' +
     '<div><b>Equity level</b><span>' + (dc.tilt > 0 ? '+' + dc.tilt + ' points more equity — Indian shares are reasonably valued' : dc.tilt < 0 ? dc.tilt + ' points less equity — valuations are stretched' : 'Neutral equity weight') + '</span></div>' +
     (dc.rotation && dc.rotation.pts ? '<div><b>Size rotation</b><span>' + dc.rotation.pts + ' points moved from ' + esc(dc.rotation.from) + ' caps to ' + esc(dc.rotation.to) + ' caps on relative valuation</span></div>' : '') +
@@ -2016,6 +2169,7 @@ function renderSmart(){
     '<div><b>Factor style</b><span>' + esc((dc.style && dc.style.why) || '') + '</span></div>' +
     (dc.sector ? '<div><b>Sector satellite</b><span>' + esc(dc.sector) + ' — cheapest attractive sector with a liquid ETF (aggressive plans from 7 years)</span></div>' : '') +
     '<div><b>Global</b><span>' + (dc.global ? 'US large caps via an ETF trading close to its NAV' : esc(dc.globalNote || '')) + '</span></div>' +
+    (dc.overlay ? '<div class="wide"><b>Market-condition overlay</b><span>' + (dc.overlay.pts ? '<b class="neg">−' + dc.overlay.pts + ' points of equity</b> moved to debt and gold / silver in plans of 3 years and more. ' : 'No change this month — ') + dc.overlay.parts.map(function(x){ return esc(x.k) + ': ' + esc(x.v) + (x.p ? ' (' + x.p + ')' : ''); }).join(' · ') + '. Rule: ' + esc(dc.overlay.parts.map(function(x){ return x.rule; }).join('; ')) + ', at most 20 points; riskier holdings are reduced first.</span></div>' : '') +
     '</div></div></div>';
   h += '<div class="note"><span>⚠️</span><span>Educational model portfolio, not investment advice. Expected returns are long-term estimates from today\'s valuations and yields; real returns vary every year and red years are normal — stay invested for the full horizon. The projection uses those estimates, today\'s tax rules (equity 12.5% on gains above ₹1.25 lakh, gold / global 12.5%, debt at your slab, plus 4% cess) and ' + ((dc.inflation) || 5) + '% inflation. Research every ETF yourself or consult a SEBI-registered investment adviser before investing.</span></div>';
   $('smBody').innerHTML = h;
@@ -2031,6 +2185,7 @@ function initSmart(){
   $('smart').addEventListener('click', function(e){
     var b = e.target.closest('[data-hz],[data-rk],[data-fq]');
     if (b){ if (b.hasAttribute('data-hz')) sm.hz = b.getAttribute('data-hz'); else if (b.hasAttribute('data-rk')) sm.rk = b.getAttribute('data-rk'); else sm.fq = b.getAttribute('data-fq'); renderSmart(); smURL(); return; }
+    var gt = e.target.closest('#smGdTabs [data-gfq]'); if (gt){ smGd(gt.getAttribute('data-gfq')); return; }
     var g = e.target.closest('[data-go]'); if (g){ e.preventDefault(); select(g.getAttribute('data-go')); }
   });
   var t; $('smAmt').addEventListener('input', function(){ var v = this.value; clearTimeout(t); t = setTimeout(function(){ sm.amt = Math.max(0, Math.min(1e8, +v || 0)); renderSmart(); smURL(); }, 200); });
