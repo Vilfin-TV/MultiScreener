@@ -138,6 +138,8 @@ html[data-theme="silver"] .vt-brand-name span{color:#7cc0ff}
 
 /* ═══════════════ LAYOUT ═══════════════ */
 .wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+@media (min-width:1400px){.wrap{max-width:1360px}}
+thead th:first-child,tbody td:first-child{padding-left:14px}
 .crumbs{font-size:12px;color:var(--text3);padding:18px 0 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .crumbs a{color:var(--text2)}
 .crumbs a:hover{color:var(--accent2)}
@@ -295,12 +297,12 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .tin:focus{border-color:var(--accent);box-shadow:var(--focus)}
 .tbl-scroll{overflow-x:auto;margin-top:14px;border:1px solid var(--border);border-radius:12px}
 table{width:100%;border-collapse:collapse;font-size:13px;min-width:860px}
-thead th{position:sticky;top:0;background:var(--surface2);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);font-weight:700;padding:11px 12px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+thead th{position:sticky;top:0;background:var(--surface2);text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);font-weight:700;padding:11px 8px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
 thead th.num{text-align:right}
 thead th .s{opacity:.35;margin-left:3px}
 thead th.sorted{color:var(--text)}
 thead th.sorted .s{opacity:1;color:var(--accent2)}
-tbody td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody td{padding:11px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
 tbody tr{cursor:pointer;transition:background .1s}
 tbody tr:hover{background:var(--accent-soft)}
 tbody tr.sel-row{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
@@ -311,7 +313,7 @@ td.num{text-align:right;font-family:'JetBrains Mono',monospace;white-space:nowra
 .xl svg{width:11px;height:11px;opacity:.45;flex-shrink:0;transition:opacity .15s}
 .xl:hover,.xl:focus-visible{color:var(--accent2);border-bottom-color:var(--accent2)}
 .xl:hover svg,.xl:focus-visible svg{opacity:1}
-.t-name{font-size:12px;color:var(--text3);max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t-name{font-size:12px;color:var(--text3);max-width:205px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .t-cat{font-size:11.5px;color:var(--text2);white-space:nowrap}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--ms);color:var(--mc);white-space:nowrap}
 .pill::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--mc)}
@@ -345,6 +347,9 @@ td.num{text-align:right;font-family:'JetBrains Mono',monospace;white-space:nowra
 .vseg button{border:none;background:none;border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:700;color:var(--text2);cursor:pointer;white-space:nowrap}
 .vseg button.on{background:var(--accent);color:var(--accent-ink)}
 .tools .sel.sm{min-width:140px}
+.flt-btn{display:none;justify-content:center;height:40px}
+.flt-n{margin-left:6px;min-width:18px;height:18px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+.flt-n:empty{display:none}
 
 /* ═══════════════ DEEP ANALYSIS ═══════════════ */
 #deep{display:none;margin-bottom:18px}
@@ -393,7 +398,7 @@ td.num{text-align:right;font-family:'JetBrains Mono',monospace;white-space:nowra
 .sm-t em{display:block;font-style:normal;font-size:11.5px;color:var(--text2);margin-top:3px;line-height:1.4}
 .sm-mix{display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px;margin:6px 0 6px;background:var(--surface3)}
 .sm-mix i{display:block;height:100%}
-.sm-mix i.Equity,.sm-ml i.Equity{background:var(--accent)}.sm-mix i.Global,.sm-ml i.Global{background:#a855f7}.sm-mix i.Debt,.sm-ml i.Debt{background:#14b8a6}.sm-mix i.Commodity,.sm-ml i.Commodity{background:#f5b301}
+.sm-mix i.Equity,.sm-ml i.Equity{background:#3b82f6}.sm-mix i.Global,.sm-ml i.Global{background:#a855f7}.sm-mix i.Debt,.sm-ml i.Debt{background:#14b8a6}.sm-mix i.Commodity,.sm-ml i.Commodity{background:#f5b301}
 .sm-ml{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11.5px;color:var(--text2)}
 .sm-ml span{display:inline-flex;align-items:center;gap:5px}.sm-ml i{width:9px;height:9px;border-radius:2px;display:inline-block}
 .sm-min{margin:4px 0 12px}
@@ -464,7 +469,8 @@ td.num{text-align:right;font-family:'JetBrains Mono',monospace;white-space:nowra
 .mt-k>span{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
 .mt-k b{font-family:'JetBrains Mono',monospace;font-size:14px}.mt-k b small{font-size:10.5px;color:var(--text3);font-weight:400}
 .mt-bar{position:relative;height:7px;border-radius:4px;background:var(--surface3);margin-top:6px}
-.mt-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.mt-bar i{display:block;height:100%;border-radius:4px;background:var(--accent2)}
+.mt-bar i.hi{background:var(--pos)}.mt-bar i.md{background:#e8a317}.mt-bar i.lo{background:var(--neg)}
 .mt-bar em{position:absolute;top:-3px;width:2px;height:13px;margin-left:-1px;background:var(--text);opacity:.6;border-radius:1px}
 .mt-s{font-size:11.5px;color:var(--text3);margin-top:4px;line-height:1.45}
 .sc-top{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.4fr);gap:14px;margin:4px 0 14px;align-items:start}
@@ -489,6 +495,7 @@ table.xt{min-width:0!important}
 .fx-b>div i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px}
 .fx-b b{font-family:'JetBrains Mono',monospace;text-align:right}
 .fx-b.z{color:var(--text3)}
+.fx-zero{font-size:11.5px;color:var(--text3);margin-top:6px;line-height:1.5}
 .ho-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px}
 .ho-k div{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 11px}
 .ho-k small{display:block;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text3)}
@@ -634,7 +641,12 @@ footer a{color:var(--text2)}
   .mc-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:9px}
   .mc-row div{font-size:10.5px;color:var(--text3);font-weight:700;letter-spacing:.4px}
   .mc-row div b{display:block;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text);font-weight:600;letter-spacing:0}
-  .tools .sel,.tools .tin{flex:1 1 100%;min-width:0}
+  .tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+  .tools .tin{grid-column:1/-1;min-width:0;width:100%}
+  .tools .sel{min-width:0;width:100%;font-size:12.5px;padding-left:11px;padding-right:30px;background-position:right 10px center}
+  .tools .flt-btn{display:inline-flex}
+  .tools:not(.open) .sel:not(#tSort){display:none}
+  .tools .flt-btn,.tools #tSort{height:40px}
   .qgrid{grid-template-columns:1fr}
   .vseg{margin-left:0;width:100%}
   .vseg button{flex:1;padding:7px 6px}
@@ -830,8 +842,9 @@ details.faq ul+p{margin-top:8px}
     </div>
     <div class="tabs" id="tabs"></div>
     <div class="acls" id="acls" role="group" aria-label="Asset class"></div>
-    <div class="tools">
-      <input class="tin" id="tFilter" type="search" placeholder="Filter list by symbol or name…" autocomplete="off"/>
+    <div class="tools" id="tools">
+      <input class="tin" id="tFilter" type="search" placeholder="Filter by symbol or name…" autocomplete="off"/>
+      <button class="btn flt-btn" id="fltBtn" type="button" aria-expanded="false" aria-controls="tools">⚙ Filters<span class="flt-n" id="fltN"></span></button>
       <select class="sel" id="tCat" aria-label="Category"><option value="">All categories</option></select>
       <select class="sel sm" id="tRole" aria-label="Role"><option value="">All roles</option><option value="core">Core</option><option value="sat">Satellite</option><option value="com">Commodity</option><option value="debt">Debt</option><option value="glob">Global</option><option value="hyb">Hybrid</option></select>
       <select class="sel sm" id="tTrend" aria-label="Trend"><option value="">Any trend</option><option value="lt">Long-term positive</option><option value="all">Positive on all three</option><option value="st">Short-term positive</option><option value="neg">Long-term negative</option></select>
@@ -917,6 +930,10 @@ details.faq ul+p{margin-top:8px}
         <li><b>How you can help:</b> if VilfinTV helped you, please <a href="#share">share it with your friends and family</a> — on WhatsApp, Telegram, Facebook, X, LinkedIn or by email. Every share helps someone you care about make better money decisions, and keeps this project going.</li>
         <li><b>Running costs:</b> some partner links in Best Brokers &amp; Apps are referral links; signing up through them may give you a welcome benefit at no extra cost and helps cover the running costs of this free platform.</li>
         <li><b>Feedback:</b> tell us what to add or improve through the feedback option on the <a href="index.html">VilfinTV home page</a> — your suggestions shape what we build next.</li></ul><p>VilfinTV is for education only and does not give investment advice.</p></details>
+      <details class="faq"><summary>Is the data on this page accurate?</summary><p>Every trading day, after the exchange closes, prices, returns, risk, liquidity and official scheme facts (NAV, expense ratio, fund size, benchmark) are refreshed. Two independent checks then run before anything is published:</p><ul>
+        <li><b>Engine check</b> — every momentum mode is recomputed with the exact calculation this page uses and must match.</li>
+        <li><b>Accuracy audit</b> — thousands of checks recompute the published numbers from the raw daily prices: last price and date, 52-week high / low, 1-week to 1-year returns, volatility, traded value, premium to NAV, weekly history, scores, ratings, holdings and every Smart Invest plan, plus day-over-day checks for missing ETFs or unexplained price jumps. If any check fails, the update is held back and the previous day's data stays online. The number of checks passed is shown at the top of the page.</li></ul>
+        <p>Limits: prices are end-of-day (today's candle during market hours is delayed up to ~30 minutes), holdings are monthly, and official facts can lag the fund house by a few days. Always confirm the live price and iNAV on the exchange before placing an order.</p></details>
       <details class="faq"><summary>What is an ETF?</summary><p>An <b>exchange-traded fund (ETF)</b> is a fund that holds a basket of investments — usually copying an index such as the Nifty 50, a sector, gold, silver, government bonds or a foreign index — and trades on the stock exchange like a share. One ETF unit gives you a slice of the whole basket. ETFs are regulated by SEBI, typically have very low expense ratios, and their holdings are disclosed regularly.</p></details>
       <details class="faq"><summary>ETF, index fund or mutual fund — what is the difference?</summary><ul>
         <li><b>ETF:</b> bought and sold on the exchange at live prices through a demat account; usually the lowest cost; you pay brokerage and the bid-ask spread.</li>
@@ -1271,10 +1288,18 @@ function renderChips(v){
   try { upd = new Date(D.generated).toLocaleString('en-IN', {timeZone:'Asia/Kolkata', day:'numeric', month:'short', hour:'numeric', minute:'2-digit'}) + ' IST'; } catch(e){}
   var h = '<span class="chip' + fresh + '" title="Last refreshed ' + esc(upd) + '"><span class="dot"></span>Prices as of ' + fmtDate(D.asOf) + '</span>';
   if (upd) h += '<span class="chip">Updated ' + esc(upd) + '</span>';
-  h += '<span class="chip">' + (st.withData || D.etfs.length) + ' NSE ETFs</span>';
+  h += '<span class="chip" title="' + (st.withData || D.etfs.length) + ' with current prices">' + D.etfs.length + ' NSE ETFs</span>';
   h += '<span class="chip">Weekly · ' + P.nRatio + '-week lookback</span>';
   if (v) h += '<span class="chip' + (v.bad ? ' warn' : '') + '" title="Mode calculations cross-checked against the reference dataset"><span class="dot"></span>' + (v.bad ? 'Verified ' + (v.n - v.bad) + '/' + v.n : 'Data verified') + '</span>';
+  h += '<span class="chip" id="auditChip" style="display:none"></span>';
   $('metaChips').innerHTML = h;
+  getJSON('data/etf_audit.json?v=' + encodeURIComponent(D.generated)).then(function(A){
+    var el = $('auditChip'); if (!el || !A || !A.checks) return;
+    el.className = 'chip' + (A.errors ? ' warn' : '');
+    el.innerHTML = '<span class="dot"></span>' + Number(A.checks - A.errors).toLocaleString('en-IN') + ' accuracy checks passed';
+    el.title = 'Independent daily audit for ' + fmtDate(A.asOf) + ': prices, returns, risk, liquidity, premium, scores, ratings, holdings and Smart Invest recomputed from the raw daily prices';
+    el.style.display = '';
+  }).catch(function(){});
 }
 
 /* ─────────── benchmark select ─────────── */
@@ -1353,8 +1378,8 @@ var COLS = {
 };
 var VIEWS = {
   momentum:{cols:['sym','cat','mode','trend','rating','rsr','rsm','r1m','r3m','r1y','tv'], m:[['RS-Ratio',function(r){ return fmt(r.rsr); }],['RS-Mom.',function(r){ return fmt(r.rsm); }],['3M',function(r){ return fmtPct((r.e.r || {})['3m']); }],['1Y',function(r){ return fmtPct((r.e.r || {})['1y']); }]]},
-  returns:{cols:['sym','cat','trend','rating','vscore','r1m','r3m','r6m','ytd','r1y','r3y','r5y','si'], m:[['1Y',function(r){ return fmtPct((r.e.r || {})['1y']); }],['3Y',function(r){ return fmtPct((r.e.r || {})['3y']); }],['5Y',function(r){ return fmtPct((r.e.r || {})['5y']); }],['YTD',function(r){ return fmtPct((r.e.r || {}).ytd); }]]},
-  risk:{cols:['sym','cat','trend','rating','ter','aum','prem','vol','mdd','beta','rr3','tv'], m:[['TER',function(r){ return fmtTer((r.e.x || {}).ter); }],['Size',function(r){ return fmtAum((r.e.x || {}).aum); }],['Vol.',function(r){ return r.e.vol != null ? fmtNum(r.e.vol, 1) + '%' : '–'; }],['Prem',function(r){ return fmtPrem(r.e.prem); }]]}
+  returns:{cols:['sym','trend','rating','vscore','r1m','r3m','r6m','ytd','r1y','r3y','r5y','si'], m:[['1Y',function(r){ return fmtPct((r.e.r || {})['1y']); }],['3Y',function(r){ return fmtPct((r.e.r || {})['3y']); }],['5Y',function(r){ return fmtPct((r.e.r || {})['5y']); }],['YTD',function(r){ return fmtPct((r.e.r || {}).ytd); }]]},
+  risk:{cols:['sym','trend','rating','ter','aum','prem','vol','mdd','beta','rr3','tv'], m:[['TER',function(r){ return fmtTer((r.e.x || {}).ter); }],['Size',function(r){ return fmtAum((r.e.x || {}).aum); }],['Vol.',function(r){ return r.e.vol != null ? fmtNum(r.e.vol, 1) + '%' : '–'; }],['Prem',function(r){ return fmtPrem(r.e.prem); }]]}
 };
 function filtered(){
   var rows = compute(state.bench).rows, f = state.filter.trim().toUpperCase(), minLiq = +state.liq || 0;
@@ -1748,7 +1773,7 @@ function notRatedWhy(e){
 var RT_PARTS = [['cost','Cost','Expense ratio vs peers — lower is better'],['liq','Liquidity','Average traded value per day — easier to buy and sell near fair value'],['trk','Tracking & pricing','Closing premium / discount to NAV and tracking error vs ETFs on the same index'],['ret','Returns','1-, 3- and 5-year returns vs peers'],['risk','Risk','Volatility, worst fall and return per unit of risk'],['size','Size & track record','Fund size and years since listing']];
 function meter(label, v, sub, med, hint){
   return '<div class="mt"><div class="mt-k"><span>' + label + (hint ? ' <span class="hint" tabindex="0" data-tip="' + esc(hint) + '">?</span>' : '') + '</span><b>' + (v == null ? '–' : Math.round(v)) + '<small>/100</small></b></div>' +
-    '<div class="mt-bar"><i style="width:' + (v == null ? 0 : Math.max(2, Math.min(100, v))) + '%"></i>' + (med != null ? '<em style="left:' + Math.max(0, Math.min(100, med)) + '%" title="Peer median ' + Math.round(med) + '"></em>' : '') + '</div>' +
+    '<div class="mt-bar"><i class="' + (v == null ? '' : v >= 67 ? 'hi' : v >= 34 ? 'md' : 'lo') + '" style="width:' + (v == null ? 0 : Math.max(2, Math.min(100, v))) + '%"></i>' + (med != null ? '<em style="left:' + Math.max(0, Math.min(100, med)) + '%" title="Peer median ' + Math.round(med) + '"></em>' : '') + '</div>' +
     (sub ? '<div class="mt-s">' + sub + '</div>' : '') + '</div>';
 }
 function ratingCard(e){
@@ -1802,7 +1827,8 @@ function factorCard(e){
   if (!f) return h + '<div class="rt-none"><b>Not available</b><span>' + (rk === 'debt' || rk === 'com' ? 'Factor DNA describes equity ETFs; this ETF holds ' + (rk === 'com' ? 'precious metal' : 'bonds or overnight money') + '.' : 'Needs 2 years of weekly prices.') + '</span></div></div>';
   var weak = f.r2 < 60, keys = Object.keys(f.w).sort(function(a, b){ return f.w[b] - f.w[a]; });
   h += '<div class="fx-chips"><div><small>Style</small><b>' + esc(f.primary) + (f.secondary && f.secondary.length ? ' · ' + esc(f.secondary.join(', ')) : '') + '</b></div><div><small>Size</small><b>' + esc(f.size || '–') + '</b></div><div><small>Explained</small><b>' + Math.round(f.r2) + '%</b></div></div>';
-  h += '<div class="fx-bars">' + keys.map(function(k){ var v = f.w[k]; return '<div class="fx-b' + (v < 0.5 ? ' z' : '') + '"><span>' + FX_N[k] + '</span><div><i style="width:' + Math.max(v > 0 ? 1.5 : 0, v) + '%"></i></div><b>' + fmtNum(v, 1) + '%</b></div>'; }).join('') + '</div>';
+  var zero = keys.filter(function(k){ return f.w[k] < 0.5; }); keys = keys.filter(function(k){ return f.w[k] >= 0.5; });
+  h += '<div class="fx-bars">' + keys.map(function(k){ var v = f.w[k]; return '<div class="fx-b' + (v < 0.5 ? ' z' : '') + '"><span>' + FX_N[k] + '</span><div><i style="width:' + Math.max(v > 0 ? 1.5 : 0, v) + '%"></i></div><b>' + fmtNum(v, 1) + '%</b></div>'; }).join('') + (zero.length ? '<div class="fx-zero">No exposure: ' + zero.map(function(k){ return FX_N[k]; }).join(' · ') + '</div>' : '') + '</div>';
   h += '<div class="note" style="margin-top:12px"><span>' + (weak ? '⚠️' : 'ℹ️') + '</span><span>' + (weak ? 'Only ' + Math.round(f.r2) + '% of its weekly moves are explained by these broad factors — its returns come mainly from its own sector or theme, so read the weights as a loose guide.' : 'Each weight shows how much of its weekly returns behaves like that factor index; together they explain ' + Math.round(f.r2) + '% of its moves.') + ' Factors are measured with ETFs tracking the matching indices.</span></div></div>';
   return h;
 }
@@ -1948,7 +1974,7 @@ function renderSmart(){
     var nOk = sl.checks.filter(function(c){ return c[1]; }).length, every = units ? 0 : Math.ceil(px / Math.max(1, amt));
     var o = exOf(sl.sym);
     rows += '<details class="sm-row"><summary>' +
-      '<div class="sm-e"><div class="sm-role"><i style="background:' + {Equity:'var(--accent)', Global:'#a855f7', Debt:'#14b8a6', Commodity:'#f5b301'}[sl.asset] + '"></i>' + esc(sl.label) + '</div>' +
+      '<div class="sm-e"><div class="sm-role"><i style="background:' + {Equity:'#3b82f6', Global:'#a855f7', Debt:'#14b8a6', Commodity:'#f5b301'}[sl.asset] + '"></i>' + esc(sl.label) + '</div>' +
       '<div class="sm-sym"><b>' + esc(sl.sym) + '</b>' + (o && o.rt ? starsHtml(o.rt.st) : '') + '</div><div class="sm-nm">' + esc(sl.name) + '</div></div>' +
       '<div class="sm-w">' + s.w + '%</div>' +
       '<div class="sm-a"><b>' + inrS(amt) + '</b><small>' + fqN.toLowerCase() + '</small></div>' +
@@ -2177,6 +2203,8 @@ function bind(){
   });
   $('tabs').addEventListener('click', function(e){ var t = e.target.closest('.tab'); if (!t) return; state.tab = t.getAttribute('data-t'); state.shown = PAGE; renderCounts(); renderTable(); });
   var ft; $('tFilter').addEventListener('input', function(){ var v = this.value; clearTimeout(ft); ft = setTimeout(function(){ state.filter = v; state.shown = PAGE; renderTable(); }, 120); });
+  $('fltBtn').addEventListener('click', function(){ var t = $('tools'), o = !t.classList.contains('open'); t.classList.toggle('open', o); this.setAttribute('aria-expanded', o); });
+  $('tools').addEventListener('change', function(){ var n = ['tCat','tRole','tTrend','tLiq','tRate','tAmc','tHist','tTer'].filter(function(id){ return $(id).value; }).length; $('fltN').textContent = n || ''; });
   $('acls').addEventListener('click', function(e){ var b = e.target.closest('[data-a]'); if (!b) return; state.asset = b.getAttribute('data-a'); state.shown = PAGE; renderAssets(); renderTable(); updateURL(); });
   $('tRole').addEventListener('change', function(){ state.role = this.value; state.shown = PAGE; renderTable(); });
   $('tTrend').addEventListener('change', function(){ state.trend = this.value; state.shown = PAGE; renderTable(); });

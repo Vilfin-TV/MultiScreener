@@ -27,6 +27,7 @@ on:
       - 'scripts/verify_etf_momentum.js'
       - 'scripts/build_etf_extras.py'
       - 'scripts/build_etf_smart.py'
+      - 'scripts/audit_etf_data.py'
       - '.github/workflows/etf_momentum.yml'
 
 permissions:
@@ -140,13 +141,16 @@ jobs:
       - name: Verify (page engine vs reference, structure checks)
         run: node scripts/verify_etf_momentum.js
 
+      - name: Accuracy audit (independent recomputation from daily prices, day-over-day checks)
+        run: python scripts/audit_etf_data.py
+
       - name: Commit (with rebase-and-retry)
         env:
           BRANCH: ${{ github.ref_name }}
         run: |
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/etf_momentum.json data/etf_hist.json data/etf/d data/etf_extras.json data/etf_holdings.json data/etf_smart.json data/etf_smart_state.json
+          git add data/etf_momentum.json data/etf_hist.json data/etf/d data/etf_extras.json data/etf_holdings.json data/etf_smart.json data/etf_smart_state.json data/etf_audit.json
           if git diff --staged --quiet; then
             echo "No changes to ETF momentum data."
             exit 0

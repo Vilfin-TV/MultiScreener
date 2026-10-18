@@ -100,7 +100,7 @@ jobs:
       - name: ETF page analytics (holdings, scores, rating, Factor DNA)
         run: |
           # a failed check never blocks the holdings publish — the ETF files then simply stay as they were
-          { python scripts/build_etf_extras.py && python scripts/build_etf_smart.py && node scripts/verify_etf_momentum.js; } || git checkout -- data/etf_extras.json data/etf_holdings.json data/etf_smart.json data/etf_smart_state.json
+          { python scripts/build_etf_extras.py && python scripts/build_etf_smart.py && node scripts/verify_etf_momentum.js && python scripts/audit_etf_data.py; } || git checkout -- data/etf_extras.json data/etf_holdings.json data/etf_smart.json data/etf_smart_state.json data/etf_audit.json
 
       - name: Commit (with rebase-and-retry)
         env:
@@ -109,7 +109,7 @@ jobs:
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add -A data/mf/p
-          git add data/mf/etf_p.json data/etf_extras.json data/etf_holdings.json data/etf_smart.json data/etf_smart_state.json 2>/dev/null || true
+          git add data/mf/etf_p.json data/etf_extras.json data/etf_holdings.json data/etf_smart.json data/etf_smart_state.json data/etf_audit.json 2>/dev/null || true
           git add data/mf/exitload_extra.json data/mf/scheme_pages.json 2>/dev/null || true
           if git diff --staged --quiet; then
             echo "No changes to holdings data."
