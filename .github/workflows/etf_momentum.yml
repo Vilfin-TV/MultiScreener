@@ -144,26 +144,7 @@ jobs:
       - name: Accuracy audit (independent recomputation from daily prices, day-over-day checks)
         run: python scripts/audit_etf_data.py
 
-      - name: Commit (with rebase-and-retry)
+      - name: Commit (with rebase-and-retry; shared ETF analytics rebuilt on conflicts)
         env:
           BRANCH: ${{ github.ref_name }}
-        run: |
-          git config --global user.name  "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/etf_momentum.json data/etf_hist.json data/etf/d data/etf_extras.json data/etf_holdings.json data/etf_smart.json data/etf_smart_state.json data/etf_audit.json
-          if git diff --staged --quiet; then
-            echo "No changes to ETF momentum data."
-            exit 0
-          fi
-          git commit -m "chore(data): refresh ETF momentum modes [skip ci]"
-          for attempt in 1 2 3 4; do
-            if git push origin HEAD:"$BRANCH"; then
-              echo "Pushed."
-              exit 0
-            fi
-            echo "Push rejected (attempt $attempt). Rebasing..."
-            git pull --rebase --autostash origin "$BRANCH" || git rebase --abort
-            sleep $((attempt * 5))
-          done
-          echo "All push attempts failed."
-          exit 1
+        run: bash scripts/push_data.sh "chore(data): refresh ETF momentum modes [skip ci]" data/etf_momentum.json data/etf_hist.json data/etf/d data/etf_extras.json data/etf_holdings.json data/etf_smart.json data/etf_smart_state.json data/etf_audit.json
