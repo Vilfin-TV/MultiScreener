@@ -347,6 +347,8 @@ td.num{text-align:right;font-family:'JetBrains Mono',monospace;white-space:nowra
 .vseg button{border:none;background:none;border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:700;color:var(--text2);cursor:pointer;white-space:nowrap}
 .vseg button.on{background:var(--accent);color:var(--accent-ink)}
 .tools .sel.sm{min-width:140px}
+.view-cap{display:none;font-size:12px;color:var(--text2);margin:12px 0 2px;padding:8px 11px;border-radius:9px;background:var(--accent-soft);border:1px solid var(--border)}
+@media (max-width:760px){.view-cap{display:block}}
 .flt-btn{display:none;justify-content:center;height:40px}
 .flt-n{margin-left:6px;min-width:18px;height:18px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
 .flt-n:empty{display:none}
@@ -638,7 +640,7 @@ footer a{color:var(--text2)}
   .mc-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
   .mc-name{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
   .mc-tags{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
-  .mc-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:9px}
+  .mc-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 6px;margin-top:9px}
   .mc-row div{font-size:10.5px;color:var(--text3);font-weight:700;letter-spacing:.4px}
   .mc-row div b{display:block;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text);font-weight:600;letter-spacing:0}
   .tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
@@ -883,6 +885,7 @@ details.faq ul+p{margin-top:8px}
         <tbody id="tbody"><tr><td colspan="9"><div class="skel" style="height:16px;margin:8px 0"></div><div class="skel" style="height:16px;margin:8px 0;width:80%"></div><div class="skel" style="height:16px;margin:8px 0;width:60%"></div></td></tr></tbody>
       </table>
     </div>
+    <div class="view-cap" id="viewCap"></div>
     <div class="cards-m" id="cardsM"></div>
     <div class="more"><button class="btn" id="moreBtn" style="display:none">Show more</button></div>
   </section>
@@ -1377,9 +1380,9 @@ var COLS = {
   tv:{n:'Liquidity', num:1, t:'Avg. daily traded value (20 days)', f:function(r){ return liqBars(r.e.tv) + ' ' + fmtTv(r.e.tv); }}
 };
 var VIEWS = {
-  momentum:{cols:['sym','cat','mode','trend','rating','rsr','rsm','r1m','r3m','r1y','tv'], m:[['RS-Ratio',function(r){ return fmt(r.rsr); }],['RS-Mom.',function(r){ return fmt(r.rsm); }],['3M',function(r){ return fmtPct((r.e.r || {})['3m']); }],['1Y',function(r){ return fmtPct((r.e.r || {})['1y']); }]]},
-  returns:{cols:['sym','trend','rating','vscore','r1m','r3m','r6m','ytd','r1y','r3y','r5y','si'], m:[['1Y',function(r){ return fmtPct((r.e.r || {})['1y']); }],['3Y',function(r){ return fmtPct((r.e.r || {})['3y']); }],['5Y',function(r){ return fmtPct((r.e.r || {})['5y']); }],['YTD',function(r){ return fmtPct((r.e.r || {}).ytd); }]]},
-  risk:{cols:['sym','trend','rating','ter','aum','prem','vol','mdd','beta','rr3','tv'], m:[['TER',function(r){ return fmtTer((r.e.x || {}).ter); }],['Size',function(r){ return fmtAum((r.e.x || {}).aum); }],['Vol.',function(r){ return r.e.vol != null ? fmtNum(r.e.vol, 1) + '%' : '–'; }],['Prem',function(r){ return fmtPrem(r.e.prem); }]]}
+  momentum:{cols:['sym','cat','mode','trend','rating','rsr','rsm','r1m','r3m','r1y','tv'], sort:'score', cap:'Momentum view — relative strength vs the benchmark · sorted strongest first', m:[['RS-Ratio',function(r){ return fmt(r.rsr); }],['RS-Mom.',function(r){ return fmt(r.rsm); }],['vs bench 13W',function(r){ return fmtPct(r.rel13); }],['1M',function(r){ return fmtPct((r.e.r || {})['1m']); }],['3M',function(r){ return fmtPct((r.e.r || {})['3m']); }],['1Y',function(r){ return fmtPct((r.e.r || {})['1y']); }]]},
+  returns:{cols:['sym','trend','rating','vscore','r1m','r3m','r6m','ytd','r1y','r3y','r5y','si'], sort:'r1y', cap:'Returns view — 1M to 5Y returns (3Y / 5Y a year) · sorted by 1-year return', m:[['3M',function(r){ return fmtPct((r.e.r || {})['3m']); }],['6M',function(r){ return fmtPct((r.e.r || {})['6m']); }],['1Y',function(r){ return fmtPct((r.e.r || {})['1y']); }],['3Y',function(r){ return fmtPct((r.e.r || {})['3y']); }],['5Y',function(r){ return fmtPct((r.e.r || {})['5y']); }],['YTD',function(r){ return fmtPct((r.e.r || {}).ytd); }]]},
+  risk:{cols:['sym','trend','rating','ter','aum','prem','vol','mdd','beta','rr3','tv'], sort:'rating', cap:'Risk & Cost view — expense ratio, size, volatility, worst fall and liquidity · sorted by VilfinTV rating', m:[['TER',function(r){ return fmtTer((r.e.x || {}).ter); }],['Size',function(r){ return fmtAum((r.e.x || {}).aum); }],['Vol.',function(r){ return r.e.vol != null ? fmtNum(r.e.vol, 1) + '%' : '–'; }],['Prem',function(r){ return fmtPrem(r.e.prem); }],['Max fall',function(r){ return r.e.mdd != null ? '<span class="neg">' + fmtNum(r.e.mdd, 1) + '%</span>' : '–'; }],['Liquidity',function(r){ return fmtTv(r.e.tv); }]]}
 };
 function filtered(){
   var rows = compute(state.bench).rows, f = state.filter.trim().toUpperCase(), minLiq = +state.liq || 0;
@@ -1471,6 +1474,8 @@ function pill(r){ return r.mode ? '<span class="pill ' + MODES[r.mode].cls + '">
 function renderTable(){
   var list = filtered(), show = list.slice(0, state.shown), sel = state.sel, V = VIEWS[state.view];
   $('countChip').textContent = list.length + ' of ' + D.etfs.length + ' ETFs';
+  var so = $('tSort').options[$('tSort').selectedIndex];
+  $('viewCap').textContent = V.cap.replace(/ · sorted.*$/, '') + (so ? ' · ' + so.text.replace(/^Sort: /, 'sorted: ') : '');
   $('thead').innerHTML = '<tr>' + V.cols.map(function(k){ var c = COLS[k]; return '<th' + (c.num ? ' class="num"' : '') + ' data-k="' + k + '"' + (c.t ? ' title="' + esc(c.t) + '"' : '') + '>' + c.n + '<span class="s">↕</span></th>'; }).join('') + '</tr>';
   document.querySelectorAll('#vseg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-v') === state.view); });
   if (!list.length){
@@ -2211,7 +2216,13 @@ function bind(){
   $('tCat').addEventListener('change', function(){ state.cat = this.value; state.shown = PAGE; renderTable(); if (state.sel && state.showAll) drawChart(); });
   $('tLiq').addEventListener('change', function(){ state.liq = this.value; state.shown = PAGE; renderTable(); });
   [['tAmc','amc'],['tHist','hist'],['tTer','ter'],['tRate','rate']].forEach(function(x){ $(x[0]).addEventListener('change', function(){ state[x[1]] = this.value; state.shown = PAGE; renderTable(); }); });
-  $('vseg').addEventListener('click', function(e){ var b = e.target.closest('[data-v]'); if (!b) return; state.view = b.getAttribute('data-v'); store('viltv_etfm_view', state.view); renderTable(); });
+  $('vseg').addEventListener('click', function(e){
+    var b = e.target.closest('[data-v]'); if (!b) return;
+    state.view = b.getAttribute('data-v'); store('viltv_etfm_view', state.view);
+    state.sort = VIEWS[state.view].sort; state.dir = LOW_FIRST[state.sort] ? 1 : -1; state.shown = PAGE;   // each view brings its own ranking
+    var o = $('tSort').querySelector('option[value="' + state.sort + '"]'); $('tSort').value = o ? state.sort : 'score';
+    renderTable();
+  });
   $('deep').addEventListener('click', function(e){
     var b = e.target.closest('#pcSeg [data-r]');
     if (b){ state.range = b.getAttribute('data-r'); document.querySelectorAll('#pcSeg button').forEach(function(x){ x.classList.toggle('on', x === b); }); drawPrice(); return; }
