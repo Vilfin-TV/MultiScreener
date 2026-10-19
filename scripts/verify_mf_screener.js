@@ -375,7 +375,8 @@ function verifyAgainstPrevious(J, C) {
 
 // portfolio holdings (data/mf/p/<sub>.json) — built monthly from fund-house disclosures
 const EQUITY_DIRECT = new Set(['large', 'largemid', 'mid', 'small', 'multi', 'flexi', 'focused', 'value', 'contra', 'elss', 'dividend',
-  'idx_large', 'idx_midsmall', 'idx_broad', 'idx_factor', 'idx_sector']);
+  'idx_large', 'idx_midsmall', 'idx_broad', 'idx_factor', 'idx_sector',
+  'idx_mid', 'idx_small', 'idx_micro', 'idx_500', 'idx_total', 'idx_eqw']);
 const DEBT_DIRECT = new Set(['overnight', 'liquid', 'money', 'ultrashort', 'lowdur', 'shortdur', 'meddur', 'medlong', 'longdur', 'dynbond',
   'corpbond', 'credit', 'bankpsu', 'gilt', 'gilt10', 'floater', 'target', 'debtidx']);
 function verifyHoldings() {
