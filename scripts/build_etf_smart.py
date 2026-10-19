@@ -203,6 +203,52 @@ def checks_for(u: ETFs, slot: str, e: dict, pool: list[dict], min_tv: float, min
     broken = [f for f in fl if not f.startswith("split")]          # unit splits are adjusted corporate actions, not errors
     c.append(["Clean price history", "reset" not in broken,
               ("no breaks in the price series" if not fl else "unit split adjusted" if not broken else "price series: " + ", ".join(broken))])
+    # ── trading quality, NAV freshness and same-index comparisons ──
+    if B and len(B["v"]) >= 20:
+        tvs = sorted(p * v for p, v in zip(B["c"][-20:], B["v"][-20:]))
+        mean_tv, med_tv = sum(tvs) / 20, (tvs[9] + tvs[10]) / 2
+        c.append(["Consistent daily volume", mean_tv <= 0 or med_tv >= 0.3 * mean_tv,
+                  f"typical day ₹{med_tv / 1e7:,.2f} cr vs average ₹{mean_tv / 1e7:,.2f} cr (a few block trades must not make up the volume)"])
+
+        def day_range(Bx):
+            rs = sorted((h - lo) / cl * 100 for h, lo, cl in zip(Bx["h"][-20:], Bx["l"][-20:], Bx["c"][-20:]) if cl > 0)
+            return rs[len(rs) // 2] if rs else None
+        mine = day_range(B)
+        peer_r = sorted(r for r in (day_range(u.daily(p["s"]) or {"h": [], "l": [], "c": []}) for p in pool
+                                    if p["s"] != e["s"] and p.get("q") == "ok") if r is not None)
+        pm = peer_r[(len(peer_r) - 1) // 2] if peer_r else None
+        floor = 0.1 if role == "debt" else 0.5
+        c.append(["Tight daily price range", mine is None or pm is None or mine <= max(pm * 1.5, pm + floor),
+                  (f"typical high-low range {mine:.2f}% a day vs {pm:.2f}% for similar ETFs (a wide range hints at a wide buy-sell spread)"
+                   if mine is not None and pm is not None else "not enough similar ETFs to compare")])
+        rets = [B["c"][i] / B["c"][i - 1] - 1 for i in range(max(1, len(B["c"]) - 250), len(B["c"])) if B["c"][i - 1] > 0]
+        jl = 0.05 if role == "debt" else 0.10
+        jumps = sum(1 for r in rets if abs(r) > jl)
+        allowed = 0 if role == "debt" else (2 if role == "core" else 4)
+        c.append(["No unusual price jumps", jumps <= allowed,
+                  f"{jumps} day{'s' if jumps != 1 else ''} with a move above {jl * 100:.0f}% in the last year (limit {allowed})"])
+    pd_, d_ = e.get("premD"), e.get("d")
+    if pd_ and d_:
+        lag = (datetime.strptime(d_, "%Y-%m-%d") - datetime.strptime(pd_, "%Y-%m-%d")).days
+        c.append(["NAV up to date", lag <= 5, f"NAV of {pd_} for a price of {d_} ({lag} day{'s' if lag != 1 else ''} apart, limit 5)"])
+    trk = ((rt or {}).get("p") or {}).get("trk")
+    if trk is not None:
+        c.append(["Tracking & pricing score", trk >= 50, f"{trk}/100 in the VilfinTV rating (tracking error, tracking difference and price vs NAV)"])
+    if role in ("core", "sat", "global"):
+        idx = (ex.get("te") or {}).get("idx")
+        same = [p for p in pool if p["s"] != e["s"] and idx and (u.ex.get(p["s"], {}).get("te") or {}).get("idx") == idx]
+
+        def med_of(vals):
+            v = sorted(x for x in vals if x is not None)
+            return v[(len(v) - 1) // 2] if v else None
+        r1, m1 = (e.get("r") or {}).get("1y"), med_of((p.get("r") or {}).get("1y") for p in same)
+        c.append(["1Y return vs same-index ETFs", r1 is None or m1 is None or r1 >= m1 - 0.75,
+                  (f"{r1:.2f}% vs {m1:.2f}% median of {len(same)} ETFs on the same index (within 0.75 pt)" if r1 is not None and m1 is not None
+                   else "no other ETF on the same index to compare")])
+        vo, mv = e.get("vol"), med_of(p.get("vol") for p in same)
+        c.append(["Volatility vs same-index ETFs", vo is None or mv is None or vo <= mv * 1.1 + 0.5,
+                  (f"{vo:.2f}% vs {mv:.2f}% median (extra swings would mean pricing noise)" if vo is not None and mv is not None
+                   else "no other ETF on the same index to compare")])
     if role in ("debt", "com"):                    # debt and gold / silver ETFs: compare with ETFs doing the same job
         def med(vals):
             v = sorted(x for x in vals if x is not None)
