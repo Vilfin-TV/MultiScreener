@@ -85,6 +85,7 @@
     '.vts-cl .v{font-variant-numeric:tabular-nums;font-size:13px;text-align:right;color:var(--text)}' +
     '.sg.pos{background:rgba(34,197,94,.15);color:#22c55e}.sg.neu{background:rgba(148,163,184,.16);color:var(--text2)}.sg.neg{background:rgba(248,113,113,.15);color:#f87171}' +
     '.vts-grid2{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px}' +
+    '@media (max-width:520px){.vts-earn th,.vts-earn td{padding:8px 4px;font-size:12px}.vts-earn th{font-size:10.5px;letter-spacing:0}.vts-earn td:first-child{white-space:normal}}' +
     '.vts-t td.fc{color:var(--text2)}.vts-t td.fc::after{content:" F";font-size:10px;font-weight:800;color:var(--accent2)}' +
     '.vts-note{font-size:12px;color:var(--text2);line-height:1.55;margin-top:10px}' +
     '@media (max-width:900px){.vts-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.vts-grid2{grid-template-columns:1fr}}' +
@@ -269,8 +270,10 @@
         }).join('') + '</tbody></table></div></div>';
     }
     var e = g.earnings || {}, er = function (lbl, x) { x = x || {}; return '<tr><td>' + lbl + '</td><td class="n">' + num(x.pe) + '</td><td class="n">' + (x.g1 != null ? num(x.g1) + '%' : '–') + '</td><td class="n">' + (x.g3 != null ? num(x.g3) + '%' : '–') + '</td><td class="n">' + (x.g5 != null ? num(x.g5) + '%' : '–') + '</td></tr>'; };
-    h += '<div class="vts-box"><h3>Company earnings</h3><p class="vts-sub">Earnings per index unit = index level ÷ P/E, compared with the same month in earlier years (3- and 5-year figures are per year).</p><div class="vts-tw"><table class="vts-t" style="min-width:0"><thead><tr><th>Index</th><th class="n">P/E</th><th class="n">1 year</th><th class="n">3 years</th><th class="n">5 years</th></tr></thead><tbody>' +
-      er('Nifty 50', e.n50) + er('Nifty 500', e.n500) + '</tbody></table></div>' +
+    h += '<div class="vts-box"><h3>Company earnings</h3><p class="vts-sub">Earnings per index unit = index level ÷ P/E, compared with the same month in earlier years (3- and 5-year figures are per year).</p><div class="vts-tw"><table class="vts-t vts-earn" style="min-width:0"><thead><tr><th>Index</th><th class="n">P/E</th><th class="n">1 year</th><th class="n">3 years</th><th class="n">5 years</th></tr></thead><tbody>' +
+      er('Nifty 50', e.n50) + er('Nifty Next 50', e.nn50) + er('Nifty Midcap 150', e.mid150) + er('Nifty Smallcap 250', e.sml250) +
+      er('Nifty Microcap 250', e.micro250) + er('Nifty 500', e.n500) + '</tbody></table></div>' +
+      (e.micro250 && e.micro250.pe != null ? '' : '<p class="vts-note" style="margin-top:6px">Nifty Microcap 250 figures appear after its history is added in the next data update.</p>') +
       '<p class="vts-note">Earnings outlook (model): over long periods company earnings tend to grow roughly in line with nominal GDP' + (g.nominalNext != null ? ', so the model uses next year\'s nominal GDP forecast of <b>' + num(g.nominalNext) + '%</b> as the expected earnings growth' : '') +
       '. This is a simple model, not a forecast of actual company results.</p></div></div>';
     h += '<p class="vts-note">GDP and inflation figures are ' + (g.src === 'wb' ? 'the latest published official international figures for India' : 'the latest official international forecasts for India, updated a few times a year') + '; earnings are updated every trading day. Economic data is often revised. For education only.</p>';
