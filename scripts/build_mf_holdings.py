@@ -100,7 +100,8 @@ SOURCES = {
 }
 # a matched portfolio must fit the fund's category (same rule as verify) — otherwise it is skipped, not published
 FIT_EQUITY = {"large", "largemid", "mid", "small", "multi", "flexi", "focused", "value", "contra", "elss", "dividend",
-              "idx_large", "idx_midsmall", "idx_broad", "idx_factor", "idx_sector"}
+              "idx_large", "idx_midsmall", "idx_broad", "idx_factor", "idx_sector",
+              "idx_mid", "idx_small", "idx_micro", "idx_500", "idx_total", "idx_eqw"}
 FIT_DEBT = {"overnight", "liquid", "money", "ultrashort", "lowdur", "shortdur", "meddur", "medlong", "longdur", "dynbond",
             "corpbond", "credit", "bankpsu", "gilt", "gilt10", "floater", "target", "debtidx"}
 

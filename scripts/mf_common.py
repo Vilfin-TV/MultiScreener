@@ -110,7 +110,7 @@ def is_direct_growth(r: dict) -> bool:
 
 # ═══════════════════════════════ CLASSIFICATION ════════════════════════════
 # bump whenever category rules change on purpose: the day-over-day audit then accepts the resulting moves
-RULES_VERSION = 4
+RULES_VERSION = 5
 
 ASSETS = ["Equity", "Debt", "Hybrid", "Commodity", "Global", "Index", "Solution"]
 
@@ -142,8 +142,11 @@ SUBS = {  # key: (asset, label)
     "gold": ("Commodity", "Gold"), "silver": ("Commodity", "Silver"), "multicomm": ("Commodity", "Gold & Silver"),
     "us": ("Global", "US Equity"), "global": ("Global", "Global / Developed"), "asia": ("Global", "Asia & Emerging"),
     "globaldebt": ("Global", "International Bonds"),
-    "idx_large": ("Index", "Large Cap Index"), "idx_midsmall": ("Index", "Mid & Small Cap Index"),
-    "idx_broad": ("Index", "Broad Market Index"), "idx_factor": ("Index", "Smart Beta / Factor"),
+    "idx_large": ("Index", "Large Cap Index"), "idx_mid": ("Index", "Mid Cap Index"), "idx_small": ("Index", "Small Cap Index"),
+    "idx_micro": ("Index", "Micro Cap Index"), "idx_midsmall": ("Index", "Mid & Small Cap Index"),
+    "idx_500": ("Index", "Nifty 500 Index"), "idx_total": ("Index", "Total Market & 1000 Index"),
+    "idx_broad": ("Index", "Broad Market Index"), "idx_eqw": ("Index", "Equal Weight Index"),
+    "idx_factor": ("Index", "Smart Beta / Factor"),
     "idx_bank": ("Index", "Bank & Financial Index"), "idx_tech": ("Index", "IT & Digital Index"),
     "idx_health": ("Index", "Healthcare & Pharma Index"), "idx_consumption": ("Index", "Consumption Index"),
     "idx_mfg": ("Index", "Manufacturing, Defence & Auto Index"), "idx_infra": ("Index", "Infrastructure & Realty Index"),
@@ -153,8 +156,11 @@ SUBS = {  # key: (asset, label)
 
 # ratings and scorecards rank a fund against this wider group (themes alone are too small for percentiles)
 IDX_THEME_SUBS = ("idx_bank", "idx_tech", "idx_health", "idx_consumption", "idx_mfg", "idx_infra", "idx_theme")
-GROUP = {k: ("sector" if k.startswith("sec_") else "idx_sector" if k in IDX_THEME_SUBS else "target" if k == "debtidx" else k)
-         for k in SUBS}
+# the split-out index categories keep ranking against their former, wider peer group
+IDX_PEER = {"idx_mid": "idx_midsmall", "idx_small": "idx_midsmall", "idx_micro": "idx_midsmall",
+            "idx_500": "idx_broad", "idx_total": "idx_broad", "idx_eqw": "idx_factor"}
+GROUP = {k: ("sector" if k.startswith("sec_") else "idx_sector" if k in IDX_THEME_SUBS else "target" if k == "debtidx"
+             else IDX_PEER.get(k, k)) for k in SUBS}
 
 
 def group(sub: str) -> str:
@@ -280,13 +286,23 @@ def _global_sub(name):
 
 
 def _index_sub(name):
+    if re.search(r"equal ?weight", name, re.I):
+        return "idx_eqw"
     if RX_FACTOR.search(name):
         return "idx_factor"
     if RX_IDX_SECTOR.search(name):
         return _theme(name, IDX_THEMES, "idx_theme")
     if RX_MIDSMALL.search(name) and not re.search(r"large ?mid|largemid", name, re.I):
-        return "idx_midsmall"
+        if re.search(r"micro ?cap", name, re.I):
+            return "idx_micro"
+        if re.search(r"mid ?small|midsmall|\b400\b", name, re.I):
+            return "idx_midsmall"
+        return "idx_small" if re.search(r"small ?cap", name, re.I) else "idx_mid"
     if RX_BROAD.search(name):
+        if re.search(r"total market|nifty total|1000", name, re.I):
+            return "idx_total"
+        if re.search(r"nifty ?500\b|bse ?500\b|nifty india 500", name, re.I) and not re.search(r"multi ?cap", name, re.I):
+            return "idx_500"
         return "idx_broad"
     if RX_LARGE.search(name):
         return "idx_large"

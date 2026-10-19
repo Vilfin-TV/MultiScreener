@@ -539,7 +539,8 @@ TAX = {
 }
 
 EQUITY_SUBS = {"large", "largemid", "mid", "small", "multi", "flexi", "focused", "value", "contra", "divyield", "sector",
-               "idx_large", "idx_midsmall", "idx_broad", "idx_factor", "idx_sector", "aggressive", "baf", "eqsavings",
+               "idx_large", "idx_midsmall", "idx_broad", "idx_factor", "idx_sector",
+               "idx_mid", "idx_small", "idx_micro", "idx_500", "idx_total", "idx_eqw", "aggressive", "baf", "eqsavings",
                "arbitrage"}
 DEBT_SUBS = {"debtidx", "overnight", "liquid", "ultrashort", "lowdur", "money", "shortdur", "meddur", "medlong", "longdur",
              "dynbond", "corpbond", "credit", "bankpsu", "gilt", "gilt10", "floater", "target", "debtfof", "conservative"}

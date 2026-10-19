@@ -87,6 +87,7 @@ SUB_BENCH = {
     "large": "n100", "largemid": "lm250", "mid": "mid150", "small": "sml250", "multi": "n500", "flexi": "n500",
     "focused": "n500", "value": "n500", "contra": "n500", "divyield": "n500", "elss": "n500", "sector": "n500",
     "eqfof": "n500", "idx_large": "n50", "idx_broad": "n500", "idx_factor": "n500", "idx_sector": "n500",
+    "idx_mid": "mid150", "idx_small": "sml250", "idx_500": "n500", "idx_total": "n500", "idx_eqw": "n500",
     "aggressive": "n50", "baf": "n50", "multiasset": "n50", "eqsavings": "n50", "balanced": "n50",
     "retire": "n50", "child": "n50", "lifecycle": "n50", "us": "us",
 }
