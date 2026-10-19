@@ -1354,20 +1354,56 @@ def build_view(store: dict, eng: Engine) -> dict:
     return out
 
 
+def account_detail(a: dict, valued: bool, sub_names: dict) -> dict:
+    """Per-account summary for the public card (only when the audit passed): what is held, units, average cost, latest
+    official price, value and gain, orders still waiting for their price, and the next scheduled buy. Full transaction
+    history, cash ledger and statements stay on the private page."""
+    mf = a["product"] == "mf"
+    tot = sum(h["value"] for h in a["holdings"]) or 0
+    hold = []
+    for h in sorted(a["holdings"], key=lambda h: -h["value"]):
+        hold.append({"n": h["name"], "k": h["key"], "cat": (sub_names.get(h["category"]) or h["category"]) if mf else h["category"],
+                     "u": h["units"], "avg": h["avg"], "px": h["price"], "pd": h["priceDate"], "val": h["value"],
+                     "g": round((h["value"] / h["cost"] - 1) * 100, 2) if h["cost"] else None,
+                     "w": round(h["value"] / tot * 100, 1) if tot else None,
+                     "pu": round(h["units"] - h["credited"], 6) if h["credited"] < h["units"] - 1e-9 else 0})
+    pend = [{"n": t["name"], "amt": t["amount"], "T": t["T"], "st": t["status"]} for t in a["txns"]
+            if t["side"] == "buy" and t.get("units") is None and t.get("amount")]
+    nxt = None
+    try:
+        today = datetime.now(IST).date()
+        nxt = next((d2.isoformat() for _, d2 in schedule(a["freq"], today + timedelta(days=400)) if d2 > today), None)
+    except Exception:  # noqa: BLE001
+        pass
+    out = {"inv": r2(a["invested"]), "val": r2(a["value"]) if valued else None, "gain": r2(a["value"] - a["invested"]) if valued else None,
+           "bench": round((a["benchValue"] / a["invested"] - 1) * 100, 2) if valued and a.get("benchValue") else None,
+           "asOf": a["valuationDate"], "next": nxt, "hold": hold, "pend": pend[:12]}
+    if not mf:
+        out["cash"] = a.get("cash")
+    return out
+
+
 def scoreboard(view: dict, audit_ok: bool) -> dict:
     """Public strip data: every account with its model, buying schedule and return % only (absolute under one year,
     XIRR after). Accounts not yet valued (before the start date / first allotment) carry ret = None."""
     rows = []
+    try:
+        sub_names = {k: v[1] for k, v in json.loads((DATA / "mf" / "screener.json").read_text())["subs"].items()}
+    except Exception:  # noqa: BLE001
+        sub_names = {}
     for a in view["accounts"]:
         valued = bool(a["valuationDate"] and a["invested"] and a["holdings"] and a["valuationDate"] >= view["start"])
         absr = (a["value"] / a["invested"] - 1) * 100 if valued else None
-        rows.append({"name": a["name"], "product": a["product"], "risk": a["riskName"], "freq": a["freqName"],
-                     "amt": a["amount"], "nri": a["res"] == "nri", "since": view["start"], "days": a["days"] if valued else 0,
-                     "metric": "xirr" if valued and a["days"] >= 365 else "abs",
-                     "ret": (round((a["xirr"] or 0) * 100, 2) if a["days"] >= 365 else round(absr, 2)) if valued and audit_ok else None})
+        row = {"name": a["name"], "product": a["product"], "risk": a["riskName"], "freq": a["freqName"],
+               "amt": a["amount"], "nri": a["res"] == "nri", "since": view["start"], "days": a["days"] if valued else 0,
+               "metric": "xirr" if valued and a["days"] >= 365 else "abs",
+               "ret": (round((a["xirr"] or 0) * 100, 2) if a["days"] >= 365 else round(absr, 2)) if valued and audit_ok else None}
+        if audit_ok:
+            row["detail"] = account_detail(a, valued, sub_names)
+        rows.append(row)
     # dated by the market data, not the run time — an unchanged scoreboard must not create a new commit every run
     asof = max([a["valuationDate"] for a in view["accounts"] if a.get("valuationDate")] or [min(view.get("mfAsOf") or "", view.get("etfAsOf") or "") or view["start"]])
-    return {"v": 2, "updated": asof, "start": view["start"], "auditOk": audit_ok, "rows": rows}
+    return {"v": 3, "updated": asof, "start": view["start"], "auditOk": audit_ok, "rows": rows}
 
 
 def main() -> int:

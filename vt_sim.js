@@ -374,10 +374,41 @@
           return started ? (sb.auditOk === false ? 'Under review' : 'Buy in progress') : 'Starts ' + d(sb.start).replace(/ \d{4}$/, '');
         };
         var cls = function (r) { return r.ret == null ? ' na' : r.ret >= 0 ? ' up' : ' dn'; };
-        var card = function (r) {
-          return '<div class="vts-buy-c" role="listitem"><div class="vts-buy-who"><div><b>' + esc(r.name) + '</b>' + (r.nri ? '<i class="vts-buy-nri">NRI</i>' : '') + '</div>' +
+        var head = function (r) {
+          return '<div class="vts-buy-who"><div><b>' + esc(r.name) + '</b>' + (r.nri ? '<i class="vts-buy-nri">NRI</i>' : '') + '</div>' +
             '<span>10+ yr ' + esc(r.risk) + ' · ' + esc(r.freq) + (r.amt ? ' ' + inr(r.amt) : '') + '</span></div><strong class="' + cls(r).trim() + '">' + retTxt(r) +
-            (r.ret != null ? '<small>' + (r.metric === 'xirr' ? 'XIRR' : 'abs') + '</small>' : '') + '</strong></div>';
+            (r.ret != null ? '<small>' + (r.metric === 'xirr' ? 'XIRR' : 'abs') + '</small>' : '') + '</strong>';
+        };
+        var num = function (v, dp) { return v == null ? '–' : Number(v).toLocaleString('en-IN', { minimumFractionDigits: dp, maximumFractionDigits: dp }); };
+        var sgn = function (v, suf) { return v == null ? '–' : '<span class="' + (v >= 0 ? 'up' : 'dn') + '">' + (v > 0 ? '+' : '') + v.toFixed(2) + suf + '</span>'; };
+        var money = function (v) { return v == null ? '–' : '₹' + num(v, 2); };
+        var body = function (r) {
+          var x = r.detail, mf = prod === 'mf', h = '<div class="vts-acc-b">';
+          var k = [['Invested', money(x.inv)], ['Value', money(x.val)],
+                   ['Gain / loss', x.gain == null ? '–' : '<span class="' + (x.gain >= 0 ? 'up' : 'dn') + '">' + (x.gain >= 0 ? '+' : '−') + '₹' + num(Math.abs(x.gain), 2) + '</span>'],
+                   ['Same money in Nifty 50', sgn(x.bench, '%')],
+                   ['Next buy', x.next ? d(x.next) : (r.freq === 'One-time' ? 'One-time (done)' : '–')]];
+          if (!mf) k.push(['Cash left (next buy)', money(x.cash)]);
+          h += '<div class="vts-acc-k">' + k.map(function (q) { return '<div><span>' + q[0] + '</span><b>' + q[1] + '</b></div>'; }).join('') + '</div>';
+          if (x.hold && x.hold.length) {
+            h += '<div class="vts-acc-t" role="table" aria-label="Holdings"><div class="vts-acc-r vts-acc-hd" role="row"><span>' + (mf ? 'Fund' : 'ETF') + '</span><span>Units</span><span>Avg cost</span><span>' + (mf ? 'NAV' : 'Close') + '</span><span>Value</span><span>Gain</span><span>Share</span></div>' +
+              x.hold.map(function (o) {
+                return '<div class="vts-acc-r" role="row"><span class="vts-acc-n"><b>' + esc(o.n) + '</b><small>' + esc(mf ? (o.cat || '') : o.k + (o.cat ? ' · ' + o.cat : '')) + (o.pu ? ' · <em>' + num(o.pu, mf ? 3 : 0) + ' units being credited</em>' : '') + '</small></span>' +
+                  '<span data-l="Units">' + num(o.u, mf ? 3 : 0) + '</span><span data-l="Avg cost">₹' + num(o.avg, mf ? 4 : 2) + '</span>' +
+                  '<span data-l="' + (mf ? 'NAV' : 'Close') + '">₹' + num(o.px, mf ? 4 : 2) + (o.pd ? '<small>' + d(o.pd).replace(/ \d{4}$/, '') + '</small>' : '') + '</span>' +
+                  '<span data-l="Value">₹' + num(o.val, 0) + '</span><span data-l="Gain">' + sgn(o.g, '%') + '</span><span data-l="Share">' + (o.w == null ? '–' : o.w.toFixed(1) + '%') + '</span></div>';
+              }).join('') + '</div>';
+          }
+          if (x.pend && x.pend.length)
+            h += '<div class="vts-acc-p"><b>Waiting for price</b>' + x.pend.map(function (o) { return '<div>' + esc(o.n) + ' · ' + inr(Math.round(o.amt)) + ' · ordered ' + d(o.T).replace(/ \d{4}$/, '') + ' — ' + esc(o.st) + '</div>'; }).join('') + '</div>';
+          if ((!x.hold || !x.hold.length) && (!x.pend || !x.pend.length)) h += '<p class="vts-acc-e">No purchases yet — the first buy is on ' + esc(d(sb.start)) + '.</p>';
+          h += '<p class="vts-acc-e">Values as of ' + (x.asOf ? esc(d(x.asOf)) : '–') + ' at official ' + (mf ? 'NAVs' : 'closing prices') + ' · simulation, not real money.</p></div>';
+          return h;
+        };
+        var card = function (r) {
+          if (!r.detail) return '<div class="vts-buy-c" role="listitem">' + head(r) + '</div>';
+          return '<details class="vts-acc" role="listitem"><summary class="vts-buy-c" aria-label="' + esc(r.name) + ' — show holdings and units">' + head(r) +
+            '<i class="vts-acc-x" aria-hidden="true">▾</i></summary>' + body(r) + '</details>';
         };
         var best = rows.filter(function (r) { return r.ret != null; })[0];
         var peek = best ? 'Top: ' + esc(best.name) + ' ' + retTxt(best) + ' · ' + rows.length + ' accounts'
@@ -427,6 +458,22 @@
     '.vts-buy-c strong{font-variant-numeric:tabular-nums;font-size:13px;text-align:right;white-space:nowrap}.vts-buy-c strong small{display:block;font-size:10px;color:var(--text2);font-weight:600}' +
     '.vts-buy .up{color:#16a34a}.vts-buy .dn{color:#dc2626}.vts-buy .na{color:var(--text2);font-weight:600;font-size:12px}' +
     '.vts-buy-n{margin:8px 0 0;font-size:11px;color:var(--text3,var(--text2))}' +
+    '.vts-acc{min-width:0}.vts-acc[open]{grid-column:1/-1}.vts-acc>summary{list-style:none;cursor:pointer}.vts-acc>summary::-webkit-details-marker{display:none}' +
+    '.vts-acc>summary:hover{border-color:var(--accent,#4a90e2)}.vts-acc>summary:focus-visible{outline:2px solid var(--accent,#4a90e2);outline-offset:1px}' +
+    '.vts-acc-x{font-style:normal;color:var(--text2);font-size:12px;transition:transform .15s;margin-left:-2px}.vts-acc[open] .vts-acc-x{transform:rotate(180deg)}' +
+    '.vts-acc[open]>summary{border-bottom-left-radius:0;border-bottom-right-radius:0;border-color:var(--accent,#4a90e2)}' +
+    '.vts-acc-b{border:1px solid var(--accent,#4a90e2);border-top:none;border-radius:0 0 10px 10px;padding:10px 12px 8px;background:var(--surface,transparent)}' +
+    '.vts-acc-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px}.vts-acc-k div{border:1px solid var(--border);border-radius:8px;padding:6px 9px;min-width:0}' +
+    '.vts-acc-k span{display:block;font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}.vts-acc-k b{font-size:13px;font-variant-numeric:tabular-nums}' +
+    '.vts-acc-r{display:grid;grid-template-columns:minmax(0,2.6fr) repeat(6,minmax(0,1fr));gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--border);font-size:12.5px;font-variant-numeric:tabular-nums}' +
+    '.vts-acc-r>span:not(.vts-acc-n){text-align:right}.vts-acc-r small{display:block;font-size:10.5px;color:var(--text2);font-weight:500}.vts-acc-r em{font-style:normal;color:#d97706}' +
+    '.vts-acc-hd>span:first-child{text-align:left!important}.vts-acc-hd{border-top:none;font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em;font-weight:700}' +
+    '.vts-acc-n{min-width:0}.vts-acc-n b{display:block;font-size:12.5px;line-height:1.3;overflow-wrap:anywhere}' +
+    '.vts-acc-p{margin-top:8px;font-size:12px;color:var(--text2);line-height:1.6}.vts-acc-p b{display:block;color:var(--text);font-size:12px}' +
+    '.vts-acc-e{margin:8px 0 0;font-size:11px;color:var(--text3,var(--text2))}' +
+    '@media (max-width:700px){.vts-acc-hd{display:none}.vts-acc-r{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:6px;padding:9px 0}.vts-acc-n{grid-column:1/-1}' +
+    '.vts-acc-r>span:not(.vts-acc-n){text-align:left}.vts-acc-r>span[data-l]::before{content:attr(data-l);display:block;font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}' +
+    '.vts-acc-k{grid-template-columns:repeat(2,minmax(0,1fr))}}' +
     '@media (max-width:520px){.vts-buy{padding:12px}.vts-buy-h{margin:-12px;padding:12px}.vts-buy-g{grid-template-columns:1fr}' +
     '.vts-buy-t1>b{order:0}.vts-buy-tg{order:1}.vts-buy-badge{order:2}.vts-buy-peek{order:3;flex-basis:100%}.vts-buy:not([open]) .vts-buy-sub{display:none}}' +
     '';
