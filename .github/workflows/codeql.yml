@@ -1,0 +1,67 @@
+name: CodeQL
+
+# Code scanning for the site's own code (JavaScript in pages / workers, Python build scripts, workflows).
+# Runs only when code changes — not on the frequent automated data commits — plus a weekly full scan.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.js'
+      - '**/*.py'
+      - '**/*.html'
+      - '.github/workflows/**'
+      - '!data/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**/*.js'
+      - '**/*.py'
+      - '**/*.html'
+      - '.github/workflows/**'
+      - '!data/**'
+  schedule:
+    - cron: '37 21 * * 0'        # Monday 03:07 IST, weekly
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, python, actions]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/data/
+            !/stories/
+            !/kids/
+            !/images/
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          config: |
+            paths-ignore:
+              - data
+              - stories
+              - kids
+              - images
+              - '**/*.min.js'
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:${{ matrix.language }}
