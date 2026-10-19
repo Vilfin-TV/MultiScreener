@@ -2,11 +2,15 @@ name: Simulator Buy Ledger
 
 # Simulator Buy: model-portfolio tracking accounts of VilfinTV agents (scripts/sim_config.json).
 # The ledger lives ONLY in the private R2 bucket "vilfintv-sim" — never in this public repository.
-#   1. download sim/ledger.json from R2 (refuse to start a fresh ledger when data/sim_meta.json says one exists)
+#   1. find a trusted ledger copy (scripts/sim_restore.py): main copy → backup bucket → dated copies → encrypted off-site
+#      copy; a copy is trusted only if its hash chain verifies and it continues the published head. Never starts over.
 #   2. scripts/sim_engine.py: plan snapshot, new orders, allotments / fills at official NAVs and closes, reviews, valuation
 #   3. scripts/audit_sim.py: independent audit — any error stops here and nothing is published
-#   4. upload ledger / view / audit + a dated permanent copy to R2
+#   4. upload ledger / view / audit + a dated permanent copy to R2, a copy to the backup bucket and (when the
+#      SIM_BACKUP_KEY secret is set) an encrypted off-site copy as a workflow artifact
 #   5. commit only the public marker (event count + head hash) and the return-% scoreboard
+# Outages (GitHub, Cloudflare, data sources): any later run catches up every missed date at that date's own prices —
+# a run every 3 hours makes sure that happens soon after the service is back.
 on:
   workflow_run:
     workflows: ["India MF Screener Data", "ETF Momentum Mode Data"]
@@ -17,14 +21,17 @@ on:
       - 'scripts/sim_engine.py'
       - 'scripts/sim_config.json'
       - 'scripts/audit_sim.py'
+      - 'scripts/sim_restore.py'
       - 'scripts/sim_xirr.js'
       - '.github/workflows/sim_ledger.yml'
   schedule:
     - cron: '25 16 * * *'        # 21:55 IST daily fallback
+    - cron: '7 */3 * * *'        # safety run every 3 hours: catches up after any outage (runs are idempotent)
   workflow_dispatch:
 
 permissions:
   contents: write
+  actions: read                  # list / download the encrypted off-site copies of earlier runs
 
 concurrency:
   group: sim-ledger
@@ -53,20 +60,13 @@ jobs:
           pip install -q requests
           npm install -g wrangler@3
 
-      - name: Download the ledger from private storage
+      - name: Find a trusted ledger copy (main → backup → dated → off-site)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SIM_BACKUP_KEY: ${{ secrets.SIM_BACKUP_KEY }}
         run: |
           mkdir -p "$RUNNER_TEMP/sim"
-          if wrangler r2 object get vilfintv-sim/sim/ledger.json --file "$RUNNER_TEMP/sim/ledger.json" > "$RUNNER_TEMP/sim/get.log" 2>&1; then
-            echo "ledger downloaded: $(wc -c < "$RUNNER_TEMP/sim/ledger.json") bytes"
-          else
-            cat "$RUNNER_TEMP/sim/get.log"
-            if [ -f data/sim_meta.json ] && python -c "import json,sys; sys.exit(0 if json.load(open('data/sim_meta.json')).get('events',0) > 0 else 1)"; then
-              echo "::error::A ledger exists (data/sim_meta.json) but could not be downloaded — stopping so it is never replaced by a fresh one."
-              exit 1
-            fi
-            echo "No ledger yet — starting a new one."
-            rm -f "$RUNNER_TEMP/sim/ledger.json"
-          fi
+          python scripts/sim_restore.py --out "$RUNNER_TEMP/sim/ledger.json"
 
       - name: Check the ledger continues the published one
         run: |
@@ -96,15 +96,36 @@ jobs:
         if: failure() && steps.audit.outcome == 'failure'
         run: wrangler r2 object put vilfintv-sim/sim/audit.json --file "$RUNNER_TEMP/sim/audit.json" --content-type application/json || true
 
-      - name: Store ledger, statements and audit (private) + dated permanent copy
+      - name: Store ledger, statements and audit (private) + dated copy + backup bucket
         run: |
           d=$(TZ=Asia/Kolkata date +%F)
+          out=$(wrangler r2 bucket create vilfintv-sim-backup 2>&1) || echo "$out" | grep -qi "already exists\|10004" || echo "::warning::backup bucket: $out"
           for f in ledger view audit; do
             wrangler r2 object put "vilfintv-sim/sim/snapshots/$d/$f.json" --file "$RUNNER_TEMP/sim/$f.json" --content-type application/json
           done
+          wrangler r2 object put "vilfintv-sim-backup/sim/ledger.json" --file "$RUNNER_TEMP/sim/ledger.json" --content-type application/json \
+            || echo "::warning::backup bucket copy failed (the dated copy and the main copy still hold the ledger)"
           for f in ledger view audit; do
             wrangler r2 object put "vilfintv-sim/sim/$f.json" --file "$RUNNER_TEMP/sim/$f.json" --content-type application/json
           done
+
+      - name: Encrypted off-site copy (only when the SIM_BACKUP_KEY secret is set)
+        id: enc
+        env:
+          SIM_BACKUP_KEY: ${{ secrets.SIM_BACKUP_KEY }}
+        run: |
+          if [ -z "$SIM_BACKUP_KEY" ]; then echo "SIM_BACKUP_KEY not set — off-site copy skipped"; exit 0; fi
+          mkdir -p "$RUNNER_TEMP/offsite"
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:SIM_BACKUP_KEY \
+            -in "$RUNNER_TEMP/sim/ledger.json" -out "$RUNNER_TEMP/offsite/ledger.json.enc"
+          echo "made=1" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.enc.outputs.made == '1'
+        with:
+          name: sim-ledger-backup
+          path: ${{ runner.temp }}/offsite/ledger.json.enc
+          retention-days: 30
 
       - name: Public marker + scoreboard (return % only)
         run: |
