@@ -112,7 +112,7 @@ def is_direct_growth(r: dict) -> bool:
 
 # ═══════════════════════════════ CLASSIFICATION ════════════════════════════
 # bump whenever category rules change on purpose: the day-over-day audit then accepts the resulting moves
-RULES_VERSION = 5
+RULES_VERSION = 6
 
 ASSETS = ["Equity", "Debt", "Hybrid", "Commodity", "Global", "Index", "Solution"]
 
@@ -149,15 +149,23 @@ SUBS = {  # key: (asset, label)
     "idx_500": ("Index", "Nifty 500 Index"), "idx_total": ("Index", "Total Market & 1000 Index"),
     "idx_broad": ("Index", "Broad Market Index"), "idx_eqw": ("Index", "Equal Weight Index"),
     "idx_factor": ("Index", "Smart Beta / Factor"),
-    "idx_bank": ("Index", "Bank & Financial Index"), "idx_tech": ("Index", "IT & Digital Index"),
-    "idx_health": ("Index", "Healthcare & Pharma Index"), "idx_consumption": ("Index", "Consumption Index"),
-    "idx_mfg": ("Index", "Manufacturing, Defence & Auto Index"), "idx_infra": ("Index", "Infrastructure & Realty Index"),
-    "idx_theme": ("Index", "Other Sectoral / Thematic Index"),
+    "idx_bank": ("Index", "Bank Index"), "idx_finsvc": ("Index", "Financial Services Index"),
+    "idx_capmkt": ("Index", "Capital Markets Index"), "idx_tech": ("Index", "IT Index"),
+    "idx_digital": ("Index", "Digital & Internet Index"), "idx_health": ("Index", "Healthcare & Pharma Index"),
+    "idx_consumption": ("Index", "Consumption Index"), "idx_tourism": ("Index", "Tourism Index"),
+    "idx_mfg": ("Index", "Manufacturing Index"), "idx_auto": ("Index", "Auto Index"), "idx_defence": ("Index", "Defence Index"),
+    "idx_infra": ("Index", "Infrastructure Index"), "idx_housing": ("Index", "Housing Index"),
+    "idx_realty": ("Index", "Realty & REITs Index"), "idx_energy": ("Index", "Energy & Power Index"),
+    "idx_commod": ("Index", "Commodities & Chemicals Index"), "idx_psu": ("Index", "PSU Index"),
+    "idx_leaders": ("Index", "Sector Leaders & Business Groups Index"),
+    "idx_theme": ("Index", "Other Thematic Index"),
     "retire": ("Solution", "Retirement"), "child": ("Solution", "Children's"), "lifecycle": ("Solution", "Life Cycle"),
 }
 
 # ratings and scorecards rank a fund against this wider group (themes alone are too small for percentiles)
-IDX_THEME_SUBS = ("idx_bank", "idx_tech", "idx_health", "idx_consumption", "idx_mfg", "idx_infra", "idx_theme")
+IDX_THEME_SUBS = ("idx_bank", "idx_finsvc", "idx_capmkt", "idx_tech", "idx_digital", "idx_health", "idx_consumption",
+                  "idx_tourism", "idx_mfg", "idx_auto", "idx_defence", "idx_infra", "idx_housing", "idx_realty", "idx_energy",
+                  "idx_commod", "idx_psu", "idx_leaders", "idx_theme")
 # the split-out index categories keep ranking against their former, wider peer group
 IDX_PEER = {"idx_mid": "idx_midsmall", "idx_small": "idx_midsmall", "idx_micro": "idx_midsmall",
             "idx_500": "idx_broad", "idx_total": "idx_broad", "idx_eqw": "idx_factor"}
@@ -247,12 +255,24 @@ SEC_THEMES = [  # first match wins
     ("sec_innov", r"innovat|pioneer|\bipo\b|opportunit|special|services"),
 ]
 IDX_THEMES = [
-    ("idx_bank", r"bank|financ|capital market"),
-    ("idx_tech", r"\bit\b|niftyit|information technology|digital|internet"),
+    ("idx_capmkt", r"capital market"),
+    ("idx_finsvc", r"financ"),                       # before "bank": "Financial Services Ex-Bank"
+    ("idx_bank", r"bank"),
+    ("idx_digital", r"digital|internet"),
+    ("idx_tech", r"\bit\b|niftyit|information technology"),
     ("idx_health", r"health|pharma|hospital"),
     ("idx_consumption", r"consum"),
-    ("idx_mfg", r"manufactur|defen[cs]e|\bauto\b|automotive"),
-    ("idx_infra", r"infra|housing|realty|reit|railway|clean environment|power"),
+    ("idx_tourism", r"tourism"),
+    ("idx_defence", r"defen[cs]e"),
+    ("idx_auto", r"\bauto\b|automotive"),
+    ("idx_mfg", r"manufactur"),
+    ("idx_housing", r"housing"),
+    ("idx_realty", r"realty|reit|real estate"),
+    ("idx_psu", r"railway|\bpsu\b|\bpse\b"),
+    ("idx_infra", r"infra|clean environment"),
+    ("idx_energy", r"energy|power|oil|gas\b"),
+    ("idx_commod", r"commodit|chemical|metal"),
+    ("idx_leaders", r"sector leaders|business group"),
 ]
 # a sector / theme word in an index name wins over its size words ("Nifty MidSmall Healthcare", "Nifty500 Multicap Infrastructure")
 RX_IDX_SECTOR = re.compile(r"bank|financ|capital market|\bit\b|niftyit|information technology|digital|internet|health|pharma|"
