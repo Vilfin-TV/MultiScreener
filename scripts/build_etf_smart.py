@@ -31,6 +31,7 @@ import json
 import logging
 import os
 import re
+import statistics as st
 import sys
 from datetime import date, datetime, timezone
 
@@ -114,6 +115,7 @@ class ETFs:
         self._daily = {}
         h = json.load(open(os.path.join(DATA, "etf_hist.json")))
         self.hist = {k: [x for x in v if x is not None] for k, v in (h.get("etfs") or {}).items()}
+        self.weeks, self.hist_raw = h.get("weeks") or [], h.get("etfs") or {}
         self.years = {e["s"]: ((ad - datetime.strptime(e["first"], "%Y-%m-%d")).days / 365.25 if e.get("first") else 0)
                       for e in self.etfs}
 
@@ -201,6 +203,31 @@ def checks_for(u: ETFs, slot: str, e: dict, pool: list[dict], min_tv: float, min
     broken = [f for f in fl if not f.startswith("split")]          # unit splits are adjusted corporate actions, not errors
     c.append(["Clean price history", "reset" not in broken,
               ("no breaks in the price series" if not fl else "unit split adjusted" if not broken else "price series: " + ", ".join(broken))])
+    if role in ("debt", "com"):                    # debt and gold / silver ETFs: compare with ETFs doing the same job
+        def med(vals):
+            v = sorted(x for x in vals if x is not None)
+            return v[(len(v) - 1) // 2] if v else None
+        peers = [p for p in pool if p.get("q") == "ok"] or pool
+        r1, m1 = (e.get("r") or {}).get("1y"), med((p.get("r") or {}).get("1y") for p in peers)
+        tol = 0.5 if role == "debt" else 1.5
+        c.append(["1Y return vs similar ETFs", r1 is None or m1 is None or r1 >= m1 - tol,
+                  (f"{r1:.2f}% vs {m1:.2f}% median (within {tol:g} pt)" if r1 is not None and m1 is not None else "not enough history to compare")])
+        vo, mv = e.get("vol"), med(p.get("vol") for p in peers)
+        c.append(["Volatility vs similar ETFs", vo is None or mv is None or vo <= max(mv * 1.15, mv + (0.3 if role == "debt" else 1.0)),
+                  (f"{vo:.2f}% vs {mv:.2f}% median" if vo is not None and mv is not None else "not enough history to compare")])
+        md, mm = e.get("mdd"), med(p.get("mdd") for p in peers)
+        dlim = 1.0 if role == "debt" else 3.0
+        c.append(["Worst fall vs similar ETFs", md is None or mm is None or md >= mm - dlim,
+                  (f"{md:.1f}% vs {mm:.1f}% median (within {dlim:g} pt)" if md is not None and mm is not None else "not enough history to compare")])
+        if role == "debt":
+            hs = u.weekly(e["s"])[-53:]
+            pk, wd = 0.0, 0.0
+            for v in hs:
+                pk = max(pk, v)
+                wd = min(wd, v / pk - 1) if pk else wd
+            lim = -0.5 if slot == "liquid" else -4.0
+            c.append(["Stable over the last year", not hs or wd * 100 >= lim,
+                      f"worst weekly-close fall {wd * 100:.2f}% in a year (limit {lim:g}%)" if hs else "not enough history"])
     if role == "sat":
         hs = u.weekly(e["s"])
         ok, why = True, "not enough history — not judged"
@@ -251,6 +278,68 @@ def pick(u: ETFs, slot: str, pattern: str | None, prev: str | None, min_tv=None,
     alts = [r["e"]["s"] for r in scored if r is not best and r["ok"]][:2]
     return {"sym": best["e"]["s"], "score": best["score"], "checks": best["checks"], "state": state, "alts": alts,
             "pool": len(pool), "passed": sum(1 for r in scored if r["ok"])}
+
+
+def risk10(vol, mdd):
+    """Risk score out of 10 (0 = no price swings): 60% annual volatility (25% or more = full) + 40% worst fall (40% or more = full)."""
+    if vol is None and mdd is None:
+        return None
+    v = min((vol or 0) / 25, 1) if vol is not None else min(abs(mdd) / 40, 1)
+    d = min(abs(mdd or 0) / 40, 1) if mdd is not None else v
+    return round(10 * (0.6 * v + 0.4 * d), 1)
+
+
+def mix_drawdown(u: ETFs, w: dict, slots_out: dict) -> dict | None:
+    """Worst peak-to-trough fall of the ETFs held together (weekly closes, rebalanced to the plan weights every week)
+    over the weekly history on file. Before an ETF started trading, the longest-running ETF of the same category stands
+    in for it (`proxy`); ETFs still without a price on a week are left out and the rest re-weighted, and the series starts
+    once ETFs worth >= 80% of the plan have prices."""
+    held = [(slots_out[k]["sym"], v, k) for k, v in w.items() if v > 0 and slots_out[k].get("sym")]
+    cat = {e["s"]: e.get("k") for e in u.etfs}
+    cnt = lambda x: sum(1 for p in (u.hist_raw.get(x) or []) if p)  # noqa: E731
+
+    def peers(k, sym):                             # ETFs doing the same job: the slot's own pool, else the same category
+        try:
+            pool = u.pool(k) if k in SLOTS or k in ("gold", "silver", "liquid") else []
+        except Exception:  # noqa: BLE001
+            pool = []
+        return [e["s"] for e in pool or [e for e in u.etfs if e.get("k") == cat.get(sym)] if e["s"] != sym]
+    stand = {sym: max(peers(k, sym), key=cnt, default=None) for sym, _, k in held}
+    held = [(sym, v) for sym, v, _ in held]
+    proxied = False
+    tot = sum(v for _, v in held)
+    if not held or not u.weeks:
+        return None
+    val = peak = 1.0
+    rets = []
+    worst, wpk, wtr, first, pk_i = 0.0, None, None, None, None
+    for i in range(1, len(u.weeks)):
+        rs = []
+        for sym, v in held:
+            for src in (sym, stand.get(sym)):
+                h = u.hist_raw.get(src) or [] if src else []
+                a, b = (h[i - 1], h[i]) if i < len(h) else (None, None)
+                if a and b:
+                    rs.append((v, b / a - 1))
+                    proxied = proxied or src != sym
+                    break
+        cw = sum(v for v, _ in rs)
+        if not rs or (first is None and cw < 0.8 * tot):
+            continue
+        if first is None:
+            first = pk_i = i - 1
+        pr = sum(v * r for v, r in rs) / cw
+        rets.append(pr)
+        val *= 1 + pr
+        if val > peak:
+            peak, pk_i = val, i
+        if val / peak - 1 < worst:
+            worst, wpk, wtr = val / peak - 1, pk_i, i
+    if first is None:
+        return None
+    vol = st.pstdev(rets) * 52 ** 0.5 * 100 if len(rets) > 10 else None
+    return {"v": round(worst * 100, 1) + 0.0, "vol": round(vol, 1) if vol is not None else None, "peak": u.weeks[wpk] if wpk is not None else None, "trough": u.weeks[wtr] if wtr is not None else None,
+            "from": u.weeks[first], "years": round((len(u.weeks) - 1 - first) / 52.18, 1), "proxy": proxied}
 
 
 def global_note(u: ETFs) -> str:
@@ -466,11 +555,21 @@ def main() -> int:
         ter = sum(v * slots_out[k]["ter"] for k, v in w.items()) / 100
         plans[pid] = {"horizon": p["horizon"], "risk": p["risk"], "years": yrs, "yearsMin": p.get("yearsMin"),
                       "yearsMax": p.get("yearsMax"), "slots": [{"id": k, "w": v} for k, v in w.items()],
-                      "mix": assets, "er": round(er, 2), "ter": round(ter, 3), "overlay": overlay}
+                      "mix": assets, "er": round(er, 2), "ter": round(ter, 3), "overlay": overlay,
+                      "mdd": (mdd := mix_drawdown(u, w, slots_out)),
+                      "risk10": risk10((mdd or {}).get("vol"), (mdd or {}).get("v")),
+                      "points10": round(sum(v * (slots_out[k].get("score") or 0) for k, v in w.items()) / max(1, sum(w.values())) / 10, 1)}
     used = {s["id"] for p in plans.values() for s in p["slots"]}
     slots_out = {k: v for k, v in slots_out.items() if k in used}
+    by = {e["s"]: e for e in u.etfs}
     for v in slots_out.values():
         v["taxNote"] = TAX_NOTE[v["tax"]]
+        e = by.get(v.get("sym")) or {}
+        k = next(kk for kk, vv in slots_out.items() if vv is v)
+        own = mix_drawdown(u, {k: 100}, slots_out) or {}      # same window as the mix (stand-in before listing)
+        v["hist"] = {"v": own.get("v"), "vol": own.get("vol")} if own else None
+        v["risk10"] = risk10(own.get("vol"), own.get("v")) if own else risk10(e.get("vol"), e.get("mdd"))
+        v["pts10"] = round(v["score"] / 10, 1) if v.get("score") is not None else None
     payload = {
         "v": 1, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "asOf": u.asof,
         "reviewed": review, "nextReview": ss.get("nextReview"),
@@ -480,7 +579,7 @@ def main() -> int:
             "rates": {"regime": regime, "signals": (ss.get("rates") or {}).get("signals")},
             "metal": {"choice": metal, "note": (ss.get("metal") or {}).get("note")},
             "style": ss.get("style"), "sector": slots_out.get(sector_id, {}).get("sector") if sector_id else None,
-            "global": global_id is not None,
+            "global": global_id is not None, "growth": (ss.get("market") or {}).get("growth"),
             "globalNote": None if global_id else global_note(u),
             "inflation": (ss.get("assumptions") or {}).get("inflation", 5.0),
             "overlay": {"pts": ov_pts, "parts": ov_parts},
@@ -493,7 +592,7 @@ def main() -> int:
     os.replace(OUT + ".tmp", OUT)
     with open(STATE, "w", encoding="utf-8") as fh:
         json.dump({"month": review, "picks": {**prev, **{k: v["sym"] for k, v in slots_out.items()}}}, fh, indent=1)
-    log.info("ETF Smart Invest: %d plans · %d ETF slots (%s)", len(plans), len(slots_out),
+    log.info("ETF Portfolio Simulator: %d plans · %d ETF slots (%s)", len(plans), len(slots_out),
              ", ".join(f"{k}={v['sym']}" for k, v in slots_out.items()))
     return 0
 

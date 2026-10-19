@@ -761,6 +761,9 @@ html[data-theme="silver"],html[data-theme="news-reader"]{--pie1:#2a78d6;--pie2:#
 
 /* info section */
 .info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:18px}
+.info-grid>.card{grid-column:1/-1}
+.info-grid>.faq-card{scroll-margin-top:120px}
+@media (min-width:1000px){.info-grid>.card:first-child>ul{columns:2;column-gap:28px}.info-grid>.card:first-child>ul>li{break-inside:avoid}}
 .info{padding:20px}
 .info p,.info li{font-size:13.5px;color:var(--text2);line-height:1.65}
 .info ul{padding-left:18px;margin-top:8px}
@@ -924,14 +927,14 @@ footer a{color:var(--text2)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* ═══════════════ BEST BROKERS & APPS ═══════════════ */
-/* Smart Invest — consistent vertical rhythm between sections */
+/* Portfolio Simulator — consistent vertical rhythm between sections */
 #sipBody > .alert{margin:0 0 14px}
 #sipBody > .card.proj{margin-bottom:14px}
 #sipBody > .sip-grid{margin-bottom:0}
 #sipMarket:empty{display:none}
 #sipMarket > .mi-head:first-child{margin-top:22px}
 @media (max-width:640px){.sip-kpis .kpi:last-child:nth-child(odd){grid-column:1/-1}}
-/* Smart Invest — where to park short-term money */
+/* Portfolio Simulator — where to park short-term money */
 .sip-park{margin-top:14px;padding:18px;scroll-margin-top:120px}
 .pk-lead{margin:8px 0 14px;font-size:13px;line-height:1.6;color:var(--text2)}
 .pk-lead b{color:var(--text)}
@@ -975,7 +978,11 @@ footer a{color:var(--text2)}
 .pk-note{margin-top:12px;font-size:12px;line-height:1.55;color:var(--text3)}
 @media (max-width:1100px){.pk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pk-row{grid-template-columns:minmax(0,1fr)}.pk-hint{grid-column:1}}
 @media (max-width:640px){.pk-grid,.pk-tiles{grid-template-columns:minmax(0,1fr)}.sip-park{padding:14px}}
-/* Smart Invest — beginner's guide */
+/* Portfolio Simulator — Risk & score / Economy & earnings tabs (panels drawn by vt_sim.js) */
+#v-sip[data-st="risk"] .sp-plan,#v-sip[data-st="eco"] .sp-plan{display:none!important}
+#v-sip:not([data-st="risk"]) #sipRisk,#v-sip:not([data-st="eco"]) #sipEco{display:none}
+#sipTabs{margin-top:14px}
+/* Portfolio Simulator — beginner's guide */
 .sip-guide{margin-top:14px;padding:18px}
 .gd-nri{margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:rgba(60,130,240,.06)}
 .gd-nri h4{margin:0 0 10px;font-size:14px;color:var(--text)}
@@ -1121,7 +1128,7 @@ footer a{color:var(--text2)}
       <button class="vbtn" data-view="detail" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg><span class="lbl">Fund Detail</span></button>
       <button class="vbtn" data-view="compare" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v18M16 3v18"/><path d="M3 8h5M16 16h5"/></svg><span class="lbl">Compare</span><span class="n" id="cmpN" hidden>0</span></button>
       <button class="vbtn" data-view="nfo" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg><span class="lbl">NFO</span><span class="n" id="nfoN" hidden>0</span></button>
-      <button class="vbtn" data-view="sip" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12z"/><path d="M15 2.5A10 10 0 0 1 21.5 9H15z"/></svg><span class="lbl">Smart Invest</span><span class="new">New</span></button>
+      <button class="vbtn" data-view="sip" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12z"/><path d="M15 2.5A10 10 0 0 1 21.5 9H15z"/></svg><span class="lbl">Portfolio Simulator</span><span class="new">New</span></button>
     </div>
     <div class="quick" id="quick"></div>
   </section>
@@ -1211,7 +1218,7 @@ footer a{color:var(--text2)}
   </section>
 
   <!-- ═════════ SMART SIP ═════════ -->
-  <section class="view" id="v-sip" aria-label="Smart Invest planner">
+  <section class="view" id="v-sip" aria-label="Portfolio Simulator planner">
     <div class="card sip-ctl">
       <div class="fld"><label>Investment horizon</label><div class="seg" id="sipHz" role="group" aria-label="Investment horizon"></div></div>
       <div class="fld"><label>Risk level</label><div class="seg" id="sipRk" role="group" aria-label="Risk level"></div></div>
@@ -1222,13 +1229,16 @@ footer a{color:var(--text2)}
       <div class="fld"><label for="sipStay">Stay invested (years)</label><input class="tin" id="sipStay" type="number" inputmode="numeric" min="1" max="30" step="1" value="15" aria-label="Years you stay invested before redeeming"/></div>
       <div class="fld" id="sipYrsFld"><label for="sipYrs">Invest for (years)</label><input class="tin" id="sipYrs" type="number" inputmode="numeric" min="1" max="30" step="1" value="15" aria-label="Years you keep investing every month"/></div>
       <div class="fld"><label for="sipSlab">Your income-tax slab</label><select class="sel" id="sipSlab" aria-label="Income-tax slab"><option value="0">0% (income below taxable limit)</option><option value="5">5%</option><option value="10">10%</option><option value="15">15%</option><option value="20">20%</option><option value="30" selected>30%</option></select></div>
-      <div class="note">Projections use today's yields, valuation-adjusted long-run equity returns and each fund's expense ratio, <b>compounded</b> every month at each fund's expected yearly return (CAGR). Regular investments run for the years you choose and then stay invested until the end of your holding period; a one-time amount stays invested for the whole holding period. Tax assumes everything is redeemed at the end under current capital-gains rules.</div>
+      <div class="note">Projections use today's yields, valuation-adjusted long-run equity returns and each fund's expense ratio, <b>compounded</b> every month at each fund's historical model estimate a year (CAGR). Regular investments run for the years you choose and then stay invested until the end of your holding period; a one-time amount stays invested for the whole holding period. Tax assumes everything is redeemed at the end under current capital-gains rules.</div>
     </div>
-    <div id="sipBody"><div class="card"><div class="skel" style="height:260px"></div></div></div>
-    <a class="card etf-alt" href="etf_momentum.html#smart"><span class="etf-alt-i">📈</span><span><b>Prefer ETFs with a demat account?</b> The same plan built with low-cost ETFs — Indian equity, debt, gold and global — in ETF Smart Invest.</span><span class="etf-alt-go">Open ETF Smart Invest →</span></a>
-    <div class="card sip-guide" id="sipGuide">
-      <div class="sec-title">How to invest with this plan — a beginner's guide</div>
-      <p class="gd-lead">Smart Invest is a plan <b>you carry out yourself</b>. On each investment day you open this page, check the plan and buy <b>every fund in it as a one-time (lump-sum) purchase</b> for the amount shown in the plan table. It is <b>not an automatic SIP</b> — nothing is debited from your bank account unless you place the orders. Buying this way means each new instalment always follows the latest monthly review of the plan, and every fund in it accepts one-time purchases from ₹1,000 or less.</p>
+    <div class="vts-tabs" id="sipTabs" role="tablist" aria-label="Portfolio Simulator sections"><button type="button" role="tab" data-st="plan" class="on" aria-selected="true">📊 Model portfolio</button><button type="button" role="tab" data-st="risk" aria-selected="false">🛡️ Risk &amp; score</button><button type="button" role="tab" data-st="eco" aria-selected="false">🌏 Economy &amp; earnings</button></div>
+    <div id="sipRisk"></div>
+    <div id="sipEco"></div>
+    <div id="sipBody" class="sp-plan"><div class="card"><div class="skel" style="height:260px"></div></div></div>
+    <a class="card etf-alt sp-plan" href="etf_momentum.html#smart"><span class="etf-alt-i">📈</span><span><b>Prefer ETFs with a demat account?</b> The same plan built with low-cost ETFs — Indian equity, debt, gold and global — in ETF Portfolio Simulator.</span><span class="etf-alt-go">Open ETF Portfolio Simulator →</span></a>
+    <div class="card sip-guide sp-plan" id="sipGuide">
+      <div class="sec-title">How mutual fund investing works — a beginner's guide</div>
+      <p class="gd-lead">The Portfolio Simulator is an educational model — it never invests for you. If you decide to invest on your own, <b>you carry out every purchase yourself</b>. The simulation assumes that on each investment day the investor checks the model portfolio and buys <b>every fund in it as a one-time (lump-sum) purchase</b> for the amount shown in the plan table. It is <b>not an automatic SIP</b> — nothing is debited from your bank account unless you place the orders. Buying this way means each new instalment always follows the latest monthly review of the plan, and every fund in it accepts one-time purchases from ₹1,000 or less.</p>
       <ol class="gd-steps">
         <li><b>Complete your KYC (once)</b>Keep your PAN card, Aadhaar (linked to your mobile number) and a bank account in your own name ready. KYC is done online in about 10 minutes when you open an investment account and usually becomes active within 1–3 working days. Your KYC status should show <i>Validated</i> or <i>Registered</i> before you invest.</li>
         <li><b>Open a direct mutual fund account</b>Choose a platform from <a href="#brokers">Best Brokers &amp; Apps</a> below. Choose one that offers <b>Direct</b> plans: there is no distributor commission, so you keep more of your returns. Add your bank account and a <b>nominee</b>.</li>
@@ -1311,21 +1321,21 @@ footer a{color:var(--text2)}
       </div>
       <div class="gd-cols gd-honest">
         <div class="gd-col"><h4>📉 Expect red years</h4><ul>
-          <li>Returns are <b>not stable every year</b> — equity funds can fall 10–20% in a normal year and far more in a crisis. The expected return is a long-term average.</li>
+          <li>Returns are <b>not stable every year</b> — equity funds can fall 10–20% in a normal year and far more in a crisis. The historical model estimate is a long-term average.</li>
           <li>Stay invested for your full <b>investment horizon</b> and keep investing through falls; selling in a fall usually locks in the loss.</li>
           <li>Need the money within 1–2 years? Move it gradually to a liquid or arbitrage fund before then.</li>
         </ul></div>
         <div class="gd-col"><h4>🎓 Educational, not advice</h4><ul>
-          <li>VilfinTV is an educational platform. Smart Invest is a model plan built from published data and rules — it does not know your personal situation.</li>
+          <li>VilfinTV is an educational platform. The Portfolio Simulator is a model plan built from published data and rules — it does not know your personal situation.</li>
           <li><b>Research every fund yourself</b> before investing: read its scheme documents and factsheet, and check its risk level, costs and exit load.</li>
           <li>When in doubt, consult a SEBI-registered investment adviser.</li>
         </ul></div>
       </div>
       <p class="gd-key">💡 <b>Rule of thumb:</b> the day you invest matters far less than investing every time. If you are unsure, use your salary day and never miss it. Funds can be bought only after your KYC is active — open your account through <a href="#brokers">Best Brokers &amp; Apps</a> below.</p>
     </div>
-    <div class="card sip-park" id="sipPark">
+    <div class="card sip-park sp-plan" id="sipPark">
       <div class="sec-title">Where to park short-term money</div>
-      <p class="pk-lead">Money you may need within <b>3 years</b> — an emergency fund, a planned purchase, school fees, or a lump sum waiting to be invested — should not go into equity funds. Choose by <b>when you will need it</b>; the recommended option also depends on your income-tax slab (set above). Funds below are ranked on return, consistency, cost and size among high-quality funds of each type with at least 3 years of history, and are refreshed daily.</p>
+      <p class="pk-lead">Money you may need within <b>3 years</b> — an emergency fund, a planned purchase, school fees, or a lump sum waiting to be invested — should not go into equity funds. Choose by <b>when you will need it</b>; the option shown first also depends on your income-tax slab (set above). Funds below are ranked on return, consistency, cost and size among high-quality funds of each type with at least 3 years of history, and are refreshed daily.</p>
       <div class="pk-grid" id="parkBody"><div class="skel" style="height:180px"></div></div>
       <div class="pk-extra" id="parkExtra"></div>
       <div class="pk-row">
@@ -1345,9 +1355,9 @@ footer a{color:var(--text2)}
         </div>
         <p class="pk-hint">Select <b>One-time</b> under <i>How you invest</i> to see the entry plan for your amount.</p>
       </div>
-      <p class="pk-note">Debt-fund gains (liquid, money market, low duration, corporate bond) are taxed at your income-tax slab however long you hold them. Arbitrage and equity savings funds are taxed as equity: 20% on gains within 12 months, 12.5% after 12 months, with ₹1.25 lakh of long-term gains tax-free each year. Arbitrage funds usually charge an exit load of about 0.25% within the first 15–30 days, and only the lower-cost half of arbitrage funds is listed; arbitrage is recommended only when it beats the alternative after tax at your slab. “Typical return” is the average 1-year return of the funds shown (3-year for corporate bond and banking &amp; PSU funds), after costs; returns are not guaranteed.</p>
+      <p class="pk-note">Debt-fund gains (liquid, money market, low duration, corporate bond) are taxed at your income-tax slab however long you hold them. Arbitrage and equity savings funds are taxed as equity: 20% on gains within 12 months, 12.5% after 12 months, with ₹1.25 lakh of long-term gains tax-free each year. Arbitrage funds usually charge an exit load of about 0.25% within the first 15–30 days, and only the lower-cost half of arbitrage funds is listed; arbitrage is shown first only when it beats the alternative after tax at your slab. “Typical return” is the average 1-year return of the funds shown (3-year for corporate bond and banking &amp; PSU funds), after costs; returns are not guaranteed.</p>
     </div>
-    <div id="sipMarket"></div>
+    <div id="sipMarket" class="sp-plan"></div>
   </section>
 
   <!-- ═════════ INFO ═════════ -->
@@ -1363,7 +1373,7 @@ footer a{color:var(--text2)}
         <li><b>VilfinTV Rating</b> ranks funds within their category on risk-adjusted return, downside protection, long-term return and cost. Funds need a 3-year record to be rated. Sectoral and thematic funds are grouped by theme (banking, pharma, technology, infrastructure and more) and rated against all sectoral / thematic funds.</li>
       </ul>
     </div>
-    <div class="card info">
+    <div class="card info faq-card" id="faq">
       <div class="sec-title">Methodology &amp; FAQ</div>
       <details class="faq"><summary>Why did we build VilfinTV — and how can you help?</summary><p>VilfinTV is a <b>free, educational initiative</b> — a charitable learning project built so that anyone, from a first-time investor to an experienced one, can understand mutual funds and ETFs, compare them honestly and learn to invest with discipline. There is no subscription and no paywall, and every tool on this page is open to all.</p><ul>
         <li><b>Our motivation is your learning.</b> Most people start investing without guidance, chase recent returns or stop at the first fall. We want to change that with clear data, plain-language guides and honest answers.</li>
@@ -1401,20 +1411,20 @@ footer a{color:var(--text2)}
         </tbody></table><ul>
         <li><b>Start with what you can:</b> many funds accept ₹100–₹500 a month. Begin with one index fund or a flexi cap fund, and add a second fund later.</li>
         <li><b>Step up every year:</b> raise the amount by 10% each year (₹1,000 becomes ₹1,100, then ₹1,210 …). Over 20 years that turns about ₹6.9 lakh invested into roughly ₹18.6 lakh at 12% — about twice the result of a fixed ₹1,000.</li>
-        <li><b>Name each goal:</b> a child's education, a home deposit, retirement — use Smart Invest to pick a plan for the horizon and your comfort with risk.</li>
+        <li><b>Name each goal:</b> a child's education, a home deposit, retirement — use the Portfolio Simulator to explore a model portfolio for the horizon and your comfort with risk.</li>
         <li><b>Homemakers:</b> invest in your own name with your own PAN and KYC; you can receive money from your spouse as a gift. Gifts between spouses are tax-free, but the income on gifted money is taxed in the giver's hands (clubbing). Add a nominee to every investment.</li>
         <li><b>Protect it:</b> keep a small emergency fund first, never stop during market falls, and do not withdraw for non-goal spending.</li></ul></details>
-      <details class="faq"><summary>How many mutual funds should I own?</summary><p>For most people <b>3 to 5 funds</b> are enough: for example an index or large-cap fund, a flexi-cap fund, a mid- or small-cap fund for long horizons, a debt or hybrid fund for stability, and optionally gold. Owning 10–15 funds rarely adds diversification — they end up holding the same stocks (check overlap in Compare) and become hard to track. Smart Invest plans use up to eight funds because they also cover debt, gold and international markets.</p></details>
+      <details class="faq"><summary>How many mutual funds should I own?</summary><p>For most people <b>3 to 5 funds</b> are enough: for example an index or large-cap fund, a flexi-cap fund, a mid- or small-cap fund for long horizons, a debt or hybrid fund for stability, and optionally gold. Owning 10–15 funds rarely adds diversification — they end up holding the same stocks (check overlap in Compare) and become hard to track. The Portfolio Simulator plans use up to eight funds because they also cover debt, gold and international markets.</p></details>
       <details class="faq"><summary>Mutual funds or ETFs — what is the difference?</summary><p>An <b>ETF</b> is a fund that trades on the stock exchange like a share, at live prices during market hours, and needs a demat account; a <b>mutual fund</b> is bought from the fund house at the day's NAV, with no demat needed and easy automatic SIPs. ETFs usually have the lowest costs; index mutual funds are simpler for regular monthly investing. Compare NSE ETFs on <a href="etf_momentum.html">ETF Momentum Mode</a>.</p></details>
-      <details class="faq"><summary>Smart Invest with ETFs or with mutual funds — which should I use?</summary><p>Both use the <b>same monthly market rules</b> (valuation, interest-rate cycle, gold vs silver, value vs momentum, sector choice) and the same asset mix for each goal and risk level. Choose by how you like to invest:</p>
-        <table class="faq-ex"><thead><tr><th></th><th>ETF Smart Invest</th><th>Mutual fund Smart Invest</th></tr></thead><tbody>
+      <details class="faq"><summary>Portfolio Simulator with ETFs or with mutual funds — which should I use?</summary><p>Both use the <b>same monthly market rules</b> (valuation, interest-rate cycle, gold vs silver, value vs momentum, sector choice) and the same asset mix for each goal and risk level. Choose by how you like to invest:</p>
+        <table class="faq-ex"><thead><tr><th></th><th>ETF Portfolio Simulator</th><th>Mutual fund Portfolio Simulator</th></tr></thead><tbody>
         <tr><td>Account</td><td>Demat &amp; trading account</td><td>Direct mutual fund account (no demat needed)</td></tr>
         <tr><td>Cost</td><td>Lowest expense ratios, plus brokerage per trade</td><td>Slightly higher expense ratios, no brokerage</td></tr>
         <tr><td>How you buy</td><td>Whole units at live prices, limit orders near iNAV</td><td>Any rupee amount at the day's NAV</td></tr>
         <tr><td>Active funds</td><td>Index ETFs only</td><td>Includes proven active funds, arbitrage, balanced advantage and multi-asset funds</td></tr>
         <tr><td>Short goals (under 3 years)</td><td>Liquid ETFs — taxed at your slab</td><td>Arbitrage funds — taxed like equity, often better after tax</td></tr>
         <tr><td>Best for</td><td>Hands-on investors who already trade and want the lowest cost</td><td>Beginners, small amounts, fully hands-off investing</td></tr></tbody></table>
-        <p>Open <a href="etf_momentum.html#smart">ETF Smart Invest</a> or <a href="?view=sip">mutual fund Smart Invest</a>.</p></details>
+        <p>Open <a href="etf_momentum.html#smart">ETF Portfolio Simulator</a> or <a href="?view=sip">mutual fund Portfolio Simulator</a>.</p></details>
       <details class="faq"><summary>Is the data on this site accurate?</summary><p>We work hard to keep it accurate, but please treat it as a research aid — not the final word.</p><ul>
         <li><b>Official sources:</b> NAVs, fund details, expense ratios, minimum amounts and exit loads come from official industry and fund-house disclosures; portfolios come from each fund house's statutory monthly portfolio statement.</li>
         <li><b>Automated checks every day:</b> every return is recalculated independently and reconciled against the official NAV history; unit splits and one-day price errors are corrected; portfolios are checked to add up and to fit the fund's category. If a check fails, the update is not published and the previous data stays.</li>
@@ -1445,35 +1455,39 @@ footer a{color:var(--text2)}
           <li><b>Rule of 72:</b> money roughly doubles in 72 ÷ yearly return years — about 6 years at 12%, 10 years at 7%.</li>
           <li>CAGR is a smoothed average: the actual yearly returns go up and down (see Calendar-year returns on each fund).</li>
           <li><b>SIP returns</b> use <b>XIRR</b>, the compounded yearly return that accounts for each instalment's own date, since each instalment is invested for a different length of time.</li>
-          <li><b>Smart Invest projections</b> compound each fund's expected yearly return every month on every instalment until the end of your holding period, then deduct tax.</li>
+          <li><b>Portfolio Simulator projections</b> compound each fund's historical model estimate a year every month on every instalment until the end of your holding period, then deduct tax.</li>
         </ul></details>
       <details class="faq"><summary>How is the risk-free rate chosen?</summary><p>Sharpe and Sortino ratios subtract the overnight money-market return for the same months, so they adapt automatically as interest rates change.</p></details>
       <details class="faq"><summary>What do the scores and status mean?</summary><p><b>Consistency</b> is the share of the last 36 month-ends in which the fund ranked in the top half of its category on rolling 1-year return. <b>Recency</b> blends 3-month, 6-month and 1-year returns (20/30/50) into a category percentile. <b>Volatility</b> ranks 3-year volatility within the category (100 = calmest). <b>Status</b>: <i>In form</i> — recency in the top 30%; <i>On track</i> — recency between the 40th and 70th percentile; <i>Underperforming</i> — recency in the bottom 40% but a top-half long-term record; <i>Out of track</i> — both recent and long-term returns in the bottom half. Index funds are not scored, since they track an index by design.</p></details>
       <details class="faq"><summary>How is taxation shown?</summary><p>Each fund is mapped to its capital-gains treatment from its SEBI category and stated asset allocation: equity-oriented, specified (debt-oriented), or other. Rates exclude surcharge and cess and may change with each Union Budget — please confirm with a tax professional.</p></details>
       <details class="faq"><summary>Where do portfolio holdings come from?</summary><p>From each fund house's statutory monthly portfolio disclosure, published within ten days of every month-end. The Portfolio tab shows the top holdings, sector allocation, asset mix and market-cap split as of that month-end. Market-cap buckets follow SEBI's ranking — Nifty 100 constituents are large cap, Nifty Midcap 150 constituents are mid cap and other listed stocks are small cap. Portfolios are being added fund house by fund house.</p></details>
       <details class="faq"><summary>Can I invest a lump sum, or quarterly / yearly?</summary><p>Yes. Under <b>How you invest</b>, choose Monthly, Weekly, Quarterly, Yearly or One-time. The funds and weights are the same for every option, so the plan stays consistent however you invest; only the amounts, the projection and the tax change. For a one-time amount the planner adds an <b>entry plan</b>: when the Nifty 50 is fairly valued (below the 60th percentile of its 10-year valuation) everything is invested at once; when it is expensive, the equity share is parked in a liquid fund and moved in monthly over 6 months (12 months above the 80th percentile), using a systematic transfer plan within the same fund house where possible. Debt, hybrid and gold allocations are invested on day one.</p></details>
-      <details class="faq"><summary>How does the Smart Invest planner work?</summary><p>Choose your investment horizon and risk level, and the planner builds a diversified plan of up to eight funds across equity, hybrid, debt and gold — with small thematic and international satellites only for aggressive plans of seven years or more. The Very aggressive level always combines equity, debt and gold or silver; when bonds are unattractive (a rising-rate cycle) or gold scores poorly on the global checks, its separate debt and / or gold fund is replaced by a multi-asset allocation fund, which still holds at least 10% each in equity, debt and gold / silver. Its core is an actively managed large & mid cap fund instead of a Nifty 50 index fund (3+ years). It holds more mid and small caps, and adds a value / contrarian fund (5–10 years), a rules-based momentum index fund (10+ years) and a medium-term corporate-bond or medium-duration debt fund. That spreads a growth-heavy plan across market caps, investing styles and asset classes. Funds must have a long record, beat their benchmark in most rolling periods, cost no more than their category median and hold low overlap with each other. Plans are reviewed monthly and stay stable: a fund is replaced only after failing two reviews in a row, and the number of funds never grows. A small market-condition tilt adds equity when prices are well below recent highs and trims it when valuations look stretched.</p></details>
-      <details class="faq"><summary>Do I invest through an automatic SIP or buy the funds myself?</summary><p>Smart Invest is designed to be followed with <b>one-time (lump-sum) purchases</b>: on each investment day (monthly, weekly, quarterly or yearly) you buy every fund in the plan for the amount shown. Nothing is debited automatically. This keeps every instalment in line with the latest monthly review, and every fund in the plan accepts one-time purchases of ₹1,000 or less. If you prefer automation, you can register a SIP in each fund for the same amounts on your platform — but check the plan every month and change a SIP when a fund is replaced.</p></details>
+      <details class="faq"><summary>How does the Portfolio Simulator work?</summary><p>Choose your investment horizon and risk level, and the planner builds a diversified plan of up to eight funds across equity, hybrid, debt and gold — with small thematic and international satellites only for aggressive plans of seven years or more. The Very aggressive level always combines equity, debt and gold or silver; when bonds are unattractive (a rising-rate cycle) or gold scores poorly on the global checks, its separate debt and / or gold fund is replaced by a multi-asset allocation fund, which still holds at least 10% each in equity, debt and gold / silver. Its core is an actively managed large & mid cap fund instead of a Nifty 50 index fund (3+ years). It holds more mid and small caps, and adds a value / contrarian fund (5–10 years), a rules-based momentum index fund (10+ years) and a medium-term corporate-bond or medium-duration debt fund. That spreads a growth-heavy plan across market caps, investing styles and asset classes. Funds must have a long record, beat their benchmark in most rolling periods, cost no more than their category median and hold low overlap with each other. Plans are reviewed monthly and stay stable: a fund is replaced only after failing two reviews in a row, and the number of funds never grows. A small market-condition tilt adds equity when prices are well below recent highs and trims it when valuations look stretched.</p></details>
+      <details class="faq"><summary>Do I invest through an automatic SIP or buy the funds myself?</summary><p>Portfolio Simulator is designed to be followed with <b>one-time (lump-sum) purchases</b>: on each investment day (monthly, weekly, quarterly or yearly) you buy every fund in the plan for the amount shown. Nothing is debited automatically. This keeps every instalment in line with the latest monthly review, and every fund in the plan accepts one-time purchases of ₹1,000 or less. If you prefer automation, you can register a SIP in each fund for the same amounts on your platform — but check the plan every month and change a SIP when a fund is replaced.</p></details>
       <details class="faq"><summary>What do I need before I can invest?</summary><p>A PAN card, Aadhaar linked to your mobile number, and a bank account in your own name. KYC (Know Your Customer) is a one-time check done online when you open an investment account; it usually becomes active within 1–3 working days. Once your KYC shows <i>Validated</i> or <i>Registered</i>, you can buy any mutual fund. Open your account with one of the platforms listed under <a href="#brokers">Best Brokers &amp; Apps</a>, choose Direct plans, and add a nominee.</p></details>
       <details class="faq"><summary>Which day should I invest?</summary><p>The simplest and most reliable choice is the <b>same day every period, 1–2 days after your salary arrives</b>. If you want to buy on weaker days, give yourself a short window (up to 7 days for monthly investing, one week for weekly): invest on the first day in that window when the Nifty 50 closes 1% or more lower, otherwise on the last day of the window. Never skip a period waiting for a fall — over many years, investing every time matters far more than the exact day.</p></details>
       <details class="faq"><summary>Should I wait for the market to fall before investing?</summary><p>No. Nobody can predict short-term falls, and waiting often means missing rises. Regular investing already buys more units when prices are low and fewer when they are high. For a large one-time amount, the entry plan spreads the equity part over 6–12 months when valuations are high, so you do not need to time the market yourself.</p></details>
       <details class="faq"><summary>How do I place an order for a fund?</summary><p>On your platform, search the exact fund name shown in the plan, choose the <b>Direct</b> plan with the <b>Growth</b> option, select <b>One-time / Lump sum</b>, enter the amount and pay by UPI or net banking from your own bank account. Repeat for each fund. Orders placed on a market working day before about 2:00 pm usually get that day's price (NAV); later orders and orders on holidays get the next working day's price. Units appear in your account within 1–3 working days.</p></details>
       <details class="faq"><summary>What happens when a fund in the plan is replaced?</summary><p>The plan is reviewed monthly and a fund is replaced only after failing two reviews in a row. When that happens, invest your <b>new money</b> in the new fund. You normally do <b>not</b> need to sell what you already hold in the old fund — selling can cost an exit load and capital-gains tax. Keep holding it as part of your portfolio unless you have a specific reason to switch.</p></details>
       <details class="faq"><summary>The market is falling and my portfolio is in the red. Should I sell?</summary><p>Usually <b>no</b> — but here is the honest picture so you can decide for yourself.</p><ul>
-        <li><b>Falls are normal, not a sign the plan failed.</b> Equity funds fall 10–20% in many years, and occasionally much more — the Nifty 50 fell about 60% in 2008 and about 38% in early 2020, and recovered in the years that followed. Returns are <b>never steady year to year</b>: a plan expected to earn 12% a year may lose money in one year and gain 30% in another. The expected return is a long-term average, not a yearly promise.</li>
+        <li><b>Falls are normal, not a sign the plan failed.</b> Equity funds fall 10–20% in many years, and occasionally much more — the Nifty 50 fell about 60% in 2008 and about 38% in early 2020, and recovered in the years that followed. Returns are <b>never steady year to year</b>: a mix whose historical model estimate is 12% a year may lose money in one year and gain 30% in another. The historical model estimate is a long-term average, not a yearly promise.</li>
         <li><b>Selling turns a temporary fall into a permanent loss.</b> Investors who sell in a fall often miss the recovery, because the best days frequently come soon after the worst.</li>
         <li><b>Keep investing if you can.</b> Your regular investments buy more units when prices are low, which is what makes the long-term average work.</li>
         <li><b>Stick to your investment horizon.</b> Judge the plan over the period you chose (5, 7 or 10+ years), not over a few months. Equity money should be money you will not need for at least 5 years.</li>
         <li><b>When selling does make sense:</b> you need the money within the next 1–2 years (move it gradually to a liquid or arbitrage fund — ideally before a fall, as you near your goal); your goal or risk tolerance has genuinely changed; or a fund has been replaced in the plan and you have a specific reason to switch (check exit load and tax first).</li>
         <li><b>If the falls keep you awake,</b> your risk level may be too high — choose a more conservative plan for new money rather than selling everything in a panic.</li></ul><p>VilfinTV is an educational platform and does not give investment advice. Past returns do not guarantee future results — please research each fund yourself (read its scheme documents and factsheet) or consult a SEBI-registered investment adviser before investing or selling.</p></details>
-      <details class="faq"><summary>Is Smart Invest investment advice?</summary><p>No. VilfinTV is an <b>educational platform</b>. Smart Invest shows a model plan built from published data and fixed rules, to help you learn how a diversified portfolio is put together. It does not know your income, existing investments, loans, tax position or goals, and it can be wrong. <b>Before investing, double-check every fund yourself</b> — read the scheme information document and factsheet, check the fund's category, risk level, costs and exit load on the fund house's website — or take advice from a SEBI-registered investment adviser. Returns are not guaranteed, every year will not be positive, and you should invest only money you can leave untouched for your full investment horizon.</p></details>
+      <details class="faq"><summary>Is the Portfolio Simulator investment advice?</summary><p>No. VilfinTV is an <b>educational platform</b>. The Portfolio Simulator shows a model plan built from published data and fixed rules, to help you learn how a diversified portfolio is put together. It does not know your income, existing investments, loans, tax position or goals, and it can be wrong. <b>Before investing, double-check every fund yourself</b> — read the scheme information document and factsheet, check the fund's category, risk level, costs and exit load on the fund house's website — or take advice from a SEBI-registered investment adviser. Returns are not guaranteed, every year will not be positive, and you should invest only money you can leave untouched for your full investment horizon.</p></details>
+      <details class="faq"><summary>Why doesn't the Portfolio Simulator show the funds with the very highest returns?</summary><p>Because last year's top performers are rarely next year's. The funds with the highest recent returns are usually concentrated in one sector, theme or style that has just had a strong run — they often carry <b>higher valuations, bigger falls and more volatility</b>, and many slip back to average or below within a few years. The simulator is built for <b>diversification and staying power</b>: every fund must pass a checklist on cost, size, track record, consistency, risk and drawdown, valuation gates trim segments that look expensive, and growth sleeves are capped. That deliberately gives up some of the highest-flying names in exchange for a mix that is easier to hold through bad years. You can still explore every fund and its returns in the screener — but chasing the latest winners is one of the most common ways investors lose money.</p></details>
+      <details class="faq"><summary>If I copy a Portfolio Simulator mix exactly and my portfolio is in the red, is VilfinTV responsible?</summary><p><b>No.</b> VilfinTV is a free educational website and is <b>not a SEBI-registered investment adviser or research analyst</b>. The simulator shows illustrative model portfolios from published data and fixed rules to help you learn — it does not know your income, goals, existing investments, tax position or risk tolerance, and its data may be delayed or wrong. Every investment decision, and its result, is your own. Markets fall regularly: a diversified equity mix can be <b>10–20% down in a normal year and 30–50% down in a crisis</b>, and can stay red for months or years. Before investing, read the scheme documents, confirm every figure on the fund house's website and, if you are unsure, consult a SEBI-registered investment adviser. You accept this when you open the simulator.</p></details>
+      <details class="faq"><summary>If I panic and sell during a fall and lose money, is VilfinTV responsible?</summary><p><b>No.</b> Selling in a panic is your own decision, and VilfinTV cannot be responsible for it or for any loss. What history does show is that <b>selling after a big fall usually turns a temporary decline into a permanent loss</b> — investors who sold in March 2020 missed one of the fastest recoveries on record. Some habits that help: invest only money you will not need for the full horizon, keep an emergency fund so you are never forced to sell, decide in advance how you will react to a 20–30% fall, look at your portfolio less often, and keep investing on schedule if your goal and income have not changed. If a fall keeps you awake at night, your mix may carry more risk than suits you — choose a lower risk level or speak to a SEBI-registered investment adviser.</p></details>
+      <details class="faq"><summary>What is a "historical model estimate"?</summary><p>It is the yearly return the simulator's rules <b>assume</b> for each fund and for the mix, worked out from historical returns, today's valuations and bond yields, after expenses. It is a long-term model figure used to draw the illustration — <b>not a forecast, target or promise</b>. Actual returns will be different and will vary a lot from year to year, including years with losses.</p></details>
       <details class="faq"><summary>What if my amount is too small for a fund?</summary><p>Every fund has a minimum purchase amount. When a fund's share of your amount is below its minimum, the plan automatically merges that share into a related fund, so you are never asked to buy less than the minimum. As your amount grows, the full plan — and sometimes an upgraded fund with a higher minimum — appears automatically.</p></details>
       <details class="faq"><summary>What if I miss an investment day?</summary><p>Simply invest as soon as you can, using the amounts shown on that day. There is no penalty, because nothing is linked to your bank account. Avoid doubling up the next period just to catch up unless you have spare savings.</p></details>
       <details class="faq"><summary>Is my money safe with the platform?</summary><p>Mutual funds are regulated by SEBI. Units are held in your own name with the fund house (or your demat account), and your money goes directly to the fund. The platform is only the route for placing orders — if you ever change platforms, your investments stay with you.</p></details>
       <details class="faq"><summary>How and when should I sell (redeem)?</summary><p>Sell when you reach your goal or near the end of your chosen horizon, ideally in parts over a few months rather than all at once. Check each fund's exit load (usually only within the first year for equity funds) and remember that gains are taxed under capital-gains rules — the projection shows an estimate of the tax. Redemption money is credited to your registered bank account in 1–3 working days.</p></details>
-      <details class="faq"><summary>Where should I keep my emergency fund?</summary><p>Keep 6 months of expenses (12 if your income is irregular) as an emergency fund before investing for long-term goals: about one month in your savings account and the rest in a <b>liquid fund</b>. Liquid funds invest in very short-term, high-quality debt, pay out the next working day, and many fund houses allow instant redemption of up to ₹50,000 a day. Gains are taxed at your income-tax slab. See <a href="?view=sip" data-gopark>Where to park short-term money</a> in Smart Invest for the best liquid funds today.</p></details>
-      <details class="faq"><summary>Where should I park money I need within 3 years?</summary><p>Match the fund to when you need the money: <b>0–6 months</b> — liquid funds (money market funds for 3–6 months); <b>6–12 months</b> — money market funds or arbitrage funds; <b>1–2 years</b> — low / ultra-short duration funds or arbitrage funds; <b>2–3 years</b> — high-quality corporate bond and banking &amp; PSU funds or arbitrage funds, with equity savings funds as an option if you can accept a small fall in a weak year. Debt funds are taxed at your slab, while arbitrage funds are taxed as equity (20% within 12 months, 12.5% after), so arbitrage usually wins in the 20–30% slabs and debt funds in the lower slabs. Smart Invest compares both <b>after costs and tax at your slab</b>, lists only the lower-cost half of arbitrage funds, and recommends whichever is better today. Avoid equity funds for money needed within 3 years. See <a href="?view=sip" data-gopark>Where to park short-term money</a> in Smart Invest; the funds update daily.</p></details>
-      <details class="faq"><summary>How can a lump-sum investor reduce risk with an STP?</summary><p>Instead of investing a large amount in equity funds on one day, park it in a liquid fund (or an arbitrage fund for transfers spread over 12 months or more) and move a fixed amount into each equity fund every month through a <b>Systematic Transfer Plan</b>, usually over 6–12 months. A fund house's STP works only between its own funds; since a diversified plan uses several fund houses, a <b>demat-linked investment account</b> is recommended — all funds sit in one place and you can transfer between funds of different fund houses, or sell the liquid fund and buy the equity fund on the same day each month. Select <b>One-time</b> in Smart Invest to see the entry plan for your amount.</p></details>
+      <details class="faq"><summary>Where should I keep my emergency fund?</summary><p>Keep 6 months of expenses (12 if your income is irregular) as an emergency fund before investing for long-term goals: about one month in your savings account and the rest in a <b>liquid fund</b>. Liquid funds invest in very short-term, high-quality debt, pay out the next working day, and many fund houses allow instant redemption of up to ₹50,000 a day. Gains are taxed at your income-tax slab. See <a href="?view=sip" data-gopark>Where to park short-term money</a> in the Portfolio Simulator to see liquid funds that pass its checks today.</p></details>
+      <details class="faq"><summary>Where should I park money I need within 3 years?</summary><p>Match the fund to when you need the money: <b>0–6 months</b> — liquid funds (money market funds for 3–6 months); <b>6–12 months</b> — money market funds or arbitrage funds; <b>1–2 years</b> — low / ultra-short duration funds or arbitrage funds; <b>2–3 years</b> — high-quality corporate bond and banking &amp; PSU funds or arbitrage funds, with equity savings funds as an option if you can accept a small fall in a weak year. Debt funds are taxed at your slab, while arbitrage funds are taxed as equity (20% within 12 months, 12.5% after), so arbitrage usually wins in the 20–30% slabs and debt funds in the lower slabs. The Portfolio Simulator compares both <b>after costs and tax at your slab</b>, lists only the lower-cost half of arbitrage funds, and shows first whichever is better today. Avoid equity funds for money needed within 3 years. See <a href="?view=sip" data-gopark>Where to park short-term money</a> in the Portfolio Simulator; the funds update daily.</p></details>
+      <details class="faq"><summary>How can a lump-sum investor reduce risk with an STP?</summary><p>Instead of investing a large amount in equity funds on one day, park it in a liquid fund (or an arbitrage fund for transfers spread over 12 months or more) and move a fixed amount into each equity fund every month through a <b>Systematic Transfer Plan</b>, usually over 6–12 months. A fund house's STP works only between its own funds; since a diversified plan uses several fund houses, a <b>demat-linked investment account</b> is usually more convenient — all funds sit in one place and you can transfer between funds of different fund houses, or sell the liquid fund and buy the equity fund on the same day each month. Select <b>One-time</b> in the Portfolio Simulator to see the entry plan for your amount.</p></details>
       <details class="faq"><summary>What is an SWP and when should I use it?</summary><p>A <b>Systematic Withdrawal Plan (SWP)</b> sells a fixed amount from a fund on a fixed date every month (or quarter) and pays it to your bank — the reverse of a SIP. It suits retirement income, or paying for a goal over several years from money already invested.</p><ul>
         <li><b>Withdraw sustainably:</b> about 4–6% of the amount a year, so the money lasts.</li>
         <li><b>Choose the right fund:</b> a hybrid, balanced-advantage or debt fund rather than a pure equity fund.</li>
@@ -1485,7 +1499,7 @@ footer a{color:var(--text2)}
         <li><b>Loss harvesting:</b> selling a fund that is below your cost books a capital loss to set off against gains — short-term losses against short- and long-term gains, long-term losses only against long-term gains. Unused losses carry forward for 8 years if you file your income-tax return on time.</li>
         <li><b>Check first:</b> sell only units held more than 12 months (the oldest units are sold first) and past any exit-load period. Debt-fund gains are taxed at your slab, so gain harvesting does not help there.</li></ul><p>Confirm with a tax professional before acting.</p></details>
       <details class="faq"><summary>What is DTAA and how does it help NRIs?</summary><p>A <b>Double Taxation Avoidance Agreement (DTAA)</b> is a tax treaty between India and another country (India has treaties with about 90 countries) that stops the same income from being fully taxed twice. For NRIs investing in Indian mutual funds: the fund house deducts TDS in India when you sell; your country of residence may tax the same gain but usually gives you a <b>credit for the tax paid in India</b>. Under some treaties, mutual fund gains may be taxed at a lower rate or only in your country of residence. To use a treaty, obtain a <b>Tax Residency Certificate (TRC)</b> from your country of residence and file <b>Form 10F</b> in India; submit them to the fund house before you redeem so TDS follows the treaty rate, or claim the difference as a refund in your Indian income-tax return. Keep your TDS certificates (Form 16A) for the foreign tax return. Treaty terms differ by country — please confirm with a tax professional.</p></details>
-      <details class="faq"><summary>When should I add international funds, and how can I invest abroad?</summary><p>Consider putting <b>10–20% of your long-term portfolio</b> outside India once it reaches a meaningful size (for example ₹10 lakh or more), and direct more new money abroad when Indian shares look expensive — Smart Invest shows the Nifty 50 valuation percentile; above the 80th percentile is a good time. International holdings spread risk across other economies and gain when the rupee weakens.</p><ul>
+      <details class="faq"><summary>When should I add international funds, and how can I invest abroad?</summary><p>Consider putting <b>10–20% of your long-term portfolio</b> outside India once it reaches a meaningful size (for example ₹10 lakh or more), and direct more new money abroad when Indian shares look expensive — Portfolio Simulator shows the Nifty 50 valuation percentile; above the 80th percentile is a good time. International holdings spread risk across other economies and gain when the rupee weakens.</p><ul>
         <li><b>Indian international funds:</b> simplest, in rupees — but often closed to new money when the industry-wide overseas limit is reached (see the purchase-status filter).</li>
         <li><b>GIFT City (IFSC) funds:</b> dollar funds set up in India's international financial centre, outside that limit; invested under the RBI's <b>Liberalised Remittance Scheme (LRS)</b> (up to USD 250,000 a year), usually with a higher minimum.</li>
         <li><b>US-listed ETFs:</b> broad S&amp;P 500, Nasdaq 100 or world-market ETFs bought through an international investing account — for example <b>Dhan</b>, listed under <a href="#brokers">Best Brokers &amp; Apps</a> — also under LRS.</li>
@@ -1514,7 +1528,7 @@ footer a{color:var(--text2)}
     <p class="shr-url" id="shrUrl"></p>
   </section>
   <section class="brk" id="brokers" aria-labelledby="brkTitle">
-    <div class="brk-head"><div><h2 id="brkTitle">💼 Best Brokers &amp; Apps</h2><p>Open the accounts you need to invest in the funds above — platforms we use and recommend.</p></div>
+    <div class="brk-head"><div><h2 id="brkTitle">💼 Best Brokers &amp; Apps</h2><p>Open the accounts you need to invest in the funds above — platforms we use.</p></div>
     <a class="brk-all" href="https://vilfintv.com/market_sentiment_score.html#brokers">Compare all features →</a></div>
     <div class="brk-grid">
       <div class="brk-grp"><h3>Direct mutual funds</h3><ul>
@@ -1553,6 +1567,7 @@ footer a{color:var(--text2)}
 </footer>
 <div class="toast" id="toast" role="status"></div>
 
+<script src="vt_sim.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════════════════
    India Mutual Fund Screener — VilfinTV
@@ -1577,9 +1592,9 @@ var ASSET_INFO = {
 };
 var PRESETS = [
   {id:'top', n:'Highest returns', ic:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>'},
-  {id:'sip', n:'Best SIP returns', ic:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>'},
+  {id:'sip', n:'Highest SIP returns', ic:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>'},
   {id:'consistent', n:'Most consistent', ic:'<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/>'},
-  {id:'riskadj', n:'Best risk-adjusted', ic:'<path d="M12 3v18M5 7h14M7 7l-3 7h6zM17 7l-3 7h6z"/>'},
+  {id:'riskadj', n:'Top risk-adjusted', ic:'<path d="M12 3v18M5 7h14M7 7l-3 7h6zM17 7l-3 7h6z"/>'},
   {id:'cost', n:'Lowest cost', ic:'<circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .9-3 2s1.3 1.8 3 2 3 .9 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/>'},
   {id:'large', n:'Largest funds', ic:'<path d="M3 21h18M5 21V10l7-5 7 5v11"/>'},
   {id:'inform', n:'In form', ic:'<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>'},
@@ -1867,6 +1882,14 @@ function writeURL(){
 
 /* ─────────── views ─────────── */
 function setView(v){
+  if (v === 'sip' && window.VTSim && !VTSim.accepted()) {          // the Portfolio Simulator opens only after the risk warning is accepted
+    VTSim.gate(function(){ setView('sip'); if (S.afterSip) S.afterSip(); S.afterSip = null; }, function(faq){
+      S.afterSip = null;
+      setView(S.view === 'sip' ? 'explore' : S.view);
+      if (faq) $('faq').scrollIntoView({block:'start'}); else window.scrollTo({top:0, behavior:'smooth'});
+    });
+    return;
+  }
   S.view = v;
   document.querySelectorAll('.vbtn').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-view') === v); b.setAttribute('aria-selected', b.getAttribute('data-view') === v); });
   document.querySelectorAll('.view').forEach(function(s){ s.classList.toggle('on', s.id === 'v-' + v); });
@@ -1935,8 +1958,8 @@ function renderSpot(){
   var c3 = isIdx ? spotList(list, 'aum', false, fmtAum) : spotList(list, 'sip3', false, function(v){ return fmtPct(v); });
   $('spot').innerHTML =
     '<div class="card spot-card"><div class="spot-h"><span class="spot-t">Top ' + PERIODS[per] + ' returns</span><span class="spot-m">' + (PERIODS[per] === '1Y' ? 'Absolute' : 'CAGR') + '</span></div>' + c1 + '</div>' +
-    '<div class="card spot-card"><div class="spot-h"><span class="spot-t">' + (isIdx ? 'Lowest expense ratio' : 'Best risk-adjusted') + '</span><span class="spot-m">' + (isIdx ? 'TER' : 'Sharpe, 3Y') + '</span></div>' + c2 + '</div>' +
-    '<div class="card spot-card"><div class="spot-h"><span class="spot-t">' + (isIdx ? 'Largest funds' : 'Best SIP returns') + '</span><span class="spot-m">' + (isIdx ? 'AUM' : '3Y XIRR') + '</span></div>' + c3 + '</div>';
+    '<div class="card spot-card"><div class="spot-h"><span class="spot-t">' + (isIdx ? 'Lowest expense ratio' : 'Top risk-adjusted') + '</span><span class="spot-m">' + (isIdx ? 'TER' : 'Sharpe, 3Y') + '</span></div>' + c2 + '</div>' +
+    '<div class="card spot-card"><div class="spot-h"><span class="spot-t">' + (isIdx ? 'Largest funds' : 'Highest SIP returns') + '</span><span class="spot-m">' + (isIdx ? 'AUM' : '3Y XIRR') + '</span></div>' + c3 + '</div>';
 }
 function renderPresets(){
   $('presets').innerHTML = PRESETS.map(function(p){
@@ -3023,6 +3046,7 @@ function bindUI(){
   }
   $('detail').addEventListener('change', function(e){ if (e.target.id === 'peerSort') sortPeers(e.target.value, false); });
   $('detail').addEventListener('click', function(e){ var th = e.target.closest('th[data-pk]'); if (th) { e.stopPropagation(); sortPeers(th.getAttribute('data-pk'), true); } });
+  if (window.VTSim) VTSim.faqCols($('faq'));
   document.querySelectorAll('[data-goview]').forEach(function(a){ a.addEventListener('click', function(e){ e.preventDefault(); setView(a.getAttribute('data-goview')); window.scrollTo({top:0, behavior:'smooth'}); }); });
   bindNfo(); bindSip();
   hsInit($('subsHs'));
@@ -3275,7 +3299,7 @@ function renderPark(){
     if (!b.fixed) opts.sort(function(x, y){ return ((y.pt || {}).post || -1) - ((x.pt || {}).post || -1); });   // best after tax first
     return '<div class="pk-b"><div class="pk-t"><b>' + b.t + '</b><span>' + esc(b.u) + '</span></div>' + opts.map(function(x, i){
       var o = PARK_OPTS[x.k], fs = x.fs.slice(0, i ? 2 : 3);
-      return '<div class="pk-o"><div class="pk-on">' + esc(o.lbl) + '<span class="pk-tag' + (i ? ' alt">Alternative' : '">' + (b.fixed ? 'Recommended' : 'Best after tax at ' + slab + '% slab')) + '</span></div>' +
+      return '<div class="pk-o"><div class="pk-on">' + esc(o.lbl) + '<span class="pk-tag' + (i ? ' alt">Alternative' : '">' + (b.fixed ? 'Model choice' : 'Higher after-tax estimate at ' + slab + '% slab')) + '</span></div>' +
         '<div class="pk-why">' + esc(o.why) + '</div>' +
         (x.pt ? '<div class="pk-y"><span>Typical return <b>' + pct(x.pt.pre) + '</b></span><span>After tax <b>' + pct(x.pt.post) + '</b></span></div>' : '') +
         (fs.length ? '<ul class="pk-f">' + fs.map(function(f){ return '<li><a href="?fund=' + f.code + '" data-open="' + f.code + '">' + esc(f.name) + '</a><span class="pk-m">1Y ' + pct(f.r1y) + ' · 3Y ' + pct(f.r3y) + ' a yr · Exp. ' + (isNum(f.ter) ? f.ter.toFixed(2) + '%' : '–') + ' · ₹' + Math.round(f.aum).toLocaleString('en-IN') + ' cr</span></li>'; }).join('') + '</ul>' : '<div class="pk-why">No fund passes the checks today.</div>') + '</div>';
@@ -3290,7 +3314,7 @@ function gdShow(fq){
   document.querySelectorAll('#sipGuide .gd-pane').forEach(function(p){ p.classList.toggle('on', p.getAttribute('data-gfq') === fq); });
 }
 function renderSip(){
-  if (!SIP) { loadSip().then(renderSip).catch(function(){ $('sipBody').innerHTML = '<div class="card"><div class="err"><b>The Smart Invest planner is temporarily unavailable</b>Please refresh in a few minutes.</div></div>'; }); return; }
+  if (!SIP) { loadSip().then(renderSip).catch(function(){ $('sipBody').innerHTML = '<div class="card"><div class="err"><b>The Portfolio Simulator is temporarily unavailable</b>Please refresh in a few minutes.</div></div>'; }); return; }
   var P = S.plan, plan = SIP.plans[P.hz + P.rk];
   $('sipHz').innerHTML = SIP.horizons.map(function(h){ return '<button data-hz="' + h.id + '"' + (h.id === P.hz ? ' class="on"' : '') + '>' + esc(h.label) + '</button>'; }).join('');
   $('sipRk').innerHTML = SIP.risks.map(function(r){ return '<button data-rk="' + r.id + '"' + (r.id === P.rk ? ' class="on"' : '') + '>' + esc(r.label) + '</button>'; }).join('');
@@ -3301,6 +3325,13 @@ function renderSip(){
   $('sipYrsFld').hidden = lump; $('sipYrsFld').parentNode.classList.toggle('lump', lump);
   if (document.activeElement !== $('sipAmt')) $('sipAmt').value = P.amt;
   if (!plan) { $('sipBody').innerHTML = '<div class="card"><div class="empty">No plan available for this combination.</div></div>'; $('sipMarket').innerHTML = ''; return; }
+  if (window.VTSim) {
+    $('sipRisk').innerHTML = VTSim.riskPanel({kind:'fund', risk10:plan.risk10, points10:plan.points10, mdd:plan.mdd,
+      rows: plan.slots.filter(function(s){ return s.w > 0; }).map(function(s){ var f = BY[s.code] || {};
+        return {name:f.name || s.label, sub:s.label, w:s.w, risk:s.risk10 != null ? s.risk10 : VTSim.risk10(f.std, f.mdd), pts:s.pts10, vol:s.hist10 ? s.hist10.vol : f.std, mdd:s.hist10 ? s.hist10.v : f.mdd,
+                ok:(s.checks || []).filter(function(c){ return c[1]; }).length, n:(s.checks || []).length}; })});
+    $('sipEco').innerHTML = VTSim.ecoPanel((SIP.market || {}).growth, (SIP.market || {}).components);
+  }
   var hzd = SIP.horizons.filter(function(h){ return h.id === P.hz; })[0] || {years:plan.years, min:1, max:30};
   // stay invested = the horizon (how long the money is held); invest for = how many years instalments are paid (≤ stay)
   var stayMax = hzd.id === 'h10' ? 40 : hzd.max;
@@ -3335,12 +3366,12 @@ function renderSip(){
   }
   // ── expected outcome ──
   var gain = Math.max(0, pr.value - pr.invested), postGain = Math.max(0, pr.post - pr.invested);
-  h += '<div class="card proj"><div class="proj-top"><div><div class="sec-title">Expected outcome after ' + stay + ' year' + (stay > 1 ? 's' : '') + '</div>' +
+  h += '<div class="card proj"><div class="proj-top"><div><div class="sec-title">Simulated outcome after ' + stay + ' year' + (stay > 1 ? 's' : '') + '</div>' +
     '<div class="sec-sub">' + (lump ? inr(P.amt) + ' invested once' + (entry.months ? ' (equity moved in over ' + entry.months + ' months)' : '') + ' and held for ' + stay + ' year' + (stay > 1 ? 's' : '')
-      : inr(P.amt) + ' every ' + per + ' for ' + years + ' year' + (years > 1 ? 's' : '') + ' (' + pr.n.toLocaleString('en-IN') + ' instalment' + (pr.n > 1 ? 's' : '') + ')' + (stay > years ? ', then left invested for ' + (stay - years) + ' more year' + (stay - years > 1 ? 's' : '') : '')) + ' · expected return ' + fmt(pr.er) + '% a year before tax (net of expense ratios)</div></div></div>' +
+      : inr(P.amt) + ' every ' + per + ' for ' + years + ' year' + (years > 1 ? 's' : '') + ' (' + pr.n.toLocaleString('en-IN') + ' instalment' + (pr.n > 1 ? 's' : '') + ')' + (stay > years ? ', then left invested for ' + (stay - years) + ' more year' + (stay - years > 1 ? 's' : '') : '')) + ' · historical model estimate ' + fmt(pr.er) + '% a year before tax (net of expense ratios)</div></div></div>' +
     '<div class="proj-kpis">' +
       kpi('Total invested', fmtCr(pr.invested)) +
-      kpi('Expected value', '<span class="big">' + fmtCr(pr.value) + '</span>', 'likely ' + fmtCr(pr.low) + ' – ' + fmtCr(pr.high)) +
+      kpi('Simulated value', '<span class="big">' + fmtCr(pr.value) + '</span>', 'likely ' + fmtCr(pr.low) + ' – ' + fmtCr(pr.high)) +
       kpi('Estimated tax', fmtCr(pr.tax), 'slab ' + P.slab + '% · incl. 4% cess') +
       kpi('Post-tax value', '<span class="pos">' + fmtCr(pr.post) + '</span>', 'gain ' + fmtCr(postGain)) +
       kpi('Post-tax return', fmt(pr.xirr) + '% a year', lump ? 'annualised on the amount invested' : 'annualised on your instalments') +
@@ -3374,7 +3405,7 @@ function renderSip(){
     var f = BY[s.code] || {name:'Fund ' + s.code, amcName:'', subLabel:''}, src = s.src, col = 'var(--pie' + (i + 1) + ')';
     var flags = [];
     if (src.state === 'watch') flags.push('<span class="st st-un" title="' + esc(src.note) + '">On watch</span>');
-    if (s.upFrom) flags.push('<span class="tag" title="Your amount for this fund covers its ' + esc(inr((s.src.upgrade || {}).min || 0)) + ' minimum, so the higher-scoring fund is used instead of ' + esc((BY[s.upFrom] || {}).name || '') + '">Upgraded for your amount</span>');
+    if (s.upFrom) flags.push('<span class="tag" title="Your amount for this fund covers its ' + esc(inr((s.src.upgrade || {}).min || 0)) + ' minimum, so the higher-scoring fund is used instead of ' + esc((BY[s.upFrom] || {}).name || '') + '">Alternative for your amount</span>');
     if (s.swapped) flags.push('<span class="tag" title="' + esc((BY[s.swapped] || {}).name || '') + ' does not offer weekly SIPs">Weekly-SIP alternate</span>');
     if (src.gate && src.w > 0) flags.push('<span class="tag" title="' + esc(src.gate.reason === 'fund' ? 'Expensive portfolio: ' + src.gate.index : src.gate.index + ' is expensive vs its 10-year history') + '">Reduced this month (−' + src.gate.cut + ' pts)</span>');
     if (s.merged.length) flags.push('<span class="tag" title="Includes the allocation for ' + esc(s.merged.join(', ')) + '">+ ' + esc(s.merged.join(', ')) + '</span>');
@@ -3406,7 +3437,7 @@ function renderSip(){
     '<div class="sec-sub">' + inr(P.amt) + ' ' + perTxt + ' split across ' + sized.slots.length + ' funds · reviewed monthly, last review ' + monthTxt(SIP.reviewed) + '</div>' +
     '<div class="mixbar">' + Object.keys(mix).map(function(a){ return '<i style="width:' + mix[a] + '%;background:' + (ASSET_COL[a] || 'var(--pieO)') + '" title="' + esc(a) + ' ' + mix[a] + '%"></i>'; }).join('') + '</div>' +
     '<div class="mixleg">' + Object.keys(mix).map(function(a){ return '<span><i style="background:' + (ASSET_COL[a] || 'var(--pieO)') + '"></i>' + esc(a) + ' <b>' + mix[a] + '%</b></span>'; }).join('') + '</div>' +
-    '<div class="tbl-scroll sip-tbl-wrap"><table class="sip-tbl"><thead><tr><th>Fund</th><th class="num">Weight</th><th class="num">' + (lump ? 'Amount' : 'Per ' + per) + '</th><th class="num" title="Expected return a year, net of expense ratio">Exp. return</th><th class="num">3Y</th><th class="num">TER</th></tr></thead><tbody>' +
+    '<div class="tbl-scroll sip-tbl-wrap"><table class="sip-tbl"><thead><tr><th>Fund</th><th class="num">Weight</th><th class="num">' + (lump ? 'Amount' : 'Per ' + per) + '</th><th class="num" title="Historical model estimate a year, net of expense ratio">Model est.</th><th class="num">3Y</th><th class="num">TER</th></tr></thead><tbody>' +
     rows.map(function(r){
       return '<tr><td>' + r.body + '</td><td class="num">' + r.s.w + '%<div class="wbar"><i style="width:' + r.s.w + '%;background:' + r.col + '"></i></div></td>' +
         '<td><div class="sip-amt">' + inr(r.s.amt) + '<small>' + r.minTxt + '</small></div></td>' +
@@ -3416,13 +3447,13 @@ function renderSip(){
       return '<div class="mc" style="cursor:default">' + r.body +
         '<div class="mc-row"><div>Weight<b>' + r.s.w + '%</b></div><div>' + (lump ? 'Amount' : 'Per ' + per) + '<b>' + inr(r.s.amt) + '</b></div><div>Exp.<b>' + (isNum(r.s.er) ? fmt(r.s.er, 1) + '%' : '–') + '</b></div><div>TER<b>' + (isNum(r.f.ter) ? fmt(r.f.ter) + '%' : '–') + '</b></div></div></div>';
     }).join('') + '</div>' +
-    '<div class="note">' + (lump ? 'Invest in the Direct plan, Growth option of each fund as a one-time purchase, following the entry plan above; each amount covers the fund\'s minimum.' : P.fq === 'q' || P.fq === 'y' ? 'Invest in the Direct plan, Growth option of each fund every ' + per + ' as a lump-sum purchase (a quarterly or yearly SIP where the fund house offers one); each amount covers the fund\'s minimum.' : 'Invest in the Direct plan, Growth option of each fund — each ' + per + ' as a lump-sum purchase or through a SIP; every fund accepts both, and each amount covers the fund\'s minimum. Weekly SIP minimums and dates vary by fund house — confirm on the scheme page.') + '</div>' +
+    '<div class="note">' + (lump ? 'The simulation assumes the Direct plan, Growth option of each fund, bought as a one-time purchase, following the entry plan above; each amount covers the fund\'s minimum.' : P.fq === 'q' || P.fq === 'y' ? 'The simulation assumes the Direct plan, Growth option of each fund, bought every ' + per + ' as a lump-sum purchase (a quarterly or yearly SIP where the fund house offers one); each amount covers the fund\'s minimum.' : 'The simulation assumes the Direct plan, Growth option of each fund, bought each ' + per + ' as a lump-sum purchase or through a SIP; every fund accepts both, and each amount covers the fund\'s minimum. Weekly SIP minimums and dates vary by fund house — confirm on the scheme page.') + '</div>' +
     '</div>';
   // ── right column: allocation snapshot (sticky beside the plan) ──
   var donut = donutCard('sipDonut', 'Allocation by fund', '', sized.slots.map(function(s){ return [shortName((BY[s.code] || {name:s.label}).name), s.w]; }), [sized.slots.length + ' funds', inr(P.amt) + (lump ? ' once' : '/' + F.ab)]);
   var rot = (m.rotation || {}), segName = function(k){ var x = (rot.segments || []).filter(function(z){ return z.key === k; })[0]; return x ? x.label.toLowerCase() : k; };
   var hs = plan.hist || {}, h3 = hs.r3y && hs.r3y.v, h5 = hs.r5y && hs.r5y.v;
-  var snap = [['Expected return', fmt(pr.er) + '% a year', 'before tax, net of costs']].concat(isNum(h3) || isNum(h5) ? [['Past return of this mix', (isNum(h3) ? fmt(h3) + '% (3Y)' : '') + (isNum(h3) && isNum(h5) ? ' · ' : '') + (isNum(h5) ? fmt(h5) + '% (5Y)' : ''), 'a year, today\'s funds and weights · not a forecast']] : []).concat([['Weighted expense ratio', fmt(ter) + '%', 'Direct plans'],
+  var snap = [['Historical model estimate', fmt(pr.er) + '% a year', 'before tax, net of costs']].concat(isNum(h3) || isNum(h5) ? [['Past return of this mix', (isNum(h3) ? fmt(h3) + '% (3Y)' : '') + (isNum(h3) && isNum(h5) ? ' · ' : '') + (isNum(h5) ? fmt(h5) + '% (5Y)' : ''), 'a year, today\'s funds and weights · not a forecast']] : []).concat([['Weighted expense ratio', fmt(ter) + '%', 'Direct plans'],
     ['Equity exposure', fmt((mix.Equity || 0) + (mix.International || 0), 0) + '%', plan.tilt ? (plan.tilt > 0 ? '+' : '') + plan.tilt + ' pts valuation tilt' : 'standard allocation'],
     ['Equity rotation', plan.rotated ? '+' + plan.rotated + ' pts' : 'none', plan.rotated && rot.to ? 'to ' + segName(rot.to) + ' from ' + segName(rot.from) : 'segments fairly valued'],
     ['Quality checks', nChecks + ' passed', 'across ' + sized.slots.length + ' funds'], ['Fund houses', Object.keys(amcs).length, 'max. 2 funds each'],
@@ -3479,7 +3510,7 @@ function renderSip(){
       GL.signals.map(function(x){ var fx = Object.keys(x.fav || {}).filter(function(a){ return x.fav[a]; }).map(function(a){ return chip(a, x.fav[a]); }).join(' ');
         return '<tr><td class="sec-n">' + esc(x.k) + '<small>' + esc(x.note || '') + '</small></td><td class="gm-v">' + esc(x.v) + '</td><td class="gm-e">' + (fx || '<span class="mut">neutral</span>') + '</td></tr>'; }).join('') +
       '</tbody></table></div>' +
-      '<p class="mi-foot">How these are used: a total of +2 or more for equities adds 5 points to the equity tilt (−2 or less removes 5); the bond total feeds the interest-rate cycle; gold at +2 or more raises the precious-metal share by 5 points (−2 or less trims it, never below 5%) and adjusts its expected return; the silver total helps decide gold vs silver. ' +
+      '<p class="mi-foot">How these are used: a total of +2 or more for equities adds 5 points to the equity tilt (−2 or less removes 5); the bond total feeds the interest-rate cycle; gold at +2 or more raises the precious-metal share by 5 points (−2 or less trims it, never below 5%) and adjusts its historical model estimate; the silver total helps decide gold vs silver. ' +
       (GL.goldTilt === 'up' ? 'This month: gold share raised.' : GL.goldTilt === 'down' ? 'This month: gold share trimmed where it was above 5%.' : 'This month: gold share unchanged.') + ' Decisions change only at the monthly review.</p></div>';
   }
   if (secRows) h += '<div class="card pcard sec-card"><div class="mi-top"><div><div class="sec-title">Sector valuations</div><div class="sec-sub">P/E against each sector\'s own 10-year history and momentum against the Nifty 50 · ★ current sector satellite (7+ year aggressive and very aggressive plans) · only sectors with a fund passing every check can be chosen · Outlook: short term 1–3 months (relative momentum &amp; trend), medium term 6–12 months (momentum, valuation, rates, oil, rupee, commodity cycle, global flows), long term 3+ years (valuation vs 10-year history) — tap a label for the reasons</div></div></div>' +
@@ -3505,15 +3536,23 @@ function renderSip(){
       '<li>Next review: ' + fmtDate(SIP.nextReview) + '.</li>' +
     '</ul>' + ((plan.changes || []).length ? '<div class="pf-h" style="margin-top:12px">Recent changes</div><ul class="rules">' + plan.changes.map(function(c){ return '<li>' + fmtDate(c.date) + ': ' + esc((BY[c.from] || {name:'Previous fund'}).name) + ' → ' + esc((BY[c.to] || {name:'new fund'}).name) + (c.note ? ' — ' + esc(c.note) : '') + '</li>'; }).join('') + '</ul>' : '') + '</div>' +
     '</div>';
-  h += '<p class="disc" style="margin-top:14px"><strong>Important:</strong> Smart Invest plans and projections are model illustrations generated from historical data and current market indicators for educational purposes only. They are not personalised investment advice and do not consider your income, existing investments, tax position or goals. Returns are not guaranteed and past performance does not predict future results. We are not SEBI registered investment advisors — please consult a certified financial advisor before investing.</p>';
+  h += '<p class="disc" style="margin-top:14px"><strong>Important:</strong> Portfolio Simulator plans and projections are model illustrations generated from historical data and current market indicators for educational purposes only. They are not personalised investment advice and do not consider your income, existing investments, tax position or goals. Returns are not guaranteed and past performance does not predict future results. We are not SEBI registered investment advisors — please consult a certified financial advisor before investing.</p>';
   var cut = h.indexOf('<div class="mi-head">');
   $('sipBody').innerHTML = cut < 0 ? h : h.slice(0, cut);
   $('sipMarket').innerHTML = cut < 0 ? '' : h.slice(cut);
   bindDonuts();
 }
 function bindSip(){
-  document.addEventListener('click', function(e){ var a = e.target.closest('[data-gopark]'); if (!a) return; e.preventDefault(); setView('sip');
-    setTimeout(function(){ var c = $('sipPark'); if (c) c.scrollIntoView({behavior:'smooth', block:'start'}); }, 60); });
+  if (window.VTSim) VTSim.css();
+  $('sipTabs').addEventListener('click', function(e){
+    var b = e.target.closest('[data-st]'); if (!b) return;
+    var st = b.getAttribute('data-st');
+    if (st === 'plan') $('v-sip').removeAttribute('data-st'); else $('v-sip').setAttribute('data-st', st);
+    this.querySelectorAll('[data-st]').forEach(function(x){ var on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); });
+  });
+  document.addEventListener('click', function(e){ var a = e.target.closest('[data-gopark]'); if (!a) return; e.preventDefault();
+    var go = function(){ setTimeout(function(){ var c = $('sipPark'); if (c) c.scrollIntoView({behavior:'smooth', block:'start'}); }, 60); };
+    if (window.VTSim && !VTSim.accepted()) { S.afterSip = go; setView('sip'); } else { setView('sip'); go(); } });
   $('sipHz').addEventListener('click', function(e){ var b = e.target.closest('[data-hz]'); if (!b) return; S.plan.hz = b.getAttribute('data-hz'); S.plan.yrs = 0; S.plan.stay = 0; renderSip(); writeURL(); });
   $('v-sip').addEventListener('click', function(e){
     if (e.target.id === 'secToggle') { S.secAll = !S.secAll; renderSip(); return; }
@@ -3569,7 +3608,7 @@ boot();
 (function(){
   function info(){
     var url = location.href.split('#')[0], t = document.title.split(' — ')[0].split(' | ')[0];
-    var text = /[?&]fund=/.test(location.search) && t ? t + ' — returns, risk, portfolio & fund health on the VilfinTV India Mutual Fund Screener (free & educational)' : /view=sip/.test(location.search) ? 'Smart Invest by VilfinTV — a diversified mutual fund plan for your horizon and risk level, with a beginner\u2019s guide (free & educational)' : 'VilfinTV India Mutual Fund Screener — compare every direct mutual fund: returns, risk, portfolios, Smart Invest plans and FAQs (free & educational)';
+    var text = /[?&]fund=/.test(location.search) && t ? t + ' — returns, risk, portfolio & fund health on the VilfinTV India Mutual Fund Screener (free & educational)' : /view=sip/.test(location.search) ? 'Portfolio Simulator by VilfinTV — a diversified mutual fund plan for your horizon and risk level, with a beginner\u2019s guide (free & educational)' : 'VilfinTV India Mutual Fund Screener — compare every direct mutual fund: returns, risk, portfolios, Portfolio Simulator plans and FAQs (free & educational)';
     return {url:url, text:text, title:document.title};
   }
   function link(net){

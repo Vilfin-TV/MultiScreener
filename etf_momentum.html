@@ -424,6 +424,14 @@ td.num{text-align:right;font-family:'JetBrains Mono',monospace;white-space:nowra
 @media (max-width:640px){.gd-steps,.gd-day,.gd-cols{grid-template-columns:minmax(0,1fr)}}
 .sm-cta{margin-top:12px;height:40px}
 .smart{padding:20px;margin-bottom:18px;scroll-margin-top:120px}
+.smart.locked>:not(.sm-head):not(.sm-lock){display:none!important}
+.smart:not(.locked) .sm-lock{display:none}
+#smart[data-st="risk"] .sm-plan,#smart[data-st="eco"] .sm-plan{display:none!important}
+#smart:not([data-st="risk"]) #smRiskPane,#smart:not([data-st="eco"]) #smEcoPane{display:none}
+#smTabs{margin-top:16px}
+.sm-lock{margin-top:14px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:16px;border:1px dashed var(--border2);border-radius:12px;background:var(--surface2)}
+.sm-lock p{margin:0;color:var(--text2);font-size:13.5px;line-height:1.55;flex:1 1 320px}
+.sm-lock .btn{height:40px;flex:none}
 .sm-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
 .sm-sub{font-size:13px;color:var(--text2);line-height:1.55;margin-top:6px;max-width:780px}
 .sm-ctl{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1.15fr) minmax(0,.7fr);gap:12px 16px;margin:16px 0 4px;align-items:end}
@@ -612,6 +620,8 @@ table.xt{min-width:0!important}
 
 /* ═══════════════ INFO ═══════════════ */
 .info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:18px}
+.info-grid>.card{grid-column:1/-1}
+.info-grid>.faq-card{scroll-margin-top:120px}
 .info{padding:20px}
 .info p,.info li{font-size:13.5px;color:var(--text2);line-height:1.65}
 .info ul{padding-left:18px;margin-top:8px}
@@ -652,6 +662,24 @@ footer a{color:var(--text2)}
   .deep-grid{grid-template-columns:1fr}
   .info-grid{grid-template-columns:1fr}
 }
+/* tablets, landscape phones and narrow windows: ETF cards instead of the wide table (the table needs ~1160px) */
+@media (max-width:1100px){
+  .tbl-scroll{display:none}
+  .cards-m{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+  .mc{border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--surface2);cursor:pointer}
+  .mc.sel-row{border-color:var(--accent)}
+  .mc-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .mc-name{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+  .mc-tags{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
+  .mc-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 6px;margin-top:9px}
+  .mc-row div{font-size:10.5px;color:var(--text3);font-weight:700;letter-spacing:.4px}
+  .mc-row div b{display:block;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text);font-weight:600;letter-spacing:0}
+  .view-cap{display:block}
+}
+@media (min-width:761px) and (max-width:1100px){
+  .cards-m{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .cards-m>.empty,.cards-m>.err{grid-column:1/-1}
+}
 @media (max-width:760px){
   .vt-hwrap{padding:0 14px;gap:10px;height:54px}
   .vt-sep,.vt-ptitle small{display:none}
@@ -679,16 +707,6 @@ footer a{color:var(--text2)}
   .ac-sym{min-width:0}
   .chart-box{min-height:0}
   .chart-top .tgl{margin-top:2px}
-  .tbl-scroll{display:none}
-  .cards-m{display:flex;flex-direction:column;gap:8px;margin-top:14px}
-  .mc{border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--surface2);cursor:pointer}
-  .mc.sel-row{border-color:var(--accent)}
-  .mc-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
-  .mc-name{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
-  .mc-tags{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
-  .mc-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 6px;margin-top:9px}
-  .mc-row div{font-size:10.5px;color:var(--text3);font-weight:700;letter-spacing:.4px}
-  .mc-row div b{display:block;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text);font-weight:600;letter-spacing:0}
   .tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
   .tools .tin{grid-column:1/-1;min-width:0;width:100%}
   .tools .sel{min-width:0;width:100%;font-size:12.5px;padding-left:11px;padding-right:30px;background-position:right 10px center}
@@ -822,7 +840,7 @@ details.faq ul+p{margin-top:8px}
     <div>
       <h1>ETF <em>Momentum Mode</em></h1>
       <p>See whether any NSE ETF is <b>Accelerating</b>, <b>Decelerating</b>, <b>Recovering</b> or <b>Underperforming</b> against the benchmark you choose, based on weekly relative strength and its momentum.</p>
-      <a class="btn pri sm-cta" href="#smart">🎯 Smart Invest — build a diversified ETF portfolio</a>
+      <a class="btn pri sm-cta" href="#smart">🎯 Portfolio Simulator — explore a diversified ETF model portfolio</a>
     </div>
     <div class="chips" id="metaChips">
       <span class="chip"><span class="skel" style="width:120px;height:12px"></span></span>
@@ -936,15 +954,16 @@ details.faq ul+p{margin-top:8px}
     <div class="more"><button class="btn" id="moreBtn" style="display:none">Show more</button></div>
   </section>
 
-  <!-- Smart Invest for ETFs -->
-  <section class="card smart" id="smart" aria-labelledby="smTitle">
+  <!-- Portfolio Simulator for ETFs -->
+  <section class="card smart locked" id="smart" aria-labelledby="smTitle">
     <div class="sm-head">
       <div>
-        <div class="sec-title" id="smTitle">Smart Invest — ETF Portfolio</div>
-        <p class="sm-sub">A diversified ETF portfolio for your goal — Indian equity, debt, gold or silver and global — built with the same market rules as our mutual fund Smart Invest and reviewed every month. Pick your goal, risk level and amount.</p>
+        <div class="sec-title" id="smTitle">Portfolio Simulator — ETF</div>
+        <p class="sm-sub">An educational, diversified ETF model portfolio for your goal — Indian equity, debt, gold or silver and global — built with the same market rules as our mutual fund Portfolio Simulator and reviewed every month. Choose a goal, risk level and amount to simulate.</p>
       </div>
       <span class="chip" id="smChip">Loading…</span>
     </div>
+    <div class="sm-lock" id="smLock"><p>🔒 <b>Educational simulation.</b> Please read and accept the risk warning and disclaimer to open the ETF Portfolio Simulator. VilfinTV is not a SEBI-registered investment adviser; the simulator is for learning only.</p><button type="button" class="btn pri" id="smOpen">Open Portfolio Simulator</button></div>
     <div class="sm-ctl">
       <div class="sm-f"><label>Goal — how long you will stay invested</label><div class="sm-seg" id="smHz"></div></div>
       <div class="sm-f"><label>Risk level</label><div class="sm-seg" id="smRisk"></div></div>
@@ -952,10 +971,13 @@ details.faq ul+p{margin-top:8px}
       <div class="sm-f"><label>How you invest</label><div class="sm-seg" id="smFq"></div></div>
       <div class="sm-f sm-slab"><label for="smSlab">Your income-tax slab</label><select id="smSlab" class="sel sm-sel"><option value="0">0%</option><option value="5">5%</option><option value="10">10%</option><option value="15">15%</option><option value="20">20%</option><option value="30" selected>30%</option></select></div>
     </div>
-    <div id="smBody"><div class="skel" style="height:260px"></div></div>
-    <div class="sm-guide" id="smGuide">
-      <div class="sec-title">How to invest with this ETF plan — a beginner's guide</div>
-      <p class="gd-lead">ETFs are bought and sold <b>on the stock exchange</b>, like shares, through a <b>demat &amp; trading account</b>. On each investment day you open this page, check the plan and place a <b>buy order for every ETF</b> in it for the units shown. Nothing is bought automatically — you stay in control of every order.</p>
+    <div class="vts-tabs" id="smTabs" role="tablist" aria-label="Portfolio Simulator sections"><button type="button" role="tab" data-st="plan" class="on" aria-selected="true">📊 Model portfolio</button><button type="button" role="tab" data-st="risk" aria-selected="false">🛡️ Risk &amp; score</button><button type="button" role="tab" data-st="eco" aria-selected="false">🌏 Economy &amp; earnings</button></div>
+    <div id="smRiskPane"></div>
+    <div id="smEcoPane"></div>
+    <div id="smBody" class="sm-plan"><div class="skel" style="height:260px"></div></div>
+    <div class="sm-guide sm-plan" id="smGuide">
+      <div class="sec-title">How ETF investing works — a beginner's guide</div>
+      <p class="gd-lead">ETFs are bought and sold <b>on the stock exchange</b>, like shares, through a <b>demat &amp; trading account</b>. The simulation assumes that on each investment day the investor checks the model portfolio and places a <b>buy order for every ETF</b> in it for the units shown. Nothing is bought automatically — you stay in control of every order.</p>
       <ol class="gd-steps">
         <li><b>Open a demat &amp; trading account (once)</b>Keep your <b>PAN</b>, <b>Aadhaar</b> linked to your mobile number, a bank account in your own name and a cancelled cheque or bank statement ready. Account opening and KYC are online (e-sign with Aadhaar OTP) and usually take 1–3 working days. Choose a platform from <a href="#brokers">Best Brokers &amp; Apps</a>, add a <b>nominee</b>, and enable the <b>equity (cash) segment</b>.</li>
         <li><b>Add money to your trading account</b>Transfer funds by UPI or net banking from your linked bank account before you buy. Purchases settle the next working day (T+1): the units appear in your demat account then.</li>
@@ -1051,12 +1073,12 @@ details.faq ul+p{margin-top:8px}
 
       <div class="gd-cols gd-honest">
         <div class="gd-col"><h4>📉 Expect red years</h4><ul>
-          <li>Returns are <b>not stable every year</b> — equity ETFs can fall 10–20% in a normal year and far more in a crisis. The expected return is a long-term average.</li>
+          <li>Returns are <b>not stable every year</b> — equity ETFs can fall 10–20% in a normal year and far more in a crisis. The historical model estimate is a long-term average.</li>
           <li>Stay invested for your full horizon and keep investing through falls; selling in a fall usually locks in the loss.</li>
           <li>Need the money within 1–2 years? Move it gradually to the liquid ETF before then.</li>
         </ul></div>
         <div class="gd-col"><h4>🎓 Educational, not advice</h4><ul>
-          <li>VilfinTV is an educational platform. ETF Smart Invest is a model plan built from published data and rules — it does not know your personal situation.</li>
+          <li>VilfinTV is an educational platform. ETF Portfolio Simulator is a model plan built from published data and rules — it does not know your personal situation.</li>
           <li><b>Research every ETF yourself</b> before investing: read its scheme documents and check its index, cost, liquidity and iNAV.</li>
           <li>When in doubt, consult a SEBI-registered investment adviser.</li>
         </ul></div>
@@ -1082,7 +1104,7 @@ details.faq ul+p{margin-top:8px}
       </div>
       <p style="margin-top:12px">ETFs typically rotate clockwise: Recovering → Accelerating → Decelerating → Underperforming. Relative moves smaller than 1% are treated as noise, so ETFs that track the benchmark sit near the centre with low confidence.</p>
     </div>
-    <div class="card info">
+    <div class="card info faq-card" id="faq">
       <div class="sec-title">Questions</div>
       <details class="faq"><summary>Why did we build VilfinTV — and how can you help?</summary><p>VilfinTV is a <b>free, educational initiative</b> — a charitable learning project built so that anyone, from a first-time investor to an experienced one, can understand mutual funds and ETFs, compare them honestly and learn to invest with discipline. There is no subscription and no paywall, and every tool on this page is open to all.</p><ul>
         <li><b>Our motivation is your learning.</b> Most people start investing without guidance, chase recent returns or stop at the first fall. We want to change that with clear data, plain-language guides and honest answers.</li>
@@ -1091,7 +1113,7 @@ details.faq ul+p{margin-top:8px}
         <li><b>Feedback:</b> tell us what to add or improve through the feedback option on the <a href="index.html">VilfinTV home page</a> — your suggestions shape what we build next.</li></ul><p>VilfinTV is for education only and does not give investment advice.</p></details>
       <details class="faq"><summary>Is the data on this page accurate?</summary><p>Every trading day, after the exchange closes, prices, returns, risk, liquidity and official scheme facts (NAV, expense ratio, fund size, benchmark) are refreshed. Two independent checks then run before anything is published:</p><ul>
         <li><b>Engine check</b> — every momentum mode is recomputed with the exact calculation this page uses and must match.</li>
-        <li><b>Accuracy audit</b> — thousands of checks recompute the published numbers from the raw daily prices: last price and date, 52-week high / low, 1-week to 1-year returns, volatility, traded value, premium to NAV, weekly history, scores, ratings, holdings and every Smart Invest plan, plus day-over-day checks for missing ETFs or unexplained price jumps. If any check fails, the update is held back and the previous day's data stays online. The number of checks passed is shown at the top of the page.</li></ul>
+        <li><b>Accuracy audit</b> — thousands of checks recompute the published numbers from the raw daily prices: last price and date, 52-week high / low, 1-week to 1-year returns, volatility, traded value, premium to NAV, weekly history, scores, ratings, holdings and every Portfolio Simulator plan, plus day-over-day checks for missing ETFs or unexplained price jumps. If any check fails, the update is held back and the previous day's data stays online. The number of checks passed is shown at the top of the page.</li></ul>
         <p>Limits: prices are end-of-day (today's candle during market hours is delayed up to ~30 minutes), holdings are monthly, and official facts can lag the fund house by a few days. Always confirm the live price and iNAV on the exchange before placing an order.</p></details>
       <details class="faq"><summary>What is an ETF?</summary><p>An <b>exchange-traded fund (ETF)</b> is a fund that holds a basket of investments — usually copying an index such as the Nifty 50, a sector, gold, silver, government bonds or a foreign index — and trades on the stock exchange like a share. One ETF unit gives you a slice of the whole basket. ETFs are regulated by SEBI, typically have very low expense ratios, and their holdings are disclosed regularly.</p></details>
       <details class="faq"><summary>ETF, index fund or mutual fund — what is the difference?</summary><ul>
@@ -1104,7 +1126,7 @@ details.faq ul+p{margin-top:8px}
         <li><b>Check the price against iNAV:</b> the exchange publishes an indicative NAV during the day. Buy close to it; avoid paying a premium of more than about 0.5%.</li>
         <li><b>Use a limit order</b> (not a market order) during market hours (9:15 am – 3:30 pm on trading days), ideally avoiding the first and last 15 minutes when spreads are wider.</li>
         <li><b>Invest regularly:</b> buy a fixed amount every month on the same day, just as with a SIP.</li></ul></details>
-      <details class="faq"><summary>Which ETF gives the maximum profit?</summary><p>Honestly, nobody can know in advance — last year's top ETF is often not next year's. Sector and thematic ETFs can rise fastest but also fall hardest. What reliably improves your long-term result is:</p><ul>
+      <details class="faq"><summary>Can anyone know which ETF will give the highest return?</summary><p>Honestly, nobody can know in advance — last year's top ETF is often not next year's. Sector and thematic ETFs can rise fastest but also fall hardest. What reliably improves your long-term result is:</p><ul>
         <li>A <b>broad core</b> — Nifty 50, Nifty Next 50, Nifty 500 or similar — for most of your money.</li>
         <li><b>Low cost and tight tracking:</b> lower expense ratio, small tracking error, and enough daily trading volume.</li>
         <li><b>Smaller satellites</b> (sector, factor such as momentum or value, international, gold) of 5–15% each, chosen with the modes on this page and your own research.</li>
@@ -1123,7 +1145,7 @@ details.faq ul+p{margin-top:8px}
           <tr><td>Debt</td><td>Bharat Bond / G-Sec / liquid ETFs</td><td class="num">15–25%</td></tr>
         </tbody></table><p>Different asset classes rarely fall together, which smooths the ride. Add a sector or factor ETF only as a small satellite. International ETFs can trade at a large premium to their value when overseas investment limits are reached — check iNAV first.</p></details>
       <details class="faq"><summary>What is the best time to buy an ETF?</summary><p>For core ETFs, the best time is <b>regularly</b> — a fixed amount every month on the same day — because nobody can time the market reliably. Extra money can be added when markets are clearly cheaper (for example after a fall of 10% or more, or when valuations are below their long-term average). Within a trading day, buy with a limit order close to iNAV, away from the opening and closing minutes. For satellite ETFs, the modes on this page help you judge timing (see the next question).</p></details>
-      <details class="faq"><summary>Accelerating, Decelerating, Recovering or Underperforming — which is best to buy?</summary><p>The modes describe how an ETF has performed <b>relative to the benchmark</b> recently; they are a timing aid, not a guarantee.</p><ul>
+      <details class="faq"><summary>Accelerating, Decelerating, Recovering or Underperforming — what do they mean for me?</summary><p>The modes describe how an ETF has performed <b>relative to the benchmark</b> recently; they are a timing aid, not a guarantee.</p><ul>
         <li><b>▲ Accelerating</b> (outperforming and gaining strength): the strongest current trend — the usual choice for momentum buyers, but it can be late in the move, so buy in parts and watch for a shift to Decelerating.</li>
         <li><b>◤ Recovering</b> (still behind, but improving): an early turn — potentially higher reward with higher risk, as some recoveries fade. Wait for confirmation (two or three weeks of improvement, rising volume) or buy a small first lot.</li>
         <li><b>▼ Decelerating</b> (still ahead, but fading): a time to hold or book partial profits rather than add new money.</li>
@@ -1140,16 +1162,21 @@ details.faq ul+p{margin-top:8px}
       <details class="faq" open><summary>How current is the data?</summary><p>Prices are end-of-day NSE closes, refreshed after market close every trading day. The latest week includes trading up to the date shown at the top of the page. Newly listed ETFs are added automatically once they have enough trading history.</p></details>
       <details class="faq"><summary>What does "Confidence" mean?</summary><p>It cross-checks the mode against simple relative returns: whether the ETF has actually beaten the benchmark over 13 weeks, whether its recent relative return is improving, and whether it trades actively. <b>High</b> means all checks agree.</p></details>
       <details class="faq"><summary>Why is an ETF "Not classified"?</summary><p>At least 20 weeks of clean trading history are needed. Recently listed, suspended or rarely traded ETFs are listed but not classified, to avoid misleading signals.</p></details>
-      <details class="faq"><summary>How does ETF Smart Invest pick the ETFs?</summary><p>Each plan starts from the same monthly decisions as our mutual fund planner, then fills every role with an ETF that does the same job — Nifty 50 for the core, Nifty Next 50 for breadth, Midcap 150, Smallcap 250, a value or momentum factor ETF, a sector ETF for the chosen sector, gold or silver, liquid or target-maturity bond ETFs depending on the interest-rate cycle, and a US-market ETF when one trades close to its NAV. Every plan from 3 years holds Indian equity, debt and gold or silver.</p><p>Within each role, every ETF tracking that index passes up to <b>14 checks</b>: liquidity, daily trading, expense ratio vs peers and an absolute cost cap, price vs NAV, tracking error and 1-year tracking difference, fund size, track record, VilfinTV rating, trades in every session, liquidity not drying up, a clean price history and — for sector and factor ETFs — a long-term trend that is not broken. The survivors are ranked on liquidity 30% · cost 25% · tracking 20% · size 15% · track record 10%. An ETF trading far above its NAV is never chosen.</p><p><b>Market-condition overlay:</b> when Indian shares are expensive (Nifty 50 / Nifty 500 valuation at the 70th, 80th or 90th percentile of 10 years) or overheated (Nifty 50 more than 12% above its 200-day average), plans of 3 years and more move 5–20 points out of equity — sector, small and mid caps first — into the plan's debt ETF and gold / silver. The money moves back automatically when valuations normalise. The chosen ETF changes only at the monthly review, and only if it fails a check or a clearly better one appears — so you are not asked to switch often.</p></details>
-      <details class="faq"><summary>Smart Invest with ETFs or with mutual funds — which should I use?</summary><p>Both use the <b>same monthly market rules</b> (valuation, interest-rate cycle, gold vs silver, value vs momentum, sector choice) and the same asset mix for each goal and risk level. Choose by how you like to invest:</p>
-        <table class="faq-ex"><thead><tr><th></th><th>ETF Smart Invest</th><th>Mutual fund Smart Invest</th></tr></thead><tbody>
+      <details class="faq"><summary>How does the ETF Portfolio Simulator select the ETFs?</summary><p>Each plan starts from the same monthly decisions as our mutual fund planner, then fills every role with an ETF that does the same job — Nifty 50 for the core, Nifty Next 50 for breadth, Midcap 150, Smallcap 250, a value or momentum factor ETF, a sector ETF for the chosen sector, gold or silver, liquid or target-maturity bond ETFs depending on the interest-rate cycle, and a US-market ETF when one trades close to its NAV. Every plan from 3 years holds Indian equity, debt and gold or silver.</p><p>Within each role, every ETF tracking that index passes up to <b>14 checks</b>: liquidity, daily trading, expense ratio vs peers and an absolute cost cap, price vs NAV, tracking error and 1-year tracking difference, fund size, track record, VilfinTV rating, trades in every session, liquidity not drying up, a clean price history and — for sector and factor ETFs — a long-term trend that is not broken. The survivors are ranked on liquidity 30% · cost 25% · tracking 20% · size 15% · track record 10%. An ETF trading far above its NAV is never chosen.</p><p><b>Market-condition overlay:</b> when Indian shares are expensive (Nifty 50 / Nifty 500 valuation at the 70th, 80th or 90th percentile of 10 years) or overheated (Nifty 50 more than 12% above its 200-day average), plans of 3 years and more move 5–20 points out of equity — sector, small and mid caps first — into the plan's debt ETF and gold / silver. The money moves back automatically when valuations normalise. The chosen ETF changes only at the monthly review, and only if it fails a check or a clearly better one appears — so you are not asked to switch often.</p></details>
+      <details class="faq"><summary>Why doesn't the Portfolio Simulator show the ETFs with the very highest returns?</summary><p>Because last year's top performers are rarely next year's. The ETFs with the highest recent returns are usually concentrated in one sector, theme or style that has just had a strong run — they often carry <b>higher valuations, bigger falls and more volatility</b>, and many slip back to average or below within a few years. The simulator is built for <b>diversification and staying power</b>: every ETF must pass a checklist on cost, size, track record, consistency, risk and drawdown, valuation gates trim segments that look expensive, and growth sleeves are capped. That deliberately gives up some of the highest-flying names in exchange for a mix that is easier to hold through bad years. You can still explore every ETF and its returns in the screener — but chasing the latest winners is one of the most common ways investors lose money.</p></details>
+      <details class="faq"><summary>If I copy a Portfolio Simulator mix exactly and my portfolio is in the red, is VilfinTV responsible?</summary><p><b>No.</b> VilfinTV is a free educational website and is <b>not a SEBI-registered investment adviser or research analyst</b>. The simulator shows illustrative model portfolios from published data and fixed rules to help you learn — it does not know your income, goals, existing investments, tax position or risk tolerance, and its data may be delayed or wrong. Every investment decision, and its result, is your own. Markets fall regularly: a diversified equity mix can be <b>10–20% down in a normal year and 30–50% down in a crisis</b>, and can stay red for months or years. Before investing, read the scheme documents, confirm every figure on the fund house's website and, if you are unsure, consult a SEBI-registered investment adviser. You accept this when you open the simulator.</p></details>
+      <details class="faq"><summary>If I panic and sell during a fall and lose money, is VilfinTV responsible?</summary><p><b>No.</b> Selling in a panic is your own decision, and VilfinTV cannot be responsible for it or for any loss. What history does show is that <b>selling after a big fall usually turns a temporary decline into a permanent loss</b> — investors who sold in March 2020 missed one of the fastest recoveries on record. Some habits that help: invest only money you will not need for the full horizon, keep an emergency fund so you are never forced to sell, decide in advance how you will react to a 20–30% fall, look at your portfolio less often, and keep investing on schedule if your goal and income have not changed. If a fall keeps you awake at night, your mix may carry more risk than suits you — choose a lower risk level or speak to a SEBI-registered investment adviser.</p></details>
+      <details class="faq"><summary>What is a "historical model estimate"?</summary><p>It is the yearly return the simulator's rules <b>assume</b> for each ETF and for the mix, worked out from historical returns, today's valuations and bond yields, after expenses. It is a long-term model figure used to draw the illustration — <b>not a forecast, target or promise</b>. Actual returns will be different and will vary a lot from year to year, including years with losses.</p></details>
+      <details class="faq"><summary>Is the ETF Portfolio Simulator investment advice?</summary><p>No. VilfinTV is a free <b>educational platform</b> and is not a SEBI-registered investment adviser or research analyst. The ETF Portfolio Simulator shows illustrative model portfolios built from published data and fixed rules so you can learn how diversification, costs and market conditions work. Data may be delayed or wrong, past returns and historical model estimates do not predict future returns, and markets can fall sharply. Please research every ETF, read the scheme documents, and consult a SEBI-registered investment adviser for advice on your own situation.</p></details>
+      <details class="faq"><summary>Portfolio Simulator with ETFs or with mutual funds — which should I use?</summary><p>Both use the <b>same monthly market rules</b> (valuation, interest-rate cycle, gold vs silver, value vs momentum, sector choice) and the same asset mix for each goal and risk level. Choose by how you like to invest:</p>
+        <table class="faq-ex"><thead><tr><th></th><th>ETF Portfolio Simulator</th><th>Mutual fund Portfolio Simulator</th></tr></thead><tbody>
         <tr><td>Account</td><td>Demat &amp; trading account</td><td>Direct mutual fund account (no demat needed)</td></tr>
         <tr><td>Cost</td><td>Lowest expense ratios, plus brokerage per trade</td><td>Slightly higher expense ratios, no brokerage</td></tr>
         <tr><td>How you buy</td><td>Whole units at live prices, limit orders near iNAV</td><td>Any rupee amount at the day's NAV</td></tr>
         <tr><td>Active funds</td><td>Index ETFs only</td><td>Includes proven active funds, arbitrage, balanced advantage and multi-asset funds</td></tr>
         <tr><td>Short goals (under 3 years)</td><td>Liquid ETFs — taxed at your slab</td><td>Arbitrage funds — taxed like equity, often better after tax</td></tr>
         <tr><td>Best for</td><td>Hands-on investors who already trade and want the lowest cost</td><td>Beginners, small amounts, fully hands-off investing</td></tr></tbody></table>
-        <p>Open <a href="#smart">ETF Smart Invest</a> or <a href="india_mf_screener.html?view=sip">mutual fund Smart Invest</a>.</p></details>
+        <p>Open <a href="#smart">ETF Portfolio Simulator</a> or <a href="india_mf_screener.html?view=sip">mutual fund Portfolio Simulator</a>.</p></details>
       <details class="faq"><summary>How is the VilfinTV ETF rating calculated?</summary><p>Every ETF with at least one year of trading history is compared only with <b>similar ETFs</b>: core (broad market, mid and small cap), satellite (sector, thematic and factor), global, hybrid, gold, silver, liquid and bond ETFs are ranked separately. Six parts are scored from 0 to 100 against those peers, then combined:</p>
         <table class="faq-ex"><thead><tr><th>Part</th><th>Weight</th><th>What it measures</th></tr></thead><tbody>
         <tr><td>Cost</td><td>20%</td><td>Expense ratio — lower is better</td></tr>
@@ -1192,7 +1219,7 @@ details.faq ul+p{margin-top:8px}
     <p class="shr-url" id="shrUrl"></p>
   </section>
   <section class="brk" id="brokers" aria-labelledby="brkTitle">
-    <div class="brk-head"><div><h2 id="brkTitle">💼 Best Brokers &amp; Apps</h2><p>Open the accounts you need to invest in the funds above — platforms we use and recommend.</p></div>
+    <div class="brk-head"><div><h2 id="brkTitle">💼 Best Brokers &amp; Apps</h2><p>Open the accounts you need to invest in the funds above — platforms we use.</p></div>
     <a class="brk-all" href="https://vilfintv.com/market_sentiment_score.html#brokers">Compare all features →</a></div>
     <div class="brk-grid">
       <div class="brk-grp"><h3>Direct mutual funds</h3><ul>
@@ -1231,6 +1258,7 @@ details.faq ul+p{margin-top:8px}
 </footer>
 <div class="toast" id="toast"></div>
 
+<script src="vt_sim.js"></script>
 <script>
 /*RRG-ENGINE-START*/
 // Relative-rotation engine. Mirrors rrg() in scripts/build_etf_momentum.py exactly;
@@ -1456,7 +1484,7 @@ function renderChips(v){
     var el = $('auditChip'); if (!el || !A || !A.checks) return;
     el.className = 'chip' + (A.errors ? ' warn' : '');
     el.innerHTML = '<span class="dot"></span>' + Number(A.checks - A.errors).toLocaleString('en-IN') + ' accuracy checks passed';
-    el.title = 'Independent daily audit for ' + fmtDate(A.asOf) + ': prices, returns, risk, liquidity, premium, scores, ratings, holdings and Smart Invest recomputed from the raw daily prices';
+    el.title = 'Independent daily audit for ' + fmtDate(A.asOf) + ': prices, returns, risk, liquidity, premium, scores, ratings, holdings and Portfolio Simulator recomputed from the raw daily prices';
     el.style.display = '';
   }).catch(function(){});
 }
@@ -2098,7 +2126,7 @@ function drawTrade(){
   document.addEventListener('keydown', function(e){ var h = e.target.closest && e.target.closest('.hint[data-tip]'); if (h && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(h); pop._for = h; } if (e.key === 'Escape') close(); });
   window.addEventListener('scroll', close, {passive: true}); window.addEventListener('resize', close);
 })();
-/* ─────────── Smart Invest for ETFs (data/etf_smart.json) ─────────── */
+/* ─────────── Portfolio Simulator for ETFs (data/etf_smart.json) ─────────── */
 var SM = null, SM_P = null;
 var SM_FQ = [['m','Monthly',12],['w','Weekly',52],['q','Quarterly',4],['y','Yearly',1],['l','One-time',0]];
 var SM_ASSET = {Equity:'Indian equity', Global:'Global equity', Debt:'Debt', Commodity:'Gold / silver'};
@@ -2129,6 +2157,13 @@ function renderSmart(){
   smSeg('smHz', hzs, sm.hz, 'hz'); smSeg('smRisk', rks, sm.rk, 'rk'); smSeg('smFq', SM_FQ, sm.fq, 'fq');
   $('smChip').textContent = 'Reviewed ' + (SM.reviewed || '') + ' · prices ' + fmtDate(SM.asOf);
   var plan = SM.plans[sm.hz + sm.rk]; if (!plan){ $('smBody').innerHTML = '<div class="empty">Plan not available.</div>'; return; }
+  if (window.VTSim) {
+    $('smRiskPane').innerHTML = VTSim.riskPanel({kind:'ETF', risk10:plan.risk10, points10:plan.points10, mdd:plan.mdd,
+      rows: plan.slots.map(function(x){ var sl = SM.slots[x.id] || {}, e = bySym[sl.sym] || {};
+        return {name:(sl.sym || '') + ' · ' + (sl.name || e.n || ''), sub:sl.label || '', w:x.w, risk:sl.risk10 != null ? sl.risk10 : VTSim.risk10(e.vol, e.mdd), pts:sl.pts10, vol:sl.hist ? sl.hist.vol : e.vol, mdd:sl.hist ? sl.hist.v : e.mdd,
+                ok:(sl.checks || []).filter(function(c){ return c[1]; }).length, n:(sl.checks || []).length}; })});
+    $('smEcoPane').innerHTML = VTSim.ecoPanel((SM.decisions || {}).growth, (SM.decisions || {}).market);
+  }
   var A = Math.max(0, +sm.amt || 0), fqN = (SM_FQ.filter(function(f){ return f[0] === sm.fq; })[0] || [])[1] || '';
   var pr = smProject(plan, A, sm.fq, plan.years, sm.slab), minAmt = 0, rows = '', left = 0, spent = 0;
   plan.slots.forEach(function(s){
@@ -2142,10 +2177,10 @@ function renderSmart(){
       '<div class="sm-w">' + s.w + '%</div>' +
       '<div class="sm-a"><b>' + inrS(amt) + '</b><small>' + fqN.toLowerCase() + '</small></div>' +
       '<div class="sm-u">' + (units ? '<b>' + units + '</b> unit' + (units > 1 ? 's' : '') + '<small>at ' + fmtPx(px) + '</small>' : '<b>Every ' + every + ' purchases</b><small>1 unit costs ' + fmtPx(px) + '</small>') + '</div>' +
-      '<span class="sm-ck ' + (sl.state === 'ok' ? 'ok' : 'rx') + '">' + (sl.state === 'ok' ? '✓ ' + nOk + '/' + sl.checks.length + ' checks' : nOk + '/' + sl.checks.length + ' · best available') + '</span><span class="sm-chev">›</span></summary>' +
+      '<span class="sm-ck ' + (sl.state === 'ok' ? 'ok' : 'rx') + '">' + (sl.state === 'ok' ? '✓ ' + nOk + '/' + sl.checks.length + ' checks' : nOk + '/' + sl.checks.length + ' · closest match') + '</span><span class="sm-chev">›</span></summary>' +
       '<div class="sm-det"><div><h4>Checklist</h4><div class="gl-chk">' + sl.checks.map(function(c){ return '<div><span>' + (c[1] ? '✅' : '⚠️') + '</span><span><b>' + esc(c[0]) + ':</b> ' + esc(c[2]) + '</span></div>'; }).join('') + '</div></div>' +
       '<div><h4>Why this ETF</h4><p>Best of ' + sl.pool + ' similar ETF' + (sl.pool > 1 ? 's' : '') + ' (' + sl.passed + ' pass every check) on liquidity, cost, tracking, size and track record · score ' + Math.round(sl.score) + '/100.' + (sl.state !== 'ok' ? ' No ETF here passes every check, so the strongest liquid one trading near its NAV is used.' : '') + '</p>' +
-      '<p>Expected return used: <b>' + fmtNum(sl.er, 1) + '% a year</b> after an expense ratio of ' + fmtNum(sl.ter, 2) + '%' + (sl.terEst ? ' (estimated from similar ETFs — confirm on the fund house\'s site)' : '') + '. ' + esc(sl.taxNote) + '.</p>' +
+      '<p>Historical model estimate used: <b>' + fmtNum(sl.er, 1) + '% a year</b> after an expense ratio of ' + fmtNum(sl.ter, 2) + '%' + (sl.terEst ? ' (estimated from similar ETFs — confirm on the fund house\'s site)' : '') + '. ' + esc(sl.taxNote) + '.</p>' +
       (sl.alts && sl.alts.length ? '<h4>Alternatives</h4><div class="sm-alt">' + sl.alts.map(function(a){ return '<button type="button" data-go="' + esc(a) + '">' + esc(a) + '</button>'; }).join('') + '</div>' : '') +
       '<div class="sm-alt"><button type="button" data-go="' + esc(sl.sym) + '">Open ' + esc(sl.sym) + ' analysis ↗</button></div></div></div></details>';
   });
@@ -2153,7 +2188,7 @@ function renderSmart(){
   var yrs = plan.years, h = '';
   h += '<div class="sm-tiles">' +
     '<div class="sm-t"><small>Asset mix</small>' + mixH + '</div>' +
-    '<div class="sm-t"><small>Expected return</small><b>' + fmtNum(plan.er, 1) + '%</b><em>a year after ETF expenses — an estimate, not a promise</em></div>' +
+    '<div class="sm-t"><small>Historical model estimate</small><b>' + fmtNum(plan.er, 1) + '%</b><em>a year after ETF expenses — an estimate, not a promise</em></div>' +
     '<div class="sm-t"><small>Average expense ratio</small><b>' + fmtNum(plan.ter, 2) + '%</b><em>weighted across the ETFs, plus brokerage on each trade</em></div>' +
     '<div class="sm-t"><small>' + (sm.fq === 'l' ? 'One-time ' + inrS(A) : inrS(A) + ' ' + fqN.toLowerCase()) + ' · ' + yrs + ' yrs</small><b>' + inrS(pr.after) + '</b><em>after tax, from ' + inrS(pr.inv) + ' invested · ≈ ' + inrS(pr.real) + ' in today\'s money</em></div></div>';
   h += '<div class="note sm-min"><span>💡</span><span>ETFs are bought in <b>whole units</b> on the exchange. To buy at least one unit of every ETF in each purchase you need about <b>' + inrS(Math.ceil(minAmt / 100) * 100) + '</b>' + (A < minAmt ? ' — with a smaller amount, buy the ETFs marked "every N purchases" on alternate dates (the plan shows how often).' : '.') + (A && left > 1 ? ' This purchase invests ' + inrS(spent) + '; carry the remaining ' + inrS(left) + ' to the next one.' : '') + '</span></div>';
@@ -2171,7 +2206,7 @@ function renderSmart(){
     '<div><b>Global</b><span>' + (dc.global ? 'US large caps via an ETF trading close to its NAV' : esc(dc.globalNote || '')) + '</span></div>' +
     (dc.overlay ? '<div class="wide"><b>Market-condition overlay</b><span>' + (dc.overlay.pts ? '<b class="neg">−' + dc.overlay.pts + ' points of equity</b> moved to debt and gold / silver in plans of 3 years and more. ' : 'No change this month — ') + dc.overlay.parts.map(function(x){ return esc(x.k) + ': ' + esc(x.v) + (x.p ? ' (' + x.p + ')' : ''); }).join(' · ') + '. Rule: ' + esc(dc.overlay.parts.map(function(x){ return x.rule; }).join('; ')) + ', at most 20 points; riskier holdings are reduced first.</span></div>' : '') +
     '</div></div></div>';
-  h += '<div class="note"><span>⚠️</span><span>Educational model portfolio, not investment advice. Expected returns are long-term estimates from today\'s valuations and yields; real returns vary every year and red years are normal — stay invested for the full horizon. The projection uses those estimates, today\'s tax rules (equity 12.5% on gains above ₹1.25 lakh, gold / global 12.5%, debt at your slab, plus 4% cess) and ' + ((dc.inflation) || 5) + '% inflation. Research every ETF yourself or consult a SEBI-registered investment adviser before investing.</span></div>';
+  h += '<div class="note"><span>⚠️</span><span>Educational model portfolio, not investment advice. Historical model estimates are long-term figures from today\'s valuations and yields; real returns vary every year and red years are normal — stay invested for the full horizon. The projection uses those estimates, today\'s tax rules (equity 12.5% on gains above ₹1.25 lakh, gold / global 12.5%, debt at your slab, plus 4% cess) and ' + ((dc.inflation) || 5) + '% inflation. Research every ETF yourself or consult a SEBI-registered investment adviser before investing.</span></div>';
   $('smBody').innerHTML = h;
 }
 function smURL(){ try { var u = new URL(location.href); u.searchParams.set('plan', sm.hz + sm.rk); u.searchParams.set('amt', sm.amt); u.searchParams.set('fq', sm.fq); history.replaceState(null, '', u.pathname + u.search + u.hash); } catch(e){} store('viltv_etfm_smart', JSON.stringify(sm)); }
@@ -2190,8 +2225,35 @@ function initSmart(){
   });
   var t; $('smAmt').addEventListener('input', function(){ var v = this.value; clearTimeout(t); t = setTimeout(function(){ sm.amt = Math.max(0, Math.min(1e8, +v || 0)); renderSmart(); smURL(); }, 200); });
   $('smSlab').addEventListener('change', function(){ sm.slab = +this.value; renderSmart(); smURL(); });
-  Promise.all([loadSmart(), loadLive()]).then(function(){ renderSmart(); if (q.get('plan') && location.hash !== '#smart') $('smart').scrollIntoView({block:'start'}); }).catch(function(){ $('smBody').innerHTML = '<div class="empty">Smart Invest is temporarily unavailable.</div>'; });
+  Promise.all([loadSmart(), loadLive()]).then(function(){ renderSmart(); if (q.get('plan') && location.hash !== '#smart') $('smart').scrollIntoView({block:'start'}); }).catch(function(){ $('smBody').innerHTML = '<div class="empty">The Portfolio Simulator is temporarily unavailable.</div>'; });
   loadEx().then(renderSmart).catch(function(){});
+  if (!window.VTSim || VTSim.accepted()) smUnlock();
+  else if (location.hash === '#smart' || pl) smGate(true);
+  document.addEventListener('click', function(e){
+    var a = e.target.closest('a[href="#smart"], #smOpen');
+    if (!a || !window.VTSim || VTSim.accepted()) return;
+    e.preventDefault(); smGate(true);
+  });
+  if (window.VTSim) { VTSim.faqCols($('faq')); VTSim.css(); }
+  $('smTabs').addEventListener('click', function(e){
+    var b = e.target.closest('[data-st]'); if (!b) return;
+    var st = b.getAttribute('data-st');
+    if (st === 'plan') $('smart').removeAttribute('data-st'); else $('smart').setAttribute('data-st', st);
+    this.querySelectorAll('[data-st]').forEach(function(x){ var on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); });
+  });
+}
+/* the Portfolio Simulator opens only after the risk warning and disclaimer are accepted */
+function smUnlock(){ $('smart').classList.remove('locked'); }
+function smGate(scroll){
+  VTSim.gate(function(){
+    smUnlock();
+    if (location.hash !== '#smart') history.replaceState(null, '', location.pathname + location.search + '#smart');
+    if (scroll) $('smart').scrollIntoView({block:'start'});
+  }, function(faq){
+    var q = new URLSearchParams(location.search); ['plan', 'amt', 'fq'].forEach(function(k){ q.delete(k); });
+    history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + (faq ? '#faq' : ''));
+    if (faq) $('faq').scrollIntoView({block:'start'}); else window.scrollTo({top:0, behavior:'smooth'});
+  });
 }
 function renderDeep(){
   var r = compute(state.bench).rows[state.sel];

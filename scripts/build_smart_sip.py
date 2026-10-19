@@ -125,6 +125,7 @@ DEBT_LABEL = {
     ("dmed", "easing"): "Medium-term debt (medium duration / corporate bond)",
 }
 # worst acceptable 3-year drawdown per debt category (a deeper fall means a credit or liquidity event)
+DURATION_SUBS = {"gilt", "gilt10", "dynbond", "meddur", "medlong", "longdur"}   # rate-sensitive debt: more red 1-year periods are normal
 DEBT_MDD = {"overnight": -0.3, "liquid": -0.5, "money": -0.5, "ultrashort": -0.75, "lowdur": -1.0, "floater": -1.5,
             "shortdur": -2.0, "bankpsu": -2.0, "corpbond": -2.5, "meddur": -3.0, "gilt": -6.0, "gilt10": -7.0, "dynbond": -6.0}
 
@@ -385,7 +386,7 @@ class Universe:
         key = tuple(sorted(subs))
         if key not in self.cat_med:
             codes = self.by_subs(subs)
-            self.cat_med[key] = {c: median([self.g(x, c) for x in codes]) for c in ("ter", "roll3", "mdd", "std", "r3y", "r1y", "cons")}
+            self.cat_med[key] = {c: median([self.g(x, c) for x in codes]) for c in ("ter", "roll3", "mdd", "std", "r3y", "r1y", "cons", "sharpe")}
         return self.cat_med[key]
 
 
@@ -616,6 +617,10 @@ def market_tilt(u, macro, sentiment, glob=None):
     if glob and glob.get("signals"):
         e = glob["score"]["E"]
         add("Global macro (dollar, yields, EM flows, rupee, oil)", f"{e:+d} from global checks", 5 if e >= 2 else (-5 if e <= -2 else 0))
+    gr = (macro or {}).get("growth") or {}
+    if gr.get("checks"):
+        sc = gr.get("score", 0)
+        add("India growth & earnings (GDP, inflation, earnings)", f"{sc:+d} from {len(gr['checks'])} checks", 5 if sc >= 3 else (-5 if sc <= -3 else 0))
     tilt = int(clamp(round(t / 5) * 5, -10, 10))
     return tilt, comps
 
@@ -871,6 +876,20 @@ def fund_checks(u, slot, code, ctx):
         cq = u.credit_share(code)
         chk("Credit quality", cq is None or cq >= 85, f"{cq:.0f}% AAA / sovereign / A1+" if cq is not None else "high-quality category (portfolio not yet published)")
         chk("Rate-cycle fit", sub in subs, f"suits a {ctx['regime']} rate cycle")
+        r1, m1 = g("r1y"), cs.get("r1y")
+        chk("1Y return vs category", r1 is None or m1 is None or r1 >= m1 - 0.5,
+            f"{r1:.2f}% vs median {m1:.2f}%" if r1 is not None and m1 is not None else "–")
+        sh, shm = g("sharpe"), cs.get("sharpe")
+        chk("Risk-adjusted return vs category", sh is None or shm is None or sh >= shm - max(0.3, abs(shm) * 0.4),
+            f"Sharpe {sh:.2f} vs median {shm:.2f}" if sh is not None and shm is not None else "–")
+        p1, plim = g("pos1"), (85 if sub in DURATION_SUBS else 95)
+        chk("Positive 1-year periods", p1 is None or p1 >= plim,
+            f"{p1:.0f}% of rolling 1-year periods positive (needs {plim}%+)" if p1 is not None else "–")
+        pf = u.pf.get(code) or {}
+        sov = sum(w for k, w in (pf.get("credit") or []) if "sovereign" in k.lower())
+        t10 = pf.get("top10All")
+        chk("Issuer concentration", t10 is None or sov >= 50 or t10 <= 75,
+            (f"top 10 holdings {t10:.0f}%" + (" (mostly government securities)" if sov >= 50 else " (limit 75%)")) if t10 is not None else "portfolio not yet published")
     if kind == "arb":
         r1, m1 = g("r1y"), cs.get("r1y")
         chk("1Y return vs category", r1 is None or m1 is None or r1 >= m1 - 0.3, f"{r1:.2f}% vs median {m1:.2f}%" if r1 is not None and m1 is not None else "–")
@@ -884,6 +903,19 @@ def fund_checks(u, slot, code, ctx):
         chk("Diversified mandate", not RX_INTL_THEME.search(core), "broad overseas market" if not RX_INTL_THEME.search(core) else "narrow theme or single region")
     if slot == "metal":
         chk("Metal", re.search(ctx["metal"], name, re.I) is not None, f"{ctx['metal']} fund")
+        r1, m1 = g("r1y"), cs.get("r1y")
+        chk("1Y return vs same-metal funds", r1 is None or m1 is None or r1 >= m1 - 1.5,
+            f"{r1:.1f}% vs median {m1:.1f}%" if r1 is not None and m1 is not None else "–")
+        sd, sm = g("std"), cs.get("std")
+        chk("Volatility vs same-metal funds", sd is None or sm is None or sd <= sm * 1.15,
+            f"{sd:.1f} vs median {sm:.1f}" if sd is not None and sm is not None else "–")
+        md, mm = g("mdd"), cs.get("mdd")
+        chk("Drawdown vs same-metal funds", md is None or mm is None or md >= mm - 3,
+            f"worst fall {md:.1f}% vs median {mm:.1f}%" if md is not None and mm is not None else "–")
+        mix = (u.pf.get(code) or {}).get("mix") or {}
+        held = (mix.get("fund") or 0) + (mix.get("commodity") or 0) + (mix.get("gold") or 0) + (mix.get("silver") or 0)
+        chk("Backed by the metal", not mix or held >= 90,
+            f"{held:.0f}% in {ctx['metal']} ETF units / bullion" if mix else "portfolio not yet published (fund of the house's own ETF)")
     if slot == "theme":
         theme_checks(u, code, ctx, chk)
     return out
@@ -1200,6 +1232,85 @@ def past_return(u, slots, col):
     if tw < 70:
         return None
     return {"v": round(sum(w * r for w, r in have) / tw, 2), "cover": tw}
+
+
+def risk10(vol, mdd):
+    """Risk score out of 10 (0 = no price swings): 60% annual volatility (25% or more = full) + 40% worst fall (40% or more = full)."""
+    if vol is None and mdd is None:
+        return None
+    v = min((vol or 0) / 25, 1) if vol is not None else min(abs(mdd) / 40, 1)
+    d = min(abs(mdd or 0) / 40, 1) if mdd is not None else v
+    return round(10 * (0.6 * v + 0.4 * d), 1)
+
+
+_WEEKLY = {}
+
+
+def weekly_nav(code):
+    """{friday: nav} from data/mf/h/<code>.json (last NAV on or before each Friday); cached."""
+    if code not in _WEEKLY:
+        out = {}
+        try:
+            h = json.loads((MF / "h" / f"{code}.json").read_text())
+            s0 = date.fromisoformat(h["s"])
+            for off, nav in h["p"]:
+                d = s0 + timedelta(days=off)
+                out[d + timedelta(days=(4 - d.weekday()) % 7)] = nav
+        except Exception:  # noqa: BLE001
+            pass
+        _WEEKLY[code] = out
+    return _WEEKLY[code]
+
+
+def mix_drawdown(u, slots, years=10):
+    """Worst peak-to-trough fall of the plan's funds held together (weekly, rebalanced to the plan weights every week)
+    over the last `years` years. Before a fund existed, the longest-running fund of the same category stands in for it
+    (`proxy`); funds still without history on a date are left out and the rest re-weighted, and the series starts once
+    funds worth >= 80% of the plan have history."""
+    held = [(s["code"], s["w"]) for s in slots if s.get("w")]
+    navs, proxied = {}, False
+    for c, _ in held:
+        own = weekly_nav(c)
+        peers = [x for x in u.by_subs([u.g(c, "sub")]) if x != c]
+        old = min(peers, key=lambda x: min(weekly_nav(x) or [date.max]), default=None)
+        px = weekly_nav(old) if old else {}
+        if own and px and min(px) < min(own):
+            first = min(own)
+            navs[c] = {d: v for d, v in px.items() if d <= first}
+            k = own[first] / navs[c][first] if first in navs[c] else None
+            if k:                                              # splice: scale the stand-in onto the fund's own NAV
+                navs[c] = {d: v * k for d, v in navs[c].items()}
+                navs[c].update(own)
+                proxied = True
+                continue
+        navs[c] = own
+    days = sorted({d for n in navs.values() for d in n})
+    if not days:
+        return None
+    start = days[-1] - timedelta(days=round(365.25 * years))
+    days = [d for d in days if d >= start]
+    tot = sum(w for _, w in held)
+    val, peak, worst, wpk, wtr, first, rets = 1.0, 1.0, 0.0, None, None, None, []
+    for a, b in zip(days, days[1:]):
+        rs = [(w, navs[c][b] / navs[c][a] - 1) for c, w in held if a in navs[c] and b in navs[c] and navs[c][a] > 0]
+        cw = sum(w for w, _ in rs)
+        if not rs or (first is None and cw < 0.8 * tot):
+            continue
+        if first is None:
+            first = pk_day = a
+        pr = sum(w * r for w, r in rs) / cw
+        rets.append(pr)
+        val *= 1 + pr
+        if val > peak:
+            peak, pk_day = val, b
+        dd = val / peak - 1
+        if dd < worst:
+            worst, wpk, wtr = dd, pk_day, b
+    if first is None:
+        return None
+    vol = st.pstdev(rets) * 52 ** 0.5 * 100 if len(rets) > 10 else None
+    return {"v": round(worst * 100, 1) + 0.0, "vol": round(vol, 1) if vol is not None else None, "peak": wpk.isoformat() if wpk else None, "trough": wtr.isoformat() if wtr else None,
+            "from": first.isoformat(), "years": round((days[-1] - first).days / 365.25, 1), "proxy": proxied}
 
 
 def why(u, slot, code):
@@ -1600,6 +1711,11 @@ def main() -> int:
                 if k not in weights or k in skipped:
                     pst["slots"].pop(k)
             pst["changes"] = (changes + pst.get("changes", []))[:6]
+            for z in slots:                          # each fund over the same window as the mix (stand-in before launch)
+                own = mix_drawdown(u, [{"code": z["code"], "w": 100}]) or {}
+                z["hist10"] = {"v": own.get("v"), "vol": own.get("vol")} if own else None
+                z["risk10"] = risk10(own.get("vol"), own.get("v")) if own else risk10(u.g(z["code"], "std"), u.g(z["code"], "mdd"))
+                z["pts10"] = round(z["score"] / 10, 1) if z.get("score") is not None else None
             codes = [s["code"] for s in slots]
             eq = [c for c in codes if chosen.get(c) in ("core", "next50", "lmcore", "flexi", "mid", "small", "value", "momentum", "theme")]
             ovs = [o for o in (u.overlap(a, b) for i, a in enumerate(eq) for b in eq[i + 1:]) if o is not None]
@@ -1611,6 +1727,10 @@ def main() -> int:
                 "slots": slots, "mix": mix, "ter": round(sum((u.g(s["code"], "ter") or 0) * s["w"] for s in slots) / 100, 2),
                 "er": round(sum(s["er"] * s["w"] for s in slots) / 100, 2),
                 "hist": {k: past_return(u, slots, k) for k in ("r3y", "r5y")},
+                "mdd": (mdd := mix_drawdown(u, slots)),
+                "risk10": risk10((mdd or {}).get("vol"), (mdd or {}).get("v")),
+                "points10": round(sum((z.get("score") or 0) * z["w"] for z in slots) / max(1, sum(z["w"] for z in slots if z.get("score") is not None)) / 10, 1),
+                "mddFunds": past_return(u, slots, "mdd"),
                 "gated": sum(z["gate"]["cut"] for z in slots if z.get("gate")),
                 "maxOverlap": max(ovs) if ovs else None, "amcs": len({u.g(c, "amc") for c in codes}),
                 "checks": sum(len(s["checks"]) for s in slots), "changes": pst["changes"],
@@ -1622,6 +1742,7 @@ def main() -> int:
     out = {"v": VERSION, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "asOf": scr["asOf"],
            "reviewed": state["reviewed"], "nextReview": date(today.year + (today.month == 12), today.month % 12 + 1, 1).isoformat(),
            "market": {"tilt": tilt, "tiltNow": tilt_now, "components": tilt_comps, "rotation": rotation, "gates": gates,
+                      "growth": {k: v for k, v in ((macro or {}).get("growth") or {}).items() if k != "gdpRaw"},
                       "n50": {k: (val.get("n50") or {}).get(k) for k in ("pe", "pb", "dy", "pePct", "pbPct", "peMed", "pbMed", "r12m")},
                       "valuationAsOf": macro.get("valuationAsOf")},
            "rates": {**rr, "applied": regime},
