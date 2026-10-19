@@ -422,19 +422,22 @@
           '<li><b>Unit price:</b> the exchange\'s <b>official closing price</b> of that session (the weighted average price of the last 30 minutes of trading, 3:00–3:30 pm IST). If the market is closed (weekend or exchange holiday) or the ETF did not trade that day, it executes at the close of the next session it trades.</li>' +
           '<li><b>Units:</b> whole units only, as many as the amount buys after charges; cash left over is added to the next buy of the same ETF. Units are credited the next trading day (T+1).</li>' +
           '<li><b>Record:</b> each trade in the ledger stores this rule, its trade date and the closing price used, and the daily audit checks every trade against the exchange\'s published closing price for that session.</li></ul></details>') +
-      '<div class="vts-pf"><button type="button" class="vts-pf-sw" aria-haspopup="listbox" aria-expanded="false"></button>' +
+      '<div class="vts-pf"><div class="vts-pf-bar"><button type="button" class="vts-pf-me" aria-haspopup="dialog"></button><span class="vts-pf-st vts-pf-cur"></span>' +
+      '<button type="button" class="vts-pf-sw" aria-haspopup="listbox" aria-expanded="false">Switch <i>▾</i></button></div>' +
       '<div class="vts-pf-list" role="listbox" aria-label="Switch account" hidden></div></div>' +
       '<div class="vts-pv" aria-live="polite"></div>' +
       '<p class="vts-buy-n">Total return: absolute for accounts under one year old, XIRR after. Day change excludes new money. Updated ' + esc(dt(sb.updated)) + (sb.auditOk === false ? ' · figures withheld while a data check is resolved' : '') + '.</p></div></details>';
-    var sw = el.querySelector('.vts-pf-sw'), list = el.querySelector('.vts-pf-list'), pv = el.querySelector('.vts-pv');
+    var sw = el.querySelector('.vts-pf-sw'), me = el.querySelector('.vts-pf-me'), stEl = el.querySelector('.vts-pf-cur'), list = el.querySelector('.vts-pf-list'), pv = el.querySelector('.vts-pv');
     var cache = {}, tab = 'today', per = '1M';
 
     function drawSwitch() {
-      sw.innerHTML = av(cur, true) + '<span class="vts-pf-who"><b>' + esc(cur.name) + (cur.nri ? '<i class="vts-buy-nri">NRI</i>' : '') + '</b><span>' + plan(cur) + '</span></span>' +
-        '<span class="vts-pf-st">' + status(cur) + '</span><span class="vts-pf-chg">Switch <i>▾</i></span>';
+      me.setAttribute('aria-label', cur.name + ' — view profile');
+      me.innerHTML = av(cur, true) + '<span class="vts-pf-who"><b>' + esc(cur.name) + (cur.nri ? '<i class="vts-buy-nri">NRI</i>' : '') + '<em class="vts-pf-vp">Profile ›</em></b>' +
+        (cur.role ? '<span class="vts-pf-role">' + esc(cur.role) + ' · VilfinTV</span>' : '') + '<span>' + plan(cur) + '</span></span>';
+      stEl.innerHTML = status(cur);
       list.innerHTML = rows.map(function (r, i) {
         return '<button type="button" role="option" class="vts-pf-o" aria-selected="' + (r === cur) + '" data-i="' + i + '">' + av(r) +
-          '<span class="vts-pf-who"><b>' + esc(r.name) + (r.nri ? '<i class="vts-buy-nri">NRI</i>' : '') + '</b><span>' + plan(r) + '</span></span>' +
+          '<span class="vts-pf-who"><b>' + esc(r.name) + (r.nri ? '<i class="vts-buy-nri">NRI</i>' : '') + '</b>' + (r.role ? '<span class="vts-pf-role">' + esc(r.role) + '</span>' : '') + '<span>' + plan(r) + '</span></span>' +
           '<span class="vts-pf-st">' + status(r) + (r.day && r.ret != null && !r.day.first ? '<small class="' + cl(r.day.chg) + '">' + spct(r.day.pct) + ' on ' + esc(dt(r.day.d, false)) + '</small>' : '') + '</span></button>';
       }).join('');
     }
@@ -455,6 +458,51 @@
       else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); var n = os[Math.max(0, Math.min(os.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))]; if (n) n.focus(); }
     });
     document.addEventListener('click', function (e) { if (!list.hidden && !el.querySelector('.vts-pf').contains(e.target)) openList(false); });
+    me.addEventListener('click', function () { profile(cur, cache[cur.f]); });
+
+    /* Profile of a VilfinTV staff member: role, desk, base, investor profile, the account type and the charges and
+       tax rules that apply to it (resident vs NRI), and the account's figures. */
+    var TEAM = { core: ['Core team', 'VilfinTV HQ, India'], recruit: ['Joined in 2026', 'VilfinTV HQ, India'],
+                 us: ['US AI training programme 2026–27', 'United States (NRI)'] };
+    var WHEN = { 'Monthly': 'on the 3rd of every month', 'Weekly': 'every Monday', 'Quarterly': 'on 19 Jan, Apr, Jul and Oct',
+                 'Yearly': 'every year on 19 Oct', 'One-time': 'once, on ' + dt(sb.start) };
+    function profile(r, a) {
+      var x = (a && a.detail) || r.detail, nri = !!r.nri, tm = TEAM[r.team] || ['VilfinTV team', nri ? 'Outside India (NRI)' : 'India'];
+      var acct = mf ? (nri ? 'Direct-plan mutual fund account with NRI KYC, funded from an NRE bank account (repatriable)' : 'Direct-plan mutual fund account (resident Indian, Indian savings account)')
+                    : (nri ? 'NRI demat & trading account with PIS, funded from an NRE bank account; delivery trades only' : 'Demat & trading account (resident Indian); delivery trades');
+      var costs = mf ? ['Stamp duty 0.005% on every purchase; exit load as per each fund when sold']
+                     : [nri ? 'Brokerage 0.1% of each trade (min ₹20, max ₹100) — NRI desks charge more than resident accounts' : 'Zero brokerage on delivery trades',
+                        'Stamp duty 0.015% on buys; exchange, SEBI and investor-protection charges + 18% GST; STT and depository charge on sales'];
+      var tax = nri ? ['Tax deducted at source (TDS) on every sale: equity held over a year 12.5%, under a year 20%; debt and other funds 30%; plus 4% cess (surcharge not modelled)',
+                       'No ₹1.25 lakh yearly exemption at source — any excess is reclaimed through the Indian tax return; tax paid in India can be credited in the country of residence under its tax treaty',
+                       'No yearly gain harvesting: TDS is deducted on the sale itself, so the saving would only return months later as a refund',
+                       'The simulation assumes the model\'s funds accept US-based investors; in practice several fund houses do not']
+                    : ['No TDS: capital-gains tax is paid through the yearly return — equity held over a year 12.5% on gains above ₹1.25 lakh a year, under a year 20%; debt at the income slab',
+                       'Yearly tax harvesting in March: long-term equity gains booked within the ₹1.25 lakh exemption and bought back'];
+      var row = function (k, v) { return '<div class="vts-pm-r"><span>' + k + '</span><b>' + v + '</b></div>'; };
+      var h = '<div class="vts-pm-h">' + av(r, true).replace('vts-pf-av lg', 'vts-pf-av xl') + '<div><h3 id="vtsPmT">' + esc(r.name) + (nri ? ' <i class="vts-buy-nri">NRI</i>' : '') + '</h3>' +
+        '<p>' + esc(r.role || 'VilfinTV team') + ' · VilfinTV</p></div><button type="button" class="vts-pm-x" aria-label="Close profile">✕</button></div>' +
+        '<div class="vts-pm-b"><h4>At VilfinTV</h4>' + row('Role', esc(r.role || '–')) + row('Works on', esc(r.desk || '–')) + row('Team', esc(tm[0])) + row('Based in', esc(tm[1])) +
+        '<h4>Investor profile</h4>' + row('Residency', nri ? 'Non-resident Indian (NRI)' : 'Resident Indian') + row('Model portfolio', '10+ years · ' + esc(r.risk)) +
+        row('Buys', esc(r.freq) + (r.amt ? ' · ' + inr(r.amt, 0) : '') + ' — ' + esc(WHEN[r.freq] || '')) + row('Started', esc(dt(sb.start))) +
+        row('Account', esc(acct)) +
+        (x ? row('Invested', inr(x.inv)) + row('Value', x.val != null ? inr(x.val) : 'After units are credited') : '') +
+        row('Total return', r.ret != null ? '<span class="' + cl(r.ret) + '">' + spct(r.ret) + '</span>' + (r.metric === 'xirr' ? ' XIRR' : '') : (r.credit ? 'Units credited ' + esc(dt(r.credit)) : '–')) +
+        '<h4>Charges</h4><ul>' + costs.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' +
+        '<h4>Tax rules for this account</h4><ul>' + tax.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' +
+        '<p class="vts-pv-e">Simulated account of a VilfinTV team member for education — not real money and not advice. Every figure comes from the audited ledger.</p></div>';
+      var back = document.createElement('div');
+      back.className = 'vts-pm-back';
+      back.innerHTML = '<div class="vts-pm" role="dialog" aria-modal="true" aria-labelledby="vtsPmT" tabindex="-1">' + h + '</div>';
+      document.body.appendChild(back);
+      var dlg = back.querySelector('.vts-pm'), prevOv = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      var close = function () { document.removeEventListener('keydown', key_); back.remove(); document.body.style.overflow = prevOv; me.focus(); };
+      var key_ = function (e) { if (e.key === 'Escape') close(); else if (e.key === 'Tab') { e.preventDefault(); dlg.querySelector('.vts-pm-x').focus(); } };
+      back.addEventListener('click', function (e) { if (e.target === back || e.target.closest('.vts-pm-x')) close(); });
+      document.addEventListener('keydown', key_);
+      dlg.querySelector('.vts-pm-x').focus();
+    }
 
     function load() {
       var r = cur;
@@ -749,8 +797,24 @@
     '.vts-buy-t1>b{order:0}.vts-buy-tg{order:1}.vts-buy-badge{order:2}.vts-buy-peek{order:3;flex-basis:100%}.vts-buy:not([open]) .vts-buy-sub{display:none}}' +
     '';
   CSS += '.vts-pf{position:relative;margin:2px 0 12px}' +
-    '.vts-pf-sw{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--border2,var(--border));border-radius:12px;background:var(--surface2,var(--surface));color:var(--text);padding:10px 12px;cursor:pointer;font:inherit}' +
-    '.vts-pf-sw:hover{border-color:var(--accent,#4a90e2)}.vts-pf-sw:focus-visible,.vts-pf-o:focus-visible{outline:2px solid var(--accent,#4a90e2);outline-offset:1px}' +
+    '.vts-pf-bar{display:flex;align-items:center;gap:12px;border:1px solid var(--border2,var(--border));border-radius:12px;background:var(--surface2,var(--surface));padding:8px 10px}' +
+    '.vts-pf-me{display:flex;align-items:center;gap:12px;flex:1;min-width:0;text-align:left;border:0;background:none;color:var(--text);padding:2px;cursor:pointer;font:inherit;border-radius:9px}' +
+    '.vts-pf-me:hover .vts-pf-vp{text-decoration:underline}.vts-pf-vp{font-style:normal;font-size:11.5px;font-weight:700;color:var(--accent,#4a90e2);margin-left:8px}' +
+    '.vts-pf-role{color:var(--text)!important;font-weight:600;font-size:12px!important}' +
+    '.vts-pf-sw{flex:none;font:inherit;font-size:12px;font-weight:800;border:1px solid var(--border2,var(--border));border-radius:999px;padding:6px 12px;color:var(--text);background:var(--surface);cursor:pointer}.vts-pf-sw i{font-style:normal}' +
+    '.vts-pf-sw:hover{border-color:var(--accent,#4a90e2)}.vts-pf-me:focus-visible,.vts-pf-sw:focus-visible,.vts-pf-o:focus-visible{outline:2px solid var(--accent,#4a90e2);outline-offset:1px}' +
+    '.vts-pm-back{position:fixed;inset:0;z-index:10000;background:rgba(2,8,20,.62);display:flex;align-items:center;justify-content:center;padding:16px}' +
+    '.vts-pm{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface,#0f1b33);color:var(--text);border:1px solid var(--border2,var(--border));border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.45);outline:none}' +
+    '.vts-pm-h{position:sticky;top:0;display:flex;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--border);background:var(--surface,#0f1b33)}' +
+    '.vts-pm-h h3{margin:0;font-size:18px}.vts-pm-h p{margin:2px 0 0;color:var(--text2);font-size:13px}.vts-pm-h>div{flex:1;min-width:0}' +
+    '.vts-pf-av.xl{width:52px;height:52px;font-size:17px}' +
+    '.vts-pm-x{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--border2,var(--border));background:none;color:var(--text);font-size:14px;cursor:pointer}.vts-pm-x:focus-visible{outline:2px solid var(--accent,#4a90e2)}' +
+    '.vts-pm-b{padding:4px 18px 18px;font-size:13px;line-height:1.55}.vts-pm-b h4{margin:16px 0 6px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2)}' +
+    '.vts-pm-r{display:grid;grid-template-columns:130px 1fr;gap:10px;padding:6px 0;border-top:1px solid var(--border)}.vts-pm-r span{color:var(--text2)}.vts-pm-r b{font-weight:600}' +
+    '.vts-pm-b ul{margin:0;padding-left:18px}.vts-pm-b li{margin:4px 0;color:var(--text2)}' +
+    '.vts-pm .up{color:#16a34a}.vts-pm .dn{color:#dc2626}' +
+    '@media (max-width:560px){.vts-pf-bar{flex-wrap:wrap;row-gap:8px}.vts-pf-me{flex-basis:100%}.vts-pf-cur{flex:1;flex-direction:row!important;align-items:baseline!important;gap:6px;justify-content:flex-start}' +
+    '.vts-pm-back{padding:0;align-items:flex-end}.vts-pm{max-height:88vh;border-radius:16px 16px 0 0}.vts-pm-r{grid-template-columns:1fr;gap:2px}.vts-pf-vp{display:none}}' +
     '.vts-pf-av{flex:none;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;color:#fff;font-weight:800;font-size:12.5px;letter-spacing:.02em}.vts-pf-av.lg{width:42px;height:42px;font-size:14px}' +
     '.vts-pf-who{display:flex;flex-direction:column;min-width:0;flex:1}.vts-pf-who b{font-size:14px;line-height:1.3}.vts-pf-who>span{color:var(--text2);font-size:12px;line-height:1.35}' +
     '.vts-pf-st{display:flex;flex-direction:column;align-items:flex-end;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.vts-pf-st b{font-size:14px}.vts-pf-st small{font-size:10.5px;color:var(--text2);font-weight:600}' +
@@ -799,7 +863,7 @@
     '.vts-olap-s{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}.vts-olap-s b{font-size:22px;font-variant-numeric:tabular-nums}.vts-olap-s span{font-size:12.5px;color:var(--text2)}' +
     '.vts-olap-t>div{display:grid;grid-template-columns:minmax(0,2fr) 1fr 1fr;gap:8px;padding:6px 0;border-top:1px solid var(--border);font-size:12.5px;font-variant-numeric:tabular-nums}.vts-olap-t>div>span:not(:first-child){text-align:right}' +
     '.vts-olap-t .hd{border-top:none;font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em;font-weight:700}' +
-    '@media (max-width:760px){.vts-bl-r{grid-template-columns:minmax(0,1.9fr) minmax(36px,1fr) 46px;gap:8px}.vts-pv-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.vts-olap-p{grid-template-columns:1fr}.vts-pv-top{grid-template-columns:1fr}.vts-pv-k{grid-template-columns:repeat(2,minmax(0,1fr))}.vts-pf-chg{display:none}.vts-pf-sw .vts-pf-av.lg{width:36px;height:36px}' +
+    '@media (max-width:760px){.vts-bl-r{grid-template-columns:minmax(0,1.9fr) minmax(36px,1fr) 46px;gap:8px}.vts-pv-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.vts-olap-p{grid-template-columns:1fr}.vts-pv-top{grid-template-columns:1fr}.vts-pv-k{grid-template-columns:repeat(2,minmax(0,1fr))}.vts-pf-me .vts-pf-av.lg{width:36px;height:36px}' +
     '.vts-hist-r.hd{display:none}.vts-hist-r{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:4px}.vts-hist-r>span:first-child{grid-column:1/-1;font-weight:700}.vts-hist-r>span:not(:first-child){text-align:left}' +
     '.vts-hist-r>span[data-l]::before{content:attr(data-l);display:block;font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}.vts-ch-k b{font-size:15px}}';
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', simBuy); else simBuy();
