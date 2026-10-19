@@ -2661,7 +2661,7 @@ const STATUS_PAGES = [
   { url:'https://vilfintv.com/market_sentiment_score.html', label:'Market Sentiment', kind:'page' },
   { url:'https://vilfintv.com/iptv.html', label:'IPTV', kind:'page' },
   { url:'https://vilfintv.com/link-console.html', label:'Link Console', kind:'page' },
-  { url:'https://vilfintv-sim.vilfintv.workers.dev/', label:'Simulator Buy (private ledger)', kind:'page' },
+  { url:'https://vilfintv-sim.vilfintv.workers.dev/', label:'Simulator Buy (private ledger)', kind:'page', binding:'SIM_WORKER' },
   { url:'https://vilfintv.com/content.json', label:'Content feed', kind:'data' },
   { url:'https://vilfintv.com/data/mf/screener.json', label:'MF screener data', kind:'data', asOf:'asOf' },
   { url:'https://vilfintv.com/data/etf_momentum.json', label:'ETF data', kind:'data' },
@@ -2681,7 +2681,8 @@ async function buildStatusReport(env){
   // 1) Page uptime checks (with size, content-type, cache + cf-cache info)
   const pageChecks = await Promise.all(STATUS_PAGES.map(async function(pg){
     const u = pg.url, t0 = Date.now();
-    try { const r = await fetch(u, { method:'GET', cf:{ cacheTtl:0 } });
+    try { const r = (pg.binding && env[pg.binding]) ? await env[pg.binding].fetch(new Request(u, { method:'GET' }))
+                                                   : await fetch(u, { method:'GET', cf:{ cacheTtl:0 } });
       const buf = await r.arrayBuffer();
       let asOf = null;
       if (pg.asOf && r.ok){ try { asOf = JSON.parse(new TextDecoder().decode(buf))[pg.asOf] || null; } catch(e){} }
