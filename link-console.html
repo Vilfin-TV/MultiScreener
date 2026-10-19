@@ -115,26 +115,36 @@
     ══════════════════════════════════ */
     #dashboard-view { width: 100%; }
 
-    /* ── Console tabs (swipeable strip) ── */
+    /* ── Console menu: grouped pills ── */
     .console-tabs {
-      display: flex; gap: 2px; border-bottom: 1px solid #162d4a;
-      background: rgba(0,0,0,.2);
-      overflow-x: auto; flex-wrap: nowrap; scrollbar-width: thin;
-      -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity;
+      display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: flex-start; gap: 10px 8px;
+      padding: 12px 14px 14px; border-bottom: 1px solid var(--tp-border, #162d4a);
+      background: transparent;
     }
-    .console-tabs::-webkit-scrollbar { height: 4px; }
-    .console-tabs::-webkit-scrollbar-thumb { background: #1e3a5c; border-radius: 4px; }
+    .ct-group { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .ct-label {
+      font-size: 10px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;
+      color: var(--tp-text3, #687a94); padding-left: 6px;
+    }
+    .ct-pills {
+      display: flex; gap: 1px; padding: 3px; border-radius: 12px;
+      background: var(--tp-surface2, #0e1f3b); border: 1px solid var(--tp-border, #162d4a);
+    }
     .c-tab {
-      flex: 0 0 auto; white-space: nowrap; scroll-snap-align: start;
-      padding: 13px 18px; font-size: 11.5px; font-weight: 700;
-      letter-spacing: .4px; color: #6c86a6; cursor: pointer;
-      border-bottom: 2px solid transparent; margin-bottom: -1px;
-      transition: color .15s, border-color .15s, background .15s;
-      display: inline-flex; align-items: center; gap: 7px; line-height: 1;
+      flex: 0 0 auto; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 9px; border-radius: 9px; font-size: 12.5px; font-weight: 650; line-height: 1;
+      color: var(--tp-text2, #8ea8c8); cursor: pointer; user-select: none; outline: none;
+      transition: background .15s, color .15s, box-shadow .15s, transform .15s;
     }
-    .c-tab:hover { color: #8ea8c8; background: rgba(255,255,255,.03); }
-    .c-tab.active { color: #e2eeff; border-bottom-color: #3b82f6; background: rgba(59,130,246,.08); }
+    .c-tab:hover { color: var(--tp-text, #e2eeff); background: var(--tp-surface3, #122344); }
+    .c-tab:active { transform: translateY(1px); }
+    .c-tab:focus-visible { box-shadow: 0 0 0 2px var(--tp-accent2, #3b82f6); }
+    .c-tab.active {
+      color: var(--tp-on-accent, #fff); background: var(--tp-accent, #2563eb);
+      box-shadow: 0 4px 14px -4px var(--tp-accent, #2563eb), inset 0 1px 0 rgba(255,255,255,.18);
+    }
     .c-tab-icon, .c-tab-ico { font-size: 14px; line-height: 1; display: inline-block; }
+    #dashboard-view .c-tab .c-tab-t { color: inherit; }        /* beat the theme's generic span colour */
     .c-panel { display: none; }
     .c-panel.active { display: block; }
 
@@ -736,9 +746,18 @@
 
     /* ── Mobile ── */
     @media (max-width: 860px) {
-      /* tab bar: sticky swipeable strip with a fade hint at the right edge */
-      .console-tabs { position: sticky; top: 0; z-index: 20; background: #0a1830; }
-      .c-tab { padding: 12px 15px; }
+      /* menu: one sticky swipeable row, no visible scrollbar, soft fades at the edges */
+      .console-tabs {
+        position: sticky; top: 0; z-index: 20; flex-wrap: nowrap; align-items: center; gap: 8px;
+        overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity;
+        padding: 10px 12px; background: var(--tp-surface, #0a1830);
+        -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 22px), transparent);
+                mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 22px), transparent);
+      }
+      .console-tabs::-webkit-scrollbar { display: none; }
+      .ct-group { flex: 0 0 auto; }
+      .ct-label { display: none; }
+      .c-tab { scroll-snap-align: start; padding: 9px 12px; }
     }
     @media (max-width: 640px) {
       body { padding: 12px 8px 48px; }
@@ -773,7 +792,7 @@
     }
     @media (max-width: 420px) {
       .rb-cards { grid-template-columns: 1fr; }
-      .c-tab { font-size: 11px; padding: 11px 13px; }
+      .c-tab { font-size: 12px; padding: 9px 11px; }
     }
     /* ════════════════════════════════════════════════════════════════════════
        THEME LAYER — matches the homepage themes (shared viltv_theme setting).
@@ -838,10 +857,7 @@
     .login-title{ color:var(--tp-text); } .login-sub{ color:var(--tp-text3); }
     .console-hdr{ background:var(--tp-surface2); border-color:var(--tp-border) !important; }
     .console-title{ color:var(--tp-text) !important; } .console-sub{ color:var(--tp-text3) !important; }
-    .console-tabs{ background:rgba(0,0,0,.12); border-color:var(--tp-border) !important; }
-    .c-tab{ color:var(--tp-text3); }
-    .c-tab:hover{ color:var(--tp-text2); }
-    .c-tab.active{ color:var(--tp-text) !important; border-bottom-color:var(--tp-accent2) !important; background:color-mix(in srgb, var(--tp-accent2) 10%, transparent); }
+    .console-tabs{ border-color:var(--tp-border) !important; }
     .form-panel,.content-form-panel,.hp-form-panel{ border-color:var(--tp-border) !important; }
     .field-label{ color:var(--tp-text2) !important; }
     /* every text-bearing element readable across tabs */
@@ -999,42 +1015,28 @@
       </div>
     </div>
 
-    <!-- Tab bar -->
-    <div class="console-tabs">
-      <div class="c-tab active" data-tab="content" onclick="switchTab('content')">
-        <span class="c-tab-icon">📝</span> News Posts
-      </div>
-      <div class="c-tab" data-tab="stories" onclick="switchTab('stories')">
-        <span class="c-tab-icon">📖</span> Stories
-      </div>
-      <div class="c-tab" data-tab="academy" onclick="switchTab('academy')">
-        <span class="c-tab-icon">🎓</span> Academy
-      </div>
-      <div class="c-tab" data-tab="links" onclick="switchTab('links')">
-        <span class="c-tab-icon">🔗</span> Links
-      </div>
-      <div class="c-tab" data-tab="homepage" onclick="switchTab('homepage')">
-        <span class="c-tab-icon">🏠</span> Home Page
-      </div>
-      <div class="c-tab" data-tab="iptv" onclick="switchTab('iptv')">
-        <span class="c-tab-ico">📺</span> IPTV
-      </div>
-      <div class="c-tab" data-tab="jio" onclick="switchTab('jio')">
-        <span class="c-tab-ico">📱</span> Jio TV Sync
-      </div>
-      <div class="c-tab admin-only" data-tab="subscribers" onclick="switchTab('subscribers')">
-        <span class="c-tab-ico">📧</span> Subscribers
-      </div>
-      <div class="c-tab admin-only" data-tab="report" onclick="switchTab('report')">
-        <span class="c-tab-ico">📊</span> Report
-      </div>
-      <div class="c-tab admin-only" data-tab="simbuy" onclick="switchTab('simbuy')">
-        <span class="c-tab-ico">🧾</span> Simulator Buy
-      </div>
-      <div class="c-tab admin-only" data-tab="settings" onclick="switchTab('settings')">
-        <span class="c-tab-ico">⚙️</span> Settings
-      </div>
-    </div>
+    <!-- Tab bar: grouped pill menu (wraps on desktop, one swipeable row on phones) -->
+    <nav class="console-tabs" role="tablist" aria-label="Console sections">
+      <div class="ct-group" role="group" aria-label="Content"><span class="ct-label">Content</span><div class="ct-pills">
+        <div class="c-tab active" data-tab="content" role="tab" tabindex="0" aria-selected="true" onclick="switchTab('content')"><span class="c-tab-ico">📝</span><span class="c-tab-t">News Posts</span></div>
+        <div class="c-tab" data-tab="stories" role="tab" tabindex="0" onclick="switchTab('stories')"><span class="c-tab-ico">📖</span><span class="c-tab-t">Stories</span></div>
+        <div class="c-tab" data-tab="academy" role="tab" tabindex="0" onclick="switchTab('academy')"><span class="c-tab-ico">🎓</span><span class="c-tab-t">Academy</span></div>
+      </div></div>
+      <div class="ct-group" role="group" aria-label="Website"><span class="ct-label">Website</span><div class="ct-pills">
+        <div class="c-tab" data-tab="links" role="tab" tabindex="0" onclick="switchTab('links')"><span class="c-tab-ico">🔗</span><span class="c-tab-t">Links</span></div>
+        <div class="c-tab" data-tab="homepage" role="tab" tabindex="0" onclick="switchTab('homepage')"><span class="c-tab-ico">🏠</span><span class="c-tab-t">Home Page</span></div>
+      </div></div>
+      <div class="ct-group" role="group" aria-label="TV"><span class="ct-label">TV</span><div class="ct-pills">
+        <div class="c-tab" data-tab="iptv" role="tab" tabindex="0" onclick="switchTab('iptv')"><span class="c-tab-ico">📺</span><span class="c-tab-t">IPTV</span></div>
+        <div class="c-tab" data-tab="jio" role="tab" tabindex="0" onclick="switchTab('jio')"><span class="c-tab-ico">📱</span><span class="c-tab-t">Jio TV Sync</span></div>
+      </div></div>
+      <div class="ct-group" role="group" aria-label="Admin"><span class="ct-label">Admin</span><div class="ct-pills">
+        <div class="c-tab admin-only" data-tab="subscribers" role="tab" tabindex="0" onclick="switchTab('subscribers')"><span class="c-tab-ico">📧</span><span class="c-tab-t">Subscribers</span></div>
+        <div class="c-tab admin-only" data-tab="report" role="tab" tabindex="0" onclick="switchTab('report')"><span class="c-tab-ico">📊</span><span class="c-tab-t">Report</span></div>
+        <div class="c-tab admin-only" data-tab="simbuy" role="tab" tabindex="0" onclick="switchTab('simbuy')"><span class="c-tab-ico">🧾</span><span class="c-tab-t">Simulator Buy</span></div>
+        <div class="c-tab admin-only" data-tab="settings" role="tab" tabindex="0" onclick="switchTab('settings')"><span class="c-tab-ico">⚙️</span><span class="c-tab-t">Settings</span></div>
+      </div></div>
+    </nav>
 
     <!-- ══ LINKS TAB ══ -->
     <style>
@@ -1873,8 +1875,8 @@
       <div style="padding:20px 28px 28px">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px">
           <div>
-            <h2 style="margin:0 0 4px;color:#ffffff">🧾 Simulator Buy</h2>
-            <p style="opacity:.7;margin:0;font-size:14px;color:#b9b9cc">Model-portfolio accounts of VilfinTV agents — leaderboard, statements, audit and dated copies. Enter the access key once; tick “Remember on this device”.</p>
+            <h2 style="margin:0 0 4px;color:var(--tp-text,#fff)">🧾 Simulator Buy</h2>
+            <p style="margin:0;font-size:14px;color:var(--tp-text2,#b9b9cc)">Model-portfolio accounts of VilfinTV agents — leaderboard, statements, audit and dated copies. Enter the access key once; tick “Remember on this device”.</p>
           </div>
           <div style="display:flex;gap:8px">
             <button class="btn-primary" onclick="simBuyReload()" style="padding:8px 18px;font-size:13px;white-space:nowrap;width:auto">↻ Refresh</button>
@@ -1983,10 +1985,27 @@ function applyRBAC(payload){
   // auditors / no-edit operators: disable editing inside content panels
   var readOnly = (RBAC.role === 'auditor');
   document.body.classList.toggle('rbac-readonly', readOnly && !isAdmin);
+  // hide menu groups whose tabs are all hidden for this role
+  document.querySelectorAll('.ct-group').forEach(function(g){
+    var any = Array.prototype.some.call(g.querySelectorAll('.c-tab'), function(t){ return t.style.display !== 'none'; });
+    g.style.display = any ? '' : 'none';
+  });
   // open the first allowed tab
   var firstVisible = Array.prototype.filter.call(document.querySelectorAll('.c-tab[data-tab]'), function(t){ return t.style.display !== 'none'; })[0];
   if (firstVisible) switchTab(firstVisible.dataset.tab);
 }
+
+/* keyboard: Enter / Space opens a menu item; ← → move between items */
+document.addEventListener('keydown', function(e){
+  var t = e.target;
+  if (!t || !t.classList || !t.classList.contains('c-tab')) return;
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); switchTab(t.dataset.tab); }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    var all = Array.prototype.filter.call(document.querySelectorAll('.c-tab'), function(x){ return x.offsetParent !== null; });
+    var i = all.indexOf(t) + (e.key === 'ArrowRight' ? 1 : -1);
+    if (all[i]) { e.preventDefault(); all[i].focus(); }
+  }
+});
 
 /* ── Quill Editor Init ─────────────────────────────────────────────────────── */
 var cpQuill = null;
@@ -2974,6 +2993,9 @@ function esc(s) {
 function switchTab(name) {
   document.querySelectorAll('.c-tab').forEach(function(t) {
     t.classList.toggle('active', t.dataset.tab === name);
+    t.setAttribute('aria-selected', t.dataset.tab === name ? 'true' : 'false');
+    if (t.dataset.tab === name && t.scrollIntoView && window.matchMedia('(max-width: 860px)').matches)
+      t.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
   });
   document.querySelectorAll('.c-panel').forEach(function(p) {
     p.classList.toggle('active', p.id === 'tab-' + name);
