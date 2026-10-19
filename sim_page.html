@@ -384,7 +384,7 @@ function renderStmt() {
   const fl = Object.entries(flowsAll).map(([d, v]) => [d, -v]).concat(a.txns.filter(x => x.src === 'withdraw' && x.navDate && x.navDate <= t).map(x => [x.credit, x.net]));
   const xr = close.val > 0 ? xirr(fl.concat([[t, close.val]])) : null, days = (Date.parse(t) - Date.parse(V.start)) / 864e5;
   const p = V.plans[Object.keys(V.plans).sort().pop()], planSlots = isMF ? p.mf[a.plan] : p.etf[a.plan];
-  const sched = { m: `${cfg.schedule.monthDay}rd of every month`, w: 'every Wednesday', q: `${cfg.schedule.anchorDay} Jan / Apr / Jul / Oct`, y: `${cfg.schedule.anchorDay} October every year`, l: `one-time on ${dt(V.start)}` }[a.freq];
+  const sched = { m: `${cfg.schedule.monthDay}rd of every month`, w: 'every ' + new Date(V.start + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long' }), q: `${cfg.schedule.anchorDay} Jan / Apr / Jul / Oct`, y: `${cfg.schedule.anchorDay} October every year`, l: `one-time on ${dt(V.start)}` }[a.freq];
   let h = `<div class="stmt-h"><div><div class="t">Statement of Account — ${isMF ? 'Mutual Funds' : 'ETF Demat & Trading'}</div>
     <dl><dt>Investor</dt><dd>${esc(a.name)} <span class="muted" style="font-weight:500">(VilfinTV agent)</span></dd><dt>Account</dt><dd class="mono">${esc(a.id)}</dd>
     <dt>Residency</dt><dd>${a.res === 'nri' ? 'Non-resident Indian (NRE/NRO · PIS for ETFs)' : 'Resident individual'}</dd>
@@ -493,7 +493,7 @@ function renderAudit() {
     <div class="grid kpis" style="margin-bottom:14px"><div class="kpi"><div class="l">Checks</div><div class="v">${AUD.checks.toLocaleString('en-IN')}</div></div><div class="kpi"><div class="l">Errors</div><div class="v ${AUD.nErrors ? 'neg' : 'pos'}">${AUD.nErrors}</div></div><div class="kpi"><div class="l">Warnings</div><div class="v">${AUD.nWarnings}</div></div></div>
     <div class="tw"><table><thead><tr><th>Area</th><th>What is checked</th><th class="n">Checks</th><th class="n">Issues</th></tr></thead><tbody>${Object.entries(AUD.areas).map(([k, v]) => `<tr><td><b>${esc(k)}</b></td><td class="wrap">${esc({
       chain: 'Every entry\'s SHA-256 hash, the link to the previous entry, sequence numbers, unique order ids, plan snapshots unchanged',
-      schedule: 'Order dates recomputed from the calendar (monthly 3rd, Wednesdays, quarters, anniversaries; next trading day on holidays) and amounts',
+      schedule: 'Order dates recomputed from the calendar (start date, monthly 3rd, the weekly day, quarters, anniversaries; next trading day on holidays) and amounts',
       plan: 'Orders add up to each instalment; funds and ETFs belong to the model portfolio; ETF budgets = weight × instalment',
       mf: 'NAV = recorded official NAV of the NAV date; liquid-fund previous-day rule; stamp duty; units truncated to 3 decimals; credit T+2',
       etf: 'Closing price of the trade date; whole units; every charge recomputed; budget incl. carried cash; no affordable unit left; T+1',
