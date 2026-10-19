@@ -2,11 +2,12 @@ name: ETF Intraday Prices
 
 # Near-live prices for the ETF page's trading chart: today's forming daily bar for every ETF,
 # refreshed about every 30 minutes during NSE market hours → data/etf_live.json.
-# Wakes after every "Update Market Sentiment" run (every 30 min, reliable) with a cron as a fallback;
-# the gate skips non-trading days, out-of-hours runs and runs less than 12 minutes after the last update.
+# Wakes after the site's frequent data workflows (GitHub delays or drops scheduled runs on busy repos, so several
+# wake-up sources are combined) with its own cron as a further fallback; the gate skips non-trading days,
+# out-of-hours runs and runs less than 12 minutes after the last update.
 on:
   workflow_run:
-    workflows: ["Update Market Sentiment"]
+    workflows: ["Update Market Sentiment", "Update Breaking News", "Update Live News Data", "Update Sports Scores", "Update World News", "Update News Content"]
     types: [completed]
   schedule:
     - cron: '7,37 3-10 * * 1-5'   # 08:37–16:07 IST, fallback

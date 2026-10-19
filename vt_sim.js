@@ -250,14 +250,14 @@
     }
     h += '<div class="vts-kpis" style="margin-bottom:12px">' +
       '<div class="vts-k"><small>Total score</small><b>' + (g.score > 0 ? '+' : '') + g.score + ' <i>/ ' + checks.length + '</i></b><em>' + (comp ? (comp.p > 0 ? '+5 equity points this month' : comp.p < 0 ? '−5 equity points this month' : 'no change to equity this month') : '') + '</em></div>' +
-      '<div class="vts-k"><small>Real GDP growth ' + esc(((g.gdp || []).filter(function (x) { return x.y === g.fy; })[0] || {}).fy || '') + '</small><b>' + num(((g.gdp || []).filter(function (x) { return x.y === g.fy; })[0] || {}).real) + '%</b><em>forecast for this fiscal year</em></div>' +
+      '<div class="vts-k"><small>Real GDP growth ' + esc(((g.gdp || []).filter(function (x) { return x.y === g.fy; })[0] || {}).fy || '') + '</small><b>' + num(((g.gdp || []).filter(function (x) { return x.y === g.fy; })[0] || {}).real) + '%</b><em>' + (g.src === 'wb' ? 'latest published year' : 'forecast for this fiscal year') + '</em></div>' +
       '<div class="vts-k"><small>Nominal GDP growth</small><b>' + num(g.nominal) + '%</b><em>real growth + inflation</em></div>' +
       '<div class="vts-k"><small>Nifty 50 earnings</small><b>' + (((g.earnings || {}).n50 || {}).g1 != null ? (g.earnings.n50.g1 > 0 ? '+' : '') + num(g.earnings.n50.g1) + '%' : '–') + '</b><em>last 12 months</em></div>' +
       '</div><ul class="vts-cl">' + checks.map(function (c) { return '<li>' + sig(c.s) + '<span class="k">' + esc(c.k) + '</span><span class="v">' + esc(c.v) + '</span><span class="w">' + esc(c.why) + '</span></li>'; }).join('') + '</ul></div>';
     var gd = g.gdp || [];
     h += '<div class="vts-grid2">';
     if (gd.length) {
-      h += '<div class="vts-box"><h3>India GDP by fiscal year</h3><p class="vts-sub">April–March fiscal years. <b>F</b> = forecast. Nominal growth is approximated as real growth plus consumer-price inflation.</p><div class="vts-tw"><table class="vts-t" style="min-width:0"><thead><tr><th>Year</th><th class="n">Real GDP</th><th class="n">Inflation</th><th class="n">Nominal</th><th class="n">GDP size</th><th class="n">World</th></tr></thead><tbody>' +
+      h += '<div class="vts-box"><h3>India GDP by fiscal year</h3><p class="vts-sub">April–March fiscal years.' + (g.src === 'wb' ? ' Published figures (forecasts are added when available).' : ' <b>F</b> = forecast.') + ' Nominal growth is approximated as real growth plus consumer-price inflation.</p><div class="vts-tw"><table class="vts-t" style="min-width:0"><thead><tr><th>Year</th><th class="n">Real GDP</th><th class="n">Inflation</th><th class="n">Nominal</th><th class="n">GDP size</th><th class="n">World</th></tr></thead><tbody>' +
         gd.map(function (x) {
           var nom = x.real != null && x.infl != null ? ((1 + x.real / 100) * (1 + x.infl / 100) - 1) * 100 : null, fc = x.f ? ' class="n fc"' : ' class="n"';
           return '<tr><td>' + esc(x.fy) + (x.y === g.fy ? ' <small style="color:var(--accent2);font-weight:700">now</small>' : '') + '</td><td' + fc + '>' + num(x.real) + '%</td><td' + fc + '>' + num(x.infl) + '%</td><td' + fc + '>' + num(nom) + '%</td><td' + fc + '>' + (x.usd ? '$' + num(x.usd / 1000, 2) + ' tn' : '–') + '</td><td' + fc + '>' + num(x.world) + '%</td></tr>';
@@ -268,7 +268,7 @@
       er('Nifty 50', e.n50) + er('Nifty 500', e.n500) + '</tbody></table></div>' +
       '<p class="vts-note">Earnings outlook (model): over long periods company earnings tend to grow roughly in line with nominal GDP' + (g.nominalNext != null ? ', so the model uses next year\'s nominal GDP forecast of <b>' + num(g.nominalNext) + '%</b> as the expected earnings growth' : '') +
       '. This is a simple model, not a forecast of actual company results.</p></div></div>';
-    h += '<p class="vts-note">GDP and inflation figures are the latest official international forecasts for India, updated a few times a year; earnings are updated every trading day. Economic data is often revised. For education only.</p>';
+    h += '<p class="vts-note">GDP and inflation figures are ' + (g.src === 'wb' ? 'the latest published official international figures for India' : 'the latest official international forecasts for India, updated a few times a year') + '; earnings are updated every trading day. Economic data is often revised. For education only.</p>';
     return '<div class="vts-pane">' + h + '</div>';
   }
 
