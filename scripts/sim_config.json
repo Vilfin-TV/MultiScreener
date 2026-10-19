@@ -58,9 +58,18 @@
     "dpSell": 13.5,
     "creditBusinessDays": 1
   },
-  "review": {
-    "_comment": "Annual review on each start anniversary: a holding is switched to the current model choice for its role only when it is very weak (MF: VilfinTV status 'Out of track' or no longer listed; ETF: rated 1 star or less, no longer listed, or not traded).",
-    "afterMonths": 12
+  "sellRules": {
+    "_comment": "Monthly sell review on the schedule's anchor day (next trading day). The agents follow it exactly: the engine places the sales it decides. Severe (fund / ETF no longer listed — merged or wound up): sell everything now, whatever the tax and exit load (units still in an ELSS lock-in wait). Weak (no longer the model portfolio's choice for its role for droppedStreak reviews in a row; a paused 0% slot is not 'dropped'): never in the account's first minHoldMonths; after that sell FIFO lots only once each is free of exit load and past the short-term tax period (equity / listed ETFs > 365 days, gold / international fund-of-funds > 730 days; debt any time), in Jan–Mar keeping equity long-term gains within the yearly exemption (rest waits for April); a holding flagged for deferMaxMonths is sold anyway. Proceeds switch into the model's current choice for that role.",
+    "droppedStreak": 2,
+    "minHoldMonths": 12,
+    "deferMaxMonths": 6,
+    "harvestMonths": [1, 2, 3]
+  },
+  "taxHarvest": {
+    "_comment": "Once a financial year, on the first trading day on/after 10 March, every agent harvests tax with the same rules a careful investor would use. The yearly equity LTCG exemption is per person, so the MF and ETF accounts share it (MF first). Gain harvesting: sell long-term, exit-load-free, unlocked equity lots (FIFO) whose gains fit in the person's unused exemption and buy the same fund / ETF back with the proceeds (higher cost basis, fresh holding period). Loss harvesting: if the person has taxable realised gains this year, sell equity lots standing at a loss (up to those gains) and buy them back. Done only when the tax saved beats the round-trip costs (stamp duty, STT, ETF brokerage / DP) and the gain is at least minGain.",
+    "month": 3,
+    "day": 10,
+    "minGain": 1000
   },
   "tax": {"stcgEquity": 0.20, "ltcgEquity": 0.125, "ltcgExempt": 125000, "debtSlab": 0.30, "cess": 0.04, "ltcgDaysEquity": 365}
 }
