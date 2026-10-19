@@ -1,5 +1,5 @@
 // Run: python3 -m http.server 8765 (repo root) && node scripts/test_smart_invest.js   [env: URL, CHROME, OUT]
-// End-to-end test of the Smart Invest planner: many inputs, desktop + phone, independent reference maths.
+// End-to-end test of the Portfolio Simulator planner: many inputs, desktop + phone, independent reference maths.
 const { chromium } = require('playwright');
 const OUT = process.env.OUT || require('os').tmpdir();
 const URL = process.env.URL || 'http://localhost:8765/india_mf_screener.html';
@@ -20,6 +20,7 @@ const SC = [ // [hz, rk, fq, amt, stay, years, slab, forcePct]
   for (const [vw, vh, dev] of [[1366, 900, 'desktop'], [390, 844, 'phone']]) {
     const ctx = await b.newContext({viewport:{width:vw, height:vh}, isMobile: vw < 500, hasTouch: vw < 500});
     const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+    await p.addInitScript(() => { try { localStorage.setItem('vt_sim_ack_v1', '1'); } catch (e) {} });   // risk warning already accepted
     for (const sc of SC) {
       const [hz, rk, fq, amt, stay, years, slab, pct] = sc;
       const q = `?view=sip&h=${hz}&r=${rk}&amt=${amt}&st=${stay}${years ? '&y=' + years : ''}${fq !== 'm' ? '&fq=' + fq : ''}${slab !== 30 ? '&tx=' + slab : ''}`;
@@ -62,7 +63,7 @@ const SC = [ // [hz, rk, fq, amt, stay, years, slab, forcePct]
           upOk: sized.slots.every(s => { const up = (plan.slots.find(z => z.key === s.key) || {}).upgrade, uf = up && BY[up.code];
             const eligible = !!(uf && !s.swapped && !(P.fq === 'w' && (uf.buy || '').indexOf('W') < 0) && s.amt >= sipMinOf(up.code));
             return s.upFrom ? (eligible && s.code === up.code && s.amt >= sipMinOf(s.code)) : !eligible; }),
-          upN: sized.slots.filter(s => s.upFrom).length, upTags: [...document.querySelectorAll('.sip-tbl .tag')].filter(t => t.innerText === 'Upgraded for your amount').length,
+          upN: sized.slots.filter(s => s.upFrom).length, upTags: [...document.querySelectorAll('.sip-tbl .tag')].filter(t => t.innerText === 'Alternative for your amount').length,
         };
       });
       const checks = [];
@@ -75,7 +76,7 @@ const SC = [ // [hz, rk, fq, amt, stay, years, slab, forcePct]
       checks.push(['post-tax vs reference', near(r.post, r.postRef, 1e-9)]);
       checks.push(['post-tax return reproduces post-tax value', near(r.fvX, r.post, 1e-4)]);
       checks.push(['range brackets value', r.low <= r.val && r.val <= r.high && r.post <= r.val && r.tax >= 0]);
-      checks.push(['heading uses holding period', r.title === `Expected outcome after ${r.stay} year${r.stay > 1 ? 's' : ''}`]);
+      checks.push(['heading uses holding period', r.title === `Simulated outcome after ${r.stay} year${r.stay > 1 ? 's' : ''}`]);
       checks.push(['KPI text = computed', r.kInv.includes(r.fmtInv) && r.kVal.includes(r.fmtVal)]);
       checks.push(['horizon + option highlighted', r.hzOn === hz && r.fqOn === fq]);
       checks.push(['invest-for hidden only for one-time', r.yrsHidden === r.lump]);

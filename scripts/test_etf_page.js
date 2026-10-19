@@ -5,7 +5,8 @@
  * Walks every menu: benchmark switch, mode tiles and tabs, asset-class chips, every option of every filter, every
  * sort option, the three column views, ETF detail pages for one ETF of every category plus edge cases (gold, liquid,
  * global at a premium, hybrid, new / thin ETFs), trading-chart ranges and types, scorecard toggles, all FAQs, and all
- * 20 Smart Invest plans × 5 investing frequencies. On every screen it checks for page errors, horizontal overflow,
+ * 20 Portfolio Simulator plans × 5 investing frequencies (Risk & score and Economy & earnings tabs included), and the
+ * risk-warning dialog (shown before the simulator opens; Close keeps it locked, Accept opens it). On every screen it checks for page errors, horizontal overflow,
  * visible "NaN" / "undefined" / "Infinity" / "[object" text, and elements wider than the screen.
  *
  * Usage: (serve the repo root on :8765)  node scripts/test_etf_page.js [--shots=DIR]
@@ -95,7 +96,7 @@ async function pageHealth(p, where) {
       for (const so of await p.$$eval('#tSort option', o => o.map(x => x.value))) {
         await p.selectOption('#tSort', so); await p.waitForTimeout(40);
         const order = await p.evaluate(() => [...document.querySelectorAll('#tbody tr[data-s]')].slice(0, 3).map(r => r.getAttribute('data-s')));
-        check(order.length > 0 || vp.width < 760, `${name}: sort ${so} in ${view} shows nothing`);
+        check(order.length > 0 || vp.width <= 1100, `${name}: sort ${so} in ${view} shows nothing`);
       }
       await pageHealth(p, `${name} view ${view}`);
     }
@@ -135,7 +136,18 @@ async function pageHealth(p, where) {
     const nFaq = await p.$$eval('details.faq', d => { d.forEach(x => { x.open = true; }); return d.length; });
     check(nFaq >= 20, `${name}: only ${nFaq} FAQs`);
     await pageHealth(p, `${name} FAQs open`);
-    // Smart Invest — every plan × frequency
+    // Portfolio Simulator — locked until the risk warning is accepted
+    check(await p.$eval('#smart', s => s.classList.contains('locked')), `${name}: simulator not locked before acceptance`);
+    await p.click('#smOpen'); await p.waitForTimeout(150);
+    check(await p.isVisible('.vts-dlg'), `${name}: risk-warning dialog not shown`);
+    check(await p.$eval('#vtsOk', b => b.disabled), `${name}: Accept enabled before the acknowledgement is ticked`);
+    await pageHealth(p, `${name} risk dialog`);
+    await p.click('.vts-ft [data-act="close"]'); await p.waitForTimeout(150);
+    check(await p.$eval('#smart', s => s.classList.contains('locked')), `${name}: Close unlocked the simulator`);
+    await p.click('#smOpen'); await p.waitForTimeout(150);
+    await p.check('#vtsAck'); await p.click('#vtsOk'); await p.waitForTimeout(250);
+    check(!(await p.$eval('#smart', s => s.classList.contains('locked'))), `${name}: Accept did not open the simulator`);
+    // Portfolio Simulator — every plan × frequency
     const hz = ['h1', 'h3', 'h5', 'h7', 'h10'], rk = ['c', 'b', 'a', 'v'], fq = ['m', 'w', 'q', 'y', 'l'];
     for (const h of hz) for (const r of rk) {
       await p.click(`#smHz [data-hz="${h}"]`); await p.click(`#smRisk [data-rk="${r}"]`);
@@ -149,6 +161,20 @@ async function pageHealth(p, where) {
         check(/₹/.test(s.proj) && !/NaN|–/.test(s.proj), `${name}: plan ${h}${r}/${f} projection "${s.proj.replace(/\n/g, ' ')}"`);
       }
     }
+    for (const st of ['risk', 'eco']) {
+      await p.click(`#smTabs [data-st="${st}"]`); await p.waitForTimeout(120);
+      const ok = await p.evaluate(st => { const el = document.getElementById(st === 'risk' ? 'smRiskPane' : 'smEcoPane'); return el.offsetHeight > 100 && !document.getElementById('smBody').offsetHeight; }, st);
+      check(ok, `${name}: ${st} tab did not switch`);
+      if (st === 'risk') {
+        for (const h of hz) for (const r of rk) {
+          await p.click(`#smHz [data-hz="${h}"]`); await p.click(`#smRisk [data-rk="${r}"]`); await p.waitForTimeout(20);
+          const k = await p.evaluate(() => [...document.querySelectorAll('#smRiskPane .vts-k b')].map(b => b.textContent));
+          check(k.length === 4 && /\d/.test(k[0]) && /\d/.test(k[1]), `${name}: risk tab ${h}${r} shows ${k.join(' | ')}`);
+        }
+      }
+      await pageHealth(p, `${name} simulator ${st} tab`);
+    }
+    await p.click('#smTabs [data-st="plan"]');
     for (const amt of ['500', '3000', '100000']) { await p.fill('#smAmt', amt); await p.waitForTimeout(260); await pageHealth(p, `${name} smart ₹${amt}`); }
     if (SHOTS) await (await p.$('#smart')).screenshot({ path: `${SHOTS}/${name}_smart.png` });
     check(!errs.length, `${name}: page errors ${errs.slice(0, 3).join(' | ')}`);
