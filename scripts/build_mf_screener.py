@@ -83,6 +83,8 @@ BENCH_DEF = {
     "us": ("S&P 500", r"s&p 500 index fund"),
 }
 
+IDXR: dict = {}               # index-fund rating details (filled in main)
+
 SUB_BENCH = {
     "large": "n100", "largemid": "lm250", "mid": "mid150", "small": "sml250", "multi": "n500", "flexi": "n500",
     "focused": "n500", "value": "n500", "contra": "n500", "divyield": "n500", "elss": "n500", "sector": "n500",
@@ -854,6 +856,25 @@ def main():
         for r, st in zip(lst, C.stars_from_scores(scores)):
             rating[r["code"]] = st
 
+    # ── index-fund rating: against the other funds tracking the SAME index (≥3 funds with ≥1 year of history) on
+    #    tracking error 35% · tracking difference 25% · expense ratio 25% · fund size 10% · track record 5%.
+    #    The peer median weekly return stands in for the index. Stars use the same bell curve over all rated index funds.
+    global IDXR
+    entries = []
+    for r in work:
+        if C.SUBS[r["sub"]][0] != "Index":
+            continue
+        f = facts.get(r["isin"]) or {}
+        try:
+            ter = float(ter_of(r, f)[0])
+        except (TypeError, ValueError):
+            ter = None
+        entries.append({"code": r["code"], "name": r["name"], "series": series[r["code"]], "ter": ter,
+                        "aum": merged_facts(r, f).get("aum")})
+    IDXR, stars_ix = C.index_ratings(entries, risk_asof.toordinal())
+    rating.update(stars_ix)
+    log.info("Index-fund ratings: %d funds across %d indices", len(stars_ix), len({v["index"] for v in IDXR.values()}))
+
     # ── scorecard: recency, consistency, volatility, status (within each sub-category)
     me48 = [C.month_end(C.shift_months(risk_asof, -k).year, C.shift_months(risk_asof, -k).month) for k in range(47, -1, -1)]
     me72 = [C.month_end(C.shift_months(risk_asof, -k).year, C.shift_months(risk_asof, -k).month) for k in range(71, -1, -1)]
@@ -1202,6 +1223,7 @@ def write_outputs(universe, work, results, facts, bench, asof, risk_asof, series
                 },
                 "score": {k: v for k, v in (SCORES.get(r["code"]) or {}).items()
                           if k in ("consTop", "consN", "cons5", "cons5Top", "cons5N", "vol5", "std5")},
+                "idxRating": IDXR.get(r["code"]),
             }
             s = series[r["code"]]
             i0 = int(np.searchsorted(s.d, risk_asof.toordinal(), side="right"))
