@@ -95,6 +95,9 @@ SOURCES = {
                       "pick": r"/investorcorner/monthly-portfolio/monthly-portfolio"},
     # file names carry no date: the portfolio month is read from inside each file (date: content)
     "Quantum": {"page": "https://www.quantumamc.com/portfolio/combined/-1/1/0/0", "pick": r"/FileCDN/FactSheet/", "date": "content", "scan": 4},
+    # the monthly file list loads only after the "Monthly Portfolio" tab is opened (one file per scheme)
+    "quant": {"page": "https://www.quantmutual.com/statutory-disclosures", "clicks": [r"^\s*MONTHLY PORTFOLIO\s*$"],
+              "pick": r"/Admin/disclouser/quant_.+_\d{1,2}_[A-Za-z]{3,9}_\d{4}\.xlsx?", "multi": True},
     "The Wealth Company": {"page": "https://www.wealthcompanyamc.in/literature-forms/portfolio-documents/monthly/",
                            "pick": r"/uploads/Monthly_Portfolio_", "date": "content", "scan": 30, "multi": True},
 }
@@ -197,19 +200,24 @@ def link_month(url: str) -> tuple[int, int] | None:
 FILE_RX = re.compile(r"""(?:https?://[^\s"'<>\\]+?|/[^\s"'<>\\]+?)\.(?:xlsx|xls|zip|xlsm)(?:\?[^\s"'<>\\]*)?""", re.I)
 
 
-def harvest(ctx, url: str) -> list[str]:
-    """Render a page and collect every spreadsheet/zip URL from links, page source and data responses."""
+def harvest(ctx, url: str, clicks: list | None = None) -> list[str]:
+    """Render a page and collect every spreadsheet/zip URL from links, page source and data responses.
+    `clicks`: regexes of tabs / buttons to click first (pages that load their file list only after a tab is opened);
+    relative file paths in data responses are resolved against the response URL."""
     from urllib.parse import urljoin
     found = []
     p = ctx.new_page()
+
+    seen_json = []
 
     def on_resp(r):
         try:
             if FILE_RX.search(r.url):
                 found.append(r.url)
             if "json" in r.headers.get("content-type", ""):
-                body = r.text().replace("\\/", "/")
-                found.extend(m for m in FILE_RX.findall(body) if m.startswith("http"))
+                seen_json.append(r.url)
+                body = r.text().replace("\\/", "/").replace("\\u0027", "'")
+                found.extend(m if m.startswith("http") else urljoin(r.url, m) for m in FILE_RX.findall(body))
         except Exception:  # noqa: BLE001
             pass
     p.on("response", on_resp)
@@ -220,6 +228,25 @@ def harvest(ctx, url: str) -> list[str]:
         except Exception:  # noqa: BLE001
             pass
         p.wait_for_timeout(3000)
+        for rx in clicks or []:
+            try:
+                loc = p.locator(f"text=/{rx}/i")
+                n, before = loc.count(), len(found)
+                clicked = False
+                for i in range(min(n, 4)):
+                    if loc.nth(i).is_visible():
+                        loc.nth(i).click(timeout=8000)
+                        clicked = True
+                        try:
+                            p.wait_for_load_state("networkidle", timeout=15000)
+                        except Exception:  # noqa: BLE001
+                            pass
+                        p.wait_for_timeout(4000)
+                        break
+                log.info("click /%s/ on %s: %d match(es), clicked=%s, +%d file link(s), %d data response(s)",
+                         rx, url[:60], n, clicked, len(found) - before, len(seen_json))
+            except Exception as e:  # noqa: BLE001
+                log.warning("click %s failed on %s (%s)", rx, url[:80], str(e)[:80])
         for _ in range(3):
             p.mouse.wheel(0, 2500)
             p.wait_for_timeout(500)
@@ -410,7 +437,7 @@ def discover(sources: dict) -> dict[str, list[str]]:
             links = []
             for page in cfg.get("pages") or [cfg["page"]]:
                 try:
-                    links += harvest(ctx, page)
+                    links += harvest(ctx, page, cfg.get("clicks"))
                 except Exception as e:  # noqa: BLE001
                     log.warning("%s: page not reachable (%s)", amc, str(e)[:120])
             allx = [l for l in dict.fromkeys(links) if re.search(r"\.(xlsx?|zip|xlsm)(\?|#|$)", l, re.I)]
