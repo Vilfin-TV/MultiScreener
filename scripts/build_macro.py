@@ -40,7 +40,7 @@ log = logging.getLogger("macro")
 # index name in the daily close file → short key used by the planner
 INDICES = {
     "Nifty 50": "n50", "Nifty Next 50": "nn50", "Nifty 500": "n500", "Nifty Midcap 150": "mid150", "Nifty Smallcap 250": "sml250",
-    "Nifty Microcap 250": "micro250",
+    "Nifty Microcap 250": "micro250", "Nifty Total Market": "totalmkt",
     "Nifty Bank": "bank", "Nifty Financial Services": "fin", "Nifty Private Bank": "pvtbank", "Nifty PSU Bank": "psubank",
     "Nifty IT": "it", "Nifty Pharma": "pharma", "Nifty Healthcare Index": "health", "Nifty FMCG": "fmcg",
     "Nifty India Consumption": "consumption", "Nifty Auto": "auto", "Nifty Infrastructure": "infra",
@@ -68,6 +68,7 @@ INDICES = {
 # alternative spellings used by the exchange over the years (matched after normalising case and punctuation)
 ALIASES = {
     "micro250": ["Nifty Microcap250", "Nifty Micro Cap 250", "Nifty Microcap 250 Index"],
+    "totalmkt": ["Nifty Total Mkt", "Nifty Total Market Index", "Nifty India Total Market"],
     "capmkt": ["Nifty Capital Market", "Nifty Capital Markets Index"],
     "finexbank": ["Nifty Financial Services Ex Bank", "Nifty Financial Services ex-Bank Index", "Nifty Fin Services Ex-Bank"],
     "msit": ["Nifty MidSmall IT and Telecom", "Nifty Midsmall IT & Telecom Index"],
@@ -260,7 +261,7 @@ def update_history(s) -> dict:
     missing = sorted(set(INDICES.values()) - latest_keys)
     if missing:
         log.warning("Indices not found in the latest close file: %s · candidates: %s", missing,
-                    sorted(n for n in SEEN_NAMES if re.search(r"textile|chemical|capital|ex.?bank|telecom|defen", n, re.I)))
+                    sorted(n for n in SEEN_NAMES if re.search(r"textile|chemical|capital|ex.?bank|telecom|defen|total", n, re.I)))
     log.info("Valuation history: %d months (+%d this run), latest %s", len(h["months"]), got, (h.get("latest") or {}).get("d"))
     HIST.write_text(json.dumps(h, separators=(",", ":")))
     return h
@@ -461,7 +462,7 @@ def eps_growth(hist: dict, key: str) -> dict:
     return out
 
 
-BROAD = ["n50", "nn50", "mid150", "sml250", "micro250", "n500"]
+BROAD = ["n50", "nn50", "mid150", "sml250", "micro250", "n500", "totalmkt"]
 NAME_OF = {v: k for k, v in INDICES.items()}
 
 
