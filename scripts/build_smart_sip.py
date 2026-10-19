@@ -132,12 +132,13 @@ DEBT_MDD = {"overnight": -0.3, "liquid": -0.5, "money": -0.5, "ultrashort": -0.7
 
 # sector satellite: key → label, index keys (valuation), fund subs, name filter (include / exclude)
 THEME_SUBS = ["sec_bank", "sec_pharma", "sec_tech", "sec_consumption", "sec_infra", "sec_mfg", "sec_energy", "sec_psu", "sec_mnc",
-              "sec_cycle", "sec_innov", "sec_other", "idx_bank", "idx_tech", "idx_health", "idx_consumption", "idx_mfg",
-              "idx_infra", "idx_theme"]
+              "sec_cycle", "sec_innov", "sec_other", "idx_bank", "idx_finsvc", "idx_capmkt", "idx_tech", "idx_digital",
+              "idx_health", "idx_consumption", "idx_tourism", "idx_mfg", "idx_auto", "idx_defence", "idx_infra", "idx_housing",
+              "idx_realty", "idx_energy", "idx_commod", "idx_psu", "idx_leaders", "idx_theme"]
 # sector satellite: key → label, index keys (valuation, first available wins), fund subs, name filter (include / exclude)
 SECTORS = [
     # banking & finance
-    ("bank", "Banking & financial services", ["fin", "bank"], ["sec_bank", "idx_bank"], None,
+    ("bank", "Banking & financial services", ["fin", "bank"], ["sec_bank", "idx_bank", "idx_finsvc"], None,
      r"capital market|ex[- ]?bank|non[- ]?bank|private bank|psu bank|mid ?small|nbfc|insurance|housing finance|small finance|microfinance"),
     ("pvtbank", "Private banks", ["pvtbank"], THEME_SUBS, r"private bank", None),
     ("psubank", "PSU banks", ["psubank"], THEME_SUBS, r"psu bank", None),
