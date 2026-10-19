@@ -3,7 +3,7 @@
 sim_engine.py — Simulator Buy: real-life tracking accounts for the Portfolio Simulator's model portfolios.
 
 Each person in scripts/sim_config.json holds a mutual fund account and an ETF demat account that buy the
-Portfolio Simulator's 10+ year model portfolio for their risk level on their schedule, starting 21 Oct 2026,
+Portfolio Simulator's 10+ year model portfolio for their risk level on their schedule, starting 19 Oct 2026,
 with real-life order rules:
 
   Mutual funds  order placed before the 3 pm cut-off on the trade date T (a holiday or weekend rolls to the next
@@ -960,7 +960,9 @@ def scoreboard(view: dict, audit_ok: bool) -> dict:
                      "amt": a["amount"], "nri": a["res"] == "nri", "since": view["start"], "days": a["days"] if valued else 0,
                      "metric": "xirr" if valued and a["days"] >= 365 else "abs",
                      "ret": (round((a["xirr"] or 0) * 100, 2) if a["days"] >= 365 else round(absr, 2)) if valued and audit_ok else None})
-    return {"v": 2, "updated": view["generated"], "start": view["start"], "auditOk": audit_ok, "rows": rows}
+    # dated by the market data, not the run time — an unchanged scoreboard must not create a new commit every run
+    asof = max([a["valuationDate"] for a in view["accounts"] if a.get("valuationDate")] or [min(view.get("mfAsOf") or "", view.get("etfAsOf") or "") or view["start"]])
+    return {"v": 2, "updated": asof, "start": view["start"], "auditOk": audit_ok, "rows": rows}
 
 
 def main() -> int:
@@ -979,8 +981,11 @@ def main() -> int:
     store = json.loads(p.read_text()) if p.exists() and p.stat().st_size > 2 else {}
     meta = store.setdefault("meta", {"start": CFG["start"], "created": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")})
     if meta["start"] != CFG["start"]:
-        log.error("store starts %s but the config says %s — refusing to mix ledgers", meta["start"], CFG["start"])
-        return 2
+        if any(e["k"] != "plan" for e in store.get("events", [])):
+            log.error("store starts %s but the config says %s — refusing to mix ledgers", meta["start"], CFG["start"])
+            return 2
+        log.info("start date moved %s → %s (no orders on record yet)", meta["start"], CFG["start"])
+        meta["start"] = CFG["start"]
     eng = Engine(store, today, network=not args.no_network, backtest=bool(args.backtest_start))
     if today < D(CFG["start"]):
         eng.snapshot()
