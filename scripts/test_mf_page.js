@@ -43,7 +43,7 @@ const subsOf = a => [...new Set(F.filter(f => f.asset === a).map(f => f.sub))];
 (async () => {
   const br = await chromium.launch({ executablePath: process.env.CHROME || undefined });
   const issues = []; let checks = 0;
-  const VP = [[1366, 900, 'dark', 'desktop'], [1440, 900, 'light', 'desktop-light'], [390, 844, 'light', 'phone'], [360, 780, 'dark', 'phone-small']];
+  const VP = [[1366, 900, 'dark', 'desktop'], [1440, 900, 'light', 'desktop-light'], [820, 1180, 'dark', 'ipad'], [1180, 820, 'light', 'ipad-landscape'], [390, 844, 'light', 'phone'], [360, 780, 'dark', 'phone-small']];
   for (const [w, h, sc, name] of VP) {
     const full = name === 'desktop';            // the exhaustive filter × scope matrix runs once; other sizes take a sample
     const ctx = await br.newContext({ viewport: { width: w, height: h }, colorScheme: sc });

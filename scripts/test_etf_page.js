@@ -73,6 +73,7 @@ async function pageHealth(p, where) {
 (async () => {
   const b = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
   const runs = [['desktop', { width: 1366, height: 900 }, 'default'], ['desktop-light', { width: 1440, height: 900 }, 'silver'],
+                ['ipad', { width: 820, height: 1180 }, 'default'], ['ipad-landscape', { width: 1180, height: 820 }, 'silver'],
                 ['phone', { width: 390, height: 844 }, 'default'], ['phone-small-light', { width: 360, height: 740 }, 'news-reader']];
   for (const [name, vp, theme] of runs) {
     const p = await b.newPage({ viewport: vp });
