@@ -427,12 +427,43 @@ def ev_hash(ev: dict) -> str:
     return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
 
 
+class DuplicateEvent(RuntimeError):
+    """A second instalment for the same account and date, a repeated order id, or a second completion / funding of
+    the same order. Raised before anything is written, so the run stops and nothing is uploaded or published."""
+
+
+def ev_key(kind: str, data: dict):
+    if kind == "instalment":
+        return ("instalment", data["acct"], data["T"])
+    if kind == "order":
+        return ("order", data["oid"])
+    if kind in ("allot", "fill", "redeem"):
+        return ("done", data["oid"])            # every order completes exactly once
+    if kind == "fund":
+        return ("fund", data["oid"])
+    return None
+
+
+_KEYS: dict = {}                                # id(store) → (events seen, keys) — rebuilt if the log was replaced
+
+
 def append(store: dict, kind: str, **data) -> dict:
     evs = store.setdefault("events", [])
+    seen = _KEYS.get(id(store))
+    if seen is None or seen[0] != len(evs) or seen[2] is not evs:
+        keys = {ev_key(e["k"], e) for e in evs} - {None}
+        seen = [len(evs), keys, evs]
+        _KEYS[id(store)] = seen
+    key = ev_key(kind, data)
+    if key is not None and key in seen[1]:
+        raise DuplicateEvent(f"refusing a duplicate {kind}: {key}")
     ev = {"seq": len(evs) + 1, "k": kind, "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
           "prev": evs[-1]["h"] if evs else "genesis", **data}
     ev["h"] = ev_hash(ev)
     evs.append(ev)
+    if key is not None:
+        seen[1].add(key)
+    seen[0] = len(evs)
     return ev
 
 

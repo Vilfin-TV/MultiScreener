@@ -161,6 +161,24 @@ def main() -> int:
                     f"plan snapshot {e['ref']} changed after it was recorded")
     oids = [e["oid"] for e in evs if e["k"] == "order"]
     A.check("chain", len(oids) == len(set(oids)), "duplicate order ids")
+    # no double buying: one instalment per account and date, one completion (allotment / fill / redemption) and at
+    # most one funding per order, and every completion belongs to a recorded order
+    seen_i, seen_d, seen_f, oset = set(), set(), set(), set(oids)
+    for e in evs:
+        if e["k"] == "instalment":
+            k = (e["acct"], e["T"])
+            A.check("chain", k not in seen_i and e["iid"] == f"{e['acct']}|{e['T']}", f"duplicate or mislabelled instalment {k}")
+            seen_i.add(k)
+        elif e["k"] in ("allot", "fill", "redeem"):
+            A.check("chain", e["oid"] not in seen_d, f"order {e['oid']} completed more than once (double credit)")
+            A.check("chain", e["oid"] in oset, f"{e['k']} for an unknown order {e['oid']}")
+            seen_d.add(e["oid"])
+        elif e["k"] == "fund":
+            A.check("chain", e["oid"] not in seen_f, f"order {e['oid']} funded more than once")
+            seen_f.add(e["oid"])
+    # completions of unknown orders are already reported above; keep them out of the remaining checks so the audit
+    # still finishes and records every problem
+    evs = [e for e in evs if not (e["k"] in ("allot", "fill", "redeem", "fund") and e["oid"] not in oset)]
     A.check("chain", view.get("head") == (evs[-1]["h"] if evs else None), "view built from a different ledger")
 
     orders = {e["oid"]: e for e in evs if e["k"] == "order"}
