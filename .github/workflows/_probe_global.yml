@@ -1,0 +1,32 @@
+name: _probe global valuations
+on:
+  push:
+    branches: [claude/festive-bell-an714y]
+    paths: ['.github/workflows/_probe_global.yml']
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pip install -q requests
+      - name: probe
+        run: |
+          python - <<'PY'
+          import requests, json, time
+          S = requests.Session(); S.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"})
+          try: S.get("https://fc.yahoo.com", timeout=20)
+          except Exception as e: print("fc", e)
+          c = S.get("https://query1.finance.yahoo.com/v1/test/getcrumb", timeout=20); print("crumb", c.status_code, c.text[:20])
+          crumb = c.text.strip()
+          for sym in ["QQQ","SPY","DIA","IEV","EZU","EWU","EWJ","1321.T","MCHI","2800.HK","EWT","EEM","URTH","ACWI","^NDX","^GSPC"]:
+              try:
+                  r = S.get(f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{sym}", params={"modules": "topHoldings,summaryDetail,defaultKeyStatistics,price", "crumb": crumb}, timeout=30)
+                  j = r.json()["quoteSummary"]["result"][0]
+                  th = (j.get("topHoldings") or {}).get("equityHoldings") or {}
+                  sd = j.get("summaryDetail") or {}
+                  pr = j.get("price") or {}
+                  print(sym, r.status_code, pr.get("longName"), {k: (v or {}).get("raw") if isinstance(v, dict) else v for k, v in th.items()},
+                        "tPE", (sd.get("trailingPE") or {}).get("raw"), "yld", (sd.get("yield") or {}).get("raw"), "px", (pr.get("regularMarketPrice") or {}).get("raw"))
+              except Exception as e:
+                  print(sym, "ERR", e, r.text[:200] if 'r' in dir() else '')
+              time.sleep(0.5)
+          PY
