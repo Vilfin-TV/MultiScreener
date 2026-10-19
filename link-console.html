@@ -5848,8 +5848,10 @@ async function saveIptvSettings() {
   body.rbac-readonly .c-panel textarea,
   body.rbac-readonly .c-panel input:not(.col-search):not(#search),
   body.rbac-readonly .c-panel select { opacity:.6; pointer-events:none; }
-  .rb-wrap{max-width:1000px}
+  .rb-wrap{max-width:none}
   .rb-cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:20px}
+  .rb-card{min-width:0}.rb-card .rb-v{overflow-wrap:anywhere}
+  .rb-name{font-weight:600}.rb-path{display:block;font-size:11px;opacity:.55;font-family:'JetBrains Mono',monospace}
   .rb-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:16px}
   .rb-card .rb-k{font-size:12px;color:#b9b9cc;margin-bottom:8px;letter-spacing:.4px;text-transform:uppercase}
   .rb-card .rb-v{font-size:26px;font-weight:800;color:#fff}
@@ -6014,23 +6016,31 @@ function _rbBytes(n){if(n==null)return '—';if(n<1024)return n+' B';if(n<104857
 function _rbRow(k,v){return '<div class="rb-row"><span>'+k+'</span><b>'+v+'</b></div>';}
 function _rbRender(r){
   var s=r.summary||{};
+  var pg=(r.pages||[]).filter(function(p){return p.kind!=='data';}), fd=(r.pages||[]).filter(function(p){return p.kind==='data';});
+  var pgDown=pg.filter(function(p){return !p.ok;}).length, fdDown=fd.filter(function(p){return !p.ok;}).length;
+  var dep=s.githubDependabotOpen, depTxt=(typeof dep==='number')?String(dep):(dep==='not-enabled'?'Off':'—'),
+      depSub=(typeof dep==='number')?(dep?'open Dependabot alerts':'no open alerts'):(dep==='not-enabled'?'Dependabot alerts not switched on for the repository':(dep==='no-access'?'worker token cannot read Dependabot alerts':'not available'));
   var h='<div class="rb-cards">'+
     '<div class="rb-card"><div class="rb-k">Overall</div><div class="rb-v">'+_rbPill(s.status||'n/a')+'</div><div class="rb-sub">generated '+esc(new Date(r.generatedAt).toLocaleString())+'</div></div>'+
-    '<div class="rb-card"><div class="rb-k">Pages online</div><div class="rb-v">'+(s.pagesTotal-s.pagesDown)+'/'+s.pagesTotal+'</div><div class="rb-sub">'+(s.pagesDown?(s.pagesDown+' down'):'all online')+' · avg '+(s.avgLatencyMs||0)+'ms</div></div>'+
-    '<div class="rb-card"><div class="rb-k">CI failing</div><div class="rb-v">'+(s.githubFailedWorkflows||0)+'</div><div class="rb-sub">recent runs</div></div>'+
-    '<div class="rb-card"><div class="rb-k">Security alerts</div><div class="rb-v">'+esc(String(s.githubDependabotOpen))+'</div><div class="rb-sub">Dependabot open</div></div>'+
-    '<div class="rb-card"><div class="rb-k">R2 storage used</div><div class="rb-v">'+_rbBytes(s.r2TotalBytes||0)+'</div><div class="rb-sub">across buckets</div></div>'+
-    '<div class="rb-card"><div class="rb-k">Pages weight</div><div class="rb-v">'+_rbBytes(s.pagesTotalBytes||0)+'</div><div class="rb-sub">total HTML/JSON</div></div>'+
+    '<div class="rb-card"><div class="rb-k">Pages online</div><div class="rb-v">'+(pg.length-pgDown)+'/'+pg.length+'</div><div class="rb-sub">'+(pgDown?(pgDown+' down'):'all online')+' · avg '+(s.avgLatencyMs||0)+'ms</div></div>'+
+    '<div class="rb-card"><div class="rb-k">Data feeds</div><div class="rb-v">'+(fd.length-fdDown)+'/'+fd.length+'</div><div class="rb-sub">'+(fdDown?(fdDown+' unreachable'):'all reachable')+'</div></div>'+
+    '<div class="rb-card"><div class="rb-k">CI failing</div><div class="rb-v">'+(s.githubFailedWorkflows||0)+'</div><div class="rb-sub">of the latest workflow runs</div></div>'+
+    '<div class="rb-card"><div class="rb-k">Security alerts</div><div class="rb-v">'+esc(depTxt)+'</div><div class="rb-sub">'+esc(depSub)+'</div></div>'+
+    '<div class="rb-card"><div class="rb-k">R2 storage used</div><div class="rb-v">'+_rbBytes(Number(s.r2TotalBytes)||0)+'</div><div class="rb-sub">'+(s.r2TotalObjects?Number(s.r2TotalObjects).toLocaleString()+' objects · ':'')+'across buckets</div></div>'+
+    '<div class="rb-card"><div class="rb-k">Pages weight</div><div class="rb-v">'+_rbBytes(s.pagesTotalBytes||0)+'</div><div class="rb-sub">pages + data feeds, per full load</div></div>'+
   '</div>';
 
-  // pages
-  h+='<div class="rb-sec"><h3>🌐 Pages — uptime &amp; size</h3>';
-  (r.pages||[]).forEach(function(p){
+  // pages & data feeds
+  var ago=function(t){ if(!t) return ''; var d=(Date.now()-new Date(t).getTime())/36e5; if(!isFinite(d)) return ''; return d<1?Math.max(1,Math.round(d*60))+' min ago':d<48?Math.round(d)+' h ago':Math.round(d/24)+' days ago'; };
+  var row=function(p){
     var ok=p.ok?'<span class="rb-pill rb-ok">'+p.status+'</span>':'<span class="rb-pill rb-bad">'+(p.status||'ERR')+'</span>';
-    var meta=p.ok?(' · '+_rbBytes(p.bytes)+(p.type?(' · '+esc(p.type)):'')+(p.cfCache?(' · cf:'+esc(p.cfCache)):'')):'';
-    h+=_rbRow(esc(p.url.replace('https://vilfintv.com','')||'/'), ok+' &nbsp;'+(p.ms||0)+'ms'+meta);
-  });
-  h+='</div>';
+    var when=p.asOf?(' · data '+esc(String(p.asOf).slice(0,10))):(p.lastModified?(' · updated '+ago(p.lastModified)):'');
+    var meta=p.ok?(' · '+_rbBytes(p.bytes)+when):(p.error?' · '+esc(p.error):'');
+    var path=esc(p.url.replace('https://vilfintv.com','')||'/');
+    return _rbRow('<span class="rb-name">'+esc(p.label||path)+'</span><span class="rb-path">'+(p.label?path:'')+'</span>', ok+' &nbsp;'+(p.ms||0)+'ms'+meta);
+  };
+  h+='<div class="rb-sec"><h3>🌐 Pages — uptime &amp; size</h3>'+pg.map(row).join('')+'</div>';
+  if(fd.length) h+='<div class="rb-sec"><h3>🗂️ Data feeds — reachability &amp; freshness</h3>'+fd.map(row).join('')+'</div>';
 
   // github
   var g=r.github||{};
@@ -6041,8 +6051,9 @@ function _rbRender(r){
     h+=_rbRow('Visibility',(g.private?'private':'public')+(g.defaultBranch?(' · '+esc(g.defaultBranch)):''));
     h+=_rbRow('Last push',esc(g.pushedAt?new Date(g.pushedAt).toLocaleString():'—'));
     var depColor=(typeof g.dependabotOpen==='number'&&g.dependabotOpen>0)?'rb-bad':'rb-ok';
-    h+=_rbRow('Dependabot alerts','<span class="rb-pill '+depColor+'">'+esc(String(g.dependabotOpen))+'</span>'+(g.dependabotBySeverity?(' '+Object.keys(g.dependabotBySeverity).map(function(k){return esc(k)+':'+g.dependabotBySeverity[k];}).join(', ')):''));
-    h+=_rbRow('Code scanning',esc(String(g.codeScanningOpen)));
+    var ghTxt=function(v){return typeof v==='number'?String(v):v==='not-enabled'?'not switched on':v==='no-access'?'token lacks access':'n/a';};
+    h+=_rbRow('Dependabot alerts','<span class="rb-pill '+(typeof g.dependabotOpen==='number'?depColor:'rb-warn')+'">'+esc(ghTxt(g.dependabotOpen))+'</span>'+(g.dependabotBySeverity?(' '+Object.keys(g.dependabotBySeverity).map(function(k){return esc(k)+':'+g.dependabotBySeverity[k];}).join(', ')):''));
+    h+=_rbRow('Code scanning',esc(ghTxt(g.codeScanningOpen)));
     if(g.workflows){g.workflows.slice(0,8).forEach(function(w){
       var c=w.conclusion==='success'?'rb-ok':(w.conclusion?'rb-bad':'rb-warn');
       h+=_rbRow(esc(w.name)+' <span style="opacity:.5">('+esc(w.event)+')</span>','<span class="rb-pill '+c+'">'+esc(w.conclusion||w.status)+'</span>');
@@ -6062,8 +6073,8 @@ function _rbRender(r){
     if(Array.isArray(c.kv)){c.kv.forEach(function(n){h+=_rbRow('KV · '+esc(n.title),esc(String(n.keys))+' keys');});}
     else if(c.kv){h+=_rbRow('KV namespaces',esc(String(c.kv)));}
     // R2 with sizes
-    if(Array.isArray(c.r2)){c.r2.forEach(function(b){h+=_rbRow('R2 · '+esc(b.name),_rbBytes(b.sizeBytes)+(b.objects!=null?(' · '+b.objects+' objects'):''));});
-      h+=_rbRow('R2 total','<b>'+_rbBytes(c.r2TotalBytes||0)+'</b>');}
+    if(Array.isArray(c.r2)){c.r2.forEach(function(b){h+=_rbRow('R2 · '+esc(b.name),_rbBytes(b.sizeBytes==null?null:Number(b.sizeBytes))+(b.objects!=null?(' · '+Number(b.objects).toLocaleString()+' objects'):''));});
+      h+=_rbRow('R2 total','<b>'+_rbBytes(Number(c.r2TotalBytes)||0)+'</b>');}
     else if(c.r2){h+=_rbRow('R2 buckets',esc(String(c.r2)));}
     // zones / SSL
     if(Array.isArray(c.zones)){c.zones.forEach(function(z){
