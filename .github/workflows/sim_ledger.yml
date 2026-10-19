@@ -132,14 +132,25 @@ jobs:
           python - <<'EOF'
           import json, os, sys
           sys.path.insert(0, "scripts")
-          from sim_engine import scoreboard
+          from sim_engine import scoreboard, account_files
           t = os.path.join(os.environ["RUNNER_TEMP"], "sim")
           store, view, audit = (json.load(open(os.path.join(t, f + ".json"))) for f in ("ledger", "view", "audit"))
           evs = store.get("events", [])
-          json.dump({"v": 1, "events": len(evs), "head": evs[-1]["h"] if evs else None, "start": view["start"]},
+          days = store.get("days", [])
+          json.dump({"v": 1, "events": len(evs), "head": evs[-1]["h"] if evs else None, "start": view["start"],
+                     "days": len(days), "daysHead": days[-1]["h"] if days else None},
                     open("data/sim_meta.json", "w"), indent=1)
-          sb = scoreboard(view, audit["nErrors"] == 0)
+          ok = audit["nErrors"] == 0
+          sb = scoreboard(view, ok)
+          os.makedirs("data/sim", exist_ok=True)
+          if ok:                                  # per-person files (daily summaries) only from an audited ledger
+              files = account_files(store, view, sb)
+              for f in os.listdir("data/sim"):
+                  if f.endswith(".json") and f[:-5] not in files:
+                      os.remove(os.path.join("data/sim", f))
+              for f, body in files.items():
+                  json.dump(body, open(f"data/sim/{f}.json", "w"), separators=(",", ":"), ensure_ascii=False)
           json.dump(sb, open("data/sim_scoreboard.json", "w"), separators=(",", ":"), ensure_ascii=False)
-          print(f"scoreboard: {len(sb['rows'])} rows · ledger {len(evs)} entries")
+          print(f"scoreboard: {len(sb['rows'])} rows · ledger {len(evs)} entries · daily journal {len(days)} records")
           EOF
-          bash scripts/push_data.sh "chore(data): Simulator Buy scoreboard" data/sim_meta.json data/sim_scoreboard.json
+          bash scripts/push_data.sh "chore(data): Simulator Buy scoreboard" data/sim_meta.json data/sim_scoreboard.json data/sim

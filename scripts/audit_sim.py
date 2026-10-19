@@ -18,6 +18,9 @@ Checks
   value       latest valuation recomputed from holdings × latest price (+ pending orders, + ETF cash)
   xirr        recomputed by scripts/sim_xirr.js (JavaScript) and compared
   verified    share of MF NAVs confirmed against the official AMFI file (warning below 100%)
+  daily       the daily portfolio summary journal: its own hash chain, one record per account / market per day, market
+              closes = recorded closes, and every account summary recomputed (credited units, pending cost, prices,
+              cash, value, invested, day change) from the ledger as of that day
 
 Usage: python scripts/audit_sim.py --store sim_store.json --view sim_view.json --out sim_audit.json [--today D]
 """
@@ -395,11 +398,116 @@ def main() -> int:
                 A.check("value", h["priceDate"] is not None and (day(acc["series"][-1][0]) - day(h["priceDate"])).days <= 12,
                         f"{aid}: {h['key']} price from {h['priceDate']} is stale", warn=True)
             val = sum(h["units"] * (h["price"] or 0) for h in acc["holdings"])
-            pend = sum((t["amount"] or 0) for t in acc["txns"] if t["side"] == "buy" and t.get("units") is None)
+            pend = sum((t["amount"] or 0) for t in acc["txns"] if t["side"] == "buy" and t.get("units") is None) if aid.endswith("-MF") else 0.0
             val += pend + (acc.get("cash") or 0)
             A.check("value", abs(val - acc["value"]) < 1.0, f"{aid}: value {acc['value']} vs recomputed {r2(val)}")
             inv = sum(e["amount"] for e in inst if e["acct"] == aid)
             A.check("value", abs(inv - acc["invested"]) < 0.01, f"{aid}: invested {acc['invested']} vs {inv}")
+
+    # daily portfolio summaries (store["days"]): own hash chain, one record per account / market per day, and every
+    # figure recomputed from the ledger as of that day and the recorded official prices
+    days = store.get("days", [])
+    prev, seen = "genesis", set()
+    for i, e in enumerate(days):
+        body = {k: v for k, v in e.items() if k != "h"}
+        h = hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
+        A.check("daily", h == e["h"] and e["prev"] == prev and e["seq"] == i + 1, f"daily record {e.get('seq')} hash / link / sequence")
+        prev = e["h"]
+        k = (e.get("a") or "mkt", e["d"])
+        A.check("daily", k not in seen, f"daily record {k} recorded twice")
+        seen.add(k)
+        A.check("daily", open_day(day(e["d"])) and day(e["d"]) <= today, f"daily record {k} on a closed or future day")
+    book = prices
+    for e in days:
+        if e["t"] != "mkt":
+            continue
+        for sym, px, pd, qx, qd in e["m"]:
+            b = book.get("etf", {}).get(sym) or {}
+            A.check("daily", b.get(pd) == px and b.get(qd) == qx and qd < pd, f"market {e['d']} {sym}: closes {qx}→{px} not the recorded closes of {qd}/{pd}")
+    lastd, acc_evs, acc_inst = {}, {}, {}
+    for x in evs:                                   # per-account indexes keep this linear in the ledger size
+        if x["k"] in ("allot", "fill", "redeem"):
+            acc_evs.setdefault(orders[x["oid"]]["acct"], []).append(x)
+    for x in inst:
+        acc_inst.setdefault(x["acct"], []).append(x)
+    acc_orders = {}
+    for o in orders.values():
+        acc_orders.setdefault(o["acct"], []).append(o)
+    for e in days:
+        if e["t"] != "acct":
+            continue
+        aid, ds = e["a"], e["d"]
+        mf = aid.endswith("-MF")
+        lots, cash, pend, inv, out = {}, 0.0, 0.0, 0.0, 0.0
+        for x in acc_inst.get(aid, []):
+            if x["T"] <= ds:
+                inv += x["amount"]
+                cash += 0 if mf else x["amount"]
+        for x in acc_evs.get(aid, []):
+            o = orders[x["oid"]]
+            if o["T"] > ds:
+                continue
+            key = str(o.get("code") or o.get("sym"))
+            if x["k"] == "redeem":
+                left = x["units"]
+                for l in lots.get(key, []):
+                    take = min(left, l[1])
+                    if take <= 0:
+                        continue
+                    l[2] *= 1 - take / l[1]
+                    l[1] = round(l[1] - take, 6)
+                    left = round(left - take, 6)
+                if o.get("withdraw"):
+                    out += x["net"]
+                elif not mf:
+                    cash += x["net"]
+                continue
+            cost = x["amount"] if x["k"] == "allot" else x["gross"] + x["charges"]["total"]
+            lots.setdefault(key, []).append([x["credit"], x["units"], cost])
+            if not mf:
+                cash -= x["gross"] + x["charges"]["total"]
+        if mf:
+            for o in acc_orders.get(aid, []):
+                if o["side"] == "buy" and o["T"] <= ds and o["oid"] not in done:
+                    pend += o["amount"] if o.get("amount") is not None else funded.get(o["oid"], 0.0)
+        hold = {h[0]: h for h in e["hold"]}
+        val = 0.0
+        for key, ls in lots.items():
+            cu = round(sum(l[1] for l in ls if l[0] <= ds), 6)
+            uc = sum(l[2] for l in ls if l[0] > ds and l[1] > 1e-9)
+            h = hold.get(key)
+            if cu <= 1e-9 and uc <= 0.005:
+                continue
+            A.check("daily", h is not None and abs(h[1] - cu) < 1e-6 and abs(h[7] - uc) < 0.02, f"{aid} {ds}: {key} credited {h and h[1]} / pending cost {h and h[7]} vs {cu} / {r2(uc)}")
+            if h is None:
+                continue
+            if cu <= 1e-9:
+                val += uc                               # nothing credited: counted at cost, no price used
+                continue
+            b = book.get("mf" if mf else "etf", {}).get(key) or {}
+            A.check("daily", h[3] is not None and h[3] <= ds and b.get(h[3]) == h[2], f"{aid} {ds}: {key} price {h[2]} not the recorded price of {h[3]}")
+            later = [x for x in b if h[3] and h[3] < x <= ds]
+            A.check("daily", not later, f"{aid} {ds}: {key} valued at {h[3]} although a later price ({later[:1]}) is on record", warn=True)
+            val += cu * (h[2] or 0) + uc
+        A.check("daily", abs(e["pend"] - pend) < 0.02 and abs(e["cash"] - (0.0 if mf else cash)) < 0.02, f"{aid} {ds}: pending {e['pend']} / cash {e['cash']} vs {r2(pend)} / {r2(cash)}")
+        val += pend + (0.0 if mf else cash)
+        A.check("daily", abs(e["val"] - val) < 0.1 and abs(e["inv"] - inv) < 0.01 and abs(e["out"] - out) < 0.02,
+                f"{aid} {ds}: value / invested {e['val']} / {e['inv']} vs recomputed {r2(val)} / {r2(inv)}")
+        lt = e.get("lt", lastd.get(aid, {}).get("_lt", {}))
+        e["_lt"] = lt
+        lb = store.get("lookthrough", {})
+        A.check("daily", all((lb.get(f"{'mf' if mf else 'etf'}:{k}") or {}).get(m) is not None for k, m in lt.items()),
+                f"{aid} {ds}: a look-through reference has no recorded composition")
+        p = lastd.get(aid)
+        if p:
+            flow = (e["inv"] - p["inv"]) - (e["out"] - p["out"])
+            ok = abs(e["chg"] - (e["val"] - p["val"] - flow)) < 0.02 and (not p["val"] or abs(e["pct"] - e["chg"] / p["val"] * 100) < 0.001) \
+                and abs(e["bchg"] - (e["bval"] - p["bval"] - flow)) < 0.02 and not e["first"]
+        else:
+            net = e["inv"] - e["out"]
+            ok = e["first"] and abs(e["chg"] - (e["val"] - net)) < 0.02 and abs(e["bchg"] - (e["bval"] - net)) < 0.02
+        A.check("daily", ok, f"{aid} {ds}: day change {e['chg']} ({e['pct']}%) does not follow from the previous summary")
+        lastd[aid] = e
 
     # XIRR in JavaScript
     try:

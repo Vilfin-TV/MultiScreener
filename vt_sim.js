@@ -353,94 +353,277 @@
      from the start date. Public data = data/sim_scoreboard.json (name, model, schedule, return % only — absolute under
      one year, XIRR after; null until an account has been valued). Fills every element with data-vts-buy="mf" | "etf".
      No real money is invested and nothing is bought on anyone's behalf — the card says so prominently. */
+  /* ── Simulator Buy: simulated accounts of VilfinTV agents that follow the 10+ year model portfolios. One person at a
+     time (profile switcher), with the daily portfolio summary recorded in the ledger journal, a Portfolio-vs-Nifty-50
+     chart, holdings and recent days. Data: data/sim_scoreboard.json + data/sim/<person>.json (audited). ── */
   function simBuy() {
     var els = document.querySelectorAll('[data-vts-buy]');
     if (!els.length || !window.fetch) return;
     fetch('data/sim_scoreboard.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (sb) {
       if (!sb) return;
       style();
-      var d = function (x) { return new Date(String(x).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); };
-      var inr = function (v) { return '₹' + Number(v).toLocaleString('en-IN'); };
-      var started = new Date() >= new Date(sb.start + 'T00:00:00');
-      els.forEach(function (el) {
-        var prod = el.getAttribute('data-vts-buy'), what = prod === 'etf' ? 'ETF' : 'mutual fund';
-        var rows = (sb.rows || []).filter(function (r) { return r.product === prod; });
-        if (!rows.length) { el.innerHTML = ''; return; }
-        rows.sort(function (a, b) { return (b.ret == null ? -1e9 : b.ret) - (a.ret == null ? -1e9 : a.ret); });
-        var anyRet = rows.some(function (r) { return r.ret != null; });
-        var metric = rows.some(function (r) { return r.metric === 'xirr'; }) ? 'XIRR (annualised)' : 'absolute return so far';
-        var retTxt = function (r) {
-          if (r.ret != null) return (r.ret > 0 ? '+' : '') + r.ret.toFixed(2) + '%';
-          if (!started) return 'Starts ' + d(sb.start).replace(/ \d{4}$/, '');
-          if (sb.auditOk === false) return 'Under review';
-          return r.credit ? 'Units credited ' + d(r.credit).replace(/ \d{4}$/, '') : 'Buy in progress';
-        };
-        var cls = function (r) { return r.ret == null ? ' na' : r.ret >= 0 ? ' up' : ' dn'; };
-        var head = function (r) {
-          return '<div class="vts-buy-who"><div><b>' + esc(r.name) + '</b>' + (r.nri ? '<i class="vts-buy-nri">NRI</i>' : '') + '</div>' +
-            '<span>10+ yr ' + esc(r.risk) + ' · ' + esc(r.freq) + (r.amt ? ' ' + inr(r.amt) : '') + '</span></div><strong class="' + cls(r).trim() + '">' + retTxt(r) +
-            (r.ret != null ? '<small>' + (r.metric === 'xirr' ? 'XIRR' : 'abs') + '</small>' : '') + '</strong>';
-        };
-        var num = function (v, dp) { return v == null ? '–' : Number(v).toLocaleString('en-IN', { minimumFractionDigits: dp, maximumFractionDigits: dp }); };
-        var sgn = function (v, suf) { return v == null ? '–' : '<span class="' + (v >= 0 ? 'up' : 'dn') + '">' + (v > 0 ? '+' : '') + v.toFixed(2) + suf + '</span>'; };
-        var money = function (v) { return v == null ? '–' : '₹' + num(v, 2); };
-        var body = function (r) {
-          var x = r.detail, mf = prod === 'mf', h = '<div class="vts-acc-b">';
-          var k = [['Invested', money(x.inv)], ['Value', x.val == null && r.credit ? 'After units are credited' : money(x.val)],
-                   ['Gain / loss', x.gain == null ? '–' : '<span class="' + (x.gain >= 0 ? 'up' : 'dn') + '">' + (x.gain >= 0 ? '+' : '−') + '₹' + num(Math.abs(x.gain), 2) + '</span>'],
-                   ['Same money in Nifty 50', sgn(x.bench, '%')],
-                   ['Next buy', x.next ? d(x.next) : (r.freq === 'One-time' ? 'One-time (done)' : '–')]];
-          if (!mf) k.push(['Cash left (next buy)', money(x.cash)]);
-          h += '<div class="vts-acc-k">' + k.map(function (q) { return '<div><span>' + q[0] + '</span><b>' + q[1] + '</b></div>'; }).join('') + '</div>';
-          if (x.hold && x.hold.length) {
-            h += '<div class="vts-acc-t" role="table" aria-label="Holdings"><div class="vts-acc-r vts-acc-hd" role="row"><span>' + (mf ? 'Fund' : 'ETF') + '</span><span>Units</span><span>Avg cost</span><span>' + (mf ? 'NAV' : 'Close') + '</span><span>Value</span><span>Gain</span><span>Share</span></div>' +
-              x.hold.map(function (o) {
-                return '<div class="vts-acc-r" role="row"><span class="vts-acc-n"><b>' + esc(o.n) + '</b><small>' + esc(mf ? (o.cat || '') : o.k + (o.cat ? ' · ' + o.cat : '')) + (o.pu ? ' · <em>' + num(o.pu, mf ? 3 : 0) + ' units being credited' + (o.cr ? ' by ' + esc(d(o.cr).replace(/ \d{4}$/, '')) : '') + '</em>' : '') + '</small></span>' +
-                  '<span data-l="Units">' + num(o.u, mf ? 3 : 0) + '</span><span data-l="Avg cost">₹' + num(o.avg, mf ? 4 : 2) + '</span>' +
-                  '<span data-l="' + (mf ? 'NAV' : 'Close') + '">₹' + num(o.px, mf ? 4 : 2) + (o.pd ? '<small>' + d(o.pd).replace(/ \d{4}$/, '') + '</small>' : '') + '</span>' +
-                  '<span data-l="Value">₹' + num(o.val, 0) + '</span><span data-l="Gain">' + sgn(o.g, '%') + '</span><span data-l="Share">' + (o.w == null ? '–' : o.w.toFixed(1) + '%') + '</span></div>';
-              }).join('') + '</div>';
-          }
-          if (x.pend && x.pend.length)
-            h += '<div class="vts-acc-p"><b>Waiting for price</b>' + x.pend.map(function (o) { return '<div>' + esc(o.n) + ' · ' + inr(Math.round(o.amt)) + ' · ordered ' + d(o.T).replace(/ \d{4}$/, '') + ' — ' + esc(o.st) + '</div>'; }).join('') + '</div>';
-          if ((!x.hold || !x.hold.length) && (!x.pend || !x.pend.length)) h += '<p class="vts-acc-e">No purchases yet — the first buy is on ' + esc(d(sb.start)) + '.</p>';
-          h += '<p class="vts-acc-e">Values as of ' + (x.asOf ? esc(d(x.asOf)) : '–') + ' at official ' + (mf ? 'NAVs' : 'closing prices') + ' · simulation, not real money.</p></div>';
-          return h;
-        };
-        var card = function (r) {
-          if (!r.detail) return '<div class="vts-buy-c" role="listitem">' + head(r) + '</div>';
-          return '<details class="vts-acc" role="listitem"><summary class="vts-buy-c" aria-label="' + esc(r.name) + ' — show holdings and units">' + head(r) +
-            '<i class="vts-acc-x" aria-hidden="true">▾</i></summary>' + body(r) + '</details>';
-        };
-        var best = rows.filter(function (r) { return r.ret != null; })[0];
-        var crBy = rows.reduce(function (m, r) { return r.credit && r.credit > m ? r.credit : m; }, '');
-        var peek = best ? 'Top: ' + esc(best.name) + ' ' + retTxt(best) + ' · ' + rows.length + ' accounts'
-          : rows.length + ' accounts · ' + (started ? (sb.auditOk === false ? 'under review' : 'buy in progress' + (crBy ? ' · units credited by ' + esc(d(crBy).replace(/ \d{4}$/, '')) : '')) : 'starts ' + esc(d(sb.start)));
-        el.innerHTML = '<details class="vts-buy">' +
-          '<summary class="vts-buy-h" aria-label="Simulator Buy — simulated accounts. Show or hide details">' +
-          '<div class="vts-buy-t1"><b>🧾 Simulator Buy</b><span class="vts-buy-badge">Simulation · not real money</span><span class="vts-buy-peek">' + peek + '</span>' +
-          '<span class="vts-buy-tg" aria-hidden="true"><span class="o">Show</span><span class="c">Hide</span><i>▾</i></span></div>' +
-          '<span class="vts-buy-sub">How ' + rows.length + ' simulated ' + what + ' accounts of VilfinTV agents are doing while following this simulator\'s 10+ year model portfolios' +
-          (anyRet ? ' since ' + esc(d(sb.start)) + ' · ' + metric : ' · simulated buying from ' + esc(d(sb.start))) + '</span></summary>' +
-          '<div class="vts-buy-b">' +
-          '<p class="vts-buy-warn"><b>Disclaimer:</b> This is a <b>simulation for education only — not a real purchase</b>. No real money is invested, no units are bought or held for anyone, and the agents are internal test accounts, not real investors. Figures are calculated from official end-of-day prices with stamp duty' + (prod === 'etf' ? ', brokerage and exchange charges' : '') + ', exit loads, taxes and settlement days, to show how the model portfolios would have behaved. Not investment advice; not a recommendation to buy any fund. Past or simulated results do not predict future returns.</p>' +
-          (prod === 'etf'
-            ? '<div class="vts-buy-rule"><b>⏱ How each ETF trade is priced</b><ul>' +
-              '<li><b>When:</b> every buy (and any sale) is placed on its plan date and treated as a market-on-close order — it executes at the end of that day\'s trading session, <b>3:30 pm IST</b>.</li>' +
-              '<li><b>Unit price:</b> the exchange\'s <b>official closing price</b> of that session (the weighted average price of the last 30 minutes of trading, 3:00–3:30 pm IST). If the market is closed (weekend or exchange holiday) or the ETF did not trade that day, it executes at the close of the next session it trades.</li>' +
-              '<li><b>Units:</b> whole units only, as many as the amount buys after charges; cash left over is added to the next buy of the same ETF. Units are credited the next trading day (T+1).</li>' +
-              '<li><b>Record:</b> each trade in the ledger stores this rule, its trade date and the closing price used, and the daily audit checks every trade against the exchange\'s published closing price for that session.</li></ul></div>'
-            : '<div class="vts-buy-rule"><b>⏱ How each fund purchase is priced</b><ul>' +
-              '<li><b>When:</b> every purchase is placed on its plan date before the 3 pm IST cut-off.</li>' +
-              '<li><b>Unit price:</b> the fund\'s <b>official NAV of that business day</b> (liquid and overnight funds: the NAV of the previous calendar day); if the fund house has no NAV that day, the next NAV day. Stamp duty of 0.005% is taken first; units are rounded down to 3 decimals and credited two business days later (market holidays skipped). Until then the purchase shows as "buy in progress" — no return, gain or stamp duty is shown before the units are credited.</li>' +
-              '<li><b>Record:</b> each purchase in the ledger stores its NAV date and NAV, and the daily audit checks it against the official NAV file.</li></ul></div>') +
-          '<div class="vts-buy-g" role="list" aria-label="Simulated accounts">' + rows.map(card).join('') + '</div>' +
-          '<p class="vts-buy-n">' + (anyRet ? 'Return: absolute for accounts under one year old, XIRR after. ' : '') + 'Updated ' + esc(d(sb.updated)) + (sb.auditOk === false ? ' · figures withheld while a data check is resolved' : '') + '.</p></div></details>';
-      });
+      els.forEach(function (el) { simBuyCard(el, sb); });
     }).catch(function () {});
   }
+
+  function simBuyCard(el, sb) {
+    var prod = el.getAttribute('data-vts-buy'), mf = prod !== 'etf', what = mf ? 'mutual fund' : 'ETF';
+    var rows = (sb.rows || []).filter(function (r) { return r.product === prod; });
+    if (!rows.length) { el.innerHTML = ''; return; }
+    var dt = function (x, yr) { var s = new Date(String(x).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); return yr === false ? s.replace(/ \d{4}$/, '') : s; };
+    var dtw = function (x) { return new Date(String(x).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }); };
+    var num = function (v, dp) { return v == null ? '–' : Number(v).toLocaleString('en-IN', { minimumFractionDigits: dp, maximumFractionDigits: dp }); };
+    var inr = function (v, dp) { return v == null ? '–' : (v < 0 ? '−' : '') + '₹' + num(Math.abs(v), dp == null ? 2 : dp); };
+    var sinr = function (v, dp) { return v == null ? '–' : (v > 0 ? '+' : v < 0 ? '−' : '') + '₹' + num(Math.abs(v), dp == null ? 2 : dp); };
+    var spct = function (v, dp) { return v == null ? '–' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(dp == null ? 2 : dp) + '%'; };
+    var cl = function (v) { return v == null ? 'na' : v > 0 ? 'up' : v < 0 ? 'dn' : ''; };
+    var started = new Date() >= new Date(sb.start + 'T00:00:00');
+    var initials = function (n) { return String(n).split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase(); };
+    var hue = function (n) { var h = 0; for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) % 360; return h; };
+    var av = function (r, big) { return '<span class="vts-pf-av' + (big ? ' lg' : '') + '" style="background:hsl(' + hue(r.name) + ' 55% 42%)" aria-hidden="true">' + esc(initials(r.name)) + '</span>'; };
+    var plan = function (r) { return '10+ yr ' + esc(r.risk) + ' · ' + esc(r.freq) + (r.amt ? ' ' + inr(r.amt, 0) : ''); };
+    var status = function (r) {
+      if (r.ret != null) return '<b class="' + cl(r.ret) + '">' + spct(r.ret) + '</b><small>' + (r.metric === 'xirr' ? 'XIRR' : 'total') + '</small>';
+      if (!started) return '<b class="na">Starts ' + esc(dt(sb.start, false)) + '</b>';
+      if (sb.auditOk === false) return '<b class="na">Under review</b>';
+      return '<b class="na">' + (r.credit ? 'Units credited ' + esc(dt(r.credit, false)) : 'Buy in progress') + '</b>';
+    };
+    rows.sort(function (a, b) { return (b.ret == null ? -1e9 : b.ret) - (a.ret == null ? -1e9 : a.ret) || (a.name < b.name ? -1 : 1); });
+    var key = 'vt_simbuy_' + prod, sel = null;
+    try { sel = localStorage.getItem(key); } catch (e) {}
+    var cur = rows.filter(function (r) { return r.name === sel; })[0] || rows[0];
+    var best = rows.filter(function (r) { return r.ret != null; })[0];
+    var crBy = rows.reduce(function (m, r) { return r.credit && r.credit > m ? r.credit : m; }, '');
+    var peek = best ? 'Top: ' + esc(best.name) + ' ' + spct(best.ret) + ' · ' + rows.length + ' accounts'
+      : rows.length + ' accounts · ' + (started ? (sb.auditOk === false ? 'under review' : 'buy in progress' + (crBy ? ' · units credited by ' + esc(dt(crBy, false)) : '')) : 'starts ' + esc(dt(sb.start)));
+    el.innerHTML = '<details class="vts-buy">' +
+      '<summary class="vts-buy-h" aria-label="Simulator Buy — simulated accounts. Show or hide details">' +
+      '<div class="vts-buy-t1"><b>🧾 Simulator Buy</b><span class="vts-buy-badge">Simulation · not real money</span><span class="vts-buy-peek">' + peek + '</span>' +
+      '<span class="vts-buy-tg" aria-hidden="true"><span class="o">Show</span><span class="c">Hide</span><i>▾</i></span></div>' +
+      '<span class="vts-buy-sub">Follow each of ' + rows.length + ' simulated ' + what + ' accounts of VilfinTV agents day by day as they buy this simulator\'s 10+ year model portfolios — value, daily change and why it moved.</span></summary>' +
+      '<div class="vts-buy-b">' +
+      '<p class="vts-buy-warn"><b>Disclaimer:</b> This is a <b>simulation for education only — not a real purchase</b>. No real money is invested, no units are bought or held for anyone, and the agents are internal test accounts, not real investors. Figures are calculated from official end-of-day prices with stamp duty' + (mf ? '' : ', brokerage and exchange charges') + ', exit loads, taxes and settlement days, to show how the model portfolios would have behaved. Not investment advice; not a recommendation to buy any fund. Past or simulated results do not predict future returns.</p>' +
+      (mf
+        ? '<details class="vts-buy-rule"><summary>⏱ How each fund purchase is priced</summary><ul>' +
+          '<li><b>When:</b> every purchase is placed on its plan date before the 3 pm IST cut-off.</li>' +
+          '<li><b>Unit price:</b> the fund\'s <b>official NAV of that business day</b> (liquid and overnight funds: the NAV of the previous calendar day); if the fund house has no NAV that day, the next NAV day. Stamp duty of 0.005% is taken first; units are rounded down to 3 decimals and credited two business days later (market holidays skipped). Until then the purchase shows as "buy in progress" — no return, gain or stamp duty is shown before the units are credited.</li>' +
+          '<li><b>Record:</b> each purchase in the ledger stores its NAV date and NAV, and the daily audit checks it against the official NAV file.</li></ul></details>'
+        : '<details class="vts-buy-rule"><summary>⏱ How each ETF trade is priced</summary><ul>' +
+          '<li><b>When:</b> every buy (and any sale) is placed on its plan date and treated as a market-on-close order — it executes at the end of that day\'s trading session, <b>3:30 pm IST</b>.</li>' +
+          '<li><b>Unit price:</b> the exchange\'s <b>official closing price</b> of that session (the weighted average price of the last 30 minutes of trading, 3:00–3:30 pm IST). If the market is closed (weekend or exchange holiday) or the ETF did not trade that day, it executes at the close of the next session it trades.</li>' +
+          '<li><b>Units:</b> whole units only, as many as the amount buys after charges; cash left over is added to the next buy of the same ETF. Units are credited the next trading day (T+1).</li>' +
+          '<li><b>Record:</b> each trade in the ledger stores this rule, its trade date and the closing price used, and the daily audit checks every trade against the exchange\'s published closing price for that session.</li></ul></details>') +
+      '<div class="vts-pf"><button type="button" class="vts-pf-sw" aria-haspopup="listbox" aria-expanded="false"></button>' +
+      '<div class="vts-pf-list" role="listbox" aria-label="Switch account" hidden></div></div>' +
+      '<div class="vts-pv" aria-live="polite"></div>' +
+      '<p class="vts-buy-n">Total return: absolute for accounts under one year old, XIRR after. Day change excludes new money. Updated ' + esc(dt(sb.updated)) + (sb.auditOk === false ? ' · figures withheld while a data check is resolved' : '') + '.</p></div></details>';
+    var sw = el.querySelector('.vts-pf-sw'), list = el.querySelector('.vts-pf-list'), pv = el.querySelector('.vts-pv');
+    var cache = {}, tab = 'today', per = '1M';
+
+    function drawSwitch() {
+      sw.innerHTML = av(cur, true) + '<span class="vts-pf-who"><b>' + esc(cur.name) + (cur.nri ? '<i class="vts-buy-nri">NRI</i>' : '') + '</b><span>' + plan(cur) + '</span></span>' +
+        '<span class="vts-pf-st">' + status(cur) + '</span><span class="vts-pf-chg">Switch <i>▾</i></span>';
+      list.innerHTML = rows.map(function (r, i) {
+        return '<button type="button" role="option" class="vts-pf-o" aria-selected="' + (r === cur) + '" data-i="' + i + '">' + av(r) +
+          '<span class="vts-pf-who"><b>' + esc(r.name) + (r.nri ? '<i class="vts-buy-nri">NRI</i>' : '') + '</b><span>' + plan(r) + '</span></span>' +
+          '<span class="vts-pf-st">' + status(r) + (r.day && r.ret != null && !r.day.first ? '<small class="' + cl(r.day.chg) + '">' + spct(r.day.pct) + ' on ' + esc(dt(r.day.d, false)) + '</small>' : '') + '</span></button>';
+      }).join('');
+    }
+    function openList(on) {
+      list.hidden = !on; sw.setAttribute('aria-expanded', on ? 'true' : 'false');
+      if (on) { var s = list.querySelector('[aria-selected="true"]'); if (s) { s.focus(); s.scrollIntoView({ block: 'nearest' }); } }
+    }
+    sw.addEventListener('click', function () { openList(list.hidden); });
+    list.addEventListener('click', function (e) {
+      var b = e.target.closest('.vts-pf-o'); if (!b) return;
+      cur = rows[+b.getAttribute('data-i')];
+      try { localStorage.setItem(key, cur.name); } catch (er) {}
+      openList(false); drawSwitch(); load(); sw.focus();
+    });
+    list.addEventListener('keydown', function (e) {
+      var os = [].slice.call(list.querySelectorAll('.vts-pf-o')), i = os.indexOf(document.activeElement);
+      if (e.key === 'Escape') { openList(false); sw.focus(); }
+      else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); var n = os[Math.max(0, Math.min(os.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))]; if (n) n.focus(); }
+    });
+    document.addEventListener('click', function (e) { if (!list.hidden && !el.querySelector('.vts-pf').contains(e.target)) openList(false); });
+
+    function load() {
+      var r = cur;
+      if (!r.f || sb.auditOk === false) { render(r, r.detail ? { detail: r.detail } : null); return; }
+      if (cache[r.f]) { render(r, cache[r.f]); return; }
+      pv.innerHTML = '<div class="vts-pv-load">Loading ' + esc(r.name) + '\'s account…</div>';
+      fetch('data/sim/' + encodeURIComponent(r.f) + '.json', { cache: 'no-cache' }).then(function (x) { return x.ok ? x.json() : null; })
+        .then(function (a) { cache[r.f] = a || {}; if (cur === r) render(r, a); })
+        .catch(function () { if (cur === r) render(r, null); });
+    }
+
+    function render(r, a) {
+      var x = a && a.detail, rc = (a && a.recent) || [], last = rc[rc.length - 1];
+      var h = '<div class="vts-pv-top"><div class="vts-pv-v"><span>Current value</span><b>' + (x && x.val != null ? inr(x.val) : (x ? inr(x.inv) : '–')) + '</b>' +
+        (x && x.val == null && r.credit ? '<small>At cost until units are credited on ' + esc(dt(r.credit)) + '</small>' : '') + '</div>' +
+        '<div class="vts-pv-k"><div><span>Invested</span><b>' + (x ? inr(x.inv) : '–') + '</b></div>' +
+        '<div><span>Total gain</span><b class="' + cl(x && x.gain) + '">' + (x && x.gain != null ? sinr(x.gain) + ' <small>' + spct(r.ret) + '</small>' : '–') + '</b></div>' +
+        '<div><span>' + (last ? (last.first ? 'Since purchase' : 'Day change · ' + esc(dt(last.d, false))) : 'Day change') + '</span><b class="' + cl(last && last.chg) + '">' + (last ? sinr(last.chg) + ' <small>' + spct(last.pct) + '</small>' : '–') + '</b></div>' +
+        '<div><span>Same money in Nifty 50</span>' + (function () { var bv = last && last.inv ? (last.bval / last.inv - 1) * 100 : (x && x.bench); return '<b class="' + cl(bv) + '">' + (bv != null ? spct(bv) : '–') + '</b>'; })() + '</div></div></div>';
+      var tabs = [['today', 'Summary'], ['bench', 'vs Nifty 50'], ['hold', 'Holdings'], ['hist', 'History']];
+      h += '<div class="vts-tabs vts-pv-tabs" role="tablist">' + tabs.map(function (t) { return '<button type="button" role="tab" data-t="' + t[0] + '" class="' + (tab === t[0] ? 'on' : '') + '" aria-selected="' + (tab === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div>';
+      h += '<div class="vts-pv-pane">' + pane(r, a) + '</div>';
+      pv.innerHTML = h;
+      pv.querySelector('.vts-pv-tabs').addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-t]'); if (!b) return;
+        tab = b.getAttribute('data-t'); render(r, a);
+      });
+      var pb = pv.querySelector('.vts-ch-per');
+      if (pb) pb.addEventListener('click', function (e) { var b = e.target.closest('button[data-p]'); if (!b) return; per = b.getAttribute('data-p'); render(r, a); });
+      chartHover(pv.querySelector('.vts-ch'));
+    }
+
+    function pane(r, a) {
+      var rc = (a && a.recent) || [], last = rc[rc.length - 1];
+      if (tab === 'today') return today(r, last);
+      if (tab === 'bench') return bench(a);
+      if (tab === 'hold') return holdings(r, a && a.detail);
+      return history(rc);
+    }
+
+    function today(r, e) {
+      if (!e) {
+        if (!started) return '<p class="vts-pv-e">Simulated buying starts on ' + esc(dt(sb.start)) + '.</p>';
+        return '<p class="vts-pv-e">' + (r.credit ? 'Units are credited on <b>' + esc(dt(r.credit)) + '</b>. The first daily summary appears that evening, once the day\'s official ' + (mf ? 'NAVs' : 'closing prices') + ' are out.' : 'The first daily summary appears once the units are credited.') + '</p>';
+      }
+      var moved = Math.abs(e.chg) < 0.5 ? 'was flat' : (e.chg > 0 ? 'rose ' : 'fell ') + '<b class="' + cl(e.chg) + '">' + inr(Math.abs(e.chg)) + ' (' + spct(e.pct) + ')</b>';
+      var gap = e.pct - e.bpct;
+      var h = '<div class="vts-sum"><p class="vts-sum-l">' + (e.first
+        ? 'Since purchase, ' + esc(r.name) + '\'s portfolio is ' + (e.chg >= 0 ? 'up' : 'down') + ' <b class="' + cl(e.chg) + '">' + inr(Math.abs(e.chg)) + ' (' + spct(e.pct) + ')</b> as of ' + esc(dtw(e.d)) + '.'
+        : esc(r.name) + '\'s portfolio ' + moved + ' on ' + esc(dtw(e.d)) + '.') +
+        ' The same money in the Nifty 50 ' + (e.first ? 'is ' : 'moved ') + '<b class="' + cl(e.bpct) + '">' + spct(e.bpct) + '</b>' +
+        (Math.abs(gap) >= 0.01 ? ' — ' + Math.abs(gap).toFixed(2) + ' pts ' + (gap > 0 ? 'ahead' : 'behind') + '.' : '.') + '</p>';
+      var m = e.mkt || [], nifty = m.filter(function (q) { return q[1] === 'NIFTYBEES'; })[0];
+      var others = m.filter(function (q) { return q[1] !== 'NIFTYBEES'; }).slice(0, 4);
+      if (m.length) {
+        h += '<h4>Market moves that day</h4><ul class="vts-sum-m">' + (nifty ? [nifty] : []).concat(others).map(function (q) {
+          return '<li><span>' + esc(q[0]) + '</span><b class="' + cl(q[2]) + '">' + spct(q[2]) + '</b></li>'; }).join('') + '</ul>';
+      }
+      var hs = (e.hold || []).filter(function (q) { return q[3] > 0; });
+      var mv = function (q) { return q[6] && q[5] !== q[7] ? (q[4] / q[6] - 1) * 100 : null; };
+      var drags = hs.filter(function (q) { return q[10] < 0; }).sort(function (p, q) { return p[10] - q[10]; }).slice(0, 2);
+      var lifts = hs.filter(function (q) { return q[10] > 0; }).sort(function (p, q) { return q[10] - p[10]; }).slice(0, 2);
+      var li = [];
+      var line = function (q) { var p = mv(q); return '<b>' + esc(q[0]) + '</b> ' + (p == null ? 'unchanged price' : (p >= 0 ? 'up ' : 'down ') + Math.abs(p).toFixed(2) + '%') + ' · <span class="' + cl(q[10]) + '">' + sinr(q[10]) + '</span>'; };
+      if (e.first) li.push('Gain or loss of each holding since it was bought: ' + hs.slice().sort(function (p, q) { return p[10] - q[10]; }).map(function (q) { return esc(q[0]) + ' <span class="' + cl(q[10]) + '">' + sinr(q[10]) + '</span>'; }).join(' · ') + '.');
+      else {
+        if (drags.length) li.push('Biggest drag' + (drags.length > 1 ? 's' : '') + ': ' + drags.map(line).join('; ') + '.');
+        if (lifts.length) li.push('Biggest lift' + (lifts.length > 1 ? 's' : '') + ': ' + lifts.map(line).join('; ') + '.');
+      }
+      var x = e.x || {}, mk = {};
+      m.forEach(function (q) { mk[q[1]] = q; });
+      var links = (x.sec || []).filter(function (s) { return s[2] && mk[s[2]]; }).sort(function (p, q) { return Math.abs(q[1] * mk[q[2]][2]) - Math.abs(p[1] * mk[p[2]][2]); }).slice(0, 2);
+      links.forEach(function (s) { var q = mk[s[2]]; li.push('About <b>' + s[1].toFixed(1) + '%</b> of the portfolio was in <b>' + esc(s[0]) + '</b> (look-through); ' + esc(q[0]) + ' ' + (q[2] >= 0 ? 'rose' : 'fell') + ' <span class="' + cl(q[2]) + '">' + spct(q[2]) + '</span> that day.'); });
+      if (x.stk && x.stk.length) li.push('Largest look-through stock exposure: ' + x.stk.map(function (s) { return esc(s[0].replace(/ (Ltd\.?|Limited)$/i, '')) + ' ' + s[1].toFixed(1) + '%'; }).join(' · ') + '.');
+      if (x.asset && x.asset.length) li.push('Beyond Indian equity: ' + x.asset.map(function (s) { return esc(s[0]) + ' ' + s[1].toFixed(1) + '%'; }).join(' · ') + '.');
+      var pend = (e.hold || []).filter(function (q) { return q[9] > 0; });
+      if (pend.length) li.push('Still being credited (counted at cost): ' + pend.map(function (q) { return esc(q[0]) + ' ' + inr(q[9]); }).join(' · ') + '.');
+      if (li.length) h += '<h4>What this meant for the portfolio</h4><ul class="vts-sum-b">' + li.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>';
+      h += '<p class="vts-pv-e">Calculated from official ' + (mf ? 'NAVs' : 'closing prices') + ' and recorded in the audited ledger journal. Market moves use the official closes of index-tracking ETFs; look-through exposure comes from the funds\' ' + (x.pm ? esc(dt(x.pm + '-01').replace(/^\d+ /, '')) + ' ' : '') + 'monthly portfolios (top holdings only).</p></div>';
+      return h;
+    }
+
+    function window_(series) {
+      if (!series || !series.length) return [];
+      var lastD = new Date(series[series.length - 1][0] + 'T00:00:00'), days = { '1W': 7, '1M': 30, '6M': 182, '1Y': 365 }[per];
+      var from = days ? new Date(lastD - days * 864e5) : null;
+      var s = from ? series.filter(function (q) { return new Date(q[0] + 'T00:00:00') >= from; }) : series;
+      var pts = [], cp = 0, cb = 0;
+      if (!from) pts.push([sb.start, 0, 0, null]);
+      s.forEach(function (q, i) {
+        if (i === 0 && from) { pts.push([q[0], 0, 0, q]); return; }
+        cp = ((1 + cp / 100) * (1 + q[3] / 100) - 1) * 100; cb = ((1 + cb / 100) * (1 + q[4] / 100) - 1) * 100;
+        pts.push([q[0], cp, cb, q]);
+      });
+      return pts;
+    }
+
+    function bench(a) {
+      var series = (a && a.series) || [];
+      if (series.length < 1) return '<p class="vts-pv-e">The comparison starts with the first daily summary, once units are credited.</p>';
+      var pts = window_(series), lastP = pts[pts.length - 1], q = lastP[3] || series[series.length - 1];
+      var h = '<div class="vts-ch-per" role="group" aria-label="Period">' + ['1W', '1M', '6M', '1Y', 'ALL'].map(function (p) { return '<button type="button" data-p="' + p + '" class="' + (per === p ? 'on' : '') + '" aria-pressed="' + (per === p) + '">' + p + '</button>'; }).join('') + '</div>';
+      h += '<div class="vts-ch-k"><div class="p"><span><i></i>Portfolio</span><b class="' + cl(lastP[1]) + '">' + spct(lastP[1]) + '</b><small>' + inr(q[1]) + '</small></div>' +
+        '<div class="b"><span><i></i>Same money in Nifty 50</span><b class="' + cl(lastP[2]) + '">' + spct(lastP[2]) + '</b><small>' + inr(q[5]) + '</small></div></div>';
+      h += chart(pts);
+      h += '<p class="vts-pv-e">Time-weighted return over the period (daily changes chained, new money excluded). Both start from the same cash on the same dates; units count at cost until credited.</p>';
+      return h;
+    }
+
+    function chart(pts) {
+      if (pts.length < 2) return '<p class="vts-pv-e">The chart appears after the second daily summary.</p>';
+      var W = 640, H = 220, L = 46, R = 10, T = 12, B = 26;
+      var ys = []; pts.forEach(function (p) { ys.push(p[1], p[2]); });
+      var lo = Math.min.apply(null, ys.concat([0])), hi = Math.max.apply(null, ys.concat([0]));
+      if (hi - lo < 0.2) { hi += 0.1; lo -= 0.1; }
+      var pad = (hi - lo) * 0.08; lo -= pad; hi += pad;
+      var X = function (i) { return L + (W - L - R) * (pts.length === 1 ? 0 : i / (pts.length - 1)); };
+      var Y = function (v) { return T + (H - T - B) * (1 - (v - lo) / (hi - lo)); };
+      var path = function (k) { return pts.map(function (p, i) { return (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(p[k]).toFixed(1); }).join(''); };
+      var g = '', step = (hi - lo) / 3;
+      for (var j = 0; j <= 3; j++) { var v = lo + step * j; g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" class="gl"/><text x="' + (L - 6) + '" y="' + (Y(v) + 4).toFixed(1) + '" text-anchor="end">' + v.toFixed(2) + '%</text>'; }
+      var xl = [0, Math.floor((pts.length - 1) / 2), pts.length - 1].filter(function (v, i, s) { return s.indexOf(v) === i; });
+      xl.forEach(function (i) { g += '<text x="' + X(i).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="' + (i === 0 ? 'start' : i === pts.length - 1 ? 'end' : 'middle') + '">' + esc(dt(pts[i][0], false)) + '</text>'; });
+      return '<div class="vts-ch" data-pts="' + esc(JSON.stringify(pts.map(function (p) { return [p[0], +p[1].toFixed(3), +p[2].toFixed(3), X(pts.indexOf(p))]; }))) + '">' +
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Portfolio versus Nifty 50, cumulative return over the period">' + g +
+        '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(0).toFixed(1) + '" y2="' + Y(0).toFixed(1) + '" class="zl"/>' +
+        '<path d="' + path(2) + '" class="lb"/><path d="' + path(1) + '" class="lp"/>' +
+        '<line class="cx" x1="0" x2="0" y1="' + T + '" y2="' + (H - B) + '" visibility="hidden"/></svg><div class="vts-ch-tip" hidden></div></div>';
+    }
+
+    function chartHover(box) {
+      if (!box) return;
+      var pts = JSON.parse(box.getAttribute('data-pts')), svg = box.querySelector('svg'), cx = svg.querySelector('.cx'), tip = box.querySelector('.vts-ch-tip');
+      var move = function (ev) {
+        var r = svg.getBoundingClientRect(), px = ((ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left) * 640 / r.width, k = 0;
+        pts.forEach(function (p, i) { if (Math.abs(p[3] - px) < Math.abs(pts[k][3] - px)) k = i; });
+        var p = pts[k]; cx.setAttribute('x1', p[3]); cx.setAttribute('x2', p[3]); cx.setAttribute('visibility', 'visible');
+        tip.hidden = false;
+        tip.innerHTML = '<b>' + esc(dt(p[0])) + '</b><span><i class="p"></i>Portfolio ' + spct(p[1]) + '</span><span><i class="b"></i>Nifty 50 ' + spct(p[2]) + '</span>';
+        var left = p[3] / 640 * r.width; tip.style.left = Math.min(Math.max(left - tip.offsetWidth / 2, 0), r.width - tip.offsetWidth) + 'px';
+      };
+      var out = function () { cx.setAttribute('visibility', 'hidden'); tip.hidden = true; };
+      svg.addEventListener('mousemove', move); svg.addEventListener('touchmove', move, { passive: true }); svg.addEventListener('touchstart', move, { passive: true });
+      svg.addEventListener('mouseleave', out); svg.addEventListener('touchend', out);
+    }
+
+    function holdings(r, x) {
+      if (!x) return '<p class="vts-pv-e">' + (sb.auditOk === false ? 'Figures are withheld while a data check is resolved.' : 'No purchases yet — the first buy is on ' + esc(dt(sb.start)) + '.') + '</p>';
+      var h = '<div class="vts-acc-k">' + [['Next buy', x.next ? dt(x.next) : (r.freq === 'One-time' ? 'One-time (done)' : '–')]].concat(mf ? [] : [['Cash left (next buy)', inr(x.cash)]]).map(function (q) { return '<div><span>' + q[0] + '</span><b>' + q[1] + '</b></div>'; }).join('') + '</div>';
+      if (x.hold && x.hold.length) {
+        h += '<div class="vts-acc-t" role="table" aria-label="Holdings"><div class="vts-acc-r vts-acc-hd" role="row"><span>' + (mf ? 'Fund' : 'ETF') + '</span><span>Units</span><span>Avg cost</span><span>' + (mf ? 'NAV' : 'Close') + '</span><span>Value</span><span>Gain</span><span>Share</span></div>' +
+          x.hold.map(function (o) {
+            return '<div class="vts-acc-r" role="row"><span class="vts-acc-n"><b>' + esc(o.n) + '</b><small>' + esc(mf ? (o.cat || '') : o.k + (o.cat ? ' · ' + o.cat : '')) + (o.pu ? ' · <em>' + num(o.pu, mf ? 3 : 0) + ' units being credited' + (o.cr ? ' by ' + esc(dt(o.cr, false)) : '') + '</em>' : '') + '</small></span>' +
+              '<span data-l="Units">' + num(o.u, mf ? 3 : 0) + '</span><span data-l="Avg cost">₹' + num(o.avg, mf ? 4 : 2) + '</span>' +
+              '<span data-l="' + (mf ? 'NAV' : 'Close') + '">₹' + num(o.px, mf ? 4 : 2) + (o.pd ? '<small>' + dt(o.pd, false) + '</small>' : '') + '</span>' +
+              '<span data-l="Value">₹' + num(o.val, 0) + '</span><span data-l="Gain" class="' + cl(o.g) + '">' + spct(o.g) + '</span><span data-l="Share">' + (o.w == null ? '–' : o.w.toFixed(1) + '%') + '</span></div>';
+          }).join('') + '</div>';
+      }
+      if (x.pend && x.pend.length)
+        h += '<div class="vts-acc-p"><b>Waiting for price</b>' + x.pend.map(function (o) { return '<div>' + esc(o.n) + ' · ' + inr(Math.round(o.amt), 0) + ' · ordered ' + dt(o.T, false) + ' — ' + esc(o.st) + '</div>'; }).join('') + '</div>';
+      h += '<p class="vts-acc-e">Values as of ' + (x.asOf ? esc(dt(x.asOf)) : '–') + ' at official ' + (mf ? 'NAVs' : 'closing prices') + ' · simulation, not real money.</p>';
+      return h;
+    }
+
+    function history(rc) {
+      if (!rc.length) return '<p class="vts-pv-e">Daily summaries start once the units are credited.</p>';
+      return '<div class="vts-hist" role="table" aria-label="Recent days"><div class="vts-hist-r hd" role="row"><span>Day</span><span>Value</span><span>Day change</span><span>Portfolio</span><span>Nifty 50</span></div>' +
+        rc.slice().reverse().map(function (e) {
+          return '<div class="vts-hist-r" role="row"><span>' + esc(dtw(e.d)) + (e.first ? '<small>since purchase</small>' : '') + '</span><span data-l="Value">' + inr(e.val, 0) + '</span>' +
+            '<span data-l="Day change" class="' + cl(e.chg) + '">' + sinr(e.chg) + '</span><span data-l="Portfolio" class="' + cl(e.pct) + '">' + spct(e.pct) + '</span><span data-l="Nifty 50" class="' + cl(e.bpct) + '">' + spct(e.bpct) + '</span></div>';
+        }).join('') + '</div><p class="vts-pv-e">The full daily history is kept in the ledger journal; the latest ' + rc.length + ' days are shown here.</p>';
+    }
+
+    drawSwitch();
+    load();
+  }
   CSS += '.vts-buy-rule{border:1px solid var(--border2,var(--border));border-radius:10px;background:rgba(74,144,226,.06);padding:10px 14px;margin:0 0 12px;font-size:12.5px;line-height:1.55;color:var(--text2,var(--text))}' +
-    '.vts-buy-rule>b{display:block;color:var(--text);font-size:13px;margin-bottom:4px}.vts-buy-rule ul{margin:0;padding-left:18px}.vts-buy-rule li{margin:2px 0}.vts-buy-rule li b{color:var(--text)}';
+    '.vts-buy-rule>summary{cursor:pointer;font-weight:700;color:var(--text);font-size:13px}.vts-buy-rule[open]>summary{margin-bottom:4px}.vts-buy-rule ul{margin:0;padding-left:18px}.vts-buy-rule li{margin:2px 0}.vts-buy-rule li b{color:var(--text)}';
   CSS += '.vts-buy{border:1px solid var(--border2,var(--border));border-left:4px solid #f5a524;border-radius:var(--radius,12px);background:var(--surface);padding:14px 16px;margin:0 0 16px;min-width:0;overflow:hidden}' +
     '.vts-buy-h{display:flex;flex-direction:column;gap:4px;cursor:pointer;list-style:none;margin:-14px -16px;padding:14px 16px;border-radius:inherit}.vts-buy-h::-webkit-details-marker{display:none}' +
     '.vts-buy-h:hover{background:rgba(245,165,36,.05)}.vts-buy-h:focus-visible{outline:2px solid #f5a524;outline-offset:-2px}' +
@@ -480,6 +663,41 @@
     '@media (max-width:520px){.vts-buy{padding:12px}.vts-buy-h{margin:-12px;padding:12px}.vts-buy-g{grid-template-columns:1fr}' +
     '.vts-buy-t1>b{order:0}.vts-buy-tg{order:1}.vts-buy-badge{order:2}.vts-buy-peek{order:3;flex-basis:100%}.vts-buy:not([open]) .vts-buy-sub{display:none}}' +
     '';
+  CSS += '.vts-pf{position:relative;margin:2px 0 12px}' +
+    '.vts-pf-sw{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--border2,var(--border));border-radius:12px;background:var(--surface2,var(--surface));color:var(--text);padding:10px 12px;cursor:pointer;font:inherit}' +
+    '.vts-pf-sw:hover{border-color:var(--accent,#4a90e2)}.vts-pf-sw:focus-visible,.vts-pf-o:focus-visible{outline:2px solid var(--accent,#4a90e2);outline-offset:1px}' +
+    '.vts-pf-av{flex:none;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;color:#fff;font-weight:800;font-size:12.5px;letter-spacing:.02em}.vts-pf-av.lg{width:42px;height:42px;font-size:14px}' +
+    '.vts-pf-who{display:flex;flex-direction:column;min-width:0;flex:1}.vts-pf-who b{font-size:14px;line-height:1.3}.vts-pf-who>span{color:var(--text2);font-size:12px;line-height:1.35}' +
+    '.vts-pf-st{display:flex;flex-direction:column;align-items:flex-end;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.vts-pf-st b{font-size:14px}.vts-pf-st small{font-size:10.5px;color:var(--text2);font-weight:600}' +
+    '.vts-pf-chg{flex:none;font-size:12px;font-weight:800;border:1px solid var(--border2,var(--border));border-radius:999px;padding:4px 10px;color:var(--text)}.vts-pf-chg i{font-style:normal}' +
+    '.vts-pf-list{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 6px);max-height:min(420px,62vh);overflow:auto;border:1px solid var(--border2,var(--border));border-radius:12px;background:var(--surface);box-shadow:0 12px 32px rgba(0,0,0,.28);padding:6px}' +
+    '.vts-pf-o{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-radius:9px;background:none;color:var(--text);padding:8px 10px;cursor:pointer;font:inherit}' +
+    '.vts-pf-o:hover{background:var(--surface2,rgba(127,127,127,.08))}.vts-pf-o[aria-selected="true"]{background:rgba(74,144,226,.12);box-shadow:inset 3px 0 0 var(--accent,#4a90e2)}' +
+    '.vts-pv-load{padding:24px 4px;color:var(--text2);font-size:13px}' +
+    '.vts-pv-top{display:grid;grid-template-columns:minmax(180px,1fr) 3fr;gap:10px;align-items:stretch;margin-bottom:12px}' +
+    '.vts-pv-v{border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:rgba(74,144,226,.06)}.vts-pv-v span{display:block;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}' +
+    '.vts-pv-v b{display:block;font-size:22px;font-variant-numeric:tabular-nums;margin-top:2px}.vts-pv-v small{display:block;font-size:11.5px;color:var(--text2);margin-top:2px}' +
+    '.vts-pv-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.vts-pv-k div{border:1px solid var(--border);border-radius:10px;padding:8px 10px;min-width:0}' +
+    '.vts-pv-k span{display:block;font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}.vts-pv-k b{display:block;font-size:14px;font-variant-numeric:tabular-nums;margin-top:2px}.vts-pv-k b small{font-size:11.5px;font-weight:700}' +
+    '.vts-pv-tabs{margin-bottom:12px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.vts-pv-tabs button{height:36px;font-size:13px;padding:0 6px;min-width:0}' +
+    '.vts-pv-e{margin:8px 0 0;font-size:11.5px;color:var(--text3,var(--text2));line-height:1.55}' +
+    '.vts-sum{font-size:13.5px;line-height:1.6}.vts-sum-l{margin:0 0 10px;font-size:14.5px}.vts-sum h4{margin:12px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2)}' +
+    '.vts-sum-m{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}.vts-sum-m li{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12.5px}.vts-sum-m b{font-variant-numeric:tabular-nums}' +
+    '.vts-sum-b{margin:0;padding-left:18px}.vts-sum-b li{margin:4px 0}' +
+    '.vts-ch-per{display:inline-flex;gap:4px;padding:3px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px}.vts-ch-per button{border:0;background:none;color:var(--text2);font-weight:700;font-size:12.5px;padding:6px 12px;border-radius:7px;cursor:pointer}' +
+    '.vts-ch-per button.on{background:var(--accent,#4a90e2);color:var(--accent-ink,#fff)}.vts-ch-per button:focus-visible{outline:2px solid var(--accent,#4a90e2)}' +
+    '.vts-ch-k{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.vts-ch-k div{border:1px solid var(--border);border-radius:10px;padding:8px 12px}.vts-ch-k .p{background:rgba(74,144,226,.08)}.vts-ch-k .b{background:rgba(217,119,6,.08)}' +
+    '.vts-ch-k span{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);font-weight:700}.vts-ch-k i{width:12px;height:3px;border-radius:2px;display:inline-block}.vts-ch-k .p i,.vts-ch-tip .p{background:#3b82f6}.vts-ch-k .b i,.vts-ch-tip .b{background:#d97706}' +
+    '.vts-ch-k b{display:block;font-size:17px;font-variant-numeric:tabular-nums}.vts-ch-k small{font-size:11.5px;color:var(--text2)}' +
+    '.vts-ch{position:relative}.vts-ch svg{display:block;width:100%;height:auto;touch-action:pan-y}.vts-ch text{font-size:10.5px;fill:var(--text2)}.vts-ch .gl{stroke:var(--border);stroke-width:1}.vts-ch .zl{stroke:var(--text3,var(--text2));stroke-width:1;stroke-dasharray:3 3;opacity:.6}' +
+    '.vts-ch .lp{fill:none;stroke:#3b82f6;stroke-width:2;stroke-linejoin:round}.vts-ch .lb{fill:none;stroke:#d97706;stroke-width:2;stroke-linejoin:round}.vts-ch .cx{stroke:var(--text2);stroke-width:1}' +
+    '.vts-ch-tip{position:absolute;top:0;pointer-events:none;background:var(--surface);border:1px solid var(--border2,var(--border));border-radius:8px;padding:6px 9px;font-size:11.5px;box-shadow:0 6px 18px rgba(0,0,0,.2);white-space:nowrap}' +
+    '.vts-ch-tip b{display:block;margin-bottom:2px}.vts-ch-tip span{display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}.vts-ch-tip i{width:10px;height:3px;border-radius:2px;display:inline-block}' +
+    '.vts-hist-r{display:grid;grid-template-columns:1.4fr repeat(4,minmax(0,1fr));gap:8px;padding:7px 0;border-top:1px solid var(--border);font-size:12.5px;font-variant-numeric:tabular-nums}.vts-hist-r>span:not(:first-child){text-align:right}' +
+    '.vts-hist-r small{display:block;font-size:10.5px;color:var(--text2)}.vts-hist-r.hd{border-top:none;font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em;font-weight:700}' +
+    '@media (max-width:760px){.vts-pv-top{grid-template-columns:1fr}.vts-pv-k{grid-template-columns:repeat(2,minmax(0,1fr))}.vts-pf-chg{display:none}.vts-pf-sw .vts-pf-av.lg{width:36px;height:36px}' +
+    '.vts-hist-r.hd{display:none}.vts-hist-r{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:4px}.vts-hist-r>span:first-child{grid-column:1/-1;font-weight:700}.vts-hist-r>span:not(:first-child){text-align:left}' +
+    '.vts-hist-r>span[data-l]::before{content:attr(data-l);display:block;font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}.vts-ch-k b{font-size:15px}}';
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', simBuy); else simBuy();
 
   /* ── Collapsible sections: any element with data-col="key" gets a header bar (its own .sec-title / .mi-head moved
