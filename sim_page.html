@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Simulator Buy Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f6fa;--card:#ffffff;--ink:#0a192f;--ink2:#3c4a63;--mut:#6b7a92;--line:#e3e8f0;--line2:#eef1f6;
+  --navy:#0a192f;--navy2:#112a4d;--acc:#1f6feb;--acc2:#e8f0fe;--good:#0b8a55;--goodb:#e5f6ee;--warn:#a86400;--warnb:#fff4e0;
+  --bad:#c0362c;--badb:#fdecea;--info:#1f5fbf;--infob:#e8f0fe;--grey:#5b6578;--greyb:#eef1f5;
+  --s1:#1f6feb;--s2:#9aa6b8;--s3:#d9822b;
+  --shadow:0 1px 2px rgba(10,25,47,.06),0 4px 14px rgba(10,25,47,.05);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#07111f;--card:#0d1b2e;--ink:#e8eef7;--ink2:#b9c5d6;--mut:#8796ab;--line:#1d2e47;--line2:#15243a;
+  --navy:#050d18;--navy2:#0d1b2e;--acc:#5b9cff;--acc2:#13294a;--good:#3ccf8e;--goodb:#0f2e22;--warn:#f0b04d;--warnb:#33240c;
+  --bad:#ff7b72;--badb:#3a1514;--info:#7fb0ff;--infob:#13294a;--grey:#a2adbd;--greyb:#18263b;
+  --s1:#5b9cff;--s2:#6f7d92;--s3:#f0a04d;--shadow:0 1px 2px rgba(0,0,0,.3)}}
+:root[data-theme="dark"]{
+  --bg:#07111f;--card:#0d1b2e;--ink:#e8eef7;--ink2:#b9c5d6;--mut:#8796ab;--line:#1d2e47;--line2:#15243a;
+  --navy:#050d18;--navy2:#0d1b2e;--acc:#5b9cff;--acc2:#13294a;--good:#3ccf8e;--goodb:#0f2e22;--warn:#f0b04d;--warnb:#33240c;
+  --bad:#ff7b72;--badb:#3a1514;--info:#7fb0ff;--infob:#13294a;--grey:#a2adbd;--greyb:#18263b;
+  --s1:#5b9cff;--s2:#6f7d92;--s3:#f0a04d;--shadow:0 1px 2px rgba(0,0,0,.3)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+a{color:var(--acc)}
+button,select,input{font:inherit;color:inherit}
+.top{background:var(--navy);color:#fff}
+.top .in{max-width:1280px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{font-weight:800;letter-spacing:.2px;font-size:17px}
+.brand small{display:block;font-weight:500;font-size:12px;opacity:.7;letter-spacing:0}
+.top .sp{flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:rgba(255,255,255,.1);color:#fff;white-space:nowrap}
+.chip.ok{background:rgba(60,207,142,.18);color:#7ff0bb}.chip.bad{background:rgba(255,123,114,.2);color:#ffb3ad}
+.tbtn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:8px;padding:6px 11px;cursor:pointer;font-size:12.5px;font-weight:600}
+.tbtn:hover{background:rgba(255,255,255,.18)}
+.tabs{background:var(--navy2);border-bottom:1px solid var(--line)}
+.tabs .in{max-width:1280px;margin:0 auto;padding:0 16px;display:flex;gap:4px;overflow-x:auto}
+.tab{background:none;border:0;color:rgba(255,255,255,.7);padding:12px 14px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tab.on{color:#fff;border-bottom-color:#5b9cff}
+main{max-width:1280px;margin:0 auto;padding:18px 16px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px;min-width:0}
+.card h2{margin:0 0 4px;font-size:16px;font-weight:700}
+.card h3{margin:18px 0 8px;font-size:14px;font-weight:700}
+.sub{color:var(--mut);font-size:12.5px;margin:0 0 12px}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.kpi{border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.kpi .l{font-size:11.5px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.kpi .v{font-size:20px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px;color:var(--mut)}
+.pos{color:var(--good)}.neg{color:var(--bad)}
+.ctrl{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.ctrl label{display:flex;flex-direction:column;font-size:11.5px;color:var(--mut);font-weight:600;gap:4px;min-width:0}
+.ctrl select,.ctrl input{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0;max-width:100%}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{background:var(--card);border:0;padding:8px 12px;cursor:pointer;font-weight:600;font-size:12.5px;color:var(--ink2)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--acc);color:#fff}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer}
+.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn:hover{filter:brightness(1.06)}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line2);text-align:left;white-space:nowrap;font-size:13px}
+th{background:var(--line2);color:var(--ink2);font-size:11.5px;text-transform:uppercase;letter-spacing:.35px;font-weight:700;position:sticky;top:0}
+th.s{cursor:pointer;user-select:none}th.s:hover{color:var(--acc)}
+td.n,th.n{text-align:right}
+tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--acc2)}
+tr.tot td{font-weight:700;background:var(--line2)}
+.wrap{white-space:normal;min-width:220px}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:700}
+.p-ok{background:var(--goodb);color:var(--good)}.p-wip{background:var(--warnb);color:var(--warn)}
+.p-ord{background:var(--infob);color:var(--info)}.p-out{background:var(--greyb);color:var(--grey)}.p-bad{background:var(--badb);color:var(--bad)}
+.tag{display:inline-block;font-size:11px;padding:1px 6px;border-radius:5px;background:var(--line2);color:var(--ink2);font-weight:600;margin-left:4px}
+.muted{color:var(--mut)}
+.stmt-h{display:grid;grid-template-columns:1fr auto;gap:16px;border-bottom:2px solid var(--navy);padding-bottom:12px;margin-bottom:14px}
+.stmt-h .t{font-size:18px;font-weight:800}
+.stmt-h dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:8px 0 0;font-size:12.5px}
+.stmt-h dt{color:var(--mut)}.stmt-h dd{margin:0;font-weight:600}
+.stmt-h .r{text-align:right;font-size:12px;color:var(--mut)}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin:6px 0}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.tip{position:absolute;pointer-events:none;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:8px;padding:8px 10px;font-size:12px;display:none;min-width:170px;z-index:3}
+.tip b{display:block;margin-bottom:3px}
+.tip div{display:flex;justify-content:space-between;gap:12px}
+details.x summary{cursor:pointer;color:var(--acc);font-size:12px}
+.login{max-width:420px;margin:12vh auto;padding:0 16px}
+.login .card{padding:26px}
+.login h1{font-size:20px;margin:0 0 4px}
+.login input[type=password]{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);margin:14px 0 10px}
+.err{color:var(--bad);font-size:13px;min-height:18px}
+.note{background:var(--line2);border-left:3px solid var(--acc);border-radius:6px;padding:10px 12px;font-size:12.5px;color:var(--ink2)}
+.hide{display:none!important}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:860px){.two{grid-template-columns:minmax(0,1fr)}.stmt-h{grid-template-columns:1fr}.stmt-h .r{text-align:left}}
+@media (max-width:560px){.ctrl label{flex:1 1 140px}.kpi .v{font-size:17px}.top .in{gap:8px}}
+@media print{
+  :root{--bg:#fff;--card:#fff;--ink:#000;--ink2:#222;--mut:#555;--line:#ccc;--line2:#f0f0f0}
+  .top,.tabs,.ctrl,.noprint,#vOverview,#vAudit,#vSnaps{display:none!important}
+  main{padding:0;max-width:none}.card{box-shadow:none;border:0;padding:0}
+  .tw{overflow:visible;border:0}th{position:static}
+  th,td{font-size:10.5px;padding:4px 6px}
+}
+</style>
+</head>
+<body>
+<div id="login" class="login">
+  <div class="card">
+    <h1>Simulator Buy · Private Ledger</h1>
+    <p class="sub">Model-portfolio tracking accounts of VilfinTV agents. Restricted access.</p>
+    <form id="lf" onsubmit="return false">
+      <input id="key" type="password" autocomplete="current-password" placeholder="Access key" aria-label="Access key">
+      <label style="font-size:13px;display:flex;gap:8px;align-items:center"><input id="rem" type="checkbox"> Remember on this device</label>
+      <div class="err" id="lerr"></div>
+      <button class="btn" id="lgo" style="width:100%;padding:11px">Open ledger</button>
+    </form>
+  </div>
+</div>
+
+<div id="app" class="hide">
+  <header class="top"><div class="in">
+    <div class="brand">VilfinTV · Simulator Buy<small>Private ledger — model portfolios with real-life order rules</small></div>
+    <div class="sp"></div>
+    <span class="chip" id="cAsof"></span>
+    <span class="chip" id="cAudit"></span>
+    <span class="chip mono" id="cHead"></span>
+    <button class="tbtn" id="theme" title="Theme">◐</button>
+    <button class="tbtn" id="logout">Lock</button>
+  </div></header>
+  <nav class="tabs"><div class="in">
+    <button class="tab on" data-v="Overview">Leaderboard</button>
+    <button class="tab" data-v="Stmt">Statement</button>
+    <button class="tab" data-v="Audit">Audit</button>
+    <button class="tab" data-v="Snaps">Permanent copies</button>
+  </div></nav>
+  <main>
+    <section id="vOverview">
+      <div class="card">
+        <h2>All accounts</h2>
+        <p class="sub" id="ovSub"></p>
+        <div class="ctrl" style="margin-bottom:12px">
+          <div class="seg" id="ovProd"><button data-p="all" class="on">All</button><button data-p="mf">Mutual funds</button><button data-p="etf">ETFs</button></div>
+          <div class="seg" id="ovRisk"><button data-r="all" class="on">All risks</button><button data-r="c">Conservative</button><button data-r="b">Balanced</button><button data-r="a">Aggressive</button><button data-r="v">Very aggr.</button></div>
+        </div>
+        <div class="grid kpis" id="ovKpi" style="margin-bottom:14px"></div>
+        <div class="tw"><table id="ovT"></table></div>
+        <p class="sub" style="margin-top:10px">Return: absolute % for accounts under one year old, XIRR (annualised, cash-flow weighted) after. Benchmark: the same cash on the same dates into a plain Nifty 50 index fund (mutual fund accounts) or Nifty 50 ETF (ETF accounts), with the same costs. Click a row to open its statement.</p>
+      </div>
+    </section>
+
+    <section id="vStmt" class="hide">
+      <div class="card noprint">
+        <div class="ctrl">
+          <label>Person<select id="sPerson"></select></label>
+          <label>Account<select id="sProd"><option value="MF">Mutual funds</option><option value="ETF">ETF demat</option></select></label>
+          <label>Period<select id="sPer">
+            <option value="all">Since account opening</option><option value="fy">This financial year</option><option value="pfy">Last financial year</option>
+            <option value="m">This month</option><option value="pm">Last month</option><option value="d30">Last 30 days</option><option value="c">Custom</option></select></label>
+          <label>From<input type="date" id="sFrom"></label>
+          <label>To<input type="date" id="sTo"></label>
+          <div style="flex:1"></div>
+          <button class="btn ghost" id="csv">CSV</button>
+          <button class="btn" id="prt">Print / PDF</button>
+        </div>
+      </div>
+      <div class="card" id="stmt"></div>
+    </section>
+
+    <section id="vAudit" class="hide"><div class="card" id="audit"></div></section>
+    <section id="vSnaps" class="hide"><div class="card" id="snaps"></div></section>
+  </main>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const LS = { get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }, del(k){ try { localStorage.removeItem(k); } catch(e){} } };
+const SS = { get(k){ try { return sessionStorage.getItem(k); } catch(e){ return null; } }, set(k,v){ try { sessionStorage.setItem(k,v); } catch(e){} }, del(k){ try { sessionStorage.removeItem(k); } catch(e){} } };
+let KEY = SS.get('simk') || LS.get('simk') || '';
+let V = null, AUD = null;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const inr = (v, d = 0) => v == null || isNaN(v) ? '–' : (v < -0.004 ? '−₹' : '₹') + Math.abs(Number(v)).toLocaleString('en-IN', { minimumFractionDigits: d, maximumFractionDigits: d });
+const num = (v, d = 2) => v == null || isNaN(v) ? '–' : Number(v).toLocaleString('en-IN', { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (v, d = 2) => v == null || isNaN(v) ? '–' : (v > 0 ? '+' : '') + v.toFixed(d) + '%';
+const cls = v => v == null ? '' : v >= 0 ? 'pos' : 'neg';
+const dt = s => { if (!s) return '–'; const d = new Date(s + 'T00:00:00'); return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); };
+const iso = d => d.toISOString().slice(0, 10);
+const addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return iso(d); };
+
+// theme
+const th = LS.get('sim_theme'); if (th) document.documentElement.dataset.theme = th;
+$('#theme').onclick = () => { const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const n = cur === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = n; LS.set('sim_theme', n); if (!$('#vStmt').classList.contains('hide')) renderStmt(); };
+
+async function api(path) {
+  const r = await fetch(path, { headers: { 'x-sim-key': KEY }, cache: 'no-store' });
+  if (r.status === 401) throw new Error('auth');
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+async function open() {
+  $('#lerr').textContent = '';
+  try {
+    const [v, a] = await Promise.all([api('/api/view'), api('/api/audit').catch(e => { if (e.message === 'auth') throw e; return null; })]);
+    V = v; AUD = a;
+    SS.set('simk', KEY); if ($('#rem').checked) LS.set('simk', KEY);
+    $('#login').classList.add('hide'); $('#app').classList.remove('hide');
+    boot();
+  } catch (e) {
+    if (e.message === 'auth') { $('#lerr').textContent = 'That access key is not valid.'; SS.del('simk'); LS.del('simk'); }
+    else $('#lerr').textContent = 'The ledger has not been published yet, or could not be loaded (' + e.message + ').';
+    $('#login').classList.remove('hide'); $('#app').classList.add('hide');
+  }
+}
+$('#lgo').onclick = () => { KEY = $('#key').value.trim(); if (KEY) open(); };
+$('#logout').onclick = () => { SS.del('simk'); LS.del('simk'); KEY = ''; V = null; location.reload(); };
+if (KEY) open();
+
+// ───────── derived per-account state at any date ─────────
+const PX = () => V.px || { mf: {}, etf: {} };
+function priceAt(prod, key, d) {
+  const h = PX()[prod === 'mf' ? 'mf' : 'etf'][key] || {};
+  let best = null, bd = null;
+  for (const k in h) if (k <= d && (!bd || k > bd)) { bd = k; best = h[k]; }
+  return [bd, best];
+}
+function stateAt(a, d) {
+  const units = {}, cost = {}, names = {};
+  let cash = 0, pend = 0, contrib = 0, wd = 0;
+  for (const t of a.txns) {
+    if (t.T > d) continue;
+    const k = String(t.code ?? t.sym); names[k] = t.name;
+    const doneBy = t.navDate && t.navDate <= d && t.units != null;
+    if (t.side === 'buy') {
+      if (t.src === 'plan') { contrib += t.amount || 0; if (a.product === 'etf') cash += t.amount || 0; }
+      if (doneBy) {
+        units[k] = (units[k] || 0) + t.units;
+        const c = a.product === 'mf' ? t.amount : t.gross + t.charges.total;
+        cost[k] = (cost[k] || 0) + c;
+        if (a.product === 'etf') cash -= t.gross + t.charges.total;
+      } else if (a.product === 'mf' || t.src !== 'plan') pend += t.amount || 0;
+      else { /* ETF plan buy awaiting the close: the cash is already in the account */ }
+    } else if (doneBy) {
+      const u0 = units[k] || 0;
+      if (u0 > 0) cost[k] = (cost[k] || 0) * (1 - Math.min(1, t.units / u0));
+      units[k] = u0 - t.units;
+      if (t.src === 'withdraw') wd += t.net; else if (a.product === 'etf') cash += t.net;
+      else pend += 0;
+    }
+  }
+  let val = 0; const hold = [];
+  for (const k in units) {
+    if (units[k] <= 1e-6) continue;
+    const [pd, p] = priceAt(a.product, k, d);
+    const v = units[k] * (p || 0); val += v;
+    hold.push({ key: k, name: names[k], units: units[k], cost: cost[k], price: p, priceDate: pd, value: v });
+  }
+  // MF review switch: the sell proceeds wait until the switch-in is allotted
+  if (a.product === 'mf') for (const t of a.txns) if (t.side === 'sell' && t.src === 'review' && t.navDate && t.navDate <= d) {
+    const inn = a.txns.find(x => x.side === 'buy' && x.src === 'review' && x.oid === t.oid.replace(/\|out$/, '|in'));
+    if (!inn || !(inn.navDate && inn.navDate <= d)) pend += t.net;
+  }
+  if (a.product === 'etf') for (const t of a.txns) if (t.side === 'buy' && t.src === 'review' && t.T <= d && !(t.navDate && t.navDate <= d)) pend -= t.amount || 0;
+  hold.sort((x, y) => y.value - x.value);
+  return { val: val + pend + (a.product === 'etf' ? cash : 0), hold, cash, pend, contrib, wd };
+}
+function xirr(flows) {
+  if (!flows.some(f => f[1] > 0) || !flows.some(f => f[1] < 0)) return null;
+  const t0 = Math.min(...flows.map(f => Date.parse(f[0])));
+  const f = r => flows.reduce((s, [d, v]) => s + v / Math.pow(1 + r, (Date.parse(d) - t0) / 864e5 / 365), 0);
+  let lo = -0.9999, hi = 10, flo = f(lo); if (flo * f(hi) > 0) return null;
+  for (let i = 0; i < 200; i++) { const m = (lo + hi) / 2, fm = f(m); if (Math.abs(fm) < 1e-7) return m; if (flo * fm < 0) hi = m; else { lo = m; flo = fm; } }
+  return (lo + hi) / 2;
+}
+function retOf(a) { return a.days >= 365 ? (a.xirr != null ? a.xirr * 100 : null) : (a.invested ? (a.value / a.invested - 1) * 100 : null); }
+function benchOf(a) { return a.days >= 365 ? (a.benchXirr != null ? a.benchXirr * 100 : null) : (a.invested ? (a.benchValue / a.invested - 1) * 100 : null); }
+const persons = () => [...new Set(V.accounts.map(a => a.name))];
+const acct = (name, prod) => V.accounts.find(a => a.name === name && a.product === prod.toLowerCase());
+
+// ───────── boot ─────────
+function boot() {
+  $('#cAsof').textContent = 'NAV ' + dt(V.mfAsOf) + ' · ETF ' + dt(V.etfAsOf);
+  if (AUD) { $('#cAudit').textContent = AUD.nErrors ? '✕ Audit: ' + AUD.nErrors + ' errors' : '✓ ' + AUD.checks.toLocaleString('en-IN') + ' checks passed';
+    $('#cAudit').className = 'chip ' + (AUD.nErrors ? 'bad' : 'ok'); } else $('#cAudit').textContent = 'Audit pending';
+  $('#cHead').textContent = (V.events || 0).toLocaleString('en-IN') + ' entries · ' + String(V.head || '').slice(0, 10);
+  $('#cHead').title = 'Ledger head (SHA-256 chain): ' + V.head;
+  const ps = persons();
+  $('#sPerson').innerHTML = ps.map(p => { const a = acct(p, 'mf'); return `<option value="${esc(p)}">${esc(p)} — ${esc(a.riskName)} · ${esc(a.freqName)}${a.res === 'nri' ? ' · NRI' : ''}</option>`; }).join('');
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get('p') && ps.includes(h.get('p'))) $('#sPerson').value = h.get('p');
+  if (h.get('a')) $('#sProd').value = h.get('a');
+  renderOverview(); renderAudit();
+  show(h.get('v') || 'Overview');
+}
+function show(v) {
+  $$('.tab').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  ['Overview', 'Stmt', 'Audit', 'Snaps'].forEach(x => $('#v' + x).classList.toggle('hide', x !== v));
+  if (v === 'Stmt') renderStmt();
+  if (v === 'Snaps') renderSnaps();
+}
+$$('.tab').forEach(b => b.onclick = () => { show(b.dataset.v); setHash(); });
+function setHash() {
+  const v = $$('.tab').find(b => b.classList.contains('on')).dataset.v;
+  history.replaceState(null, '', '#' + new URLSearchParams({ v, p: $('#sPerson').value, a: $('#sProd').value }).toString());
+}
+
+// ───────── leaderboard ─────────
+let ovSort = { k: 'ret', d: -1 }, ovP = 'all', ovR = 'all';
+$('#ovProd').onclick = e => { const b = e.target.closest('button'); if (!b) return; ovP = b.dataset.p; $$('#ovProd button').forEach(x => x.classList.toggle('on', x === b)); renderOverview(); };
+$('#ovRisk').onclick = e => { const b = e.target.closest('button'); if (!b) return; ovR = b.dataset.r; $$('#ovRisk button').forEach(x => x.classList.toggle('on', x === b)); renderOverview(); };
+function renderOverview() {
+  const rows = V.accounts.filter(a => (ovP === 'all' || a.product === ovP) && (ovR === 'all' || a.risk === ovR)).map(a => ({
+    a, name: a.name, prod: a.product.toUpperCase(), risk: a.riskName, freq: a.freqName, inv: a.invested, val: a.value,
+    gain: a.value - a.invested, ret: retOf(a), bench: benchOf(a), alpha: retOf(a) != null && benchOf(a) != null ? retOf(a) - benchOf(a) : null,
+    prog: a.txns.filter(t => /progress|placed/i.test(t.status)).length }));
+  const k = ovSort.k; rows.sort((x, y) => ((x[k] ?? -1e18) > (y[k] ?? -1e18) ? 1 : (x[k] ?? -1e18) < (y[k] ?? -1e18) ? -1 : 0) * ovSort.d);
+  const inv = rows.reduce((s, r) => s + r.inv, 0), val = rows.reduce((s, r) => s + r.val, 0);
+  const days = Math.max(0, ...rows.map(r => r.a.days));
+  $('#ovSub').textContent = `${rows.length} accounts · started ${dt(V.start)} · valued ${dt(rows[0]?.a.valuationDate)} · 10+ year model portfolios`;
+  $('#ovKpi').innerHTML = [
+    ['Invested', inr(inv), rows.length + ' accounts'], ['Current value', inr(val), 'incl. orders in progress & cash'],
+    ['Gain', `<span class="${cls(val - inv)}">${inr(val - inv)}</span>`, inv ? pct((val / inv - 1) * 100) + ' absolute' : ''],
+    ['Orders in progress', rows.reduce((s, r) => s + r.prog, 0), 'awaiting NAV / close or credit'], ['Running for', days + ' days', 'since ' + dt(V.start)]
+  ].map(([l, v, s]) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+  const H = [['name', 'Person'], ['prod', 'Account'], ['risk', 'Model'], ['freq', 'Buys'], ['inv', 'Invested', 1], ['val', 'Value', 1], ['gain', 'Gain', 1], ['ret', 'Return', 1], ['bench', 'Nifty 50', 1], ['alpha', 'vs Nifty 50', 1], ['prog', 'In progress', 1]];
+  $('#ovT').innerHTML = `<thead><tr>${H.map(([k, l, n]) => `<th class="s${n ? ' n' : ''}" data-k="${k}">${l}${ovSort.k === k ? (ovSort.d > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}</tr></thead><tbody>` +
+    rows.map(r => `<tr data-p="${esc(r.name)}" data-a="${r.prod}" style="cursor:pointer"><td><b>${esc(r.name)}</b>${r.a.res === 'nri' ? '<span class="tag">NRI</span>' : ''}</td><td>${r.prod === 'MF' ? 'Mutual funds' : 'ETF demat'}</td><td>${esc(r.risk)}</td><td>${esc(r.freq)} ${inr(r.a.amount)}</td>
+      <td class="n">${inr(r.inv)}</td><td class="n">${inr(r.val)}</td><td class="n ${cls(r.gain)}">${inr(r.gain)}</td><td class="n ${cls(r.ret)}"><b>${pct(r.ret)}</b> <span class="muted" style="font-size:11px">${r.a.days >= 365 ? 'XIRR' : 'abs'}</span></td>
+      <td class="n">${pct(r.bench)}</td><td class="n ${cls(r.alpha)}">${r.alpha == null ? '–' : (r.alpha > 0 ? '+' : '') + r.alpha.toFixed(2) + ' pt'}</td><td class="n">${r.prog || ''}</td></tr>`).join('') + '</tbody>';
+  $$('#ovT th.s').forEach(t => t.onclick = () => { const k = t.dataset.k; ovSort = { k, d: ovSort.k === k ? -ovSort.d : -1 }; renderOverview(); });
+  $$('#ovT tbody tr').forEach(tr => tr.onclick = () => { $('#sPerson').value = tr.dataset.p; $('#sProd').value = tr.dataset.a; show('Stmt'); setHash(); });
+}
+
+// ───────── statement ─────────
+function period() {
+  const a = acct($('#sPerson').value, $('#sProd').value), end = a.valuationDate || iso(new Date());
+  const p = $('#sPer').value, e = new Date(end + 'T00:00:00Z'); let f = V.start, t = end;
+  const fyStart = y => `${y}-04-01`, fy = e.getUTCMonth() >= 3 ? e.getUTCFullYear() : e.getUTCFullYear() - 1;
+  if (p === 'fy') f = fyStart(fy);
+  if (p === 'pfy') { f = fyStart(fy - 1); t = `${fy}-03-31`; }
+  if (p === 'm') f = end.slice(0, 8) + '01';
+  if (p === 'pm') { const d = new Date(Date.UTC(e.getUTCFullYear(), e.getUTCMonth(), 0)); t = iso(d); f = t.slice(0, 8) + '01'; }
+  if (p === 'd30') f = addDays(end, -29);
+  if (p === 'c') { f = $('#sFrom').value || V.start; t = $('#sTo').value || end; }
+  if (f < V.start) f = V.start; if (t > end) t = end; if (f > t) f = t;
+  $('#sFrom').value = f; $('#sTo').value = t;
+  return { a, f, t };
+}
+['#sPerson', '#sProd', '#sPer'].forEach(s => $(s).onchange = () => { renderStmt(); setHash(); });
+['#sFrom', '#sTo'].forEach(s => $(s).onchange = () => { $('#sPer').value = 'c'; renderStmt(); });
+$('#prt').onclick = () => window.print();
+$('#csv').onclick = () => {
+  const { a, f, t } = period(), rows = a.txns.filter(x => x.T >= f && x.T <= t);
+  const H = ['Order date', 'Price date', 'Type', 'Fund / ETF', 'Code', 'Amount', 'Price', 'Units', 'Stamp duty', 'Charges', 'TDS', 'Net', 'Credit / payout', 'Status', 'Order id'];
+  const L = [H].concat(rows.map(x => [x.T, x.navDate || '', x.side === 'buy' ? (x.src === 'review' ? 'Switch in' : 'Purchase') : (x.src === 'withdraw' ? 'Redemption' : 'Switch out'),
+    x.name, x.code ?? x.sym, x.amount ?? x.gross ?? '', x.price ?? '', x.units ?? '', x.stamp ?? '', x.charges ? x.charges.total : '', x.tds ?? '', x.net ?? '', x.credit || '', x.status, x.oid]));
+  const s = L.map(r => r.map(v => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : v).join(',')).join('\n');
+  const b = new Blob(['﻿' + s], { type: 'text/csv' }), u = URL.createObjectURL(b), el = document.createElement('a');
+  el.href = u; el.download = `${a.id}_${f}_${t}.csv`; el.click(); setTimeout(() => URL.revokeObjectURL(u), 2000);
+};
+const pill = s => `<span class="pill ${/^(Allotted|Settled)/.test(s) ? 'p-ok' : /progress/.test(s) ? 'p-wip' : /^Order placed/.test(s) ? 'p-ord' : /Paid out/.test(s) ? 'p-out' : 'p-out'}">${esc(s)}</span>`;
+
+function renderStmt() {
+  if (!V) return;
+  const { a, f, t } = period(), cfg = V.config, isMF = a.product === 'mf';
+  const open = f <= V.start ? { val: 0, contrib: 0, wd: 0 } : stateAt(a, addDays(f, -1)), close = stateAt(a, t);
+  const inP = a.txns.filter(x => x.T >= f && x.T <= t);
+  const contrib = close.contrib - open.contrib, wd = close.wd - open.wd, gain = close.val - open.val - contrib + wd;
+  const flowsAll = a.txns.filter(x => x.side === 'buy' && x.src === 'plan' && x.T <= t).reduce((m, x) => { m[x.T] = (m[x.T] || 0) + (x.amount || 0); return m; }, {});
+  const fl = Object.entries(flowsAll).map(([d, v]) => [d, -v]).concat(a.txns.filter(x => x.src === 'withdraw' && x.navDate && x.navDate <= t).map(x => [x.credit, x.net]));
+  const xr = close.val > 0 ? xirr(fl.concat([[t, close.val]])) : null, days = (Date.parse(t) - Date.parse(V.start)) / 864e5;
+  const p = V.plans[Object.keys(V.plans).sort().pop()], planSlots = isMF ? p.mf[a.plan] : p.etf[a.plan];
+  const sched = { m: `${cfg.schedule.monthDay}rd of every month`, w: 'every Wednesday', q: `${cfg.schedule.anchorDay} Jan / Apr / Jul / Oct`, y: `${cfg.schedule.anchorDay} October every year`, l: `one-time on ${dt(V.start)}` }[a.freq];
+  let h = `<div class="stmt-h"><div><div class="t">Statement of Account — ${isMF ? 'Mutual Funds' : 'ETF Demat & Trading'}</div>
+    <dl><dt>Investor</dt><dd>${esc(a.name)} <span class="muted" style="font-weight:500">(VilfinTV agent)</span></dd><dt>Account</dt><dd class="mono">${esc(a.id)}</dd>
+    <dt>Residency</dt><dd>${a.res === 'nri' ? 'Non-resident Indian (NRE/NRO · PIS for ETFs)' : 'Resident individual'}</dd>
+    <dt>Model</dt><dd>Portfolio Simulator · 10+ years · ${esc(a.riskName)}</dd><dt>Instructions</dt><dd>${esc(a.freqName)} ${inr(a.amount)} · ${sched}; next trading day when the market is closed</dd>
+    <dt>Period</dt><dd>${dt(f)} to ${dt(t)}</dd></dl></div>
+    <div class="r">Generated ${new Date().toLocaleString('en-IN')}<br>Ledger ${(V.events || 0).toLocaleString('en-IN')} entries<br><span class="mono">head ${esc(String(V.head || '').slice(0, 16))}</span><br>${AUD ? (AUD.nErrors ? '<b class="neg">Audit: errors</b>' : '<b class="pos">✓ Independently audited</b>') : ''}</div></div>`;
+  h += `<div class="grid kpis">${[
+    ['Opening value', inr(open.val, 2), dt(addDays(f, -1))], ['Contributions', inr(contrib, 2), (n => n + (n === 1 ? ' instalment' : ' instalments'))(new Set(inP.filter(x => x.src === 'plan').map(x => x.T)).size)],
+    ['Withdrawals', inr(wd, 2), ''], ['Closing value', inr(close.val, 2), dt(t)],
+    ['Gain in period', `<span class="${cls(gain)}">${inr(gain, 2)}</span>`, ''],
+    [days >= 365 ? 'XIRR since start' : 'Absolute return', `<span class="${cls(xr)}">${days >= 365 ? pct(xr * 100) : pct(close.contrib ? ((close.val + close.wd) / close.contrib - 1) * 100 : null)}</span>`, 'Nifty 50 same cash: ' + pct(t === a.valuationDate ? benchOf(a) : null)]
+  ].map(([l, v, s]) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('')}</div>`;
+  h += `<h3>Value over time</h3><div class="chart" id="ch"></div>`;
+
+  // holdings
+  const hold = close.hold, hv = hold.reduce((s, x) => s + x.value, 0);
+  h += `<h3>Holdings as of ${dt(t)}</h3><div class="tw"><table><thead><tr><th>${isMF ? 'Scheme' : 'ETF'}</th><th class="n">Units</th><th class="n">Avg cost</th><th class="n">Cost</th><th class="n">${isMF ? 'NAV' : 'Close'}</th><th>Date</th><th class="n">Value</th><th class="n">Gain</th><th class="n">Return</th><th class="n">Weight</th></tr></thead><tbody>` +
+    hold.map(x => `<tr><td class="wrap"><b>${esc(x.name)}</b><br><span class="muted mono" style="font-size:11px">${esc(x.key)}</span></td><td class="n">${num(x.units, isMF ? 3 : 0)}</td><td class="n">${num(x.cost / x.units, 4)}</td><td class="n">${inr(x.cost, 2)}</td>
+      <td class="n">${num(x.price, 4)}</td><td>${dt(x.priceDate)}</td><td class="n"><b>${inr(x.value, 2)}</b></td><td class="n ${cls(x.value - x.cost)}">${inr(x.value - x.cost, 2)}</td><td class="n ${cls(x.value - x.cost)}">${pct((x.value / x.cost - 1) * 100)}</td><td class="n">${hv ? (x.value / hv * 100).toFixed(1) + '%' : ''}</td></tr>`).join('') +
+    `<tr class="tot"><td>Total</td><td></td><td></td><td class="n">${inr(hold.reduce((s, x) => s + x.cost, 0), 2)}</td><td></td><td></td><td class="n">${inr(hv, 2)}</td><td class="n">${inr(hv - hold.reduce((s, x) => s + x.cost, 0), 2)}</td><td></td><td></td></tr></tbody></table></div>`;
+  if (!isMF || close.pend) h += `<p class="sub" style="margin-top:8px">${!isMF ? 'Cash balance (uninvested fractions carried to the next purchase): <b>' + inr(close.cash, 2) + '</b>. ' : ''}${close.pend ? 'Orders in progress: <b>' + inr(close.pend, 2) + '</b>.' : ''}</p>`;
+  h += `<details class="x"><summary>Model allocation for this account (latest plan)</summary><div class="tw" style="margin-top:8px"><table><thead><tr><th>Role</th><th>${isMF ? 'Fund' : 'ETF'}</th><th class="n">Weight</th></tr></thead><tbody>${planSlots.map(s => `<tr><td>${esc(s.label || s.key || s.id)}</td><td>${esc(isMF ? (s.code) : s.name || s.sym)}</td><td class="n">${s.w}%</td></tr>`).join('')}</tbody></table></div></details>`;
+
+  // transactions
+  const run = {};
+  for (const x of a.txns) if (x.T < f && x.units != null) { const k = String(x.code ?? x.sym); run[k] = (run[k] || 0) + (x.side === 'buy' ? x.units : -x.units); }
+  h += `<h3>Transactions</h3><div class="tw"><table><thead><tr><th>Order date</th><th>Type</th><th>${isMF ? 'Scheme' : 'ETF'}</th><th class="n">Amount</th><th>${isMF ? 'NAV date' : 'Trade date'}</th><th class="n">${isMF ? 'NAV' : 'Price'}</th><th class="n">${isMF ? 'Stamp duty' : 'Charges'}</th><th class="n">Units</th><th class="n">Unit balance</th><th>${isMF ? 'Credited' : 'Settles'}</th><th>Status</th></tr></thead><tbody>`;
+  if (!inP.length) h += `<tr><td colspan="11" class="muted">No transactions in this period.</td></tr>`;
+  for (const x of inP) {
+    const k = String(x.code ?? x.sym); if (x.units != null) run[k] = (run[k] || 0) + (x.side === 'buy' ? x.units : -x.units);
+    const type = x.side === 'buy' ? (x.src === 'review' ? 'Switch in' : 'Purchase') : (x.src === 'withdraw' ? 'Redemption' : 'Switch out');
+    const ch = x.charges ? `<details class="x"><summary>${inr(x.charges.total, 2)}</summary><div style="font-size:11.5px;line-height:1.6">${Object.entries(x.charges).filter(([n, v]) => n !== 'total' && v).map(([n, v]) => `${({ brokerage: 'Brokerage', exchange: 'Exchange txn', sebi: 'SEBI fee', ipft: 'IPFT', gst: 'GST 18%', stamp: 'Stamp duty', stt: 'STT', dp: 'DP charge + GST', exitLoad: 'Exit load' })[n] || n}: ${inr(v, 2)}`).join('<br>')}${x.carry != null ? '<br>Carried to next buy: ' + inr(x.carry, 2) : ''}</div></details>` : x.stamp != null ? inr(x.stamp, 2) : '–';
+    const amt = x.side === 'buy' ? (x.gross != null ? inr(x.gross, 2) + `<br><span class="muted" style="font-size:11px">of ${inr(x.budget, 2)} budget</span>` : inr(x.amount, 2)) : (x.net != null ? inr(x.net, 2) + (x.tds ? `<br><span class="muted" style="font-size:11px">after TDS ${inr(x.tds, 2)}</span>` : '') : '–');
+    h += `<tr><td>${dt(x.T)}</td><td>${type}</td><td class="wrap">${esc(x.name)}${x.note ? `<br><span class="muted" style="font-size:11px">${esc(x.note)}</span>` : ''}</td><td class="n">${amt}</td><td>${dt(x.navDate)}${isMF && x.verified ? ' <span class="tag" title="Matches the official NAV file">✓</span>' : ''}</td>
+      <td class="n">${x.price != null ? num(x.price, 4) : '–'}</td><td class="n">${ch}</td><td class="n">${x.units != null ? (x.side === 'sell' ? '−' : '') + num(x.units, isMF ? 3 : 0) : '–'}</td><td class="n">${x.units != null ? num(run[k], isMF ? 3 : 0) : '–'}</td><td>${dt(x.credit)}</td><td>${pill(x.status)}</td></tr>`;
+  }
+  h += `</tbody></table></div>`;
+
+  // charges summary
+  const tot = { stamp: 0, brokerage: 0, exchange: 0, sebi: 0, ipft: 0, gst: 0, stt: 0, dp: 0, exitLoad: 0, tds: 0 };
+  for (const x of inP) { if (x.stamp) tot.stamp += x.stamp; if (x.charges) for (const n in x.charges) if (n !== 'total' && n in tot) tot[n] += x.charges[n]; if (x.tds) tot.tds += x.tds; }
+  const tl = Object.entries(tot).filter(([, v]) => v > 0);
+  h += `<div class="two"><div><h3>Charges & taxes in period</h3><div class="tw"><table><tbody>${tl.length ? tl.map(([n, v]) => `<tr><td>${({ stamp: 'Stamp duty', brokerage: 'Brokerage', exchange: 'Exchange transaction charges', sebi: 'SEBI turnover fee', ipft: 'Investor protection fund', gst: 'GST', stt: 'Securities transaction tax', dp: 'DP charges (incl. GST)', exitLoad: 'Exit load', tds: 'TDS (NRI)' })[n]}</td><td class="n">${inr(v, 2)}</td></tr>`).join('') + `<tr class="tot"><td>Total</td><td class="n">${inr(tl.reduce((s, [, v]) => s + v, 0), 2)}</td></tr>` : '<tr><td class="muted">None</td></tr>'}</tbody></table></div>
+    <p class="sub" style="margin-top:6px">${isMF ? 'Stamp duty 0.005% on every purchase; units truncated to 3 decimals; units credited two business days after the order.' : (a.res === 'nri' ? 'NRI account: brokerage 0.1% (min ₹20, max ₹100) + statutory charges.' : 'Resident account: zero brokerage on delivery + statutory charges.') + ' Whole units only; leftover cash is carried to the next purchase of the same ETF; T+1 settlement.'}</p></div>`;
+  // ETF cash ledger / capital gains
+  const sells = inP.filter(x => x.side === 'sell' && x.gains);
+  h += `<div><h3>Realised capital gains in period</h3><div class="tw"><table><thead><tr><th>Sold</th><th>Bought</th><th class="n">Units</th><th class="n">Cost</th><th class="n">Value</th><th class="n">Gain</th><th>Term</th></tr></thead><tbody>${sells.length ? sells.flatMap(x => x.gains.map(g => `<tr><td>${dt(x.navDate)}</td><td>${dt(g.buyDate)}</td><td class="n">${num(g.units, isMF ? 3 : 0)}</td><td class="n">${inr(g.cost, 2)}</td><td class="n">${inr(g.value, 2)}</td><td class="n ${cls(g.gain)}">${inr(g.gain, 2)}</td><td>${g.term === 'LT' ? 'Long term' : g.term === 'ST' ? 'Short term' : 'Slab rate'}</td></tr>`)).join('') : '<tr><td colspan="7" class="muted">No sales in this period.</td></tr>'}</tbody></table></div></div></div>`;
+  if (!isMF) {
+    let c = open.cash || 0; const L = [];
+    for (const x of inP) {
+      if (x.side === 'buy' && x.src === 'plan') { c += x.amount; L.push([x.T, 'Instalment credited — ' + x.label, x.amount, null, c]); }
+      if (x.side === 'buy' && x.units != null) { const v = x.gross + x.charges.total; c -= v; L.push([x.navDate, 'Bought ' + x.units + ' × ' + x.sym, null, v, c]); }
+      if (x.side === 'sell' && x.net != null && x.src !== 'withdraw') { c += x.net; L.push([x.navDate, 'Sold ' + x.units + ' × ' + x.sym, x.net, null, c]); }
+    }
+    h += `<details class="x" style="margin-top:12px"><summary>Cash ledger (${L.length} entries)</summary><div class="tw" style="margin-top:8px"><table><thead><tr><th>Date</th><th>Description</th><th class="n">Credit</th><th class="n">Debit</th><th class="n">Balance</th></tr></thead><tbody><tr><td>${dt(f)}</td><td>Opening balance</td><td></td><td></td><td class="n">${inr(open.cash || 0, 2)}</td></tr>${L.map(r => `<tr><td>${dt(r[0])}</td><td>${esc(r[1])}</td><td class="n">${r[2] != null ? inr(r[2], 2) : ''}</td><td class="n">${r[3] != null ? inr(r[3], 2) : ''}</td><td class="n">${inr(r[4], 2)}</td></tr>`).join('')}</tbody></table></div></details>`;
+  }
+  const rv = (a.reviews || []).filter(r => r.T >= f && r.T <= t);
+  h += `<h3>Annual reviews</h3>${rv.length ? rv.map(r => `<p class="sub">${dt(r.T)}: ${r.switches.length ? r.switches.map(s => `switched ${esc(s.from)} → ${esc(s.to)} (${esc(s.why)})`).join('; ') : 'all holdings kept — none very weak'}</p>`).join('') : `<p class="sub">First review on ${dt(addDays(V.start, 365))}. A holding is switched only when it is very weak (fund out of track or no longer listed; ETF rated 1 star, not traded or delisted).</p>`}`;
+  h += `<div class="note" style="margin-top:14px">Simulated account of a VilfinTV agent that follows the Portfolio Simulator's model portfolio with real-life order rules: official end-of-day NAVs (liquid and overnight funds: previous day's NAV), exchange closing prices, stamp duty, exchange and statutory charges, settlement days and the exchange holiday calendar. Educational record only — not investment advice, not a broker or registrar statement. Tax shown for NRI accounts is an estimate of TDS.</div>`;
+  $('#stmt').innerHTML = h;
+  chart(a, t);
+}
+
+function chart(a, t) {
+  const box = $('#ch'), bk = a.product === 'mf' ? String(V.config.benchmark.mf) : V.config.benchmark.etf;
+  const dates = Object.keys(PX()[a.product === 'mf' ? 'mf' : 'etf'][bk] || {}).filter(d => d >= V.start && d <= t);
+  const firstBuy = a.txns.find(x => x.side === 'buy');
+  const ds = (dates.length ? dates : [t]).filter(d => !firstBuy || d >= firstBuy.T);
+  const step = Math.max(1, Math.floor(ds.length / 220)), pts = ds.filter((_, i) => i % step === 0 || i === ds.length - 1).map(d => { const s = stateAt(a, d); return { d, v: s.val, inv: s.contrib - s.wd }; });
+  const ser = (a.series || []).filter(r => r[0] <= t);
+  if (pts.length < 2) { box.innerHTML = '<p class="sub">The chart appears once the account has a few days of prices.</p>'; return; }
+  const W = 900, H = 260, L = 64, R = 12, T = 12, B = 28;
+  const all = pts.flatMap(p => [p.v, p.inv]).concat(ser.map(r => r[3])), lo = Math.min(...all) * 0.97, hi = Math.max(...all) * 1.02;
+  const t0 = Date.parse(pts[0].d), t1 = Date.parse(pts[pts.length - 1].d) || t0 + 1;
+  const X = d => L + (W - L - R) * (Date.parse(d) - t0) / Math.max(1, t1 - t0), Y = v => T + (H - T - B) * (1 - (v - lo) / Math.max(1, hi - lo));
+  const line = (arr, f) => arr.map((p, i) => (i ? 'L' : 'M') + X(p.d).toFixed(1) + ' ' + Y(f(p)).toFixed(1)).join(' ');
+  const ticks = [0, .25, .5, .75, 1].map(k => lo + (hi - lo) * k);
+  const bench = ser.length >= 2 ? `<path d="${ser.map((r, i) => (i ? 'L' : 'M') + X(r[0]).toFixed(1) + ' ' + Y(r[3]).toFixed(1)).join(' ')}" fill="none" stroke="var(--s3)" stroke-width="2" stroke-dasharray="5 4"/>` : '';
+  box.innerHTML = `<div class="legend"><span><i style="background:var(--s1)"></i>Portfolio value</span><span><i style="background:var(--s2)"></i>Net invested</span>${bench ? '<span><i style="background:var(--s3)"></i>Nifty 50, same cash</span>' : ''}</div>
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Portfolio value over time">
+    ${ticks.map(v => `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L - 8}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="var(--mut)">${v >= 1e5 ? (v / 1e5).toFixed(1) + 'L' : Math.round(v / 1e3) + 'k'}</text>`).join('')}
+    <text x="${L}" y="${H - 8}" font-size="11" fill="var(--mut)">${dt(pts[0].d)}</text><text x="${W - R}" y="${H - 8}" font-size="11" fill="var(--mut)" text-anchor="end">${dt(pts[pts.length - 1].d)}</text>
+    <path d="${line(pts, p => p.inv)}" fill="none" stroke="var(--s2)" stroke-width="2"/>${bench}
+    <path d="${line(pts, p => p.v)}" fill="none" stroke="var(--s1)" stroke-width="2"/>
+    <line id="cx" y1="${T}" y2="${H - B}" stroke="var(--mut)" stroke-width="1" visibility="hidden"/><circle id="cd" r="4" fill="var(--s1)" stroke="var(--card)" stroke-width="2" visibility="hidden"/>
+    <rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent" id="hit"/></svg><div class="tip" id="tip"></div>`;
+  const svg = box.querySelector('svg'), tip = box.querySelector('#tip');
+  const move = ev => {
+    const r = svg.getBoundingClientRect(), x = (ev.clientX - r.left) * W / r.width;
+    let best = pts[0]; for (const p of pts) if (Math.abs(X(p.d) - x) < Math.abs(X(best.d) - x)) best = p;
+    svg.querySelector('#cx').setAttribute('x1', X(best.d)); svg.querySelector('#cx').setAttribute('x2', X(best.d)); svg.querySelector('#cx').setAttribute('visibility', 'visible');
+    const c = svg.querySelector('#cd'); c.setAttribute('cx', X(best.d)); c.setAttribute('cy', Y(best.v)); c.setAttribute('visibility', 'visible');
+    tip.innerHTML = `<b>${dt(best.d)}</b><div><span>Value</span><span>${inr(best.v)}</span></div><div><span>Invested</span><span>${inr(best.inv)}</span></div><div><span>Gain</span><span class="${cls(best.v - best.inv)}">${inr(best.v - best.inv)}</span></div>`;
+    tip.style.display = 'block'; const px = X(best.d) * r.width / W; tip.style.left = Math.min(r.width - 190, Math.max(0, px + 12)) + 'px'; tip.style.top = '30px';
+  };
+  svg.addEventListener('mousemove', move); svg.addEventListener('touchstart', e => move(e.touches[0]), { passive: true });
+  svg.addEventListener('mouseleave', () => { tip.style.display = 'none'; svg.querySelector('#cx').setAttribute('visibility', 'hidden'); svg.querySelector('#cd').setAttribute('visibility', 'hidden'); });
+}
+
+// ───────── audit & snapshots ─────────
+function renderAudit() {
+  const el = $('#audit');
+  if (!AUD) { el.innerHTML = '<h2>Independent audit</h2><p class="sub">No audit has been published yet.</p>'; return; }
+  el.innerHTML = `<h2>Independent audit</h2><p class="sub">Run ${new Date(AUD.generated).toLocaleString('en-IN')} on ${AUD.events.toLocaleString('en-IN')} ledger entries by a separate program that recomputes every figure from the raw records. Any error blocks publishing.</p>
+    <div class="grid kpis" style="margin-bottom:14px"><div class="kpi"><div class="l">Checks</div><div class="v">${AUD.checks.toLocaleString('en-IN')}</div></div><div class="kpi"><div class="l">Errors</div><div class="v ${AUD.nErrors ? 'neg' : 'pos'}">${AUD.nErrors}</div></div><div class="kpi"><div class="l">Warnings</div><div class="v">${AUD.nWarnings}</div></div></div>
+    <div class="tw"><table><thead><tr><th>Area</th><th>What is checked</th><th class="n">Checks</th><th class="n">Issues</th></tr></thead><tbody>${Object.entries(AUD.areas).map(([k, v]) => `<tr><td><b>${esc(k)}</b></td><td class="wrap">${esc({
+      chain: 'Every entry\'s SHA-256 hash, the link to the previous entry, sequence numbers, unique order ids, plan snapshots unchanged',
+      schedule: 'Order dates recomputed from the calendar (monthly 3rd, Wednesdays, quarters, anniversaries; next trading day on holidays) and amounts',
+      plan: 'Orders add up to each instalment; funds and ETFs belong to the model portfolio; ETF budgets = weight × instalment',
+      mf: 'NAV = recorded official NAV of the NAV date; liquid-fund previous-day rule; stamp duty; units truncated to 3 decimals; credit T+2',
+      etf: 'Closing price of the trade date; whole units; every charge recomputed; budget incl. carried cash; no affordable unit left; T+1',
+      cash: 'ETF cash ledger recomputed and never negative', holdings: 'Units held = units bought − units sold, per fund / ETF',
+      value: 'Valuation = units × recorded latest price + orders in progress + cash; invested totals', xirr: 'XIRR recomputed independently in a second language',
+      verified: 'Share of fund NAVs confirmed against the official NAV file' }[k] || '')}</td><td class="n">${v.checks.toLocaleString('en-IN')}</td><td class="n ${v.issues ? 'neg' : ''}">${v.issues}</td></tr>`).join('')}</tbody></table></div>
+    ${AUD.errors.length ? '<h3>Errors</h3><ul>' + AUD.errors.map(e => `<li class="neg">${esc(e)}</li>`).join('') + '</ul>' : ''}
+    ${AUD.warnings.length ? '<h3>Warnings</h3><ul>' + AUD.warnings.map(e => `<li>${esc(e)}</li>`).join('') + '</ul>' : ''}`;
+}
+async function renderSnaps() {
+  const el = $('#snaps'); el.innerHTML = '<h2>Permanent copies</h2><p class="sub">Loading…</p>';
+  try {
+    const s = await api('/api/snapshots'), by = {};
+    for (const o of s.snapshots) { const d = o.key.split('/')[2]; (by[d] = by[d] || []).push(o); }
+    el.innerHTML = `<h2>Permanent copies</h2><p class="sub">A dated copy of the full ledger, statement data and audit is kept after every update. ${Object.keys(by).length} days on record.</p><div class="tw"><table><thead><tr><th>Date</th><th>Files</th></tr></thead><tbody>${Object.entries(by).map(([d, fs]) => `<tr><td>${dt(d)}</td><td>${fs.map(o => `<a href="#" data-k="${esc(o.key)}">${esc(o.key.split('/').pop())}</a> <span class="muted">${(o.size / 1024).toFixed(0)} KB</span>`).join(' · ')}</td></tr>`).join('')}</tbody></table></div>`;
+    el.querySelectorAll('a[data-k]').forEach(x => x.onclick = async e => { e.preventDefault();
+      const r = await fetch('/api/file?key=' + encodeURIComponent(x.dataset.k), { headers: { 'x-sim-key': KEY } }); const b = await r.blob(), u = URL.createObjectURL(b), l = document.createElement('a');
+      l.href = u; l.download = x.dataset.k.split('/').slice(2).join('_'); l.click(); setTimeout(() => URL.revokeObjectURL(u), 2000); });
+  } catch (e) { el.innerHTML = '<h2>Permanent copies</h2><p class="sub">Could not load the list (' + esc(e.message) + ').</p>'; }
+}
+})();
+</script>
+</body>
+</html>

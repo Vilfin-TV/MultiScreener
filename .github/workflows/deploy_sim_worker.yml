@@ -1,0 +1,48 @@
+name: Deploy Simulator Buy Worker
+
+# Deploys the private Simulator Buy ledger viewer (sim_worker.js + sim_page.html) and makes sure its private
+# R2 bucket "vilfintv-sim" exists. The page holds no data; every data route needs the access key.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sim_worker.js'
+      - 'sim_page.html'
+      - 'wrangler.sim.toml'
+      - '.github/workflows/deploy_sim_worker.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install wrangler
+        run: npm install -g wrangler@3
+
+      - name: Create the private R2 bucket (once)
+        run: |
+          out=$(wrangler r2 bucket create vilfintv-sim 2>&1) && echo "$out" || {
+            echo "$out"
+            echo "$out" | grep -qi "already exists\|10004" || { echo "::error::Could not create the R2 bucket vilfintv-sim"; exit 1; }
+          }
+
+      - name: Deploy
+        run: wrangler deploy --config wrangler.sim.toml
+
+      - name: Smoke test — page served, data locked
+        run: |
+          sleep 10
+          base="https://vilfintv-sim.vilfintv.workers.dev"
+          p=$(curl -s -o /dev/null -w "%{http_code}" "$base/")
+          d=$(curl -s -o /dev/null -w "%{http_code}" "$base/api/view")
+          echo "page: HTTP $p · data without key: HTTP $d"
+          test "$p" = "200" || { echo "::error::page not served"; exit 1; }
+          test "$d" = "401" || { echo "::error::data route is not locked (HTTP $d)"; exit 1; }

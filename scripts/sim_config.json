@@ -1,0 +1,66 @@
+{
+  "_comment": "Simulator Buy — model-portfolio tracking accounts. Each person holds one mutual fund account and one ETF demat account that follow the Portfolio Simulator's 10+ year model portfolios with real-life order rules. Ledger, statements and values live only in the private R2 bucket (scripts/sim_engine.py); this file holds no balances.",
+  "start": "2026-10-21",
+  "horizon": "h10",
+  "schedule": {
+    "monthDay": 3,
+    "weekday": 2,
+    "quarterMonths": [1, 4, 7, 10],
+    "anchorDay": 21,
+    "anchorMonth": 10
+  },
+  "monthly": {"c": 10000, "b": 10000, "a": 20000, "v": 20000},
+  "riskNames": {"c": "Conservative", "b": "Balanced", "a": "Aggressive", "v": "Very aggressive"},
+  "freqNames": {"m": "Monthly", "w": "Weekly", "q": "Quarterly", "y": "Yearly", "l": "One-time"},
+  "persons": [
+    {"name": "Arjun",     "risk": "c", "freq": "m", "res": "resident"},
+    {"name": "Aswin",     "risk": "c", "freq": "w", "res": "resident"},
+    {"name": "Sooraj",    "risk": "c", "freq": "q", "res": "resident"},
+    {"name": "Midhun",    "risk": "c", "freq": "y", "res": "resident"},
+    {"name": "Govind",    "risk": "b", "freq": "m", "res": "resident"},
+    {"name": "Vishnu",    "risk": "b", "freq": "w", "res": "resident"},
+    {"name": "Arun",      "risk": "b", "freq": "q", "res": "resident"},
+    {"name": "Sreeram",   "risk": "b", "freq": "y", "res": "resident"},
+    {"name": "Nithin",    "risk": "a", "freq": "m", "res": "resident"},
+    {"name": "Sanal",     "risk": "a", "freq": "w", "res": "resident"},
+    {"name": "Rahul",     "risk": "a", "freq": "q", "res": "resident"},
+    {"name": "Vimal",     "risk": "a", "freq": "y", "res": "resident"},
+    {"name": "Aishwarya", "risk": "v", "freq": "m", "res": "resident"},
+    {"name": "Pooja",     "risk": "v", "freq": "w", "res": "resident"},
+    {"name": "Fathima",   "risk": "v", "freq": "q", "res": "resident"},
+    {"name": "Teressa",   "risk": "v", "freq": "y", "res": "resident"},
+    {"name": "Abhinav",   "risk": "c", "freq": "l", "res": "nri"},
+    {"name": "Rohith",    "risk": "b", "freq": "l", "res": "nri"},
+    {"name": "Jithin",    "risk": "a", "freq": "l", "res": "nri"},
+    {"name": "Akhil",     "risk": "v", "freq": "l", "res": "nri"}
+  ],
+  "benchmark": {"mf": 120716, "mfName": "UTI Nifty 50 Index Fund", "etf": "NIFTYBEES"},
+  "mfRules": {
+    "stampDuty": 0.00005,
+    "unitDecimals": 3,
+    "creditBusinessDays": 2,
+    "sttRedeemEquity": 0.00001,
+    "exitLoadIfUnknown": 0.01,
+    "liquidSubs": ["liquid", "overnight"]
+  },
+  "etfFees": {
+    "_comment": "Delivery (CNC) trades. Resident: zero-brokerage discount broker. NRI: NRI demat + PIS account, brokerage 0.1% of value (min ₹20, max ₹100) — typical NRI desks charge more than resident accounts. Statutory: STT only on selling equity-oriented ETFs; stamp duty on buys; exchange, SEBI and investor-protection charges both sides; GST on brokerage + exchange + SEBI; DP charge per ETF per sell day.",
+    "brokerageResident": 0,
+    "brokerageNriRate": 0.001,
+    "brokerageNriMin": 20,
+    "brokerageNriMax": 100,
+    "stampBuy": 0.00015,
+    "exchange": 0.0000297,
+    "sebi": 0.000001,
+    "ipft": 0.000001,
+    "gst": 0.18,
+    "sttSellEquity": 0.00001,
+    "dpSell": 13.5,
+    "creditBusinessDays": 1
+  },
+  "review": {
+    "_comment": "Annual review on each start anniversary: a holding is switched to the current model choice for its role only when it is very weak (MF: VilfinTV status 'Out of track' or no longer listed; ETF: rated 1 star or less, no longer listed, or not traded).",
+    "afterMonths": 12
+  },
+  "tax": {"stcgEquity": 0.20, "ltcgEquity": 0.125, "ltcgExempt": 125000, "debtSlab": 0.30, "cess": 0.04, "ltcgDaysEquity": 365}
+}
