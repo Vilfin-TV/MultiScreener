@@ -40,6 +40,7 @@ log = logging.getLogger("macro")
 # index name in the daily close file → short key used by the planner
 INDICES = {
     "Nifty 50": "n50", "Nifty Next 50": "nn50", "Nifty 500": "n500", "Nifty Midcap 150": "mid150", "Nifty Smallcap 250": "sml250",
+    "Nifty Microcap 250": "micro250",
     "Nifty Bank": "bank", "Nifty Financial Services": "fin", "Nifty Private Bank": "pvtbank", "Nifty PSU Bank": "psubank",
     "Nifty IT": "it", "Nifty Pharma": "pharma", "Nifty Healthcare Index": "health", "Nifty FMCG": "fmcg",
     "Nifty India Consumption": "consumption", "Nifty Auto": "auto", "Nifty Infrastructure": "infra",
@@ -66,6 +67,7 @@ INDICES = {
 }
 # alternative spellings used by the exchange over the years (matched after normalising case and punctuation)
 ALIASES = {
+    "micro250": ["Nifty Microcap250", "Nifty Micro Cap 250", "Nifty Microcap 250 Index"],
     "capmkt": ["Nifty Capital Market", "Nifty Capital Markets Index"],
     "finexbank": ["Nifty Financial Services Ex Bank", "Nifty Financial Services ex-Bank Index", "Nifty Fin Services Ex-Bank"],
     "msit": ["Nifty MidSmall IT and Telecom", "Nifty Midsmall IT & Telecom Index"],
@@ -511,7 +513,8 @@ def growth_block(S, prev: dict) -> dict:
     return {"fy": fy, "src": src, "checks": checks, "score": sum(c["s"] for c in checks),
             "gdp": [{"y": y, "fy": f"{y}-{str(y + 1)[2:]}", "real": real.get(y), "infl": infl.get(y),
                      "usd": (gdp.get("usd") or {}).get(y), "world": world.get(y), "f": fc and y >= fy} for y in yrs],
-            "nominal": nom, "nominalNext": nom1, "earnings": {"n50": n50, "n500": n500},
+            "nominal": nom, "nominalNext": nom1, "earnings": {"n50": n50, "nn50": eps_growth(hist, "nn50"), "mid150": eps_growth(hist, "mid150"),
+                         "sml250": eps_growth(hist, "sml250"), "micro250": eps_growth(hist, "micro250"), "n500": n500},
             "gdpRaw": {**{k: {str(y): x for y, x in v.items()} for k, v in gdp.items()}, "src": src}}
 
 
