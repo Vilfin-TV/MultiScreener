@@ -193,7 +193,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const inr = (v, d = 0) => v == null || isNaN(v) ? '–' : (v < -0.004 ? '−₹' : '₹') + Math.abs(Number(v)).toLocaleString('en-IN', { minimumFractionDigits: d, maximumFractionDigits: d });
 const num = (v, d = 2) => v == null || isNaN(v) ? '–' : Number(v).toLocaleString('en-IN', { minimumFractionDigits: d, maximumFractionDigits: d });
 const pct = (v, d = 2) => v == null || isNaN(v) ? '–' : (v > 0 ? '+' : '') + v.toFixed(d) + '%';
-const cls = v => v == null ? '' : v >= 0 ? 'pos' : 'neg';
+const cls = v => v == null || Math.abs(v) < 0.005 ? '' : v > 0 ? 'pos' : 'neg';
 const dt = s => { if (!s) return '–'; const d = new Date(s + 'T00:00:00'); return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); };
 const iso = d => d.toISOString().slice(0, 10);
 const addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return iso(d); };
@@ -329,16 +329,17 @@ function renderOverview() {
   const k = ovSort.k; rows.sort((x, y) => ((x[k] ?? -1e18) > (y[k] ?? -1e18) ? 1 : (x[k] ?? -1e18) < (y[k] ?? -1e18) ? -1 : 0) * ovSort.d);
   const inv = rows.reduce((s, r) => s + r.inv, 0), val = rows.reduce((s, r) => s + r.val, 0);
   const days = Math.max(0, ...rows.map(r => r.a.days));
-  $('#ovSub').textContent = `${rows.length} accounts · started ${dt(V.start)} · valued ${dt(rows[0]?.a.valuationDate)} · 10+ year model portfolios`;
+  const live = V.accounts.some(a => a.valuationDate), begun = iso(new Date()) >= V.start;
+  $('#ovSub').textContent = `${rows.length} accounts · ${begun ? 'started' : 'simulated buying starts'} ${dt(V.start)}${live ? ' · valued ' + dt(rows.map(r => r.a.valuationDate).filter(Boolean).sort().pop()) : ''} · 10+ year model portfolios`;
   $('#ovKpi').innerHTML = [
     ['Invested', inr(inv), rows.length + ' accounts'], ['Current value', inr(val), 'incl. orders in progress & cash'],
     ['Gain', `<span class="${cls(val - inv)}">${inr(val - inv)}</span>`, inv ? pct((val / inv - 1) * 100) + ' absolute' : ''],
-    ['Orders in progress', rows.reduce((s, r) => s + r.prog, 0), 'awaiting NAV / close or credit'], ['Running for', days + ' days', 'since ' + dt(V.start)]
+    ['Orders in progress', rows.reduce((s, r) => s + r.prog, 0), 'awaiting NAV / close or credit'], begun ? ['Running for', days + ' days', 'since ' + dt(V.start)] : ['Starts', dt(V.start), 'first simulated buys']
   ].map(([l, v, s]) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
   const H = [['name', 'Person'], ['prod', 'Account'], ['risk', 'Model'], ['freq', 'Buys'], ['inv', 'Invested', 1], ['val', 'Value', 1], ['gain', 'Gain', 1], ['ret', 'Return', 1], ['bench', 'Nifty 50', 1], ['alpha', 'vs Nifty 50', 1], ['prog', 'In progress', 1]];
   $('#ovT').innerHTML = `<thead><tr>${H.map(([k, l, n]) => `<th class="s${n ? ' n' : ''}" data-k="${k}">${l}${ovSort.k === k ? (ovSort.d > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}</tr></thead><tbody>` +
     rows.map(r => `<tr data-p="${esc(r.name)}" data-a="${r.prod}" style="cursor:pointer"><td><b>${esc(r.name)}</b>${r.a.res === 'nri' ? '<span class="tag">NRI</span>' : ''}</td><td>${r.prod === 'MF' ? 'Mutual funds' : 'ETF demat'}</td><td>${esc(r.risk)}</td><td>${esc(r.freq)} ${inr(r.a.amount)}</td>
-      <td class="n">${inr(r.inv)}</td><td class="n">${inr(r.val)}</td><td class="n ${cls(r.gain)}">${inr(r.gain)}</td><td class="n ${cls(r.ret)}"><b>${pct(r.ret)}</b> <span class="muted" style="font-size:11px">${r.a.days >= 365 ? 'XIRR' : 'abs'}</span></td>
+      <td class="n">${inr(r.inv)}</td><td class="n">${inr(r.val)}</td><td class="n ${cls(r.gain)}">${inr(r.gain)}</td><td class="n ${cls(r.ret)}">${r.ret == null ? `<span class="muted">${begun ? 'In progress' : 'Starts ' + dt(V.start)}</span>` : `<b>${pct(r.ret)}</b> <span class="muted" style="font-size:11px">${r.a.days >= 365 ? 'XIRR' : 'abs'}</span>`}</td>
       <td class="n">${pct(r.bench)}</td><td class="n ${cls(r.alpha)}">${r.alpha == null ? '–' : (r.alpha > 0 ? '+' : '') + r.alpha.toFixed(2) + ' pt'}</td><td class="n">${r.prog || ''}</td></tr>`).join('') + '</tbody>';
   $$('#ovT th.s').forEach(t => t.onclick = () => { const k = t.dataset.k; ovSort = { k, d: ovSort.k === k ? -ovSort.d : -1 }; renderOverview(); });
   $$('#ovT tbody tr').forEach(tr => tr.onclick = () => { $('#sPerson').value = tr.dataset.p; $('#sProd').value = tr.dataset.a; show('Stmt'); setHash(); });
@@ -390,6 +391,7 @@ function renderStmt() {
     <dt>Model</dt><dd>Portfolio Simulator · 10+ years · ${esc(a.riskName)}</dd><dt>Instructions</dt><dd>${esc(a.freqName)} ${inr(a.amount)} · ${sched}; next trading day when the market is closed</dd>
     <dt>Period</dt><dd>${dt(f)} to ${dt(t)}</dd></dl></div>
     <div class="r">Generated ${new Date().toLocaleString('en-IN')}<br>Ledger ${(V.events || 0).toLocaleString('en-IN')} entries<br><span class="mono">head ${esc(String(V.head || '').slice(0, 16))}</span><br>${AUD ? (AUD.nErrors ? '<b class="neg">Audit: errors</b>' : '<b class="pos">✓ Independently audited</b>') : ''}</div></div>`;
+  if (!a.txns.length) h += `<div class="note" style="margin-bottom:14px">${iso(new Date()) < V.start ? 'Simulated buying starts on <b>' + dt(V.start) + '</b> — this statement fills in automatically after the first order.' : 'No orders yet — the first order appears after the next daily update.'}</div>`;
   h += `<div class="grid kpis">${[
     ['Opening value', inr(open.val, 2), dt(addDays(f, -1))], ['Contributions', inr(contrib, 2), (n => n + (n === 1 ? ' instalment' : ' instalments'))(new Set(inP.filter(x => x.src === 'plan').map(x => x.T)).size)],
     ['Withdrawals', inr(wd, 2), ''], ['Closing value', inr(close.val, 2), dt(t)],

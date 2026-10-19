@@ -960,7 +960,9 @@ def scoreboard(view: dict, audit_ok: bool) -> dict:
                      "amt": a["amount"], "nri": a["res"] == "nri", "since": view["start"], "days": a["days"] if valued else 0,
                      "metric": "xirr" if valued and a["days"] >= 365 else "abs",
                      "ret": (round((a["xirr"] or 0) * 100, 2) if a["days"] >= 365 else round(absr, 2)) if valued and audit_ok else None})
-    return {"v": 2, "updated": view["generated"], "start": view["start"], "auditOk": audit_ok, "rows": rows}
+    # dated by the market data, not the run time — an unchanged scoreboard must not create a new commit every run
+    asof = max([a["valuationDate"] for a in view["accounts"] if a.get("valuationDate")] or [min(view.get("mfAsOf") or "", view.get("etfAsOf") or "") or view["start"]])
+    return {"v": 2, "updated": asof, "start": view["start"], "auditOk": audit_ok, "rows": rows}
 
 
 def main() -> int:
