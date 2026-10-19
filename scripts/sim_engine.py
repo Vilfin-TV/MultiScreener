@@ -779,7 +779,8 @@ class Engine:
         eq = self.mkt.etf_equity(o["sym"])
         n, ch = etf_units_for(budget, px, res, eq)
         gross = r2(n * px)
-        ev = append(self.store, "fill", oid=o["oid"], tradeDate=d.isoformat(), price=px, units=n, gross=gross, charges=ch,
+        ev = append(self.store, "fill", oid=o["oid"], tradeDate=d.isoformat(), price=px, rule=CFG["etfRules"]["id"],
+                    priceTime=CFG["etfRules"]["priceTime"], units=n, gross=gross, charges=ch,
                     budget=budget, carry=r2(budget - gross - ch["total"]),
                     credit=add_business(d, CFG["etfFees"]["creditBusinessDays"]).isoformat())
         return ev
@@ -839,7 +840,8 @@ class Engine:
         net = r2(gross - charges["total"] - tds)
         append(self.store, "redeem", oid=o["oid"], navDate=nd.isoformat(), price=px, units=round(units, 6), gross=gross,
                charges=charges, tds=r2(tds), net=net, gains=gains, payout=payout.isoformat(),
-               exitRule=rule["tiers"] if f is not None else None)
+               exitRule=rule["tiers"] if f is not None else None,
+               **({} if o.get("code") else {"rule": CFG["etfRules"]["id"], "priceTime": CFG["etfRules"]["priceTime"]}))
 
     # monthly sell review — tax- and exit-load-aware (CFG["sellRules"]); the agents follow it exactly
     def review_dates(self) -> list[date]:
@@ -1303,11 +1305,14 @@ def build_view(store: dict, eng: Engine) -> dict:
                         "credit": done["credit"], "verified": done.get("verified"),
                         "status": "Allotted" if D(done["credit"]) <= today else "Buy in progress"}
             elif done and done["k"] == "fill":
-                row |= {"navDate": done["tradeDate"], "price": done["price"], "units": done["units"], "gross": done["gross"],
+                row |= {"navDate": done["tradeDate"], "price": done["price"], "rule": done.get("rule") or CFG["etfRules"]["id"],
+                        "priceTime": done.get("priceTime") or CFG["etfRules"]["priceTime"], "units": done["units"], "gross": done["gross"],
                         "charges": done["charges"], "budget": done["budget"], "carry": done["carry"], "credit": done["credit"],
                         "status": "Settled" if D(done["credit"]) <= today else "Buy in progress"}
             elif done and done["k"] == "redeem":
                 row |= {"navDate": done["navDate"], "price": done["price"], "units": done["units"], "gross": done["gross"],
+                        **({} if o.get("code") else {"rule": done.get("rule") or CFG["etfRules"]["id"],
+                                                     "priceTime": done.get("priceTime") or CFG["etfRules"]["priceTime"]}),
                         "charges": done["charges"], "tds": done["tds"], "net": done["net"], "gains": done["gains"], "credit": done["payout"],
                         "status": "Paid out" if D(done["payout"]) <= today else "Sell in progress"}
             else:

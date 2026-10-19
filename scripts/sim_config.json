@@ -43,6 +43,11 @@
     "exitLoadIfUnknown": 0.01,
     "liquidSubs": ["liquid", "overnight"]
   },
+  "etfRules": {
+    "_comment": "How every simulated ETF trade is priced (buys and sells alike). The order is placed on its plan date and executes as a market-on-close trade: the exchange's official closing price of the first trading session on or after the order date (the close is set at 3:30 pm IST from the weighted average of the last 30 minutes of trading). Exchange holidays, weekends and days the ETF did not trade roll to the next session. Whole units only, within the budget including cash carried from earlier buys; charges per etfFees; units credited T+1. Every fill records this rule id and the audit checks each trade against it.",
+    "id": "close-v1",
+    "priceTime": "15:30 IST"
+  },
   "etfFees": {
     "_comment": "Delivery (CNC) trades. Resident: zero-brokerage discount broker. NRI: NRI demat + PIS account, brokerage 0.1% of value (min ₹20, max ₹100) — typical NRI desks charge more than resident accounts. Statutory: STT only on selling equity-oriented ETFs; stamp duty on buys; exchange, SEBI and investor-protection charges both sides; GST on brokerage + exchange + SEBI; DP charge per ETF per sell day.",
     "brokerageResident": 0,

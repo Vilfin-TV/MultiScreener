@@ -390,11 +390,23 @@
           (anyRet ? ' since ' + esc(d(sb.start)) + ' · ' + metric : ' · simulated buying from ' + esc(d(sb.start))) + '</span></summary>' +
           '<div class="vts-buy-b">' +
           '<p class="vts-buy-warn"><b>Disclaimer:</b> This is a <b>simulation for education only — not a real purchase</b>. No real money is invested, no units are bought or held for anyone, and the agents are internal test accounts, not real investors. Figures are calculated from official end-of-day prices with stamp duty' + (prod === 'etf' ? ', brokerage and exchange charges' : '') + ', exit loads, taxes and settlement days, to show how the model portfolios would have behaved. Not investment advice; not a recommendation to buy any fund. Past or simulated results do not predict future returns.</p>' +
+          (prod === 'etf'
+            ? '<div class="vts-buy-rule"><b>⏱ How each ETF trade is priced</b><ul>' +
+              '<li><b>When:</b> every buy (and any sale) is placed on its plan date and treated as a market-on-close order — it executes at the end of that day\'s trading session, <b>3:30 pm IST</b>.</li>' +
+              '<li><b>Unit price:</b> the exchange\'s <b>official closing price</b> of that session (the weighted average price of the last 30 minutes of trading, 3:00–3:30 pm IST). If the market is closed (weekend or exchange holiday) or the ETF did not trade that day, it executes at the close of the next session it trades.</li>' +
+              '<li><b>Units:</b> whole units only, as many as the amount buys after charges; cash left over is added to the next buy of the same ETF. Units are credited the next trading day (T+1).</li>' +
+              '<li><b>Record:</b> each trade in the ledger stores this rule, its trade date and the closing price used, and the daily audit checks every trade against the exchange\'s published closing price for that session.</li></ul></div>'
+            : '<div class="vts-buy-rule"><b>⏱ How each fund purchase is priced</b><ul>' +
+              '<li><b>When:</b> every purchase is placed on its plan date before the 3 pm IST cut-off.</li>' +
+              '<li><b>Unit price:</b> the fund\'s <b>official NAV of that business day</b> (liquid and overnight funds: the NAV of the previous calendar day); if the fund house has no NAV that day, the next NAV day. Stamp duty of 0.005% is taken first; units are rounded down to 3 decimals and credited two business days later.</li>' +
+              '<li><b>Record:</b> each purchase in the ledger stores its NAV date and NAV, and the daily audit checks it against the official NAV file.</li></ul></div>') +
           '<div class="vts-buy-g" role="list" aria-label="Simulated accounts">' + rows.map(card).join('') + '</div>' +
           '<p class="vts-buy-n">' + (anyRet ? 'Return: absolute for accounts under one year old, XIRR after. ' : '') + 'Updated ' + esc(d(sb.updated)) + (sb.auditOk === false ? ' · figures withheld while a data check is resolved' : '') + '.</p></div></details>';
       });
     }).catch(function () {});
   }
+  CSS += '.vts-buy-rule{border:1px solid var(--border2,var(--border));border-radius:10px;background:rgba(74,144,226,.06);padding:10px 14px;margin:0 0 12px;font-size:12.5px;line-height:1.55;color:var(--text2,var(--text))}' +
+    '.vts-buy-rule>b{display:block;color:var(--text);font-size:13px;margin-bottom:4px}.vts-buy-rule ul{margin:0;padding-left:18px}.vts-buy-rule li{margin:2px 0}.vts-buy-rule li b{color:var(--text)}';
   CSS += '.vts-buy{border:1px solid var(--border2,var(--border));border-left:4px solid #f5a524;border-radius:var(--radius,12px);background:var(--surface);padding:14px 16px;margin:0 0 16px;min-width:0;overflow:hidden}' +
     '.vts-buy-h{display:flex;flex-direction:column;gap:4px;cursor:pointer;list-style:none;margin:-14px -16px;padding:14px 16px;border-radius:inherit}.vts-buy-h::-webkit-details-marker{display:none}' +
     '.vts-buy-h:hover{background:rgba(245,165,36,.05)}.vts-buy-h:focus-visible{outline:2px solid #f5a524;outline-offset:-2px}' +

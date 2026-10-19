@@ -268,6 +268,35 @@ def main() -> int:
     def is_eq(sym):
         k = cats.get(sym, "")
         return not any(x in k for x in ("Gold", "Silver", "Liquid", "Debt", "International", "Global"))
+    # the ETF trade rule (sim_config etfRules): market-on-close at the official closing price of the first session the
+    # ETF traded on or after the order date. Sessions come from the published daily price files, read here directly.
+    ER, bars_of = CFG["etfRules"], {}
+
+    def sessions(sym):
+        if sym not in bars_of:
+            try:
+                b = json.loads((ROOT / "data" / "etf" / "d" / f"{sym}.json").read_text())
+                bars_of[sym] = {f"{t // 10000:04d}-{t // 100 % 100:02d}-{t % 100:02d}": c for t, c in zip(b["t"], b["c"])}
+            except Exception:  # noqa: BLE001
+                bars_of[sym] = {}
+        return bars_of[sym]
+
+    def trade_rule(o, e, when, what):
+        A.check("etf", e.get("rule", ER["id"]) == ER["id"] and e.get("priceTime", ER["priceTime"]) == ER["priceTime"],
+                f"{o['oid']}: {what} recorded under rule {e.get('rule')} / {e.get('priceTime')}, not {ER['id']} / {ER['priceTime']}")
+        bs = sessions(o["sym"])
+        if bs and min(bs) <= o["T"]:                      # the published file covers the order date
+            first = min((k for k in bs if k >= o["T"]), default=None)
+            A.check("etf", first is None or when == first, f"{o['oid']}: {what} on {when}, but the first session on or after the order date {o['T']} was {first}")
+            if when in bs:
+                A.check("etf", abs(bs[when] - e["price"]) < 1e-6, f"{o['oid']}: {what} price {e['price']} differs from the published close {bs[when]} of {when}", warn=True)
+    for o in orders.values():
+        d = done.get(o["oid"])
+        if o.get("sym") and d and d["k"] == "redeem":
+            trade_rule(o, d, d["navDate"], "sale")
+            px = (prices.get("etf", {}).get(o["sym"]) or {}).get(d["navDate"])
+            A.check("etf", px is not None and abs(px - d["price"]) < 1e-9, f"{o['oid']}: sale price {d['price']} not the recorded close of {d['navDate']}")
+
     for aid in sorted({o["acct"] for o in orders.values() if o["acct"].endswith("-ETF")}):
         carry, cash = {}, 0.0
         r = res[aid.rsplit("-", 1)[0]]
@@ -287,6 +316,7 @@ def main() -> int:
             px = (prices.get("etf", {}).get(o["sym"]) or {}).get(e["tradeDate"])
             A.check("etf", px is not None and abs(px - e["price"]) < 1e-9, f"{o['oid']}: price {e['price']} not the recorded close of {e['tradeDate']}")
             A.check("etf", day(e["tradeDate"]) >= day(o["T"]) and open_day(day(e["tradeDate"])), f"{o['oid']}: trade date {e['tradeDate']}")
+            trade_rule(o, e, e["tradeDate"], "buy")
             A.check("etf", isinstance(e["units"], int) and e["units"] >= 0, f"{o['oid']}: units not whole")
             A.check("etf", abs(e["budget"] - budget) < 0.011, f"{o['oid']}: budget {e['budget']} vs {budget}")
             ch = charges(e["units"] * e["price"], "buy", r, is_eq(o["sym"]))
