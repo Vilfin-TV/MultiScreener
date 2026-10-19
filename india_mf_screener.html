@@ -2423,6 +2423,18 @@ function pinDetail(){
   [250, 700, 1500].forEach(function(t){ setTimeout(function(){ if (_pin === id) scrollToDetail(); }, t); });
   setTimeout(stop, 1600);
 }
+/* switch the fund-page tab: the panel keeps its height while the new tab loads (no collapse), then the reader is
+   placed at the start of the new tab if they had scrolled past it */
+var _tabSettle = false;
+function goTab(tab){
+  var pan = $('panels'); pan.style.minHeight = pan.offsetHeight + 'px';
+  S.tab = tab; _tabSettle = true; writeURL(); renderDetail();
+}
+function tabSettled(){
+  if (!_tabSettle) return; _tabSettle = false;
+  $('panels').style.minHeight = '';
+  requestAnimationFrame(function(){ if (window.VTSim && VTSim.tabSettle) VTSim.tabSettle($('dtabs'), $('panels')); });
+}
 function renderDetail(){
   if (!S.sel || !BY[S.sel]) { $('detailEmpty').hidden = false; $('detail').hidden = true; return; }
   $('detailEmpty').hidden = true; $('detail').hidden = false;
@@ -2437,8 +2449,10 @@ function renderDetail(){
     var det = r[0][code] || {}, tail = r[1][code] || {};
     renderSnap(f, det);
     renderPanel(f, det, tail);
+    tabSettled();
     if (_pin) requestAnimationFrame(scrollToDetail);
   }).catch(function(){
+    tabSettled();
     $('panels').innerHTML = '<div class="card err"><b>Details could not be loaded</b>Please check your connection and try again.</div>';
   });
 }
@@ -3277,10 +3291,10 @@ function bindUI(){
     $(x[0]).addEventListener('change', function(){ S.f[x[1]] = x[2](this.value); S.shown = PAGE; renderTable(); });
   });
   // detail
-  $('dtabs').addEventListener('click', function(e){ var b = e.target.closest('[data-tab]'); if (!b) return; S.tab = b.getAttribute('data-tab'); writeURL(); renderDetail(); });
+  $('dtabs').addEventListener('click', function(e){ var b = e.target.closest('[data-tab]'); if (!b) return; goTab(b.getAttribute('data-tab')); });
   $('detail').addEventListener('click', function(e){
     var t = e.target;
-    var tb = t.closest('.pcard [data-tab]'); if (tb) { S.tab = tb.getAttribute('data-tab'); writeURL(); renderDetail(); return; }
+    var tb = t.closest('.pcard [data-tab]'); if (tb) { goTab(tb.getAttribute('data-tab')); return; }
     if (t.closest('#cmpAdd')) { toggleCmp(S.sel); return; }
     if (t.closest('#shareBtn')) { share(); return; }
     if (t.closest('#scLbBtn')) { var lb = document.querySelector('.sc-lead'); if (lb) lb.scrollIntoView({behavior:'smooth', block:'start'}); return; }
@@ -3809,6 +3823,7 @@ function bindSip(){
     var st = b.getAttribute('data-st');
     if (st === 'plan') $('v-sip').removeAttribute('data-st'); else $('v-sip').setAttribute('data-st', st);
     this.querySelectorAll('[data-st]').forEach(function(x){ var on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); });
+    var bar = this; requestAnimationFrame(function(){ if (window.VTSim && VTSim.tabSettle) VTSim.tabSettle(bar); });
   });
   document.addEventListener('click', function(e){ var a = e.target.closest('[data-gopark]'); if (!a) return; e.preventDefault();
     var go = function(){ setTimeout(function(){ var c = $('sipPark'); if (c) { if (window.VTSim && VTSim.colOpen) VTSim.colOpen(c); c.scrollIntoView({behavior:'smooth', block:'start'}); } }, 60); };

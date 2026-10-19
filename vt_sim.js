@@ -509,5 +509,16 @@
   window.addEventListener('hashchange', colHash);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', colInit); else colInit();
 
-  window.VTSim = { gate: gate, accepted: accepted, faqCols: faqCols, riskPanel: riskPanel, ecoPanel: ecoPanel, risk10: risk10, css: style, simBuy: simBuy, col: col, colOpen: colOpen };
+  /* Tabs: keep the reader at the start of the new tab. After a switch, when the reader had scrolled past the tab bar
+     (or, for a sticky bar, past the start of its content), the content start is brought just under the header /
+     sticky bar; otherwise the view is left where it is. Shorter content never makes the page jump down. */
+  function tabSettle(bar, content) {
+    if (!bar) return;
+    var h = document.querySelector('.vt-header'), hdr = h ? h.offsetHeight : 0;
+    var cs = getComputedStyle(bar), sticky = cs.position === 'sticky' && content;
+    var off = sticky ? (parseFloat(cs.top) || hdr) + bar.offsetHeight + 8 : hdr + 8;
+    var top = (sticky ? content : bar).getBoundingClientRect().top;
+    if (top < off - 1) window.scrollTo(0, Math.max(0, top + window.pageYOffset - off));
+  }
+  window.VTSim = { tabSettle: tabSettle, gate: gate, accepted: accepted, faqCols: faqCols, riskPanel: riskPanel, ecoPanel: ecoPanel, risk10: risk10, css: style, simBuy: simBuy, col: col, colOpen: colOpen };
 })();
