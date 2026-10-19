@@ -2322,6 +2322,25 @@ function filterCount(){
 function setFilter(key, val, sel){
   S.f[key] = val; if (sel) $(sel).value = val; S.shown = PAGE; renderTable();
 }
+/* a tab tap opens the view at its start: Explore at the top of the page, other views just below the sticky header
+   (phones); on wider screens the page returns to the tab row only when it has scrolled past it. The Portfolio
+   Simulator scrolls after its risk notice is accepted. */
+function goView(v){
+  setView(v);
+  var to = function(){ requestAnimationFrame(function(){
+    var hdr = (document.querySelector('.vt-header') || {}).offsetHeight || 0, bar = document.querySelector('.views');
+    if (bar && !bar.classList.contains('bnav')) {
+      var bt = bar.getBoundingClientRect().top;
+      if (bt < hdr) window.scrollTo(0, Math.max(0, bt + window.scrollY - hdr - 12));
+      return;
+    }
+    if (v === 'explore') { window.scrollTo(0, 0); return; }
+    var sec = $('v-' + v); if (!sec) return;
+    window.scrollTo(0, Math.max(0, sec.getBoundingClientRect().top + window.scrollY - hdr - 10));
+  }); };
+  if (S.view === v) to();
+  else if (v === 'sip') { var prev = S.afterSip; S.afterSip = function(){ if (prev) prev(); to(); }; }
+}
 /* phones: the view switcher becomes an app-style tab bar fixed to the bottom of the screen */
 var BNAV_MQ = window.matchMedia ? matchMedia('(max-width:760px)') : null, BNAV_HOME = null;
 function placeViews(){
@@ -3236,7 +3255,7 @@ function bindUI(){
   $('q').addEventListener('input', function(){ $('searchBox').classList.toggle('has', !!this.value); });
   $('qClear').addEventListener('click', function(){ $('q').value = ''; $('searchBox').classList.remove('has'); $('ac').classList.remove('open'); $('q').focus(); });
   document.addEventListener('keydown', function(e){ if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') { e.preventDefault(); $('q').focus(); } });
-  document.querySelectorAll('.vbtn').forEach(function(b){ b.addEventListener('click', function(){ setView(b.getAttribute('data-view')); }); });
+  document.querySelectorAll('.vbtn').forEach(function(b){ b.addEventListener('click', function(){ goView(b.getAttribute('data-view')); }); });
   $('quick').addEventListener('click', function(e){ var b = e.target.closest('[data-code]'); if (b) openFund(+b.getAttribute('data-code')); });
   $('assets').addEventListener('click', function(e){ var b = e.target.closest('[data-asset]'); if (!b) return; S.asset = b.getAttribute('data-asset'); S.sub = ''; S.shown = PAGE; S.sort = null; renderExplore(); writeURL(); });
   $('subs').addEventListener('click', function(e){ var b = e.target.closest('[data-sub]'); if (!b) return; S.sub = b.getAttribute('data-sub'); S.shown = PAGE; renderSubs(); renderSpot(); renderTable(); writeURL(); });
