@@ -925,6 +925,72 @@ footer a{color:var(--text2)}
   .bar-row{grid-template-columns:48px minmax(0,1fr)}
   .bar-line{grid-template-columns:minmax(0,1fr) 56px}
 }
+/* ═══════════════ FUND-HOUSE ICONS · STATUS CARDS · MOBILE APP LAYOUT ═══════════════ */
+/* original monogram icons (VilfinTV design; fund houses' own logos are their trademarks and are not used) */
+.amc-av{--h:210;flex:0 0 auto;width:var(--avs,40px);height:var(--avs,40px);border-radius:30%;display:inline-grid;place-items:center;font-family:'DM Sans',sans-serif;font-weight:800;letter-spacing:-.3px;font-size:calc(var(--avs,40px) * .34);color:#fff;
+  background:linear-gradient(140deg,hsl(var(--h) 62% 52%),hsl(calc(var(--h) + 28) 58% 38%));box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 2px 6px rgba(0,0,0,.18);text-transform:uppercase;line-height:1}
+.amc-av.l3{font-size:calc(var(--avs,40px) * .27)}
+.amc-card{margin-bottom:14px;padding:16px 18px}
+.amc-h{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.amc-clr{border:1px solid var(--border2);background:var(--surface2);color:var(--text);font:inherit;font-size:12px;font-weight:700;border-radius:999px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.amc-strip{display:flex;gap:6px;overflow-x:auto;margin:12px -6px 0;padding:2px 6px 6px;scrollbar-width:none;scroll-snap-type:x proximity}
+.amc-strip::-webkit-scrollbar{display:none}
+.amc-i{flex:0 0 82px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 4px;border:1px solid transparent;border-radius:14px;background:none;color:var(--text2);font:inherit;cursor:pointer;scroll-snap-align:start;transition:background .15s,border-color .15s}
+.amc-i:hover{background:var(--surface2)}
+.amc-i.on{border-color:var(--accent);background:var(--accent-soft)}
+.amc-i .amc-av{--avs:48px}
+.amc-i b{font-size:11.5px;font-weight:600;line-height:1.25;text-align:center;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.5em}
+.amc-i small{font-size:10.5px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+/* fund status cards */
+.stc{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.stc-i{--c:var(--accent);--b:var(--accent-soft);display:flex;align-items:center;gap:12px;text-align:left;border:1px solid var(--border);border-radius:14px;background:linear-gradient(135deg,var(--b),transparent 75%),var(--surface2);padding:12px 14px;cursor:pointer;color:var(--text);font:inherit;transition:border-color .15s,transform .15s}
+.stc-i:hover{border-color:var(--c)}.stc-i:active{transform:scale(.99)}
+.stc-i.on{border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c)}
+.stc-ic{position:relative;flex:0 0 44px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--b);color:var(--c)}
+.stc-ic svg{width:20px;height:20px}
+.stc-ic em{position:absolute;top:-8px;right:-10px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--surface);border:1px solid var(--border2);color:var(--text);font-style:normal;font-size:11px;font-weight:800;display:grid;place-items:center;font-family:'JetBrains Mono',monospace}
+.stc-t{min-width:0;flex:1}.stc-t b{display:block;font-size:14px;color:var(--c)}.stc-t span{display:block;font-size:12px;color:var(--text2);line-height:1.35;margin-top:1px}
+.stc-go{color:var(--text3);flex-shrink:0}
+.stc-in{--c:var(--pos);--b:rgba(52,211,153,.14)}.stc-on{--c:var(--accent2,var(--accent));--b:var(--accent-soft)}.stc-un{--c:var(--warn);--b:rgba(232,163,23,.13)}.stc-out{--c:var(--neg);--b:rgba(248,113,113,.13)}
+.ftog{display:none}
+.mc-av{display:flex;gap:10px;min-width:0;align-items:flex-start}.mc-av .amc-av{--avs:36px;margin-top:1px}
+@media (max-width:1180px){.stc{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){
+  /* compact header */
+  .crumbs{display:none}
+  .hero h1{font-size:30px}
+  .hero p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14px}
+  .hero .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-right:-14px;padding-right:14px}.hero .chips::-webkit-scrollbar{display:none}
+  .hero .chip{flex:0 0 auto}
+  .quick{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-right:-14px;padding-right:14px}.quick::-webkit-scrollbar{display:none}
+  .quick .qbtn{flex:0 0 auto}.quick .qbtn:nth-of-type(n+5){display:inline-flex}
+  /* app-style bottom tab bar */
+  .views.bnav{position:fixed;left:0;right:0;bottom:0;z-index:900;height:auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;margin:0;padding:6px 6px calc(6px + env(safe-area-inset-bottom));border:0;border-top:1px solid var(--border2);border-radius:0;
+    background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 -6px 24px rgba(0,0,0,.18);overflow:visible}
+  .views.bnav .vbtn{flex-direction:column;justify-content:center;gap:3px;height:52px;padding:0 2px;border-radius:12px;font-size:11px;font-weight:700;color:var(--text3);position:relative;background:none}
+  .views.bnav .vbtn svg{display:block;width:22px;height:22px}
+  .views.bnav .vbtn.on{background:none;color:var(--accent2,var(--accent))}
+  .views.bnav .vbtn.on::before{content:'';position:absolute;top:-6px;left:28%;right:28%;height:3px;border-radius:0 0 3px 3px;background:var(--accent)}
+  .views.bnav .vbtn .lbl{font-size:0}.views.bnav .vbtn .lbl::after{content:attr(data-s);font-size:11px}
+  .views.bnav .vbtn .new{display:none}
+  .views.bnav .vbtn .n{position:absolute;top:2px;left:calc(50% + 6px);background:var(--neg);color:#fff;font-size:9.5px;padding:0 5px;line-height:15px}
+  body.has-bnav{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+  body.has-bnav .toast{bottom:calc(84px + env(safe-area-inset-bottom))}
+  /* presets: one swipeable row of pills */
+  .presets{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:14px -14px 0;padding:0 14px 2px}.presets::-webkit-scrollbar{display:none}
+  .presets>*{flex:0 0 auto}
+  /* filters behind a button */
+  .ftog{display:inline-flex;align-items:center;gap:8px;margin-top:12px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font:inherit;font-size:13px;font-weight:700;border-radius:999px;padding:8px 14px;cursor:pointer}
+  .ftog svg{width:16px;height:16px}
+  .ftog-n{background:var(--accent);color:var(--accent-ink,#fff);border-radius:999px;font-size:11px;padding:0 7px;line-height:18px}
+  .tbl-card:not(.f-open) .tools{display:none}
+  .tbl-card.f-open .ftog{border-color:var(--accent)}
+  /* fund houses + status */
+  .amc-card{padding:14px}
+  .amc-i{flex-basis:76px}.amc-i .amc-av{--avs:46px}
+  .stc{grid-template-columns:1fr;gap:8px}
+  .stc-i{padding:12px}
+}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* ═══════════════ BEST BROKERS & APPS ═══════════════ */
@@ -1125,11 +1191,11 @@ footer a{color:var(--text2)}
       </div>
     </div>
     <div class="views" role="tablist" aria-label="Views">
-      <button class="vbtn on" data-view="explore" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="lbl">Explore</span></button>
-      <button class="vbtn" data-view="detail" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg><span class="lbl">Fund Detail</span></button>
-      <button class="vbtn" data-view="compare" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v18M16 3v18"/><path d="M3 8h5M16 16h5"/></svg><span class="lbl">Compare</span><span class="n" id="cmpN" hidden>0</span></button>
-      <button class="vbtn" data-view="nfo" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg><span class="lbl">NFO</span><span class="n" id="nfoN" hidden>0</span></button>
-      <button class="vbtn" data-view="sip" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12z"/><path d="M15 2.5A10 10 0 0 1 21.5 9H15z"/></svg><span class="lbl">Portfolio Simulator</span><span class="new">New</span></button>
+      <button class="vbtn on" data-view="explore" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="lbl" data-s="Explore">Explore</span></button>
+      <button class="vbtn" data-view="detail" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg><span class="lbl" data-s="Fund">Fund Detail</span></button>
+      <button class="vbtn" data-view="compare" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v18M16 3v18"/><path d="M3 8h5M16 16h5"/></svg><span class="lbl" data-s="Compare">Compare</span><span class="n" id="cmpN" hidden>0</span></button>
+      <button class="vbtn" data-view="nfo" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg><span class="lbl" data-s="NFO">NFO</span><span class="n" id="nfoN" hidden>0</span></button>
+      <button class="vbtn" data-view="sip" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12z"/><path d="M15 2.5A10 10 0 0 1 21.5 9H15z"/></svg><span class="lbl" data-s="Simulator">Portfolio Simulator</span><span class="new">New</span></button>
     </div>
     <div class="quick" id="quick"></div>
   </section>
@@ -1138,6 +1204,7 @@ footer a{color:var(--text2)}
   <section class="view on" id="v-explore" aria-label="Explore funds">
     <div class="assets" id="assets"></div>
     <div class="hs" id="subsHs"><button class="hs-btn prev" type="button" aria-label="Scroll categories left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div class="subs" id="subs" role="tablist" aria-label="Sub-categories"></div><button class="hs-btn next" type="button" aria-label="Scroll categories right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button></div>
+    <div class="card amc-card" id="amcCard"><div class="amc-h"><div><div class="sec-title">Fund houses</div><div class="sec-sub" id="amcSub">Tap a fund house to see only its funds</div></div><button class="amc-clr" id="amcClr" type="button" hidden>Show all</button></div><div class="amc-strip" id="amcStrip" role="list"></div></div>
     <div class="spot" id="spot"></div>
     <div class="card tbl-card">
       <div class="tbl-head">
@@ -1150,7 +1217,9 @@ footer a{color:var(--text2)}
         </div>
       </div>
       <div class="presets" id="presets"></div>
-      <div class="tools">
+      <div class="stc" id="stCards" role="group" aria-label="Fund status"></div>
+      <button class="ftog" id="fTog" type="button" aria-expanded="false" aria-controls="tools"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filters<span class="ftog-n" id="fTogN" hidden></span></button>
+      <div class="tools" id="tools">
         <input class="tin" id="fText" type="search" placeholder="Filter by name…" aria-label="Filter by name"/>
         <select class="sel" id="fAmc" aria-label="Fund house"><option value="">All fund houses</option></select>
         <select class="sel" id="fRating" aria-label="Rating">
@@ -2145,6 +2214,7 @@ function loadValueData(){
   })));
 }
 function renderTable(){
+  if (S.f.amc !== '' && S.f.amc != null && !scope().some(function(x){ return x.amc === +S.f.amc; })) { S.f.amc = ''; $('fAmc').value = ''; }
   var list = sortList(filtered()), s = S.sort || presetSort();
   var title = S.sub ? D.subs[S.sub][1] : 'All ' + S.asset;
   $('listTitle').textContent = title + ' funds';
@@ -2184,12 +2254,81 @@ function renderTable(){
     $('fcards').innerHTML = show.map(function(f){
       var sk = s.k, extra = sk === 'sharpe' ? ['Sharpe', fmt(f.sharpe)] : sk === 'ter' ? ['TER', isNum(f.ter) ? fmt(f.ter) + '%' : '–'] : sk === 'aum' ? ['AUM', fmtAum(f.aum)] : sk === 'sip3' ? ['SIP 3Y', pctTxt(f.sip3)] : MOMK[sk] ? [{r1m:'1M', r3m:'3M', r6m:'6M'}[sk], pctTxt(f[sk])] : ['TER', isNum(f.ter) ? fmt(f.ter) + '%' : '–'];
       var cells = (TRK[sk] || (S.preset === 'trend' && !S.sort)) ? [['Trend', cellFmt('trend', f.trend)], ['1M', fmtPct(f.r1m)], ['3M', fmtPct(f.r3m)], ['1W', fmtPct(f.r1w)]] : (VALK[sk] || (S.preset === 'value' && !S.sort)) ? [['Value tilt', cellFmt('valW', f.valW)], ['P/E vs cat.', cellFmt('peRel', f.peRel)], ['3Y p.a.', fmtPct(f.r3y)], ['P/E', cellFmt('pe', f.pe)]] : [['1Y', fmtPct(f.r1y)], ['3Y p.a.', fmtPct(f.r3y)], ['5Y p.a.', fmtPct(f.r5y)], extra];
-      return '<div class="mc" data-code="' + f.code + '"><div class="mc-top"><div style="min-width:0"><div class="mc-name">' + esc(f.name) + '</div><div class="mc-meta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + '</div>' + (buyPill(f, f.asset === 'Global') ? '<div style="margin-top:5px">' + buyPill(f, f.asset === 'Global') + '</div>' : '') + '</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">' + stars(f.rating) + (f.status ? statusPill(f.status) : '') + '</div></div>' +
+      return '<div class="mc" data-code="' + f.code + '"><div class="mc-top"><div class="mc-av">' + amcAv(f.amcName) + '<div style="min-width:0"><div class="mc-name">' + esc(f.name) + '</div><div class="mc-meta">' + esc(f.amcName) + ' · ' + esc(f.subLabel) + '</div>' + (buyPill(f, f.asset === 'Global') ? '<div style="margin-top:5px">' + buyPill(f, f.asset === 'Global') + '</div>' : '') + '</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">' + stars(f.rating) + (f.status ? statusPill(f.status) : '') + '</div></div>' +
         '<div class="mc-row">' + cells.map(function(c){ return '<div>' + c[0] + '<b>' + c[1] + '</b></div>'; }).join('') + '</div></div>';
     }).join('');
   }
   $('more').hidden = list.length <= S.shown;
   $('moreBtn').textContent = 'Show more funds (' + (list.length - S.shown).toLocaleString('en-IN') + ' remaining)';
+  renderAmcStrip(); renderStatusCards(); filterCount();
+}
+
+/* ═══════════ FUND-HOUSE ICONS · STATUS CARDS · MOBILE TAB BAR ═══════════ */
+/* Original monogram per fund house (letters + a colour derived from the name) — fund houses' logos are their
+   trademarks, so they are not reproduced. */
+function amcMono(n){
+  n = String(n || '').replace(/\b(mutual fund|asset management|amc|ltd|limited)\b/ig, '').trim();
+  var w = n.split(/[\s\-]+/).filter(Boolean);
+  if (!w.length) return '?';
+  if (/^\d/.test(w[0])) return w[0].slice(0, 3);
+  if (w[0].length <= 4 && w[0] === w[0].toUpperCase() && /[A-Z]/.test(w[0])) return w[0];
+  if (w.length >= 2) return (w[0][0] + w[1][0]).toUpperCase();
+  return w[0].slice(0, 2);
+}
+function amcHue(n){ var h = 0; String(n).split('').forEach(function(c){ h = (h * 31 + c.charCodeAt(0)) % 3600; }); return Math.round(h / 10); }
+function amcAv(n, size){
+  var m = amcMono(n);
+  return '<span class="amc-av' + (m.length > 2 ? ' l3' : '') + '" style="--h:' + amcHue(n) + (size ? ';--avs:' + size + 'px' : '') + '" aria-hidden="true">' + esc(m) + '</span>';
+}
+function renderAmcStrip(){
+  var list = scope(), by = {};
+  list.forEach(function(f){ var a = by[f.amc] || (by[f.amc] = {i:f.amc, n:0, aum:0}); a.n++; if (isNum(f.aum)) a.aum += f.aum; });
+  var arr = Object.keys(by).map(function(k){ return by[k]; }).sort(function(a, b){ return b.aum - a.aum || b.n - a.n; });
+  var cur = S.f.amc === '' || S.f.amc == null ? null : String(S.f.amc);
+  $('amcStrip').innerHTML = arr.map(function(a){
+    var nm = D.amcs[a.i], on = cur === String(a.i);
+    return '<button class="amc-i' + (on ? ' on' : '') + '" type="button" role="listitem" data-amcf="' + a.i + '" aria-pressed="' + on + '" title="' + esc(nm) + ' · ' + a.n + ' fund' + (a.n === 1 ? '' : 's') + '">' +
+      amcAv(nm) + '<b>' + esc(nm) + '</b><small>' + a.n + '</small></button>';
+  }).join('');
+  $('amcSub').textContent = arr.length + ' fund houses in ' + (S.sub ? D.subs[S.sub][1] : S.asset) + ' · tap one to see only its funds';
+  $('amcClr').hidden = cur === null;
+  var on = $('amcStrip').querySelector('.amc-i.on');
+  if (on) { var sc = $('amcStrip'); if (on.offsetLeft < sc.scrollLeft || on.offsetLeft + on.offsetWidth > sc.scrollLeft + sc.clientWidth) sc.scrollLeft = Math.max(0, on.offsetLeft - 20); }
+}
+var STC = [
+  ['In form', 'stc-in', 'Performing strongly in recent months', '<path d="M7 17l5-5 5 5M7 11l5-5 5 5"/>'],
+  ['On track', 'stc-on', 'Performing in line with or above peers', '<path d="M12 19V5M6 11l6-6 6 6"/>'],
+  ['Underperforming', 'stc-un', 'Lagging most funds in its category', '<path d="M12 5v14M6 13l6 6 6-6"/>'],
+  ['Out of track', 'stc-out', 'Consistently behind its category', '<path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/>']
+];
+function renderStatusCards(){
+  var keep = S.f.status; S.f.status = '';
+  var cnt = {}; filtered().forEach(function(f){ if (f.status) cnt[f.status] = (cnt[f.status] || 0) + 1; });
+  S.f.status = keep;
+  $('stCards').innerHTML = STC.map(function(x){
+    var on = keep === x[0];
+    return '<button class="stc-i ' + x[1] + (on ? ' on' : '') + '" type="button" data-stf="' + esc(x[0]) + '" aria-pressed="' + on + '" title="' + esc(ST_DESC[x[0]] || '') + '">' +
+      '<span class="stc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' + x[3] + '</svg><em>' + (cnt[x[0]] || 0) + '</em></span>' +
+      '<span class="stc-t"><b>' + esc(x[0]) + '</b><span>' + esc(x[2]) + '</span></span><span class="stc-go" aria-hidden="true">' + (on ? '✓' : '›') + '</span></button>';
+  }).join('');
+}
+function filterCount(){
+  var f = S.f, n = 0;
+  ['amc', 'risk', 'status', 'buy'].forEach(function(k){ if (f[k] !== '' && f[k] != null) n++; });
+  ['rating', 'hist', 'ter'].forEach(function(k){ if (+f[k]) n++; });
+  if (f.text) n++;
+  $('fTogN').textContent = n; $('fTogN').hidden = !n;
+}
+function setFilter(key, val, sel){
+  S.f[key] = val; if (sel) $(sel).value = val; S.shown = PAGE; renderTable();
+}
+/* phones: the view switcher becomes an app-style tab bar fixed to the bottom of the screen */
+var BNAV_MQ = window.matchMedia ? matchMedia('(max-width:760px)') : null, BNAV_HOME = null;
+function placeViews(){
+  var v = document.querySelector('.views'); if (!v || !BNAV_MQ) return;
+  if (!BNAV_HOME) { BNAV_HOME = document.createComment('views'); v.parentNode.insertBefore(BNAV_HOME, v); }
+  if (BNAV_MQ.matches && !v.classList.contains('bnav')) { document.body.appendChild(v); v.classList.add('bnav'); document.body.classList.add('has-bnav'); }
+  else if (!BNAV_MQ.matches && v.classList.contains('bnav')) { BNAV_HOME.parentNode.insertBefore(v, BNAV_HOME.nextSibling); v.classList.remove('bnav'); document.body.classList.remove('has-bnav'); }
 }
 
 /* ═════════════════════════ SEARCH ═════════════════════════ */
@@ -3101,6 +3240,12 @@ function bindUI(){
   $('quick').addEventListener('click', function(e){ var b = e.target.closest('[data-code]'); if (b) openFund(+b.getAttribute('data-code')); });
   $('assets').addEventListener('click', function(e){ var b = e.target.closest('[data-asset]'); if (!b) return; S.asset = b.getAttribute('data-asset'); S.sub = ''; S.shown = PAGE; S.sort = null; renderExplore(); writeURL(); });
   $('subs').addEventListener('click', function(e){ var b = e.target.closest('[data-sub]'); if (!b) return; S.sub = b.getAttribute('data-sub'); S.shown = PAGE; renderSubs(); renderSpot(); renderTable(); writeURL(); });
+  $('amcStrip').addEventListener('click', function(e){ var b = e.target.closest('[data-amcf]'); if (!b) return; var v = b.getAttribute('data-amcf'); setFilter('amc', String(S.f.amc) === v ? '' : v, 'fAmc'); });
+  $('amcClr').addEventListener('click', function(){ setFilter('amc', '', 'fAmc'); });
+  $('amcStrip').addEventListener('wheel', function(e){ if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && this.scrollWidth > this.clientWidth) { var m = this.scrollWidth - this.clientWidth; if ((e.deltaY > 0 && this.scrollLeft < m) || (e.deltaY < 0 && this.scrollLeft > 0)) { e.preventDefault(); this.scrollLeft += e.deltaY; } } }, {passive:false});
+  $('stCards').addEventListener('click', function(e){ var b = e.target.closest('[data-stf]'); if (!b) return; var v = b.getAttribute('data-stf'); setFilter('status', S.f.status === v ? '' : v, 'fStatus'); });
+  $('fTog').addEventListener('click', function(){ var c = this.closest('.tbl-card'), o = !c.classList.contains('f-open'); c.classList.toggle('f-open', o); this.setAttribute('aria-expanded', o); });
+  placeViews(); if (BNAV_MQ) (BNAV_MQ.addEventListener ? BNAV_MQ.addEventListener('change', placeViews) : BNAV_MQ.addListener(placeViews));
   $('presets').addEventListener('click', function(e){ var b = e.target.closest('[data-pre]'); if (!b) return; S.preset = b.getAttribute('data-pre'); S.sort = null; S.shown = PAGE; renderPresets(); renderTable(); });
   $('perSeg').addEventListener('click', function(e){ var b = e.target.closest('[data-p]'); if (!b) return; S.per = b.getAttribute('data-p'); document.querySelectorAll('#perSeg button').forEach(function(x){ x.classList.toggle('on', x === b); }); if (S.preset === 'top') S.sort = null; renderSpot(); renderTable(); });
   $('fthead').addEventListener('click', function(e){ var th = e.target.closest('th[data-k]'); if (!th) return; var k = th.getAttribute('data-k'), cur = S.sort || presetSort(); S.sort = {k:k, dir: cur.k === k ? -cur.dir : (k === 'ter' || k === 'name' ? 1 : -1)}; S.shown = PAGE; renderTable(); });
