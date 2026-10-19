@@ -149,6 +149,33 @@ def fits_category(sub: str, mix: dict) -> bool:
     return True
 
 
+def listed_pct(sm: dict) -> float:
+    """What the portfolio's holdings add up to (cash / other excluded) — the same total verify checks."""
+    return sum(v for k, v in sm["mix"].items() if k != "cashOther")
+
+
+def portfolio_problem(sm: dict) -> str | None:
+    """The publish verify's structural checks (scripts/verify_mf_screener.js --holdings), run before a portfolio is
+    stored, so one odd file (e.g. derivative legs counted as holdings) is skipped instead of blocking the publish."""
+    mix, eq = sm["mix"], sm["mix"].get("equity") or 0
+    listed = listed_pct(sm)
+    if not 40 <= listed <= 130:
+        return f"holdings add up to {listed:.1f}%"
+    if not sm["top"]:
+        return "no holdings with an ISIN"
+    if any(not (-50 < t[2] <= 105) for t in sm["top"]):
+        return "a holding weight outside -50…105%"
+    if sum(x[1] for x in sm["sectors"] or []) > eq + 0.05:
+        return "sector weights exceed the equity share"
+    if sm.get("cap") and abs(sum(sm["cap"].values()) - eq) >= 0.1:
+        return "market-cap split does not add up to the equity share"
+    if sm["top10"] > eq + 0.05:
+        return f"top-10 weight {sm['top10']:.1f}% exceeds the equity share {eq:.1f}% (hedged / short positions)"
+    if sm.get("credit") and sum(x[1] for x in sm["credit"]) > (mix.get("debt") or 0) + 0.1:
+        return "credit split exceeds the debt share"
+    return None
+
+
 MONTHS = {m: i for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
 
 
@@ -823,8 +850,9 @@ def main():
         bad = 0
         for code, blk in matched.items():
             sm = summarise(blk, large, mid)
-            listed = 100 - sm["mix"]["cashOther"]
-            if listed < 40 or listed > 130:          # sanity: a portfolio should add up to ~100 %
+            why = portfolio_problem(sm)
+            if why:                                  # sanity: the same checks the publish verify runs
+                log.warning("%s: %s portfolio skipped — %s", amc, code, why)
                 bad += 1
                 continue
             if not fits_category(sub_of.get(code, ""), sm["mix"]):
@@ -838,7 +866,7 @@ def main():
             for code, blk in match_blocks([b for b in blocks if id(b) not in hit], etf_by_amc[amc]).items():
                 sm = summarise(blk, large, mid)
                 eq = (sm["mix"].get("equity") or 0) + (sm["mix"].get("overseas") or 0)
-                if 40 <= 100 - sm["mix"]["cashOther"] <= 130 and eq >= 60 and sm["top"]:
+                if not portfolio_problem(sm) and eq >= 60:
                     sm["asOf"] = info["month"]
                     etf_new[etf_isin[code]] = sm
                     etf_n += 1
@@ -875,8 +903,10 @@ def main():
                 if pf_age_days(month) > MAX_AGE_DAYS:
                     continue
                 sm = summarise(blk, large, mid)
-                listed = 100 - sm["mix"]["cashOther"]
-                if listed < 40 or listed > 130 or not sm["top"]:
+                listed = listed_pct(sm)
+                why = portfolio_problem(sm)
+                if why:
+                    log.info("    %s: %s — skipped", code, why)
                     continue
                 sub = sub_of.get(code, "")
                 need = PAGE_MIN_LISTED["index"] if sub.startswith("idx_") else PAGE_MIN_LISTED["equity"] if (sub in EQUITY_SUBS or sub.startswith("sec_")) else 0
