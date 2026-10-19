@@ -220,7 +220,8 @@ async function open() {
     boot();
   } catch (e) {
     if (e.message === 'auth') { $('#lerr').textContent = 'That access key is not valid.'; SS.del('simk'); LS.del('simk'); }
-    else $('#lerr').textContent = 'The ledger has not been published yet, or could not be loaded (' + e.message + ').';
+    else if (e.message === 'HTTP 404') $('#lerr').textContent = 'Access key accepted. The ledger has not been published yet — it appears after the first daily update.';
+    else $('#lerr').textContent = 'The ledger could not be loaded right now (' + e.message + '). Please try again shortly.';
     $('#login').classList.remove('hide'); $('#app').classList.add('hide');
   }
 }
