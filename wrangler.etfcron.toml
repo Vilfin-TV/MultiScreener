@@ -8,7 +8,10 @@ compatibility_date = "2026-01-01"
 workers_dev = false
 
 [triggers]
-# UTC. IST = UTC+5:30. Weekdays 16:20, 16:50, 17:50, 18:50, 19:50 IST
-# (after NSE close; the worker only dispatches when data is behind), plus a
-# 08:10 IST catch-up Tue–Sat for the previous session.
-crons = ["50 10 * * 1-5", "20,50 11 * * 1-5", "20 12,13,14 * * 1-5", "40 2 * * 2-6"]
+# UTC. IST = UTC+5:30. Still 4 cron triggers (the account is at the free-plan limit of 5):
+#   "*/30 4-9 * * 1-5"      09:30–15:00 IST every 30 min → etf_intraday.yml (near-live chart bars)
+#   "20,50 10,11 * * 1-5"   15:50–17:20 IST → etf_momentum.yml when behind (before 16:15 IST it
+#                           finds the data up to date and does nothing)
+#   "20 12,13,14 * * 1-5"   17:50, 18:50, 19:50 IST → etf_momentum.yml when behind
+#   "40 2 * * 2-6"          08:10 IST Tue–Sat catch-up for the previous session
+crons = ["*/30 4-9 * * 1-5", "20,50 10,11 * * 1-5", "20 12,13,14 * * 1-5", "40 2 * * 2-6"]

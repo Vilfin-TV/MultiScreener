@@ -7,6 +7,11 @@
  * checks the published data after NSE close and dispatches the workflow
  * only when data/etf_momentum.json is behind the latest completed session.
  *
+ * During market hours (every 30 minutes, 09:30–15:30 IST on weekdays) it also
+ * dispatches etf_intraday.yml, which refreshes the near-live trading-chart bars
+ * (data/etf_live.json); that workflow's own gate skips exchange holidays and runs
+ * less than 12 minutes after the last update.
+ *
  * Deployed by .github/workflows/deploy_etf_cron.yml (secret GH_TOKEN with
  * actions:write / workflow scope). No public route (workers_dev = false).
  */
@@ -14,6 +19,8 @@
 const OWNER = 'Vilfin-TV';
 const REPO = 'MultiScreener';
 const WORKFLOW = 'etf_momentum.yml';
+const INTRADAY = 'etf_intraday.yml';
+const MARKET_CRON = '*/30 4-9 * * 1-5';   // 09:30–15:00 IST (UTC 04:00–09:30); must match wrangler.etfcron.toml
 const DATA_URL = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main/data/etf_momentum.json`;
 const RECENT_RUN_MIN = 25;      // a run started this recently is still in flight
 const RETRY_AFTER_MIN = 90;     // after a build, wait before retrying (holidays / source lag)
@@ -48,17 +55,17 @@ async function publishedState() {
   return { asOf: d.asOf, generated: d.generated };
 }
 
-async function recentRuns(env) {
+async function recentRuns(env, workflow = WORKFLOW) {
   const since = new Date(Date.now() - RECENT_RUN_MIN * 60000).toISOString();
-  const url = `https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/runs?created=%3E${since}&per_page=5`;
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${workflow}/runs?created=%3E${since}&per_page=5`;
   const res = await fetch(url, { headers: ghHeaders(env) });
   if (!res.ok) return 0;
   const data = await res.json();
   return (data.workflow_runs || []).filter(r => r.status !== 'completed').length;
 }
 
-async function dispatch(env) {
-  const url = `https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/dispatches`;
+async function dispatch(env, workflow = WORKFLOW) {
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${workflow}/dispatches`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { ...ghHeaders(env), 'Content-Type': 'application/json' },
@@ -94,8 +101,19 @@ async function run(env, now = new Date()) {
   return status === 204 ? 'dispatched' : `dispatch-failed-${status}`;
 }
 
+// Market hours: refresh today's forming bars for the trading chart.
+async function runIntraday(env, now = new Date()) {
+  const ist = new Date(now.getTime() + 330 * 60000);
+  const day = ist.getUTCDay(), mins = ist.getUTCHours() * 60 + ist.getUTCMinutes();
+  if (day < 1 || day > 5 || mins < 9 * 60 + 20 || mins > 15 * 60 + 50) return 'outside-market-hours';
+  if (await recentRuns(env, INTRADAY) > 0) return 'in-progress';
+  const status = await dispatch(env, INTRADAY);
+  console.log(`Market hours — dispatched ${INTRADAY}: HTTP ${status}.`);
+  return status === 204 ? 'dispatched' : `dispatch-failed-${status}`;
+}
+
 export default {
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(run(env));
+    ctx.waitUntil(event.cron === MARKET_CRON ? runIntraday(env) : run(env));
   },
 };
