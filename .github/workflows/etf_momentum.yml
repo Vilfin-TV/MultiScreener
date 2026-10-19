@@ -147,4 +147,5 @@ jobs:
       - name: Commit (with rebase-and-retry; shared ETF analytics rebuilt on conflicts)
         env:
           BRANCH: ${{ github.ref_name }}
-        run: bash scripts/push_data.sh "chore(data): refresh ETF momentum modes [skip ci]" data/etf_momentum.json data/etf_hist.json data/etf/d data/etf_extras.json data/etf_holdings.json data/etf_smart.json data/etf_smart_state.json data/etf_audit.json
+        run: |
+          bash scripts/push_data.sh "chore(data): refresh ETF momentum modes [skip ci]" data/etf_momentum.json data/etf_hist.json data/etf/d data/etf_extras.json data/etf_holdings.json data/etf_smart.json data/etf_smart_state.json data/etf_audit.json

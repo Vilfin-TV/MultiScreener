@@ -105,4 +105,5 @@ jobs:
       - name: Commit (with rebase-and-retry; shared ETF analytics rebuilt on conflicts)
         env:
           BRANCH: ${{ github.ref_name }}
-        run: bash scripts/push_data.sh "chore(data): refresh India MF holdings [skip ci]" data/mf/p data/mf/exitload_extra.json data/mf/scheme_pages.json data/mf/etf_p.json data/etf_extras.json data/etf_holdings.json data/etf_smart.json data/etf_smart_state.json data/etf_audit.json
+        run: |
+          bash scripts/push_data.sh "chore(data): refresh India MF holdings [skip ci]" data/mf/p data/mf/exitload_extra.json data/mf/scheme_pages.json data/mf/etf_p.json data/etf_extras.json data/etf_holdings.json data/etf_smart.json data/etf_smart_state.json data/etf_audit.json
