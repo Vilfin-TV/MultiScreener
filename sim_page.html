@@ -322,9 +322,12 @@ let ovSort = { k: 'ret', d: -1 }, ovP = 'all', ovR = 'all';
 $('#ovProd').onclick = e => { const b = e.target.closest('button'); if (!b) return; ovP = b.dataset.p; $$('#ovProd button').forEach(x => x.classList.toggle('on', x === b)); renderOverview(); };
 $('#ovRisk').onclick = e => { const b = e.target.closest('button'); if (!b) return; ovR = b.dataset.r; $$('#ovRisk button').forEach(x => x.classList.toggle('on', x === b)); renderOverview(); };
 function renderOverview() {
+  // before the first valuation, orders placed count at cost (as in the statement: orders in progress at their amount)
+  const placed = a => a.txns.filter(t => t.side === 'buy' && t.src === 'plan').reduce((s, t) => s + (t.amount || 0), 0);
   const rows = V.accounts.filter(a => (ovP === 'all' || a.product === ovP) && (ovR === 'all' || a.risk === ovR)).map(a => ({
-    a, name: a.name, prod: a.product.toUpperCase(), risk: a.riskName, freq: a.freqName, inv: a.invested, val: a.value,
-    gain: a.value - a.invested, ret: retOf(a), bench: benchOf(a), alpha: retOf(a) != null && benchOf(a) != null ? retOf(a) - benchOf(a) : null,
+    a, name: a.name, prod: a.product.toUpperCase(), risk: a.riskName, freq: a.freqName,
+    inv: a.valuationDate ? a.invested : placed(a), val: a.valuationDate ? a.value : placed(a),
+    gain: a.valuationDate ? a.value - a.invested : 0, ret: retOf(a), bench: benchOf(a), alpha: retOf(a) != null && benchOf(a) != null ? retOf(a) - benchOf(a) : null,
     prog: a.txns.filter(t => /progress|placed/i.test(t.status)).length }));
   const k = ovSort.k; rows.sort((x, y) => ((x[k] ?? -1e18) > (y[k] ?? -1e18) ? 1 : (x[k] ?? -1e18) < (y[k] ?? -1e18) ? -1 : 0) * ovSort.d);
   const inv = rows.reduce((s, r) => s + r.inv, 0), val = rows.reduce((s, r) => s + r.val, 0);
@@ -396,7 +399,7 @@ function renderStmt() {
     ['Opening value', inr(open.val, 2), dt(addDays(f, -1))], ['Contributions', inr(contrib, 2), (n => n + (n === 1 ? ' instalment' : ' instalments'))(new Set(inP.filter(x => x.src === 'plan').map(x => x.T)).size)],
     ['Withdrawals', inr(wd, 2), ''], ['Closing value', inr(close.val, 2), dt(t)],
     ['Gain in period', `<span class="${cls(gain)}">${inr(gain, 2)}</span>`, ''],
-    [days >= 365 ? 'XIRR since start' : 'Absolute return', `<span class="${cls(xr)}">${days >= 365 ? pct(xr * 100) : pct(close.contrib ? ((close.val + close.wd) / close.contrib - 1) * 100 : null)}</span>`, 'Nifty 50 same cash: ' + pct(t === a.valuationDate ? benchOf(a) : null)]
+    [days >= 365 ? 'XIRR since start' : 'Absolute return', (r => `<span class="${cls(r)}">${pct(r)}</span>`)(days >= 365 ? (xr == null ? null : xr * 100) : (close.contrib ? ((close.val + close.wd) / close.contrib - 1) * 100 : null)), 'Nifty 50 same cash: ' + pct(t === a.valuationDate ? benchOf(a) : null)]
   ].map(([l, v, s]) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('')}</div>`;
   h += `<h3>Value over time</h3><div class="chart" id="ch"></div>`;
 

@@ -785,9 +785,12 @@ class Engine:
                     pend += o["amount"] if o.get("amount") is not None else funded.get(o["oid"], 0.0)
             if a["product"] == "etf":
                 val += s["cash"]
+            ser = self.store["series"].setdefault(a["id"], [])
+            if V < D(CFG["start"]):                  # latest prices predate the first order — nothing to value yet
+                ser[:] = [r for r in ser if r[0] >= CFG["start"]]
+                continue
             invested = sum(i["amount"] for i in s["inst"])
             bench = self.benchmark(a, s["inst"], V)
-            ser = self.store["series"].setdefault(a["id"], [])
             row = [V.isoformat(), r2(invested), r2(val + pend), r2(bench)]
             if ser and ser[-1][0] == row[0]:
                 ser[-1] = row
@@ -954,7 +957,7 @@ def scoreboard(view: dict, audit_ok: bool) -> dict:
     XIRR after). Accounts not yet valued (before the start date / first allotment) carry ret = None."""
     rows = []
     for a in view["accounts"]:
-        valued = bool(a["valuationDate"] and a["invested"])
+        valued = bool(a["valuationDate"] and a["invested"] and a["holdings"] and a["valuationDate"] >= view["start"])
         absr = (a["value"] / a["invested"] - 1) * 100 if valued else None
         rows.append({"name": a["name"], "product": a["product"], "risk": a["riskName"], "freq": a["freqName"],
                      "amt": a["amount"], "nri": a["res"] == "nri", "since": view["start"], "days": a["days"] if valued else 0,
