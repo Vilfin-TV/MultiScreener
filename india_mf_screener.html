@@ -614,6 +614,7 @@ td.sorted-col{background:rgba(127,127,127,.05)}
 .fh-row{border-bottom:1px solid var(--border)}
 .sc-lb{height:30px;padding:0 12px;font-size:12px;margin-top:6px}
 .trk-hero{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;margin-bottom:12px}
+.trk-rate{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin:0 0 12px;background:var(--surface2)}.trk-rate-h{display:flex;flex-direction:column;gap:2px;min-width:110px}.trk-rate-h small{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text3)}.trk-rate-b{flex:1;min-width:220px;font-size:12.5px;color:var(--text2);line-height:1.9}.trk-pt{display:inline-flex;gap:5px;align-items:baseline;border:1px solid var(--border);border-radius:999px;padding:1px 9px;margin:0 4px 0 0;white-space:nowrap;font-size:12px}.trk-pt i{font-style:normal;color:var(--text3)}.trk-pt b{color:var(--text)}
 .trk-rank{border-radius:12px;padding:14px;text-align:center;background:linear-gradient(160deg,var(--accent-soft),var(--surface2));border:1px solid var(--border);display:flex;flex-direction:column;justify-content:center}
 .trk-rank small{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text3)}
 .trk-rank b{font-family:'JetBrains Mono',monospace;font-size:34px;line-height:1.1;margin:4px 0}.trk-rank b span{font-size:16px;color:var(--text3)}
@@ -1372,7 +1373,7 @@ footer a{color:var(--text2)}
         <li><b>Rolling returns</b> show every possible holding period — the best, the worst and how often the fund beat its benchmark. They reveal consistency that point-to-point returns hide.</li>
         <li><b>Risk ratios</b> use 36 monthly returns to the last month-end. Higher Sharpe / Sortino means more return per unit of risk; a downside capture below 100 means the fund fell less than its benchmark in falling months.</li>
         <li><b>Factor DNA</b> shows which investment style best explains an equity fund's behaviour — Momentum, Value, Quality or Low Volatility — together with its market-cap tilt.</li>
-        <li><b>VilfinTV Rating</b> ranks funds within their category on risk-adjusted return, downside protection, long-term return and cost. Funds need a 3-year record to be rated. Sectoral and thematic funds are grouped by theme (banking, pharma, technology, infrastructure and more) and rated against all sectoral / thematic funds.</li>
+        <li><b>VilfinTV Rating</b> ranks funds within their category on risk-adjusted return, downside protection, long-term return and cost. Funds need a 3-year record to be rated. Sectoral and thematic funds are grouped by theme (banking, pharma, technology, infrastructure and more) and rated against all sectoral / thematic funds. <b>Index funds</b> are rated only against funds tracking the same index — tracking error 35%, tracking difference 25%, expense ratio 25%, fund size 10%, track record 5% — and need 1+ year of history and at least 3 funds on that index.</li>
       </ul>
     </div>
     <div class="card info faq-card" id="faq">
@@ -1460,7 +1461,7 @@ footer a{color:var(--text2)}
           <li><b>Portfolio Simulator projections</b> compound each fund's historical model estimate a year every month on every instalment until the end of your holding period, then deduct tax.</li>
         </ul></details>
       <details class="faq"><summary>How is the risk-free rate chosen?</summary><p>Sharpe and Sortino ratios subtract the overnight money-market return for the same months, so they adapt automatically as interest rates change.</p></details>
-      <details class="faq"><summary>What do the scores and status mean?</summary><p><b>Consistency</b> is the share of the last 36 month-ends in which the fund ranked in the top half of its category on rolling 1-year return. <b>Recency</b> blends 3-month, 6-month and 1-year returns (20/30/50) into a category percentile. <b>Volatility</b> ranks 3-year volatility within the category (100 = calmest). <b>Status</b>: <i>In form</i> — recency in the top 30%; <i>On track</i> — recency between the 40th and 70th percentile; <i>Underperforming</i> — recency in the bottom 40% but a top-half long-term record; <i>Out of track</i> — both recent and long-term returns in the bottom half. Index funds are not scored, since they track an index by design.</p></details>
+      <details class="faq"><summary>What do the scores and status mean?</summary><p><b>Consistency</b> is the share of the last 36 month-ends in which the fund ranked in the top half of its category on rolling 1-year return. <b>Recency</b> blends 3-month, 6-month and 1-year returns (20/30/50) into a category percentile. <b>Volatility</b> ranks 3-year volatility within the category (100 = calmest). <b>Status</b>: <i>In form</i> — recency in the top 30%; <i>On track</i> — recency between the 40th and 70th percentile; <i>Underperforming</i> — recency in the bottom 40% but a top-half long-term record; <i>Out of track</i> — both recent and long-term returns in the bottom half. Index funds are not scored on these, since they track an index by design — instead they get a VilfinTV rating against the other funds tracking the same index (how closely they follow it, cost, size and track record) and an Index tracking card.</p></details>
       <details class="faq"><summary>How is taxation shown?</summary><p>Each fund is mapped to its capital-gains treatment from its SEBI category and stated asset allocation: equity-oriented, specified (debt-oriented), or other. Rates exclude surcharge and cess and may change with each Union Budget — please confirm with a tax professional.</p></details>
       <details class="faq"><summary>Where do portfolio holdings come from?</summary><p>From each fund house's statutory monthly portfolio disclosure, published within ten days of every month-end. The Portfolio tab shows the top holdings, sector allocation, asset mix and market-cap split as of that month-end. Market-cap buckets follow SEBI's ranking — Nifty 100 constituents are large cap, Nifty Midcap 150 constituents are mid cap and other listed stocks are small cap. Portfolios are being added fund house by fund house.</p></details>
       <details class="faq"><summary>Can I invest a lump sum, or quarterly / yearly?</summary><p>Yes. Under <b>How you invest</b>, choose Monthly, Weekly, Quarterly, Yearly or One-time. The funds and weights are the same for every option, so the plan stays consistent however you invest; only the amounts, the projection and the tax change. For a one-time amount the planner adds an <b>entry plan</b>: when the Nifty 50 is fairly valued (below the 60th percentile of its 10-year valuation) everything is invested at once; when it is expensive, the equity share is parked in a liquid fund and moved in monthly over 6 months (12 months above the 80th percentile), using a systematic transfer plan within the same fund house where possible. Debt, hybrid and gold allocations are invested on day one.</p></details>
@@ -2342,7 +2343,7 @@ function renderPanel(f, det, tail){
     case 'info': h = pInfo(f, det); break;
   }
   $('panels').innerHTML = '<div class="panel on">' + h + '</div>';
-  if (S.tab === 'overview') { drawNavChart(); CACHE.dSync = {}; CACHE.dSync[f.code] = (det || {}).score; CACHE.dRisk = {}; CACHE.dRisk[f.code] = (det || {}).risk; renderScorecard(f); }
+  if (S.tab === 'overview') { drawNavChart(); CACHE.dSync = {}; CACHE.dSync[f.code] = (det || {}).score; CACHE.dRisk = {}; CACHE.dRisk[f.code] = (det || {}).risk; CACHE.dIdx = {}; CACHE.dIdx[f.code] = (det || {}).idxRating; renderScorecard(f); }
   if (S.tab === 'sip') bindSipCalc(f, tail);
   if (S.tab === 'info') fillManagers(f, (det.info || {}).managers || []);
   if (S.tab === 'portfolio') {
@@ -2528,9 +2529,10 @@ function renderHealth(f){
 }
 /* ── index funds: how well each fund delivers its index, against the funds tracking the same index ── */
 function idxKey(name){
-  var n = String(name || '').toLowerCase().replace(/\(.*?\)/g, ' ').replace(/\b(nifty|midcap|smallcap)(\d)/g, '$1 $2');
+  var n = String(name || '').toLowerCase().replace(/\(.*?\)/g, ' ').replace(/-/g, ' ').replace(/capital markets/g, 'capital market').replace(/\b(nifty|midcap|smallcap)(\d)/g, '$1 $2');
   var m = n.match(/\b((?:nifty|bse|s&p bse|sensex|crisil|msci|nasdaq|s&p)\b.*?)(?=\s+(?:index|etf|fund|fof|plan)\b|$)/);
-  return (m ? m[1] : n).replace(/\s+/g, ' ').trim();
+  var k = (m ? m[1] : n).replace(/\s+/g, ' ').trim().replace(/^s&p /, '');
+  return k === 'nifty' ? 'nifty 50' : k;
 }
 function weeklyRets(sr, grid){
   var out = [], j = 0, prev = null;
@@ -2566,6 +2568,13 @@ function renderTracking(f){
     var terR = use.filter(function(x){ return isNum(x.ter); }).sort(function(a, b){ return a.ter - b.ter; }).indexOf(f) + 1;
     var aumR = use.indexOf(f) + 1;
     var h = '<div class="pc-head"><div><div class="sec-title">Index tracking</div><div class="sec-sub">' + use.length + ' fund' + (use.length > 1 ? 's' : '') + ' tracking ' + esc(label) + (peers.length > use.length ? ' (largest ' + use.length + ' compared)' : '') + ' · peer median used as the index proxy</div></div></div>';
+    var ir = (CACHE.dIdx || {})[f.code], ip = (ir || {}).parts || {};
+    var chip = function(lbl, v){ return isNum(v) ? '<span class="trk-pt"><i>' + lbl + '</i><b>' + v + '</b>/100</span>' : ''; };
+    h += '<div class="trk-rate"><div class="trk-rate-h"><small>VilfinTV rating</small>' + stars(f.rating) + '</div><div class="trk-rate-b">' +
+      (f.rating && ir ? 'Rated against the ' + ir.n + ' funds tracking ' + esc(label) + ' (month-end data): ' + chip('Tracking error', ip.te) + chip('Tracking difference', ip.td) + chip('Cost', ip.ter) + chip('Fund size', ip.size) + chip('Track record', ip.age)
+        : f.rating ? 'Rated against the other funds tracking ' + esc(label) + ' on tracking error, tracking difference, cost, size and track record.'
+        : 'Not rated — an index fund is rated only against at least 3 funds tracking the same index, with 1+ year of history.') +
+      '</div></div>';
     h += '<div class="trk-hero"><div class="trk-rank"><small>Tracking rank</small><b>' + (rk ? rk + '<span>/' + ranked.length + '</span>' : '–') + '</b><em>' + esc(label) + '</em></div>' +
       '<div class="trk-k">' +
         (offOk ? kv('Tracking error (3Y)', fmt(off.te) + '%', (off.te <= 0.15 ? 'tight' : off.te <= 0.4 ? 'acceptable' : 'loose') + ' · vs ' + D.bench[f.bench].name + ' TRI')

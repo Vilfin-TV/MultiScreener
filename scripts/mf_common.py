@@ -22,6 +22,8 @@ from __future__ import annotations
 
 import math
 import re
+import warnings
+from collections import defaultdict
 from calendar import monthrange
 from datetime import date, datetime
 
@@ -161,6 +163,68 @@ IDX_PEER = {"idx_mid": "idx_midsmall", "idx_small": "idx_midsmall", "idx_micro":
             "idx_500": "idx_broad", "idx_total": "idx_broad", "idx_eqw": "idx_factor"}
 GROUP = {k: ("sector" if k.startswith("sec_") else "idx_sector" if k in IDX_THEME_SUBS else "target" if k == "debtidx"
              else IDX_PEER.get(k, k)) for k in SUBS}
+
+
+def index_key(name: str) -> str:
+    """The index a passive fund tracks, from its name ("HDFC Nifty 50 Index Fund" → "nifty 50"); same rule as the page's idxKey()."""
+    n = re.sub(r"\(.*?\)", " ", (name or "").lower()).replace("-", " ").replace("capital markets", "capital market")
+    n = re.sub(r"\b(nifty|midcap|smallcap)(\d)", r"\1 \2", n)
+    m = re.search(r"\b((?:nifty|bse|s&p bse|sensex|crisil|msci|nasdaq|s&p)\b.*?)(?=\s+(?:index|etf|fund|fof|plan)\b|$)", n)
+    k = re.sub(r"^s&p ", "", re.sub(r"\s+", " ", m.group(1)).strip()) if m else ""
+    return "nifty 50" if k == "nifty" else k
+
+
+IDX_RATING_W = (("te", .35, False), ("td", .25, True), ("ter", .25, False), ("size", .10, True), ("age", .05, True))
+
+
+def index_ratings(entries: list[dict], asof: int) -> tuple[dict, dict]:
+    """VilfinTV rating for index funds: each fund against the other funds tracking the SAME index (≥3 funds with ≥1 year
+    of history). Weekly returns over up to 3 years; the peer median stands in for the index. Parts (percentiles within
+    the index group): tracking error 35% (lower better) · tracking difference 25% · expense ratio 25% (lower better) ·
+    fund size 10% · track record 5%. Stars: the same bell curve, over all rated index funds.
+    entries: [{code, name, series, ter, aum}] → ({code: details}, {code: stars})."""
+    grid = np.array([asof - 7 * k for k in range(156, -1, -1)])
+    by_idx = defaultdict(list)
+    for e in entries:
+        k = index_key(e["name"])
+        s = e["series"].upto(asof)
+        if not k or len(s.d) < 2 or s.d[0] > asof - 365:
+            continue
+        pos = np.searchsorted(s.d, grid, side="right") - 1
+        vals = np.where(grid >= s.d[0], s.v[np.clip(pos, 0, None)], np.nan)
+        by_idx[k].append((e, vals[1:] / vals[:-1] - 1, int(s.d[0])))
+    details, codes, scores = {}, [], []
+    for k, lst in by_idx.items():
+        if len(lst) < 3:
+            continue
+        mat = np.vstack([w for _, w, _ in lst])
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)            # weeks before every fund existed
+            med = np.nanmedian(mat, axis=0)
+        raw = {"te": [], "td": [], "ter": [], "size": [], "age": []}
+        for e, w, start in lst:
+            ok = np.isfinite(w) & np.isfinite(med)
+            dlt = (w - med)[ok]
+            raw["te"].append(float(np.std(dlt, ddof=1) * np.sqrt(52) * 100) if ok.sum() >= 26 else None)
+            raw["td"].append(float(np.mean(dlt) * 52 * 100) if ok.sum() >= 26 else None)
+            raw["ter"].append(e.get("ter"))
+            raw["size"].append(math.log10(max(e["aum"], 1)) if e.get("aum") else None)
+            raw["age"].append(float(asof - start))
+        pr = {n: percentile_ranks(raw[n], hb) for n, _, hb in IDX_RATING_W}
+        for i, (e, _, _) in enumerate(lst):
+            if raw["te"][i] is None:
+                continue
+            parts = [(pr[n][i], wt) for n, wt, _ in IDX_RATING_W if pr[n][i] is not None]
+            sc = sum(p * w for p, w in parts) / sum(w for _, w in parts)
+            codes.append(e["code"])
+            scores.append(sc)
+            details[e["code"]] = {"index": k, "n": len(lst), "te": round(raw["te"][i], 2), "td": round(raw["td"][i], 2),
+                                  "score": round(sc * 100),
+                                  "parts": {n: (round(pr[n][i] * 100) if pr[n][i] is not None else None) for n, _, _ in IDX_RATING_W}}
+    stars = dict(zip(codes, stars_from_scores(scores)))
+    for c, st in stars.items():
+        details[c]["stars"] = st
+    return details, stars
 
 
 def group(sub: str) -> str:
