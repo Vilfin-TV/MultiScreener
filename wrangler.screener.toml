@@ -47,3 +47,9 @@ id = "25437ace56a442c69fb435cd97ae51cc"
 [[r2_buckets]]
 binding = "IPTV_CACHE"
 bucket_name = "vilfintv-iptv-cache"
+
+# Status report: check the private Simulator Buy worker directly (a worker cannot fetch another worker's
+# workers.dev address on the same account — Cloudflare error 1042).
+[[services]]
+binding = "SIM_WORKER"
+service = "vilfintv-sim"
