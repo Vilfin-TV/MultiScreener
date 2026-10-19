@@ -17,7 +17,7 @@ const SC = [ // [hz, rk, fq, amt, stay, years, slab, forcePct]
 (async () => {
   const b = await chromium.launch({executablePath: process.env.CHROME || undefined});
   let pass = 0, fail = 0; const rows = [];
-  for (const [vw, vh, dev] of [[1366, 900, 'desktop'], [390, 844, 'phone']]) {
+  for (const [vw, vh, dev] of [[1366, 900, 'desktop'], [820, 1180, 'ipad'], [390, 844, 'phone']]) {
     const ctx = await b.newContext({viewport:{width:vw, height:vh}, isMobile: vw < 500, hasTouch: vw < 500});
     const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
     await p.addInitScript(() => { try { localStorage.setItem('vt_sim_ack_v1', '1'); } catch (e) {} });   // risk warning already accepted

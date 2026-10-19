@@ -611,10 +611,10 @@
       if (series.length < 1) return '<p class="vts-pv-e">The comparison starts with the first daily summary, once units are credited.</p>';
       var pts = window_(series), lastP = pts[pts.length - 1], q = lastP[3] || series[series.length - 1];
       var h = '<div class="vts-ch-per" role="group" aria-label="Period">' + ['1W', '1M', '6M', '1Y', 'ALL'].map(function (p) { return '<button type="button" data-p="' + p + '" class="' + (per === p ? 'on' : '') + '" aria-pressed="' + (per === p) + '">' + p + '</button>'; }).join('') + '</div>';
-      h += '<div class="vts-ch-k"><div class="p"><span><i></i>Portfolio</span><b class="' + cl(lastP[1]) + '">' + spct(lastP[1]) + '</b><small>' + inr(q[1]) + '</small></div>' +
-        '<div class="b"><span><i></i>Same money in Nifty 50</span><b class="' + cl(lastP[2]) + '">' + spct(lastP[2]) + '</b><small>' + inr(q[5]) + '</small></div></div>';
+      h += '<div class="vts-ch-k"><div class="p"><span><i></i>Portfolio · time-weighted</span><b class="' + cl(lastP[1]) + '">' + spct(lastP[1]) + '</b><small>' + inr(q[1]) + '</small></div>' +
+        '<div class="b"><span><i></i>Nifty 50 · time-weighted</span><b class="' + cl(lastP[2]) + '">' + spct(lastP[2]) + '</b><small>' + inr(q[5]) + '</small></div></div>';
       h += chart(pts);
-      h += '<p class="vts-pv-e">Time-weighted return over the period (daily changes chained, new money excluded). Both start from the same cash on the same dates; units count at cost until credited.</p>';
+      h += '<p class="vts-pv-e">Time-weighted return over the period: daily changes chained, so new money and its timing do not count — the way fund returns are quoted. The total gain above is measured on the money actually invested, so the two differ for accounts that keep buying. Both lines start from the same cash on the same dates; units count at cost until credited.</p>';
       return h;
     }
 
@@ -676,6 +676,10 @@
     var ACOL = { 'Equity': '#3b82f6', 'Debt': '#14b8a6', 'Gold': '#eab308', 'Silver': '#94a3b8', 'International': '#8b5cf6', 'REITs & InvITs': '#f97316', 'Cash & others': '#64748b' };
     var bdOpen = { alloc: true }, ovSel = null, distTab = 'eq';
     function ovPct(A, B) { var wb = {}; B[3].forEach(function (q) { wb[q[0]] = q[1]; }); return A[3].reduce(function (t, q) { return t + (wb[q[0]] != null ? Math.min(q[1], wb[q[0]]) : 0); }, 0); }
+    var svg = function (d) { return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>'; };
+    var IC = { alloc: svg('<rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="8" height="6" rx="1.5"/><rect x="13" y="14" width="8" height="6" rx="1.5"/>'),
+               dist: svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5V12l6 6"/>'),
+               ovl: svg('<circle cx="9" cy="12" r="5.5"/><circle cx="15" cy="12" r="5.5"/>') };
     function bd(k, icon, title, sub, body) {
       return '<details class="vts-pbk" data-k="' + k + '"' + (bdOpen[k] ? ' open' : '') + '><summary><span class="vts-pbk-i" aria-hidden="true">' + icon + '</span><span class="vts-pbk-t"><b>' + title + '</b><small>' + sub + '</small></span><i class="vts-pbk-x" aria-hidden="true">▾</i></summary><div class="vts-pbk-b">' + body + '</div></details>';
     }
@@ -737,8 +741,8 @@
         var opt = function (i) { return f.map(function (q, j) { return '<option value="' + j + '"' + (j === ovSel[i] ? ' selected' : '') + '>' + esc(q[1]) + '</option>'; }).join(''); };
         h3 = '<div class="vts-olap"><div class="vts-olap-p"><label>Fund 1<select data-o="0">' + opt(0) + '</select></label><label>Fund 2<select data-o="1">' + opt(1) + '</select></label></div><div class="vts-olap-r">' + overlapOut(b) + '</div></div>';
       }
-      return '<div class="vts-pbks">' + bd('alloc', '▦', 'Allocation', 'Equity, debt, gold and others', h1) + bd('dist', '◑', 'Distribution', 'Equity, debt and global holdings', h2) +
-        bd('ovl', '⧉', 'Overlap calculator', 'Common holdings in two funds', h3) + '</div>';
+      return '<div class="vts-pbks">' + bd('alloc', IC.alloc, 'Allocation', 'Equity, debt, gold and others', h1) + bd('dist', IC.dist, 'Distribution', 'Equity, debt and global holdings', h2) +
+        bd('ovl', IC.ovl, 'Overlap calculator', 'Common holdings in two funds', h3) + '</div>';
     }
 
     function history(rc) {
