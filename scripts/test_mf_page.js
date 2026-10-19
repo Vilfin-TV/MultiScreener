@@ -85,6 +85,7 @@ const subsOf = a => [...new Set(F.filter(f => f.asset === a).map(f => f.sub))];
     };
     const goAsset = async a => { await p.click(`#assets [data-asset="${a}"]`); await p.waitForTimeout(250); };
     const goSub = async s => { await p.click(`#subs [data-sub="${s}"]`); await p.waitForTimeout(200); };
+    try {
 
     await p.goto(B, { waitUntil: 'networkidle' }); await p.waitForTimeout(900); await look('explore');
 
@@ -121,7 +122,7 @@ const subsOf = a => [...new Set(F.filter(f => f.asset === a).map(f => f.sub))];
 
     // 3. combined filters, status cards and fund-house strip (Equity)
     await goAsset('Equity');
-    const combos = [{ rating: '3', hist: '5' }, { ter: '1', status: 'On track' }, { buy: 'open', rating: '4', hist: '3' }, { risk: String(F.find(f => f.asset === 'Equity').risk), ter: '0.75', buy: 'sip' }];
+    const combos = [{ rating: '3', hist: '5' }, { ter: '1', status: 'On track' }, { buy: 'open', rating: '4', hist: '3' }, { risk: '5', ter: '0.75', buy: 'sip' }];
     for (const c of combos) { for (const [k, v] of Object.entries(c)) await setSel(k, v); await verify({ asset: 'Equity' }, c, 'combo ' + JSON.stringify(c));
       const fc = await p.$eval('#fTogN', e => e.hidden ? 0 : +e.textContent); ok(fc === Object.keys(c).length, 'combo ' + JSON.stringify(c), `filter badge ${fc}`); await resetAll(); }
     for (const st of ['In form', 'On track', 'Underperforming', 'Out of track']) {
@@ -234,6 +235,7 @@ const subsOf = a => [...new Set(F.filter(f => f.asset === a).map(f => f.sub))];
     const nf = await p.$$eval('details.faq', x => x.length);
     for (let i = 0; i < nf; i++) await p.evaluate(i => { document.querySelectorAll('details.faq')[i].open = true; }, i);
     ok(nf > 40, 'faq', `only ${nf} questions`); await look(`faq (${nf})`);
+    } catch (e) { note('run', 'test stopped: ' + e.message.split('\n')[0]); }
     await ctx.close();
     console.log(`${name}: done (${checks} checks so far, ${issues.length} issues)`);
   }
