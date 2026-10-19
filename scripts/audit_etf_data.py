@@ -107,10 +107,15 @@ def main() -> int:
         if not os.path.exists(p):
             continue
         B = json.load(open(p))
-        n_daily += 1
         d = [date(t // 10000, t // 100 % 100, t % 100) for t in B["t"]]
         c, v = B["c"], B["v"]
         last = d[-1]
+        if e.get("d") and last.isoformat() < e["d"]:
+            # the day's download missed this ETF, so its chart file is from an earlier session: report it, but do not
+            # compare old bars with today's figures (coverage of current files is checked separately, >= 90%)
+            A.check("freshness", False, f"{s}: daily bars end {last} but prices are published for {e['d']} — trading chart not current", warn=True)
+            continue
+        n_daily += 1                                  # ETFs with a current daily-bar file
         # prices
         A.check("prices", close(c[-1], e["p"], 0.011, 0.0005), f"{s}: last close {c[-1]} vs published {e['p']}")
         A.check("prices", last.isoformat() == e.get("d"), f"{s}: last bar {last} vs published date {e.get('d')}")
@@ -179,7 +184,7 @@ def main() -> int:
         cat = by_k.get(s)
         own = [t for t in jumps if len(jumps_by.get((cat, t), [])) < 3]
         A.check("bars", not own or flagged, f"{s}: daily moves over 20% on {own[:3]} without a split / repair flag", warn=True)
-    A.check("coverage", n_daily >= 0.9 * len(priced), f"daily bars for {n_daily} of {len(priced)} priced ETFs")
+    A.check("coverage", n_daily >= 0.9 * len(priced), f"current daily bars for {n_daily} of {len(priced)} priced ETFs")
 
     # ── analytics ──
     XE = X.get("etfs", {})

@@ -373,19 +373,58 @@ IMF = "https://www.imf.org/external/datamapper/api/v1/{ind}/IND/WEOWORLD"
 IMF_SERIES = {"real": "NGDP_RPCH", "infl": "PCPIPCH", "usd": "NGDPD"}     # real GDP growth %, CPI inflation %, GDP US$ bn
 
 
+WB = "https://api.worldbank.org/v2/country/{c}/indicator/{ind}?format=json&per_page=80"
+WB_SERIES = {"real": "NY.GDP.MKTP.KD.ZG", "infl": "FP.CPI.TOTL.ZG", "usd": "NY.GDP.MKTP.CD"}
+API_HEADERS = [{"Accept": "application/json", "User-Agent": "Mozilla/5.0 (compatible; VilfinTV-data/1.0)"},
+               {"Accept": "application/json, text/plain, */*", **UA}, {"Accept": "*/*", "User-Agent": "curl/8.5.0"}]
+
+
+def get_json(url: str):
+    """GET a JSON API, trying a few header sets (some APIs reject browser-like or bare clients)."""
+    last = None
+    for h in API_HEADERS:
+        try:
+            r = requests.get(url, headers=h, timeout=40)
+            if r.ok and r.text.lstrip()[:1] in "[{":
+                return r.json()
+            last = f"HTTP {r.status_code} {r.headers.get('content-type', '')} {r.text[:120]!r}"
+        except Exception as e:  # noqa: BLE001
+            last = str(e)
+        time.sleep(1)
+    raise RuntimeError(last)
+
+
 def fetch_gdp(S) -> dict:
-    """India's real GDP growth, inflation and GDP size by fiscal year (IMF World Economic Outlook, incl. forecasts)."""
+    """India's real GDP growth, inflation and GDP size by fiscal year — IMF World Economic Outlook (incl. forecasts),
+    else the World Bank's published history (no forecasts; `src` says which)."""
     out = {}
     for key, ind in IMF_SERIES.items():
         try:
-            r = S.get(IMF.format(ind=ind), timeout=40)
-            v = r.json()["values"][ind]
+            v = get_json(IMF.format(ind=ind))["values"][ind]
             out[key] = {int(y): round(float(x), 2) for y, x in (v.get("IND") or {}).items() if x is not None}
             if key == "real":
                 out["world"] = {int(y): round(float(x), 2) for y, x in (v.get("WEOWORLD") or {}).items() if x is not None}
         except Exception as e:  # noqa: BLE001
-            log.warning("GDP series %s unavailable: %s", key, e)
-    return out if out.get("real") and out.get("infl") else {}
+            log.warning("GDP forecasts %s unavailable: %s", key, e)
+    if out.get("real") and out.get("infl"):
+        out["src"] = "imf"
+        return out
+    out = {}
+    for key, ind in WB_SERIES.items():
+        for c, k in (("IND", key), ("WLD", "world")):
+            if c == "WLD" and key != "real":
+                continue
+            try:
+                rows = get_json(WB.format(c=c, ind=ind))[1] or []
+                val = {int(r["date"]): round(float(r["value"]) / (1e9 if key == "usd" else 1), 2) for r in rows if r.get("value") is not None}
+                if val:
+                    out[k] = val
+            except Exception as e:  # noqa: BLE001
+                log.warning("GDP history %s/%s unavailable: %s", c, key, e)
+    if out.get("real") and out.get("infl"):
+        out["src"] = "wb"
+        return out
+    return {}
 
 
 def eps_growth(hist: dict, key: str) -> dict:
@@ -416,7 +455,8 @@ def growth_block(S, prev: dict) -> dict:
     """India growth & earnings checks: each +1 (supportive) / 0 / −1 (a headwind) for equities; the total feeds the
     equity tilt of the planners. GDP figures are by fiscal year (April–March) with the latest official forecasts."""
     gdp = fetch_gdp(S) or (prev.get("growth") or {}).get("gdpRaw") or {}
-    gdp = {k: {int(y): x for y, x in v.items()} for k, v in gdp.items()}
+    src = gdp.get("src", "imf") if isinstance(gdp.get("src"), str) else "imf"
+    gdp = {k: {int(y): x for y, x in v.items()} for k, v in gdp.items() if isinstance(v, dict)}
     hist = load(HIST, {})
     n50, n500 = eps_growth(hist, "n50"), eps_growth(hist, "n500")
     today = date.today()
@@ -426,18 +466,21 @@ def growth_block(S, prev: dict) -> dict:
     def add(k, val, sc, why):
         checks.append({"k": k, "v": val, "s": sc, "why": why})
     real, infl, world = gdp.get("real", {}), gdp.get("infl", {}), gdp.get("world", {})
+    if real and fy not in real:                  # history only (no forecasts): judge the latest published year
+        fy = max(y for y in real if y in infl) if any(y in infl for y in real) else max(real)
+    fc = src == "imf"
     r0, r1, i0 = real.get(fy), real.get(fy + 1), infl.get(fy)
     past = [real[y] for y in range(fy - 10, fy) if y in real and y not in (2019, 2020, 2021)]
     avg = sum(past) / len(past) if past else None
     if r0 is not None and avg is not None:
-        add("Real GDP growth (this year, forecast)", f"{r0:.1f}% vs {avg:.1f}% 10-year average",
+        add("Real GDP growth (this year, forecast)" if fc else f"Real GDP growth ({fy}-{str(fy + 1)[2:]}, latest)", f"{r0:.1f}% vs {avg:.1f}% 10-year average",
             1 if r0 >= avg - 0.25 else (-1 if r0 < avg - 1.5 else 0), "Faster real growth usually supports company sales and profits.")
     if r0 is not None and r1 is not None:
         d = r1 - r0
         add("Growth direction (next year vs this year)", f"{r1:.1f}% next year ({d:+.1f} pt)",
             1 if d >= 0.3 else (-1 if d <= -0.5 else 0), "Accelerating growth is a tailwind; a slowdown is a headwind.")
     if i0 is not None:
-        add("Inflation (consumer prices, forecast)", f"{i0:.1f}%", 1 if 2 <= i0 <= 6 else (-1 if i0 > 6 else 0),
+        add("Inflation (consumer prices" + (", forecast)" if fc else ", latest year)"), f"{i0:.1f}%", 1 if 2 <= i0 <= 6 else (-1 if i0 > 6 else 0),
             "Inflation inside the central bank's 2–6% band keeps interest rates and costs in check.")
     nom = round((1 + r0 / 100) * (1 + i0 / 100) * 100 - 100, 1) if r0 is not None and i0 is not None else None
     nom1 = round((1 + r1 / 100) * (1 + (infl.get(fy + 1) or i0) / 100) * 100 - 100, 1) if r1 is not None and i0 is not None else None
@@ -458,12 +501,18 @@ def growth_block(S, prev: dict) -> dict:
         add("Earnings outlook vs valuation (model)", f"P/E {n50['pe']:.1f} ÷ {eg:.1f}% expected growth = {peg:.2f}",
             1 if peg <= 1.5 else (-1 if peg >= 2.5 else 0),
             "Model earnings growth = next year's nominal GDP forecast; a lower P/E per point of growth is more attractive.")
+    if r1 is None and len(past) >= 2 and r0 is not None:
+        prev_y = real.get(fy - 1)
+        if prev_y is not None:
+            d = r0 - prev_y
+            add("Growth direction (latest year vs year before)", f"{r0:.1f}% vs {prev_y:.1f}% ({d:+.1f} pt)",
+                1 if d >= 0.3 else (-1 if d <= -0.5 else 0), "Accelerating growth is a tailwind; a slowdown is a headwind.")
     yrs = sorted(y for y in real if fy - 6 <= y <= fy + 3)
-    return {"fy": fy, "checks": checks, "score": sum(c["s"] for c in checks),
+    return {"fy": fy, "src": src, "checks": checks, "score": sum(c["s"] for c in checks),
             "gdp": [{"y": y, "fy": f"{y}-{str(y + 1)[2:]}", "real": real.get(y), "infl": infl.get(y),
-                     "usd": (gdp.get("usd") or {}).get(y), "world": world.get(y), "f": y >= fy} for y in yrs],
+                     "usd": (gdp.get("usd") or {}).get(y), "world": world.get(y), "f": fc and y >= fy} for y in yrs],
             "nominal": nom, "nominalNext": nom1, "earnings": {"n50": n50, "n500": n500},
-            "gdpRaw": {k: {str(y): x for y, x in v.items()} for k, v in gdp.items()}}
+            "gdpRaw": {**{k: {str(y): x for y, x in v.items()} for k, v in gdp.items()}, "src": src}}
 
 
 def main() -> int:
