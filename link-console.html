@@ -1028,6 +1028,9 @@
       <div class="c-tab admin-only" data-tab="report" onclick="switchTab('report')">
         <span class="c-tab-ico">📊</span> Report
       </div>
+      <div class="c-tab admin-only" data-tab="simbuy" onclick="switchTab('simbuy')">
+        <span class="c-tab-ico">🧾</span> Simulator Buy
+      </div>
       <div class="c-tab admin-only" data-tab="settings" onclick="switchTab('settings')">
         <span class="c-tab-ico">⚙️</span> Settings
       </div>
@@ -1864,6 +1867,24 @@
         </div>
       </div>
     </div><!-- /tab-subscribers -->
+
+    <!-- ══ SIMULATOR BUY TAB — private ledger (key-protected; the frame holds no data until the access key is entered) ══ -->
+    <div class="c-panel" id="tab-simbuy">
+      <div style="padding:20px 28px 28px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+          <div>
+            <h2 style="margin:0 0 4px;color:#ffffff">🧾 Simulator Buy</h2>
+            <p style="opacity:.7;margin:0;font-size:14px;color:#b9b9cc">Model-portfolio accounts of VilfinTV agents — leaderboard, statements, audit and dated copies. Enter the access key once; tick “Remember on this device”.</p>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-primary" onclick="simBuyReload()" style="padding:8px 18px;font-size:13px">↻ Refresh</button>
+            <a class="btn-primary" href="https://vilfintv-sim.vilfintv.workers.dev/" target="_blank" rel="noopener noreferrer" style="padding:8px 18px;font-size:13px;text-decoration:none">⤢ Full screen</a>
+          </div>
+        </div>
+        <iframe id="simbuy-frame" title="Simulator Buy ledger" referrerpolicy="no-referrer"
+                style="width:100%;height:calc(100vh - 210px);min-height:640px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:#f4f6fa"></iframe>
+      </div>
+    </div><!-- /tab-simbuy -->
 
   </div><!-- /console -->
 </div><!-- /dashboard-view -->
@@ -2966,7 +2987,12 @@ function switchTab(name) {
   if (name === 'subscribers') loadSubscribers();
   if (name === 'report')      loadReport();
   if (name === 'settings')    loadSettings();
+  if (name === 'simbuy')      simBuyLoad();
 }
+
+var SIMBUY_URL = 'https://vilfintv-sim.vilfintv.workers.dev/';
+function simBuyLoad()   { var f = document.getElementById('simbuy-frame'); if (f && !f.getAttribute('src')) f.setAttribute('src', SIMBUY_URL); }
+function simBuyReload() { var f = document.getElementById('simbuy-frame'); if (f) f.setAttribute('src', SIMBUY_URL + '?_=' + Date.now()); }
 
 /* ══════════════════════════════════════════════════════════════════════════════
    CONTENT CMS
