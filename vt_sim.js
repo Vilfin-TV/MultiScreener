@@ -371,7 +371,9 @@
         var metric = rows.some(function (r) { return r.metric === 'xirr'; }) ? 'XIRR (annualised)' : 'absolute return so far';
         var retTxt = function (r) {
           if (r.ret != null) return (r.ret > 0 ? '+' : '') + r.ret.toFixed(2) + '%';
-          return started ? (sb.auditOk === false ? 'Under review' : 'Buy in progress') : 'Starts ' + d(sb.start).replace(/ \d{4}$/, '');
+          if (!started) return 'Starts ' + d(sb.start).replace(/ \d{4}$/, '');
+          if (sb.auditOk === false) return 'Under review';
+          return r.credit ? 'Units credited ' + d(r.credit).replace(/ \d{4}$/, '') : 'Buy in progress';
         };
         var cls = function (r) { return r.ret == null ? ' na' : r.ret >= 0 ? ' up' : ' dn'; };
         var head = function (r) {
@@ -384,7 +386,7 @@
         var money = function (v) { return v == null ? '–' : '₹' + num(v, 2); };
         var body = function (r) {
           var x = r.detail, mf = prod === 'mf', h = '<div class="vts-acc-b">';
-          var k = [['Invested', money(x.inv)], ['Value', money(x.val)],
+          var k = [['Invested', money(x.inv)], ['Value', x.val == null && r.credit ? 'After units are credited' : money(x.val)],
                    ['Gain / loss', x.gain == null ? '–' : '<span class="' + (x.gain >= 0 ? 'up' : 'dn') + '">' + (x.gain >= 0 ? '+' : '−') + '₹' + num(Math.abs(x.gain), 2) + '</span>'],
                    ['Same money in Nifty 50', sgn(x.bench, '%')],
                    ['Next buy', x.next ? d(x.next) : (r.freq === 'One-time' ? 'One-time (done)' : '–')]];
@@ -393,7 +395,7 @@
           if (x.hold && x.hold.length) {
             h += '<div class="vts-acc-t" role="table" aria-label="Holdings"><div class="vts-acc-r vts-acc-hd" role="row"><span>' + (mf ? 'Fund' : 'ETF') + '</span><span>Units</span><span>Avg cost</span><span>' + (mf ? 'NAV' : 'Close') + '</span><span>Value</span><span>Gain</span><span>Share</span></div>' +
               x.hold.map(function (o) {
-                return '<div class="vts-acc-r" role="row"><span class="vts-acc-n"><b>' + esc(o.n) + '</b><small>' + esc(mf ? (o.cat || '') : o.k + (o.cat ? ' · ' + o.cat : '')) + (o.pu ? ' · <em>' + num(o.pu, mf ? 3 : 0) + ' units being credited</em>' : '') + '</small></span>' +
+                return '<div class="vts-acc-r" role="row"><span class="vts-acc-n"><b>' + esc(o.n) + '</b><small>' + esc(mf ? (o.cat || '') : o.k + (o.cat ? ' · ' + o.cat : '')) + (o.pu ? ' · <em>' + num(o.pu, mf ? 3 : 0) + ' units being credited' + (o.cr ? ' by ' + esc(d(o.cr).replace(/ \d{4}$/, '')) : '') + '</em>' : '') + '</small></span>' +
                   '<span data-l="Units">' + num(o.u, mf ? 3 : 0) + '</span><span data-l="Avg cost">₹' + num(o.avg, mf ? 4 : 2) + '</span>' +
                   '<span data-l="' + (mf ? 'NAV' : 'Close') + '">₹' + num(o.px, mf ? 4 : 2) + (o.pd ? '<small>' + d(o.pd).replace(/ \d{4}$/, '') + '</small>' : '') + '</span>' +
                   '<span data-l="Value">₹' + num(o.val, 0) + '</span><span data-l="Gain">' + sgn(o.g, '%') + '</span><span data-l="Share">' + (o.w == null ? '–' : o.w.toFixed(1) + '%') + '</span></div>';
@@ -411,8 +413,9 @@
             '<i class="vts-acc-x" aria-hidden="true">▾</i></summary>' + body(r) + '</details>';
         };
         var best = rows.filter(function (r) { return r.ret != null; })[0];
+        var crBy = rows.reduce(function (m, r) { return r.credit && r.credit > m ? r.credit : m; }, '');
         var peek = best ? 'Top: ' + esc(best.name) + ' ' + retTxt(best) + ' · ' + rows.length + ' accounts'
-          : rows.length + ' accounts · ' + (started ? (sb.auditOk === false ? 'under review' : 'buy in progress') : 'starts ' + esc(d(sb.start)));
+          : rows.length + ' accounts · ' + (started ? (sb.auditOk === false ? 'under review' : 'buy in progress' + (crBy ? ' · units credited by ' + esc(d(crBy).replace(/ \d{4}$/, '')) : '')) : 'starts ' + esc(d(sb.start)));
         el.innerHTML = '<details class="vts-buy">' +
           '<summary class="vts-buy-h" aria-label="Simulator Buy — simulated accounts. Show or hide details">' +
           '<div class="vts-buy-t1"><b>🧾 Simulator Buy</b><span class="vts-buy-badge">Simulation · not real money</span><span class="vts-buy-peek">' + peek + '</span>' +
