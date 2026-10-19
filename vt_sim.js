@@ -104,7 +104,8 @@
     '.vts-cl li{grid-template-columns:auto 1fr}.vts-cl .v{grid-column:2;text-align:left}.vts-cl .w{grid-column:1/3}}';
 
   function style() {
-    if (document.getElementById('vtsCss')) return;
+    var cur = document.getElementById('vtsCss');
+    if (cur) { if (cur.textContent.length !== CSS.length) cur.textContent = CSS; return; }
     var s = document.createElement('style'); s.id = 'vtsCss'; s.textContent = CSS; document.head.appendChild(s);
   }
 
@@ -419,5 +420,82 @@
     '';
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', simBuy); else simBuy();
 
-  window.VTSim = { gate: gate, accepted: accepted, faqCols: faqCols, riskPanel: riskPanel, ecoPanel: ecoPanel, risk10: risk10, css: style, simBuy: simBuy };
+  /* ── Collapsible sections: any element with data-col="key" gets a header bar (its own .sec-title / .mi-head moved
+     into it, a one-line summary from data-col-hint) and a Minimise / Expand pill. Closed by default unless
+     data-col-open="1"; each viewer's choice is remembered on this device. Sections re-rendered by script (innerHTML)
+     get their header back automatically; children marked by data-col-keep (a selector, e.g. the disclaimer) stay
+     visible when minimised. ── */
+  var colMem = {};
+  function colStored(key) { try { return localStorage.getItem('vt_col_' + key); } catch (e) { return null; } }
+  function colSave(key, open) { colMem[key] = open; try { localStorage.setItem('vt_col_' + key, open ? '1' : '0'); } catch (e) {} }
+  function colSet(el, open) {
+    el.classList.toggle('is-closed', !open);
+    var b = el.querySelector(':scope > .vts-col-h .vts-col-b');
+    if (b) b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  function col(el) {
+    if (!el || !el.getAttribute) return;
+    style();
+    var key = el.getAttribute('data-col');
+    var first = el.firstElementChild;
+    if (first && first.classList.contains('vts-col-h')) return;          // already has its header
+    el.classList.add('vts-col');
+    if (!el.classList.contains('card') && !el.classList.contains('vts-col-card')) el.classList.add('vts-col-bare');
+    var t = el.querySelector(':scope > .sec-title, :scope > .mi-head');
+    if (!t && el.getAttribute('data-col-title')) { t = document.createElement('div'); t.className = 'sec-title'; t.textContent = el.getAttribute('data-col-title'); }
+    var h = document.createElement('div');
+    h.className = 'vts-col-h';
+    var tw = document.createElement('div');
+    tw.className = 'vts-col-t';
+    if (t) tw.appendChild(t);
+    var hint = el.getAttribute('data-col-hint');
+    if (hint) { var p = document.createElement('p'); p.className = 'vts-col-s'; p.textContent = hint; tw.appendChild(p); }
+    h.appendChild(tw);
+    var id = 'vtcb-' + key;
+    h.insertAdjacentHTML('beforeend', '<button type="button" class="vts-col-b" id="' + id + '" aria-expanded="true"><span class="o">Expand</span><span class="c">Minimise</span><i aria-hidden="true">▾</i></button>');
+    el.insertBefore(h, el.firstChild);
+    var keep = el.getAttribute('data-col-keep');
+    if (keep) el.querySelectorAll(':scope > ' + keep).forEach(function (k) { k.classList.add('vts-col-keep'); });
+    var open = key in colMem ? colMem[key] : (colStored(key) != null ? colStored(key) === '1' : el.getAttribute('data-col-open') === '1');
+    colMem[key] = open;
+    colSet(el, open);
+    if (!el._colObs && window.MutationObserver) {          // innerHTML re-renders drop the header: put it back
+      el._colObs = new MutationObserver(function () { col(el); });
+      el._colObs.observe(el, { childList: true });
+    }
+  }
+  function colOpen(el) {
+    var c = el && el.closest ? el.closest('.vts-col') : null;
+    while (c) { colSave(c.getAttribute('data-col'), true); colSet(c, true); c = c.parentElement && c.parentElement.closest('.vts-col'); }
+  }
+  function colInit() { document.querySelectorAll('[data-col]').forEach(col); colHash(); }
+  function colHash() { if (location.hash && location.hash.length > 1) { try { colOpen(document.querySelector(location.hash)); } catch (e) {} } }
+  document.addEventListener('click', function (e) {
+    var h = e.target.closest && e.target.closest('.vts-col-h');
+    if (!h || (e.target.closest('a') && !e.target.closest('.vts-col-b'))) return;
+    var el = h.parentElement, open = el.classList.contains('is-closed');
+    colSave(el.getAttribute('data-col'), open);
+    colSet(el, open);
+    if (open) { var top = h.getBoundingClientRect().top; if (top < 0) h.scrollIntoView({ block: 'start' }); }
+  });
+  CSS += '.vts-col-h{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;margin:-4px -6px 0;padding:4px 6px;border-radius:10px;transition:background .15s}' +
+    '.vts-col-h:hover{background:rgba(127,127,127,.06)}' +
+    '.vts-col-t{min-width:0;flex:1}.vts-col-t .sec-title{margin:0;line-height:1.2;align-items:flex-start}.vts-col-t .sec-title::before{flex-shrink:0;margin-top:.1em}.vts-col-t .mi-head{margin:0;padding:0;border:0}.vts-col-t .mi-head .sec-sub{margin:3px 0 0 14px;font-size:12.5px;color:var(--text3,var(--text2))}' +
+    '.vts-col-s{margin:3px 0 0 14px;color:var(--text3,var(--text2));font-size:12.5px;line-height:1.45}' +
+    '.vts-col-b{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border2,var(--border));background:var(--surface2,transparent);color:var(--text);font:inherit;font-size:12px;font-weight:700;border-radius:999px;padding:6px 12px;cursor:pointer;white-space:nowrap;transition:border-color .15s,background .15s}' +
+    '.vts-col-b:hover{border-color:var(--accent,#3d8bff)}.vts-col-b:focus-visible{outline:2px solid var(--accent,#3d8bff);outline-offset:2px}' +
+    '.vts-col-b i{font-style:normal;font-size:11px;transform:rotate(180deg);transition:transform .2s}.vts-col.is-closed .vts-col-b i{transform:none}' +
+    '.vts-col-b .o,.vts-col.is-closed .vts-col-b .c{display:none}.vts-col.is-closed .vts-col-b .o{display:inline}' +
+    '.vts-col:not(.is-closed)>.vts-col-h{margin-bottom:12px}' +
+    '.vts-col.is-closed>:not(.vts-col-h):not(.vts-col-keep){display:none!important}' +
+    '.vts-col:not(.is-closed)>:not(.vts-col-h){animation:vtsColIn .22s ease-out}' +
+    '@keyframes vtsColIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}' +
+    '.vts-col-bare{margin-top:14px}.vts-col-bare>.vts-col-h{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius,14px);padding:16px 18px;margin:0}' +
+    '.vts-col-bare:not(.is-closed)>.vts-col-h{margin-bottom:14px}.vts-col-bare>.vts-col-h:hover{border-color:var(--border2,var(--border))}' +
+    '@media (prefers-reduced-motion:reduce){.vts-col:not(.is-closed)>:not(.vts-col-h){animation:none}}' +
+    '@media (max-width:520px){.vts-col-h{align-items:flex-start}.vts-col-b{padding:6px 10px}.vts-col-s,.vts-col-t .mi-head .sec-sub{margin-left:14px}}';
+  window.addEventListener('hashchange', colHash);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', colInit); else colInit();
+
+  window.VTSim = { gate: gate, accepted: accepted, faqCols: faqCols, riskPanel: riskPanel, ecoPanel: ecoPanel, risk10: risk10, css: style, simBuy: simBuy, col: col, colOpen: colOpen };
 })();

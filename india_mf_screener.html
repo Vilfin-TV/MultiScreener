@@ -1239,7 +1239,7 @@ footer a{color:var(--text2)}
     <div id="sipBody" class="sp-plan"><div class="card"><div class="skel" style="height:260px"></div></div></div>
     <div class="sp-plan" data-vts-buy="mf"></div>
     <a class="card etf-alt sp-plan" href="etf_momentum.html#smart"><span class="etf-alt-i">📈</span><span><b>Prefer ETFs with a demat account?</b> The same plan built with low-cost ETFs — Indian equity, debt, gold and global — in ETF Portfolio Simulator.</span><span class="etf-alt-go">Open ETF Portfolio Simulator →</span></a>
-    <div class="card sip-guide sp-plan" id="sipGuide">
+    <div class="card sip-guide sp-plan" id="sipGuide" data-col="mf-guide" data-col-hint="KYC, opening a direct account, choosing your day, placing each order, timing by way of investing, NRI rules and common mistakes.">
       <div class="sec-title">How mutual fund investing works — a beginner's guide</div>
       <p class="gd-lead">The Portfolio Simulator is an educational model — it never invests for you. If you decide to invest on your own, <b>you carry out every purchase yourself</b>. The simulation assumes that on each investment day the investor checks the model portfolio and buys <b>every fund in it as a one-time (lump-sum) purchase</b> for the amount shown in the plan table. It is <b>not an automatic SIP</b> — nothing is debited from your bank account unless you place the orders. Buying this way means each new instalment always follows the latest monthly review of the plan, and every fund in it accepts one-time purchases from ₹1,000 or less.</p>
       <ol class="gd-steps">
@@ -1336,7 +1336,7 @@ footer a{color:var(--text2)}
       </div>
       <p class="gd-key">💡 <b>Rule of thumb:</b> the day you invest matters far less than investing every time. If you are unsure, use your salary day and never miss it. Funds can be bought only after your KYC is active — open your account through <a href="#brokers">Best Brokers &amp; Apps</a> below.</p>
     </div>
-    <div class="card sip-park sp-plan" id="sipPark">
+    <div class="card sip-park sp-plan" id="sipPark" data-col="mf-park" data-col-hint="Liquid, money market, arbitrage and bond funds for money needed in 0–3 years — compared after tax at your slab.">
       <div class="sec-title">Where to park short-term money</div>
       <p class="pk-lead">Money you may need within <b>3 years</b> — an emergency fund, a planned purchase, school fees, or a lump sum waiting to be invested — should not go into equity funds. Choose by <b>when you will need it</b>; the option shown first also depends on your income-tax slab (set above). Funds below are ranked on return, consistency, cost and size among high-quality funds of each type with at least 3 years of history, and are refreshed daily.</p>
       <div class="pk-grid" id="parkBody"><div class="skel" style="height:180px"></div></div>
@@ -1360,12 +1360,12 @@ footer a{color:var(--text2)}
       </div>
       <p class="pk-note">Debt-fund gains (liquid, money market, low duration, corporate bond) are taxed at your income-tax slab however long you hold them. Arbitrage and equity savings funds are taxed as equity: 20% on gains within 12 months, 12.5% after 12 months, with ₹1.25 lakh of long-term gains tax-free each year. Arbitrage funds usually charge an exit load of about 0.25% within the first 15–30 days, and only the lower-cost half of arbitrage funds is listed; arbitrage is shown first only when it beats the alternative after tax at your slab. “Typical return” is the average 1-year return of the funds shown (3-year for corporate bond and banking &amp; PSU funds), after costs; returns are not guaranteed.</p>
     </div>
-    <div id="sipMarket" class="sp-plan"></div>
+    <div id="sipMarket" class="sp-plan" data-col="mf-market" data-col-keep=".disc"></div>
   </section>
 
   <!-- ═════════ INFO ═════════ -->
   <section class="info-grid">
-    <div class="card info">
+    <div class="card info" data-col="mf-howto" data-col-hint="What each column, score, rating and badge on this page means.">
       <div class="sec-title">How to read this screener</div>
       <ul>
         <li><b>Returns</b> up to 1 year are absolute; 3, 5 and 10 year returns are <b>per year, compounded (CAGR)</b> — marked <i>p.a.</i>. Since-launch returns start from the launch of the Direct plan and are per year once the fund is more than a year old.</li>
@@ -3647,7 +3647,7 @@ function bindSip(){
     this.querySelectorAll('[data-st]').forEach(function(x){ var on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); });
   });
   document.addEventListener('click', function(e){ var a = e.target.closest('[data-gopark]'); if (!a) return; e.preventDefault();
-    var go = function(){ setTimeout(function(){ var c = $('sipPark'); if (c) c.scrollIntoView({behavior:'smooth', block:'start'}); }, 60); };
+    var go = function(){ setTimeout(function(){ var c = $('sipPark'); if (c) { if (window.VTSim && VTSim.colOpen) VTSim.colOpen(c); c.scrollIntoView({behavior:'smooth', block:'start'}); } }, 60); };
     if (window.VTSim && !VTSim.accepted()) { S.afterSip = go; setView('sip'); } else { setView('sip'); go(); } });
   $('sipHz').addEventListener('click', function(e){ var b = e.target.closest('[data-hz]'); if (!b) return; S.plan.hz = b.getAttribute('data-hz'); S.plan.yrs = 0; S.plan.stay = 0; renderSip(); writeURL(); });
   $('v-sip').addEventListener('click', function(e){
