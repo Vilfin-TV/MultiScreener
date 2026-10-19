@@ -295,7 +295,7 @@
     ['g5', 'EPS 5Y', 'Earnings growth a year over 5 years'], ['peg', 'PEG', 'P/E ÷ 3-year earnings growth — below 1.5 is attractive, above 2.5 expensive']];
   var earnState = { view: 'broad', sort: 'g1', dir: -1 };
   function earnRows(g) {
-    var e = g.earnings || {}, names = g.names || {}, broad = g.broad || ['n50', 'nn50', 'mid150', 'sml250', 'micro250', 'n500'];
+    var e = g.earnings || {}, names = g.names || {}, broad = g.broad || ['n50', 'nn50', 'mid150', 'sml250', 'micro250', 'n500', 'totalmkt'];
     var keys = Object.keys(e).filter(function (k) { return earnState.view === 'broad' ? broad.indexOf(k) >= 0 : broad.indexOf(k) < 0; });
     if (earnState.view === 'broad') keys.sort(function (a, b) { return broad.indexOf(a) - broad.indexOf(b); });
     else keys.sort(function (a, b) {
@@ -315,7 +315,7 @@
     }).join('') || '<tr><td colspan="10" class="vts-note">Figures appear after the next data update.</td></tr>';
   }
   function earnBox(g) {
-    var e = g.earnings || {}, broad = g.broad || ['n50', 'nn50', 'mid150', 'sml250', 'micro250', 'n500'], nSec = Object.keys(e).filter(function (k) { return broad.indexOf(k) < 0; }).length;
+    var e = g.earnings || {}, broad = g.broad || ['n50', 'nn50', 'mid150', 'sml250', 'micro250', 'n500', 'totalmkt'], nSec = Object.keys(e).filter(function (k) { return broad.indexOf(k) < 0; }).length;
     var head = EARN_COLS.map(function (c) {
       var on = earnState.view !== 'broad' && earnState.sort === c[0];
       return '<th class="n" title="' + esc(c[2]) + '">' + (earnState.view === 'broad' ? c[1] : '<button type="button" class="vts-es' + (on ? ' on' : '') + '" data-es="' + c[0] + '" aria-label="Sort by ' + esc(c[1]) + '">' + c[1] + (on ? (earnState.dir < 0 ? ' ▾' : ' ▴') : '') + '</button>') + '</th>';
@@ -478,6 +478,8 @@
       chartHover(pv.querySelector('.vts-ch'));
       var ov = pv.querySelector('.vts-olap');
       if (ov) ov.addEventListener('change', function () { ovSel = [+ov.querySelector('[data-o="0"]').value, +ov.querySelector('[data-o="1"]').value]; ov.querySelector('.vts-olap-r').innerHTML = overlapOut(a.breakdown); });
+      var dtb = pv.querySelector('.vts-dist-t');
+      if (dtb) dtb.addEventListener('click', function (e) { var bt = e.target.closest('button[data-dt]'); if (!bt) return; distTab = bt.getAttribute('data-dt'); render(r, a); });
       pv.querySelectorAll('.vts-pbk').forEach(function (d) { d.addEventListener('toggle', function () { bdOpen[d.getAttribute('data-k')] = d.open; }); });
     }
 
@@ -615,14 +617,15 @@
     }
 
     var ACOL = { 'Equity': '#3b82f6', 'Debt': '#14b8a6', 'Gold': '#eab308', 'Silver': '#94a3b8', 'International': '#8b5cf6', 'REITs & InvITs': '#f97316', 'Cash & others': '#64748b' };
-    var bdOpen = { alloc: true }, ovSel = null;
+    var bdOpen = { alloc: true }, ovSel = null, distTab = 'eq';
     function ovPct(A, B) { var wb = {}; B[3].forEach(function (q) { wb[q[0]] = q[1]; }); return A[3].reduce(function (t, q) { return t + (wb[q[0]] != null ? Math.min(q[1], wb[q[0]]) : 0); }, 0); }
     function bd(k, icon, title, sub, body) {
       return '<details class="vts-pbk" data-k="' + k + '"' + (bdOpen[k] ? ' open' : '') + '><summary><span class="vts-pbk-i" aria-hidden="true">' + icon + '</span><span class="vts-pbk-t"><b>' + title + '</b><small>' + sub + '</small></span><i class="vts-pbk-x" aria-hidden="true">▾</i></summary><div class="vts-pbk-b">' + body + '</div></details>';
     }
+    function pfx(v) { return (v > 0 && v < 0.05 ? '<0.05' : v < 1 ? v.toFixed(2) : v.toFixed(1)) + '%'; }
     function bars(list, max, fmtR) {
       return '<div class="vts-bl">' + list.map(function (q) {
-        return '<div class="vts-bl-r"><span class="vts-bl-n">' + esc(q[0]) + '</span><span class="vts-bl-t"><i style="width:' + Math.max(1, Math.min(100, q[1] / max * 100)).toFixed(1) + '%' + (q[2] ? ';background:' + q[2] : '') + '"></i></span><b>' + q[1].toFixed(1) + '%</b>' + (fmtR ? '<small>' + fmtR(q[1]) + '</small>' : '') + '</div>';
+        return '<div class="vts-bl-r"><span class="vts-bl-n">' + esc(q[0]) + '</span><span class="vts-bl-t"><i style="width:' + Math.max(1, Math.min(100, q[1] / max * 100)).toFixed(1) + '%' + (q[2] ? ';background:' + q[2] : '') + '"></i></span><b>' + pfx(q[1]) + '</b>' + (fmtR ? '<small>' + fmtR(q[1]) + '</small>' : '') + '</div>';
       }).join('') + '</div>';
     }
     function overlapOut(b) {
@@ -640,14 +643,33 @@
       if (!b) return '<p class="vts-pv-e">' + (r.credit ? 'The breakdown appears once the units are credited on <b>' + esc(dt(r.credit)) + '</b>.' : 'The breakdown appears once the units are credited.') + '</p>';
       var al = b.alloc || [], tot = al.reduce(function (t, q) { return t + q[1]; }, 0) || 1;
       var h1 = '<div class="vts-al-bar" role="img" aria-label="Asset allocation">' + al.map(function (q) { return '<i style="width:' + (q[1] / tot * 100).toFixed(2) + '%;background:' + (ACOL[q[0]] || '#64748b') + '" title="' + esc(q[0]) + ' ' + q[1].toFixed(1) + '%"></i>'; }).join('') + '</div>' +
-        '<div class="vts-al-l">' + al.map(function (q) { return '<div><span><i style="background:' + (ACOL[q[0]] || '#64748b') + '"></i>' + esc(q[0]) + '</span><b>' + q[1].toFixed(1) + '%</b><small>' + inr(b.val * q[1] / 100, 0) + '</small></div>'; }).join('') + '</div>' +
+        '<div class="vts-al-l">' + al.map(function (q) { return '<div><span><i style="background:' + (ACOL[q[0]] || '#64748b') + '"></i>' + esc(q[0]) + '</span><b>' + pfx(q[1]) + '</b><small>' + inr(b.val * q[1] / 100, 0) + '</small></div>'; }).join('') + '</div>' +
         '<p class="vts-pv-e">Look-through allocation of the credited holdings on ' + esc(dt(b.d)) + ' (value ' + inr(b.val, 0) + '), from each fund\'s ' + (b.pm ? esc(dt(b.pm + '-01').replace(/^\d+ /, '')) + ' ' : '') + 'monthly portfolio' + (b.pfCover < 99.5 ? '; ' + (100 - b.pfCover).toFixed(0) + '% of the value is in funds without a published portfolio, counted by their asset class' : '') + '.</p>';
       var cap = b.cap || {}, eq = (al.filter(function (q) { return q[0] === 'Equity'; })[0] || [0, 0])[1];
       var capL = [['Large cap', cap.large || 0, '#3b82f6'], ['Mid cap', cap.mid || 0, '#60a5fa'], ['Small cap', cap.small || 0, '#93c5fd']];
       if (eq - (b.eqCapCover || 0) > 0.5) capL.push(['Not classified', eq - (b.eqCapCover || 0), '#64748b']);
-      var h2 = '<h4>Sectors <small>(% of portfolio)</small></h4>' + ((b.sec || []).length ? bars(b.sec.map(function (q) { return [q[0], q[1]]; }), b.sec[0][1]) : '<p class="vts-pv-e">No sector data.</p>') +
+      var hEq = '<h4>Sectors <small>(% of portfolio)</small></h4>' + ((b.sec || []).length ? bars(b.sec.map(function (q) { return [q[0], q[1]]; }), b.sec[0][1]) : '<p class="vts-pv-e">No sector data.</p>') +
         '<h4>Market cap <small>(equity, % of portfolio)</small></h4>' + bars(capL.filter(function (q) { return q[1] > 0.05; }), Math.max.apply(null, capL.map(function (q) { return q[1]; }).concat([1]))) +
         '<h4>Top stocks <small>(look-through)</small></h4>' + ((b.stk || []).length ? bars(b.stk.map(function (q) { return [q[0].replace(/ (Ltd\.?|Limited)$/i, ''), q[1]]; }), b.stk[0][1]) : '<p class="vts-pv-e">No stock data.</p>');
+      var alv = function (c) { return (al.filter(function (q) { return q[0] === c; })[0] || [0, 0])[1]; };
+      var fundsBars = function (list) { return bars(list.map(function (q) { return [q[1], q[2]]; }), Math.max.apply(null, list.map(function (q) { return q[2]; }).concat([0.01]))); };
+      var dbt = b.debt || {}, gl = b.glob || {}, dsh = alv('Debt'), gsh = alv('International');
+      var CCOL = { 'Sovereign': '#14b8a6', 'AAA & equivalent': '#0ea5e9', 'A1+ (money market)': '#22c55e', 'AA': '#eab308', 'A': '#f97316', 'Below A': '#ef4444', 'Not disclosed': '#64748b' };
+      var hDebt = !dsh ? '<p class="vts-pv-e">No debt in this portfolio.</p>' :
+        '<div class="vts-dist-k"><b>' + pfx(dsh) + '</b><span>of the portfolio is in debt · ' + inr(b.val * dsh / 100, 0) + '</span></div>' +
+        ((dbt.credit || []).length ? '<h4>Credit quality <small>(% of portfolio)</small></h4>' + bars(dbt.credit.map(function (q) { return [q[0], q[1], CCOL[q[0]] || '#64748b']; }), dbt.credit[0][1]) : '') +
+        ((dbt.type || []).length ? '<h4>Instrument type <small>(top debt holdings)</small></h4>' + bars(dbt.type, dbt.type[0][1]) : '') +
+        ((dbt.issuers || []).length ? '<h4>Top issuers <small>(look-through)</small></h4>' + bars(dbt.issuers.map(function (q) { return [q[0].replace(/ (Ltd\.?|Limited)$/i, ''), q[1]]; }), dbt.issuers[0][1]) : '') +
+        ((dbt.funds || []).length ? '<h4>Where the debt comes from</h4>' + fundsBars(dbt.funds) : '') +
+        '<p class="vts-pv-e">Credit quality from each fund\'s rating split; instrument type and issuers from the top holdings of each monthly portfolio.</p>';
+      var hGlob = !gsh ? '<p class="vts-pv-e">No international holdings in this portfolio.</p>' :
+        '<div class="vts-dist-k"><b>' + pfx(gsh) + '</b><span>of the portfolio is invested abroad · ' + inr(b.val * gsh / 100, 0) + '</span></div>' +
+        ((gl.top || []).length ? '<h4>Top overseas holdings <small>(look-through)</small></h4>' + bars(gl.top, gl.top[0][1]) : '') +
+        ((gl.funds || []).length ? '<h4>Where the global exposure comes from</h4>' + fundsBars(gl.funds) : '') +
+        '<p class="vts-pv-e">Overseas shares, ETFs and funds held by each fund, from its monthly portfolio.</p>';
+      var dt3 = [['eq', 'Equity', alv('Equity')], ['debt', 'Debt', dsh], ['glob', 'Global', gsh]];
+      var h2 = '<div class="vts-dist-t" role="tablist">' + dt3.map(function (t) { return '<button type="button" role="tab" data-dt="' + t[0] + '" class="' + (distTab === t[0] ? 'on' : '') + '" aria-selected="' + (distTab === t[0]) + '">' + t[1] + ' <small>' + (t[2] > 0 && t[2] < 1 ? '<1' : t[2].toFixed(0)) + '%</small></button>'; }).join('') + '</div>' +
+        (distTab === 'debt' ? hDebt : distTab === 'glob' ? hGlob : hEq);
       var f = b.funds || [], h3;
       if (f.length < 2) h3 = '<p class="vts-pv-e">Needs at least two equity funds with a published monthly portfolio.</p>';
       else {
@@ -658,7 +680,7 @@
         var opt = function (i) { return f.map(function (q, j) { return '<option value="' + j + '"' + (j === ovSel[i] ? ' selected' : '') + '>' + esc(q[1]) + '</option>'; }).join(''); };
         h3 = '<div class="vts-olap"><div class="vts-olap-p"><label>Fund 1<select data-o="0">' + opt(0) + '</select></label><label>Fund 2<select data-o="1">' + opt(1) + '</select></label></div><div class="vts-olap-r">' + overlapOut(b) + '</div></div>';
       }
-      return '<div class="vts-pbks">' + bd('alloc', '▦', 'Allocation', 'Equity, debt, gold and others', h1) + bd('dist', '◑', 'Distribution', 'Sectors, market cap and stocks', h2) +
+      return '<div class="vts-pbks">' + bd('alloc', '▦', 'Allocation', 'Equity, debt, gold and others', h1) + bd('dist', '◑', 'Distribution', 'Equity, debt and global holdings', h2) +
         bd('ovl', '⧉', 'Overlap calculator', 'Common holdings in two funds', h3) + '</div>';
     }
 
@@ -752,6 +774,9 @@
     '.vts-pbk>summary:focus-visible{outline:2px solid var(--accent,#4a90e2);outline-offset:-2px}.vts-pbk-i{flex:none;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:9px;font-size:17px;color:var(--text2)}' +
     '.vts-pbk-t{flex:1;display:flex;flex-direction:column;min-width:0}.vts-pbk-t b{font-size:14px}.vts-pbk-t small{font-size:12px;color:var(--text2)}.vts-pbk-x{font-style:normal;color:var(--text2);transition:transform .15s}.vts-pbk[open] .vts-pbk-x{transform:rotate(180deg)}' +
     '.vts-pbk-b{padding:4px 14px 14px}.vts-pbk-b h4{margin:12px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2)}.vts-pbk-b h4 small{text-transform:none;letter-spacing:0;font-weight:500}' +
+    '.vts-dist-t{display:inline-flex;gap:4px;padding:3px;border:1px solid var(--border);border-radius:10px;margin:4px 0 8px}.vts-dist-t button{border:0;background:none;color:var(--text2);font-weight:700;font-size:12.5px;padding:6px 14px;border-radius:7px;cursor:pointer}' +
+    '.vts-dist-t button small{font-weight:600;opacity:.8}.vts-dist-t button.on{background:var(--accent,#4a90e2);color:var(--accent-ink,#fff)}.vts-dist-t button:focus-visible{outline:2px solid var(--accent,#4a90e2)}' +
+    '.vts-dist-k{display:flex;align-items:baseline;gap:10px;margin:4px 0 2px}.vts-dist-k b{font-size:20px;font-variant-numeric:tabular-nums}.vts-dist-k span{font-size:12.5px;color:var(--text2)}' +
     '.vts-al-bar{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px;margin:6px 0 10px}.vts-al-bar i{display:block;min-width:2px}' +
     '.vts-al-l{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}.vts-al-l div{display:flex;align-items:baseline;gap:8px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12.5px}' +
     '.vts-al-l span{flex:1;display:flex;align-items:center;gap:7px;min-width:0}.vts-al-l span i{width:10px;height:10px;border-radius:3px;flex:none}.vts-al-l b{font-variant-numeric:tabular-nums}.vts-al-l small{color:var(--text2);font-variant-numeric:tabular-nums}' +

@@ -1312,7 +1312,10 @@ class Engine:
             book[month] = {"asset": label,
                            "sec": [[n.strip(), p] for n, p in (pf or {}).get("sectors") or [] if isinstance(n, str) and any(c.isalpha() for c in n) and n not in ("N.A.", "Others")],
                            "stk": [[t[0], t[2]] for t in (pf or {}).get("top") or [] if len(t) > 4 and t[4] == "equity"],
-                           "alloc": alloc_of(pf, label, eq), "cap": (pf or {}).get("cap")}
+                           "alloc": alloc_of(pf, label, eq), "cap": (pf or {}).get("cap"),
+                           "credit": (pf or {}).get("credit"),
+                           "dtop": [[t[0], t[1], t[2]] for t in (pf or {}).get("top") or [] if len(t) > 4 and t[4] == "debt"],
+                           "otop": [[t[0], t[2]] for t in (pf or {}).get("top") or [] if len(t) > 4 and t[4] == "overseas"]}
         return month
 
     def journal(self):
@@ -1674,6 +1677,7 @@ def exposure_from(product: str, hold: list, lt: dict, book: dict, full: bool = F
            "asset": [[n, round(v, 2)] for n, v in sorted(asset.items(), key=lambda x: -x[1])]}
     if full:                                 # allocation, market-cap split and per-fund top holdings (overlap)
         alloc, cap, funds, cover = {}, {}, [], 0.0
+        credit, dtype, issuers, dfunds, gtop, gfunds = {}, {}, {}, [], {}, []
         for key, v in vals.items():
             comp = (book.get(f"{product}:{key}") or {}).get(lt.get(key)) or {}
             w = v / tot * 100
@@ -1689,12 +1693,48 @@ def exposure_from(product: str, hold: list, lt: dict, book: dict, full: bool = F
                     cap[c] = cap.get(c, 0) + eqw * pct / capt
             if comp.get("stk"):
                 funds.append([key, round(w, 2), comp["stk"][:15]])
+            dw = w * al.get("Debt", 0) / 100                   # debt: credit quality, instrument type, issuers
+            if dw > 0.005:
+                dfunds.append([key, round(dw, 2)])
+                ct = sum(p for _, p in comp.get("credit") or [])
+                for c, p in comp.get("credit") or []:
+                    credit[c] = credit.get(c, 0) + dw * p / ct if ct > 0 else credit.get(c, 0)
+                if not comp.get("credit"):
+                    credit["Not disclosed"] = credit.get("Not disclosed", 0) + dw
+                for nm, rating, p in comp.get("dtop") or []:
+                    t, iss = debt_kind(nm, rating)
+                    dtype[t] = dtype.get(t, 0) + w * p / 100
+                    issuers[iss] = issuers.get(iss, 0) + w * p / 100
+            gw = w * al.get("International", 0) / 100          # global: overseas holdings and the funds giving it
+            if gw > 0.005:
+                gfunds.append([key, round(gw, 2)])
+                for nm, p in comp.get("otop") or []:
+                    gtop[nm] = gtop.get(nm, 0) + w * p / 100
         out["alloc"] = [[c, round(v, 2)] for c, v in sorted(alloc.items(), key=lambda x: -x[1]) if v >= 0.005]
         out["cap"] = {c: round(v, 2) for c, v in cap.items()}
         out["eqCapCover"] = round(sum(cap.values()), 2)
         out["pfCover"] = round(cover, 2)              # share of the portfolio whose holdings come from a monthly portfolio
         out["funds"] = funds
+        out["debt"] = {"credit": [[c, round(v, 2)] for c, v in sorted(credit.items(), key=lambda x: -x[1]) if v >= 0.005],
+                       "type": [[c, round(v, 2)] for c, v in sorted(dtype.items(), key=lambda x: -x[1])],
+                       "issuers": [[c, round(v, 2)] for c, v in sorted(issuers.items(), key=lambda x: -x[1])[:10]],
+                       "funds": sorted(dfunds, key=lambda x: -x[1])}
+        out["glob"] = {"top": [[c, round(v, 2)] for c, v in sorted(gtop.items(), key=lambda x: -x[1])[:10]],
+                       "funds": sorted(gfunds, key=lambda x: -x[1])}
     return out
+
+
+def debt_kind(name: str, rating: str) -> tuple:
+    """(instrument type, issuer) for a debt holding: central government securities and T-bills, state development
+    loans, money-market paper (CP / CD / A1+) or corporate bonds."""
+    n, r = (name or "").lower(), (rating or "").lower()
+    if re.search(r"\bgoi\b|government of india|government securit|t-?bill|treasury bill|\bgsec|g-sec", n) or ("sovereign" in r and not re.search(r"\bsdl\b|state", n)):
+        return "Government securities", "Government of India"
+    if re.search(r"\bsdl\b|state development|state government", n):
+        return "State government loans (SDL)", "State governments"
+    if "a1+" in r or re.search(r"\bcp\b|\bcd\b|commercial paper|certificate of deposit", n):
+        return "Money market (CP / CD)", re.sub(r"\s*\(.*$", "", name).strip()
+    return "Corporate bonds", re.sub(r"\s*\(.*$", "", name).strip()
 
 def acct_slug(aid: str) -> str:
     return "".join(c if c.isalnum() else "-" for c in aid.lower()).strip("-")
@@ -1759,7 +1799,8 @@ def account_files(store: dict, view: dict, sb: dict) -> dict:
                               "x": exposure_from(a["product"], e["hold"], e["_lt"], book), "mkt": moves(e["d"])} for e in es[-keep:]],
                   "breakdown": ({**exposure_from(a["product"], es[-1]["hold"], es[-1]["_lt"], book, full=True), "d": es[-1]["d"],
                                  "val": r2(sum(h[1] * (h[2] or 0) for h in es[-1]["hold"] if h[1] > 0))} if es else None)}
-        for fd in (out[f]["breakdown"] or {}).get("funds", []):
+        bk = out[f]["breakdown"] or {}
+        for fd in bk.get("funds", []) + (bk.get("debt") or {}).get("funds", []) + (bk.get("glob") or {}).get("funds", []):
             fd.insert(1, names.get(fd[0], fd[0]))
     return out
 
