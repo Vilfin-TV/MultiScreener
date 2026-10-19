@@ -2432,7 +2432,9 @@ function goTab(tab){
 }
 function tabSettled(){
   if (!_tabSettle) return; _tabSettle = false;
-  $('panels').style.minHeight = '';
+  // a short tab still gets a full screen below the tab bar, so it can open at its start instead of the page snapping back
+  var bar = $('dtabs'), top = (parseFloat(getComputedStyle(bar).top) || 0) + bar.offsetHeight + 8;
+  $('panels').style.minHeight = Math.max(0, innerHeight - top) + 'px';
   requestAnimationFrame(function(){ if (window.VTSim && VTSim.tabSettle) VTSim.tabSettle($('dtabs'), $('panels')); });
 }
 function renderDetail(){
