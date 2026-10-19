@@ -950,16 +950,17 @@ def build_view(store: dict, eng: Engine) -> dict:
 
 
 def scoreboard(view: dict, audit_ok: bool) -> dict:
+    """Public strip data: every account with its model, buying schedule and return % only (absolute under one year,
+    XIRR after). Accounts not yet valued (before the start date / first allotment) carry ret = None."""
     rows = []
     for a in view["accounts"]:
-        if not a["valuationDate"] or not a["invested"]:
-            continue
-        absr = (a["value"] / a["invested"] - 1) * 100 if a["invested"] else None
+        valued = bool(a["valuationDate"] and a["invested"])
+        absr = (a["value"] / a["invested"] - 1) * 100 if valued else None
         rows.append({"name": a["name"], "product": a["product"], "risk": a["riskName"], "freq": a["freqName"],
-                     "nri": a["res"] == "nri", "since": view["start"], "days": a["days"],
-                     "metric": "xirr" if a["days"] >= 365 else "abs",
-                     "ret": round((a["xirr"] or 0) * 100, 2) if a["days"] >= 365 else (round(absr, 2) if absr is not None else None)})
-    return {"v": 1, "updated": view["generated"], "start": view["start"], "auditOk": audit_ok, "rows": rows if audit_ok else []}
+                     "amt": a["amount"], "nri": a["res"] == "nri", "since": view["start"], "days": a["days"] if valued else 0,
+                     "metric": "xirr" if valued and a["days"] >= 365 else "abs",
+                     "ret": (round((a["xirr"] or 0) * 100, 2) if a["days"] >= 365 else round(absr, 2)) if valued and audit_ok else None})
+    return {"v": 2, "updated": view["generated"], "start": view["start"], "auditOk": audit_ok, "rows": rows}
 
 
 def main() -> int:
