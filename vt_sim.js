@@ -436,7 +436,7 @@
     sw.addEventListener('click', function () { openList(list.hidden); });
     list.addEventListener('click', function (e) {
       var b = e.target.closest('.vts-pf-o'); if (!b) return;
-      cur = rows[+b.getAttribute('data-i')];
+      cur = rows[+b.getAttribute('data-i')]; ovSel = null;
       try { localStorage.setItem(key, cur.name); } catch (er) {}
       openList(false); drawSwitch(); load(); sw.focus();
     });
@@ -465,7 +465,7 @@
         '<div><span>Total gain</span><b class="' + cl(x && x.gain) + '">' + (x && x.gain != null ? sinr(x.gain) + ' <small>' + spct(r.ret) + '</small>' : '–') + '</b></div>' +
         '<div><span>' + (last ? (last.first ? 'Since purchase' : 'Day change · ' + esc(dt(last.d, false))) : 'Day change') + '</span><b class="' + cl(last && last.chg) + '">' + (last ? sinr(last.chg) + ' <small>' + spct(last.pct) + '</small>' : '–') + '</b></div>' +
         '<div><span>Same money in Nifty 50</span>' + (function () { var bv = last && last.inv ? (last.bval / last.inv - 1) * 100 : (x && x.bench); return '<b class="' + cl(bv) + '">' + (bv != null ? spct(bv) : '–') + '</b>'; })() + '</div></div></div>';
-      var tabs = [['today', 'Summary'], ['bench', 'vs Nifty 50'], ['hold', 'Holdings'], ['hist', 'History']];
+      var tabs = [['today', 'Summary'], ['bench', 'vs Nifty 50'], ['brk', 'Breakdown'], ['hold', 'Holdings'], ['hist', 'History']];
       h += '<div class="vts-tabs vts-pv-tabs" role="tablist">' + tabs.map(function (t) { return '<button type="button" role="tab" data-t="' + t[0] + '" class="' + (tab === t[0] ? 'on' : '') + '" aria-selected="' + (tab === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div>';
       h += '<div class="vts-pv-pane">' + pane(r, a) + '</div>';
       pv.innerHTML = h;
@@ -476,6 +476,9 @@
       var pb = pv.querySelector('.vts-ch-per');
       if (pb) pb.addEventListener('click', function (e) { var b = e.target.closest('button[data-p]'); if (!b) return; per = b.getAttribute('data-p'); render(r, a); });
       chartHover(pv.querySelector('.vts-ch'));
+      var ov = pv.querySelector('.vts-olap');
+      if (ov) ov.addEventListener('change', function () { ovSel = [+ov.querySelector('[data-o="0"]').value, +ov.querySelector('[data-o="1"]').value]; ov.querySelector('.vts-olap-r').innerHTML = overlapOut(a.breakdown); });
+      pv.querySelectorAll('.vts-pbk').forEach(function (d) { d.addEventListener('toggle', function () { bdOpen[d.getAttribute('data-k')] = d.open; }); });
     }
 
     function pane(r, a) {
@@ -483,6 +486,7 @@
       if (tab === 'today') return today(r, last);
       if (tab === 'bench') return bench(a);
       if (tab === 'hold') return holdings(r, a && a.detail);
+      if (tab === 'brk') return breakdown(r, a && a.breakdown);
       return history(rc);
     }
 
@@ -610,6 +614,54 @@
       return h;
     }
 
+    var ACOL = { 'Equity': '#3b82f6', 'Debt': '#14b8a6', 'Gold': '#eab308', 'Silver': '#94a3b8', 'International': '#8b5cf6', 'REITs & InvITs': '#f97316', 'Cash & others': '#64748b' };
+    var bdOpen = { alloc: true }, ovSel = null;
+    function ovPct(A, B) { var wb = {}; B[3].forEach(function (q) { wb[q[0]] = q[1]; }); return A[3].reduce(function (t, q) { return t + (wb[q[0]] != null ? Math.min(q[1], wb[q[0]]) : 0); }, 0); }
+    function bd(k, icon, title, sub, body) {
+      return '<details class="vts-pbk" data-k="' + k + '"' + (bdOpen[k] ? ' open' : '') + '><summary><span class="vts-pbk-i" aria-hidden="true">' + icon + '</span><span class="vts-pbk-t"><b>' + title + '</b><small>' + sub + '</small></span><i class="vts-pbk-x" aria-hidden="true">▾</i></summary><div class="vts-pbk-b">' + body + '</div></details>';
+    }
+    function bars(list, max, fmtR) {
+      return '<div class="vts-bl">' + list.map(function (q) {
+        return '<div class="vts-bl-r"><span class="vts-bl-n">' + esc(q[0]) + '</span><span class="vts-bl-t"><i style="width:' + Math.max(1, Math.min(100, q[1] / max * 100)).toFixed(1) + '%' + (q[2] ? ';background:' + q[2] : '') + '"></i></span><b>' + q[1].toFixed(1) + '%</b>' + (fmtR ? '<small>' + fmtR(q[1]) + '</small>' : '') + '</div>';
+      }).join('') + '</div>';
+    }
+    function overlapOut(b) {
+      var f = b.funds, A = f[ovSel[0]], B = f[ovSel[1]];
+      if (!A || !B || ovSel[0] === ovSel[1]) return '<p class="vts-pv-e">Choose two different funds.</p>';
+      var wb = {}; B[3].forEach(function (q) { wb[q[0]] = q[1]; });
+      var com = A[3].filter(function (q) { return wb[q[0]] != null; }).map(function (q) { return [q[0], q[1], wb[q[0]]]; }).sort(function (p, q) { return Math.min(q[1], q[2]) - Math.min(p[1], p[2]); });
+      var ovp = com.reduce(function (t, q) { return t + Math.min(q[1], q[2]); }, 0);
+      return '<div class="vts-olap-s"><b>' + ovp.toFixed(1) + '%</b><span>overlap in their top holdings · ' + com.length + ' common stock' + (com.length === 1 ? '' : 's') + '</span></div>' +
+        (com.length ? '<div class="vts-olap-t"><div class="hd"><span>Stock</span><span>' + esc(A[1]).slice(0, 18) + '…</span><span>' + esc(B[1]).slice(0, 18) + '…</span></div>' + com.map(function (q) {
+          return '<div><span>' + esc(q[0].replace(/ (Ltd\.?|Limited)$/i, '')) + '</span><span>' + q[1].toFixed(2) + '%</span><span>' + q[2].toFixed(2) + '%</span></div>'; }).join('') + '</div>' : '<p class="vts-pv-e">No common stocks among their top holdings.</p>') +
+        '<p class="vts-pv-e">Overlap = sum of the smaller weight of each common stock, from the top 15 holdings of each fund\'s latest monthly portfolio.</p>';
+    }
+    function breakdown(r, b) {
+      if (!b) return '<p class="vts-pv-e">' + (r.credit ? 'The breakdown appears once the units are credited on <b>' + esc(dt(r.credit)) + '</b>.' : 'The breakdown appears once the units are credited.') + '</p>';
+      var al = b.alloc || [], tot = al.reduce(function (t, q) { return t + q[1]; }, 0) || 1;
+      var h1 = '<div class="vts-al-bar" role="img" aria-label="Asset allocation">' + al.map(function (q) { return '<i style="width:' + (q[1] / tot * 100).toFixed(2) + '%;background:' + (ACOL[q[0]] || '#64748b') + '" title="' + esc(q[0]) + ' ' + q[1].toFixed(1) + '%"></i>'; }).join('') + '</div>' +
+        '<div class="vts-al-l">' + al.map(function (q) { return '<div><span><i style="background:' + (ACOL[q[0]] || '#64748b') + '"></i>' + esc(q[0]) + '</span><b>' + q[1].toFixed(1) + '%</b><small>' + inr(b.val * q[1] / 100, 0) + '</small></div>'; }).join('') + '</div>' +
+        '<p class="vts-pv-e">Look-through allocation of the credited holdings on ' + esc(dt(b.d)) + ' (value ' + inr(b.val, 0) + '), from each fund\'s ' + (b.pm ? esc(dt(b.pm + '-01').replace(/^\d+ /, '')) + ' ' : '') + 'monthly portfolio' + (b.pfCover < 99.5 ? '; ' + (100 - b.pfCover).toFixed(0) + '% of the value is in funds without a published portfolio, counted by their asset class' : '') + '.</p>';
+      var cap = b.cap || {}, eq = (al.filter(function (q) { return q[0] === 'Equity'; })[0] || [0, 0])[1];
+      var capL = [['Large cap', cap.large || 0, '#3b82f6'], ['Mid cap', cap.mid || 0, '#60a5fa'], ['Small cap', cap.small || 0, '#93c5fd']];
+      if (eq - (b.eqCapCover || 0) > 0.5) capL.push(['Not classified', eq - (b.eqCapCover || 0), '#64748b']);
+      var h2 = '<h4>Sectors <small>(% of portfolio)</small></h4>' + ((b.sec || []).length ? bars(b.sec.map(function (q) { return [q[0], q[1]]; }), b.sec[0][1]) : '<p class="vts-pv-e">No sector data.</p>') +
+        '<h4>Market cap <small>(equity, % of portfolio)</small></h4>' + bars(capL.filter(function (q) { return q[1] > 0.05; }), Math.max.apply(null, capL.map(function (q) { return q[1]; }).concat([1]))) +
+        '<h4>Top stocks <small>(look-through)</small></h4>' + ((b.stk || []).length ? bars(b.stk.map(function (q) { return [q[0].replace(/ (Ltd\.?|Limited)$/i, ''), q[1]]; }), b.stk[0][1]) : '<p class="vts-pv-e">No stock data.</p>');
+      var f = b.funds || [], h3;
+      if (f.length < 2) h3 = '<p class="vts-pv-e">Needs at least two equity funds with a published monthly portfolio.</p>';
+      else {
+        if (!ovSel || ovSel[0] >= f.length || ovSel[1] >= f.length) {   // start with the most overlapping pair
+          ovSel = [0, 1];
+          for (var i = 0; i < f.length; i++) for (var j = i + 1; j < f.length; j++) if (ovPct(f[i], f[j]) > ovPct(f[ovSel[0]], f[ovSel[1]])) ovSel = [i, j];
+        }
+        var opt = function (i) { return f.map(function (q, j) { return '<option value="' + j + '"' + (j === ovSel[i] ? ' selected' : '') + '>' + esc(q[1]) + '</option>'; }).join(''); };
+        h3 = '<div class="vts-olap"><div class="vts-olap-p"><label>Fund 1<select data-o="0">' + opt(0) + '</select></label><label>Fund 2<select data-o="1">' + opt(1) + '</select></label></div><div class="vts-olap-r">' + overlapOut(b) + '</div></div>';
+      }
+      return '<div class="vts-pbks">' + bd('alloc', '▦', 'Allocation', 'Equity, debt, gold and others', h1) + bd('dist', '◑', 'Distribution', 'Sectors, market cap and stocks', h2) +
+        bd('ovl', '⧉', 'Overlap calculator', 'Common holdings in two funds', h3) + '</div>';
+    }
+
     function history(rc) {
       if (!rc.length) return '<p class="vts-pv-e">Daily summaries start once the units are credited.</p>';
       return '<div class="vts-hist" role="table" aria-label="Recent days"><div class="vts-hist-r hd" role="row"><span>Day</span><span>Value</span><span>Day change</span><span>Portfolio</span><span>Nifty 50</span></div>' +
@@ -679,7 +731,7 @@
     '.vts-pv-v b{display:block;font-size:22px;font-variant-numeric:tabular-nums;margin-top:2px}.vts-pv-v small{display:block;font-size:11.5px;color:var(--text2);margin-top:2px}' +
     '.vts-pv-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.vts-pv-k div{border:1px solid var(--border);border-radius:10px;padding:8px 10px;min-width:0}' +
     '.vts-pv-k span{display:block;font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}.vts-pv-k b{display:block;font-size:14px;font-variant-numeric:tabular-nums;margin-top:2px}.vts-pv-k b small{font-size:11.5px;font-weight:700}' +
-    '.vts-pv-tabs{margin-bottom:12px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.vts-pv-tabs button{height:36px;font-size:13px;padding:0 6px;min-width:0}' +
+    '.vts-pv-tabs{margin-bottom:12px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}.vts-pv-tabs button{height:36px;font-size:13px;padding:0 6px;min-width:0}' +
     '.vts-pv-e{margin:8px 0 0;font-size:11.5px;color:var(--text3,var(--text2));line-height:1.55}' +
     '.vts-sum{font-size:13.5px;line-height:1.6}.vts-sum-l{margin:0 0 10px;font-size:14.5px}.vts-sum h4{margin:12px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2)}' +
     '.vts-sum-m{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}.vts-sum-m li{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12.5px}.vts-sum-m b{font-variant-numeric:tabular-nums}' +
@@ -695,7 +747,23 @@
     '.vts-ch-tip b{display:block;margin-bottom:2px}.vts-ch-tip span{display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}.vts-ch-tip i{width:10px;height:3px;border-radius:2px;display:inline-block}' +
     '.vts-hist-r{display:grid;grid-template-columns:1.4fr repeat(4,minmax(0,1fr));gap:8px;padding:7px 0;border-top:1px solid var(--border);font-size:12.5px;font-variant-numeric:tabular-nums}.vts-hist-r>span:not(:first-child){text-align:right}' +
     '.vts-hist-r small{display:block;font-size:10.5px;color:var(--text2)}.vts-hist-r.hd{border-top:none;font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em;font-weight:700}' +
-    '@media (max-width:760px){.vts-pv-top{grid-template-columns:1fr}.vts-pv-k{grid-template-columns:repeat(2,minmax(0,1fr))}.vts-pf-chg{display:none}.vts-pf-sw .vts-pf-av.lg{width:36px;height:36px}' +
+    '.vts-pbks{border:1px solid var(--border);border-radius:12px;overflow:hidden}.vts-pbk+.vts-pbk{border-top:1px solid var(--border)}' +
+    '.vts-pbk>summary{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;list-style:none}.vts-pbk>summary::-webkit-details-marker{display:none}.vts-pbk>summary:hover{background:var(--surface2,rgba(127,127,127,.06))}' +
+    '.vts-pbk>summary:focus-visible{outline:2px solid var(--accent,#4a90e2);outline-offset:-2px}.vts-pbk-i{flex:none;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:9px;font-size:17px;color:var(--text2)}' +
+    '.vts-pbk-t{flex:1;display:flex;flex-direction:column;min-width:0}.vts-pbk-t b{font-size:14px}.vts-pbk-t small{font-size:12px;color:var(--text2)}.vts-pbk-x{font-style:normal;color:var(--text2);transition:transform .15s}.vts-pbk[open] .vts-pbk-x{transform:rotate(180deg)}' +
+    '.vts-pbk-b{padding:4px 14px 14px}.vts-pbk-b h4{margin:12px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2)}.vts-pbk-b h4 small{text-transform:none;letter-spacing:0;font-weight:500}' +
+    '.vts-al-bar{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px;margin:6px 0 10px}.vts-al-bar i{display:block;min-width:2px}' +
+    '.vts-al-l{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}.vts-al-l div{display:flex;align-items:baseline;gap:8px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12.5px}' +
+    '.vts-al-l span{flex:1;display:flex;align-items:center;gap:7px;min-width:0}.vts-al-l span i{width:10px;height:10px;border-radius:3px;flex:none}.vts-al-l b{font-variant-numeric:tabular-nums}.vts-al-l small{color:var(--text2);font-variant-numeric:tabular-nums}' +
+    '.vts-bl{display:flex;flex-direction:column;gap:5px}.vts-bl-r{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(60px,2fr) 52px;gap:10px;align-items:center;font-size:12.5px}' +
+    '.vts-bl-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vts-bl-t{height:8px;border-radius:4px;background:var(--surface2,rgba(127,127,127,.12));overflow:hidden}.vts-bl-t i{display:block;height:100%;border-radius:4px;background:#3b82f6}' +
+    '.vts-bl-r b{text-align:right;font-variant-numeric:tabular-nums}' +
+    '.vts-olap-p{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 10px}.vts-olap-p label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;font-weight:700;min-width:0}' +
+    '.vts-olap-p select{font:inherit;font-size:13px;text-transform:none;letter-spacing:0;font-weight:600;color:var(--text);background:var(--surface2,var(--surface));border:1px solid var(--border2,var(--border));border-radius:8px;padding:8px;min-width:0;width:100%}' +
+    '.vts-olap-s{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}.vts-olap-s b{font-size:22px;font-variant-numeric:tabular-nums}.vts-olap-s span{font-size:12.5px;color:var(--text2)}' +
+    '.vts-olap-t>div{display:grid;grid-template-columns:minmax(0,2fr) 1fr 1fr;gap:8px;padding:6px 0;border-top:1px solid var(--border);font-size:12.5px;font-variant-numeric:tabular-nums}.vts-olap-t>div>span:not(:first-child){text-align:right}' +
+    '.vts-olap-t .hd{border-top:none;font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em;font-weight:700}' +
+    '@media (max-width:760px){.vts-bl-r{grid-template-columns:minmax(0,1.9fr) minmax(36px,1fr) 46px;gap:8px}.vts-pv-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.vts-olap-p{grid-template-columns:1fr}.vts-pv-top{grid-template-columns:1fr}.vts-pv-k{grid-template-columns:repeat(2,minmax(0,1fr))}.vts-pf-chg{display:none}.vts-pf-sw .vts-pf-av.lg{width:36px;height:36px}' +
     '.vts-hist-r.hd{display:none}.vts-hist-r{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:4px}.vts-hist-r>span:first-child{grid-column:1/-1;font-weight:700}.vts-hist-r>span:not(:first-child){text-align:left}' +
     '.vts-hist-r>span[data-l]::before{content:attr(data-l);display:block;font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}.vts-ch-k b{font-size:15px}}';
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', simBuy); else simBuy();
