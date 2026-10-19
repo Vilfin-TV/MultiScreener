@@ -1305,9 +1305,14 @@ class Engine:
         month = (pf or {}).get("asOf") or "none"
         book = self.store.setdefault("lookthrough", {}).setdefault(f"{a['product']}:{key}", {})
         if month not in book:
+            if a["product"] == "mf":
+                eq = (self.mkt.fund(int(key)) or {}).get("tax") == "equity"
+            else:
+                eq = self.mkt.etf_equity(key)
             book[month] = {"asset": label,
                            "sec": [[n.strip(), p] for n, p in (pf or {}).get("sectors") or [] if isinstance(n, str) and any(c.isalpha() for c in n) and n not in ("N.A.", "Others")],
-                           "stk": [[t[0], t[2]] for t in (pf or {}).get("top") or [] if len(t) > 4 and t[4] == "equity"]}
+                           "stk": [[t[0], t[2]] for t in (pf or {}).get("top") or [] if len(t) > 4 and t[4] == "equity"],
+                           "alloc": alloc_of(pf, label, eq), "cap": (pf or {}).get("cap")}
         return month
 
     def journal(self):
@@ -1622,7 +1627,26 @@ def scoreboard(view: dict, audit_ok: bool) -> dict:
     return {"v": 4, "updated": asof, "start": view["start"], "auditOk": audit_ok, "rows": rows}
 
 
-def exposure_from(product: str, hold: list, lt: dict, book: dict) -> dict:
+ALLOC_MIX = {"equity": "Equity", "debt": "Debt", "cashOther": "Cash & others", "reit": "REITs & InvITs", "overseas": "International"}
+ALLOC_LABEL = {"Gold": "Gold", "Silver": "Silver", "International": "International", "Debt & cash": "Debt"}
+
+
+def alloc_of(pf, label, equity: bool) -> dict:
+    """Asset allocation (% of the fund / ETF) from its monthly portfolio's asset mix; fund-of-fund units take the
+    fund's own asset class (gold / silver / international / debt). Without a portfolio: the fund's asset class."""
+    out = {}
+    for k, v in ((pf or {}).get("mix") or {}).items():
+        if k == "fund":
+            c = ALLOC_LABEL.get(label) or ("Equity" if equity else "Debt")
+        else:
+            c = ALLOC_MIX.get(k, "Cash & others")
+        out[c] = round(out.get(c, 0) + v, 2)
+    if not out:
+        out[ALLOC_LABEL.get(label) or ("Equity" if equity else "Debt")] = 100.0
+    return out
+
+
+def exposure_from(product: str, hold: list, lt: dict, book: dict, full: bool = False) -> dict:
     """Look-through exposure (% of the portfolio) of a daily record: credited holdings' values × each one's recorded
     composition (store["lookthrough"]) — top sectors with their market tracker, top stocks and non-equity shares."""
     vals = {h[0]: h[1] * (h[2] or 0) for h in hold if h[1] > 0}
@@ -1644,10 +1668,33 @@ def exposure_from(product: str, hold: list, lt: dict, book: dict) -> dict:
         for n, pct in comp.get("stk", []):
             stk[n] = stk.get(n, 0) + w * pct / 100
     tr = CFG["daily"]["sectorTracker"]
-    return {"pm": max(months) if months else None,
-            "sec": [[n, round(v, 2), tr.get(k)] for k, (n, v) in sorted(sec.items(), key=lambda x: -x[1][1])[:6]],
-            "stk": [[n, round(v, 2)] for n, v in sorted(stk.items(), key=lambda x: -x[1])[:5]],
-            "asset": [[n, round(v, 2)] for n, v in sorted(asset.items(), key=lambda x: -x[1])]}
+    out = {"pm": max(months) if months else None,
+           "sec": [[n, round(v, 2), tr.get(k)] for k, (n, v) in sorted(sec.items(), key=lambda x: -x[1][1])[:12 if full else 6]],
+           "stk": [[n, round(v, 2)] for n, v in sorted(stk.items(), key=lambda x: -x[1])[:10 if full else 5]],
+           "asset": [[n, round(v, 2)] for n, v in sorted(asset.items(), key=lambda x: -x[1])]}
+    if full:                                 # allocation, market-cap split and per-fund top holdings (overlap)
+        alloc, cap, funds, cover = {}, {}, [], 0.0
+        for key, v in vals.items():
+            comp = (book.get(f"{product}:{key}") or {}).get(lt.get(key)) or {}
+            w = v / tot * 100
+            al = comp.get("alloc") or {ALLOC_LABEL.get(comp.get("asset")) or "Equity": 100.0}
+            if comp.get("sec") or comp.get("stk") or comp.get("cap"):
+                cover += w
+            for c, pct in al.items():
+                alloc[c] = alloc.get(c, 0) + w * pct / 100
+            eqw = w * al.get("Equity", 0) / 100
+            capt = sum((comp.get("cap") or {}).values())
+            for c, pct in (comp.get("cap") or {}).items():
+                if capt > 0:
+                    cap[c] = cap.get(c, 0) + eqw * pct / capt
+            if comp.get("stk"):
+                funds.append([key, round(w, 2), comp["stk"][:15]])
+        out["alloc"] = [[c, round(v, 2)] for c, v in sorted(alloc.items(), key=lambda x: -x[1]) if v >= 0.005]
+        out["cap"] = {c: round(v, 2) for c, v in cap.items()}
+        out["eqCapCover"] = round(sum(cap.values()), 2)
+        out["pfCover"] = round(cover, 2)              # share of the portfolio whose holdings come from a monthly portfolio
+        out["funds"] = funds
+    return out
 
 def acct_slug(aid: str) -> str:
     return "".join(c if c.isalnum() else "-" for c in aid.lower()).strip("-")
@@ -1709,7 +1756,11 @@ def account_files(store: dict, view: dict, sb: dict) -> dict:
                   "recent": [{"d": e["d"], "val": e["val"], "inv": e["inv"], "chg": e["chg"], "pct": e["pct"], "bval": e["bval"],
                               "bchg": e["bchg"], "bpct": e["bpct"], "first": e["first"], "cash": e["cash"], "pend": e["pend"],
                               "hold": [[names.get(h[0], h[0]), h[0], cats.get(h[0], "")] + h[1:] for h in e["hold"]],
-                              "x": exposure_from(a["product"], e["hold"], e["_lt"], book), "mkt": moves(e["d"])} for e in es[-keep:]]}
+                              "x": exposure_from(a["product"], e["hold"], e["_lt"], book), "mkt": moves(e["d"])} for e in es[-keep:]],
+                  "breakdown": ({**exposure_from(a["product"], es[-1]["hold"], es[-1]["_lt"], book, full=True), "d": es[-1]["d"],
+                                 "val": r2(sum(h[1] * (h[2] or 0) for h in es[-1]["hold"] if h[1] > 0))} if es else None)}
+        for fd in (out[f]["breakdown"] or {}).get("funds", []):
+            fd.insert(1, names.get(fd[0], fd[0]))
     return out
 
 def main() -> int:
