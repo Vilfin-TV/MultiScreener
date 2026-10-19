@@ -277,5 +277,15 @@
     return '<div class="vts-pane">' + h + '</div>';
   }
 
+  /* FAQ accordion: opening one question closes the one that was open (the 'toggle' event does not bubble, so listen
+     in the capture phase); the newly opened question stays in view even when a longer one above it closes */
+  document.addEventListener('toggle', function (e) {
+    var d = e.target;
+    if (!d || d.tagName !== 'DETAILS' || !d.classList.contains('faq') || !d.open) return;
+    var top = d.getBoundingClientRect().top, moved = false;
+    document.querySelectorAll('details.faq[open]').forEach(function (o) { if (o !== d) { o.open = false; moved = true; } });
+    if (moved) { var shift = d.getBoundingClientRect().top - top; if (Math.abs(shift) > 1) window.scrollBy(0, shift); }
+  }, true);
+
   window.VTSim = { gate: gate, accepted: accepted, faqCols: faqCols, riskPanel: riskPanel, ecoPanel: ecoPanel, risk10: risk10, css: style };
 })();
