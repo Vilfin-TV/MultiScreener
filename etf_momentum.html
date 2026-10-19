@@ -2270,9 +2270,11 @@ function initSmart(){
     var st = b.getAttribute('data-st');
     if (st === 'plan') $('smart').removeAttribute('data-st'); else $('smart').setAttribute('data-st', st);
     this.querySelectorAll('[data-st]').forEach(function(x){ var on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); });
+    var bar = this; requestAnimationFrame(function(){ if (window.VTSim && VTSim.tabSettle) VTSim.tabSettle(bar); });
   });
 }
 /* the Portfolio Simulator opens only after the risk warning and disclaimer are accepted */
+function tabsSettle(bar){ requestAnimationFrame(function(){ if (window.VTSim && VTSim.tabSettle) VTSim.tabSettle(bar); }); }
 function smUnlock(){ $('smart').classList.remove('locked'); }
 function smGate(scroll){
   VTSim.gate(function(){
@@ -2453,11 +2455,11 @@ function bind(){
     renderCounts(); renderTable();
     var el = document.querySelector('.tbl-card'); window.scrollTo({top:el.getBoundingClientRect().top + window.pageYOffset - (document.querySelector('.vt-header').offsetHeight + 12), behavior:'smooth'});
   });
-  $('tabs').addEventListener('click', function(e){ var t = e.target.closest('.tab'); if (!t) return; state.tab = t.getAttribute('data-t'); state.shown = PAGE; renderCounts(); renderTable(); });
+  $('tabs').addEventListener('click', function(e){ var t = e.target.closest('.tab'); if (!t) return; state.tab = t.getAttribute('data-t'); state.shown = PAGE; renderCounts(); renderTable(); tabsSettle($('tabs')); });
   var ft; $('tFilter').addEventListener('input', function(){ var v = this.value; clearTimeout(ft); ft = setTimeout(function(){ state.filter = v; state.shown = PAGE; renderTable(); }, 120); });
   $('fltBtn').addEventListener('click', function(){ var t = $('tools'), o = !t.classList.contains('open'); t.classList.toggle('open', o); this.setAttribute('aria-expanded', o); });
   $('tools').addEventListener('change', function(){ var n = ['tCat','tRole','tTrend','tLiq','tRate','tAmc','tHist','tTer'].filter(function(id){ return $(id).value; }).length; $('fltN').textContent = n || ''; });
-  $('acls').addEventListener('click', function(e){ var b = e.target.closest('[data-a]'); if (!b) return; state.asset = b.getAttribute('data-a'); state.shown = PAGE; renderAssets(); renderTable(); updateURL(); });
+  $('acls').addEventListener('click', function(e){ var b = e.target.closest('[data-a]'); if (!b) return; state.asset = b.getAttribute('data-a'); state.shown = PAGE; renderAssets(); renderTable(); updateURL(); tabsSettle($('acls')); });
   $('tRole').addEventListener('change', function(){ state.role = this.value; state.shown = PAGE; renderTable(); });
   $('tTrend').addEventListener('change', function(){ state.trend = this.value; state.shown = PAGE; renderTable(); });
   $('tCat').addEventListener('change', function(){ state.cat = this.value; state.shown = PAGE; renderTable(); if (state.sel && state.showAll) drawChart(); });
