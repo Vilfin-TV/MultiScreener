@@ -1,0 +1,21 @@
+# Cloudflare Worker: private Simulator Buy ledger viewer.
+# Deployed automatically by .github/workflows/deploy_sim_worker.yml.
+# Data: private R2 bucket "vilfintv-sim" (written only by .github/workflows/sim_ledger.yml).
+# SIM_KEY_HASH is the SHA-256 of the access key (the key itself is never stored anywhere in the repository).
+
+name = "vilfintv-sim"
+main = "sim_worker.js"
+compatibility_date = "2026-01-01"
+workers_dev = true
+
+[[r2_buckets]]
+binding = "SIM"
+bucket_name = "vilfintv-sim"
+
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = true
+
+[vars]
+SIM_KEY_HASH = "66ea8aee6c0e64d575f802905e885925a834d1de79c6a9c8a829697053365056"

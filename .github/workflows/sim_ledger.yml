@@ -1,0 +1,116 @@
+name: Simulator Buy Ledger
+
+# Simulator Buy: model-portfolio tracking accounts of VilfinTV agents (scripts/sim_config.json).
+# The ledger lives ONLY in the private R2 bucket "vilfintv-sim" — never in this public repository.
+#   1. download sim/ledger.json from R2 (refuse to start a fresh ledger when data/sim_meta.json says one exists)
+#   2. scripts/sim_engine.py: plan snapshot, new orders, allotments / fills at official NAVs and closes, reviews, valuation
+#   3. scripts/audit_sim.py: independent audit — any error stops here and nothing is published
+#   4. upload ledger / view / audit + a dated permanent copy to R2
+#   5. commit only the public marker (event count + head hash) and the return-% scoreboard
+on:
+  workflow_run:
+    workflows: ["India MF Screener Data", "ETF Momentum Mode Data"]
+    types: [completed]
+  schedule:
+    - cron: '25 16 * * *'        # 21:55 IST daily fallback
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sim-ledger
+  cancel-in-progress: false
+
+jobs:
+  ledger:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install tools
+        run: |
+          pip install -q requests
+          npm install -g wrangler@3
+
+      - name: Download the ledger from private storage
+        run: |
+          mkdir -p "$RUNNER_TEMP/sim"
+          if wrangler r2 object get vilfintv-sim/sim/ledger.json --file "$RUNNER_TEMP/sim/ledger.json" > "$RUNNER_TEMP/sim/get.log" 2>&1; then
+            echo "ledger downloaded: $(wc -c < "$RUNNER_TEMP/sim/ledger.json") bytes"
+          else
+            cat "$RUNNER_TEMP/sim/get.log"
+            if [ -f data/sim_meta.json ] && python -c "import json,sys; sys.exit(0 if json.load(open('data/sim_meta.json')).get('events',0) > 0 else 1)"; then
+              echo "::error::A ledger exists (data/sim_meta.json) but could not be downloaded — stopping so it is never replaced by a fresh one."
+              exit 1
+            fi
+            echo "No ledger yet — starting a new one."
+            rm -f "$RUNNER_TEMP/sim/ledger.json"
+          fi
+
+      - name: Check the ledger continues the published one
+        run: |
+          python - <<'EOF'
+          import json, os, sys
+          p = os.path.join(os.environ["RUNNER_TEMP"], "sim", "ledger.json")
+          meta = json.load(open("data/sim_meta.json")) if os.path.exists("data/sim_meta.json") else {}
+          n = meta.get("events", 0)
+          if not n:
+              sys.exit(0)
+          evs = json.load(open(p)).get("events", [])
+          if len(evs) < n or evs[n - 1]["h"] != meta["head"]:
+              print(f"::error::Downloaded ledger ({len(evs)} entries) does not contain the published head {meta['head'][:12]} at entry {n}")
+              sys.exit(1)
+          print(f"ledger continues the published head ({n} entries)")
+          EOF
+
+      - name: Run the simulator engine
+        run: python scripts/sim_engine.py --store "$RUNNER_TEMP/sim/ledger.json" --view "$RUNNER_TEMP/sim/view.json"
+
+      - name: Independent audit
+        id: audit
+        run: |
+          python scripts/audit_sim.py --store "$RUNNER_TEMP/sim/ledger.json" --view "$RUNNER_TEMP/sim/view.json" --out "$RUNNER_TEMP/sim/audit.json"
+
+      - name: Upload the audit result even when it fails
+        if: failure() && steps.audit.outcome == 'failure'
+        run: wrangler r2 object put vilfintv-sim/sim/audit.json --file "$RUNNER_TEMP/sim/audit.json" --content-type application/json || true
+
+      - name: Store ledger, statements and audit (private) + dated permanent copy
+        run: |
+          d=$(TZ=Asia/Kolkata date +%F)
+          for f in ledger view audit; do
+            wrangler r2 object put "vilfintv-sim/sim/snapshots/$d/$f.json" --file "$RUNNER_TEMP/sim/$f.json" --content-type application/json
+          done
+          for f in ledger view audit; do
+            wrangler r2 object put "vilfintv-sim/sim/$f.json" --file "$RUNNER_TEMP/sim/$f.json" --content-type application/json
+          done
+
+      - name: Public marker + scoreboard (return % only)
+        run: |
+          python - <<'EOF'
+          import json, os, sys
+          sys.path.insert(0, "scripts")
+          from sim_engine import scoreboard
+          t = os.path.join(os.environ["RUNNER_TEMP"], "sim")
+          store, view, audit = (json.load(open(os.path.join(t, f + ".json"))) for f in ("ledger", "view", "audit"))
+          evs = store.get("events", [])
+          json.dump({"v": 1, "events": len(evs), "head": evs[-1]["h"] if evs else None, "start": view["start"]},
+                    open("data/sim_meta.json", "w"), indent=1)
+          sb = scoreboard(view, audit["nErrors"] == 0)
+          json.dump(sb, open("data/sim_scoreboard.json", "w"), separators=(",", ":"), ensure_ascii=False)
+          print(f"scoreboard: {len(sb['rows'])} rows · ledger {len(evs)} entries")
+          EOF
+          bash scripts/push_data.sh "chore(data): Simulator Buy scoreboard" data/sim_meta.json data/sim_scoreboard.json
