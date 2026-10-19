@@ -6,7 +6,8 @@
  * sort option, the three column views, ETF detail pages for one ETF of every category plus edge cases (gold, liquid,
  * global at a premium, hybrid, new / thin ETFs), trading-chart ranges and types, scorecard toggles, all FAQs, and all
  * 20 Portfolio Simulator plans × 5 investing frequencies (Risk & score and Economy & earnings tabs included), and the
- * risk-warning dialog (shown before the simulator opens; Close keeps it locked, Accept opens it). On every screen it checks for page errors, horizontal overflow,
+ * risk-warning dialog. Every filter option is also checked against an independent re-computation from the published
+ * data files (count and every listed ETF). The (shown before the simulator opens; Close keeps it locked, Accept opens it). On every screen it checks for page errors, horizontal overflow,
  * visible "NaN" / "undefined" / "Infinity" / "[object" text, and elements wider than the screen.
  *
  * Usage: (serve the repo root on :8765)  node scripts/test_etf_page.js [--shots=DIR]
@@ -17,6 +18,32 @@ const { chromium } = require('playwright');
 const BASE = process.env.BASE || 'http://localhost:8765/etf_momentum.html';
 const shotArg = process.argv.find(a => a.startsWith('--shots='));
 const SHOTS = shotArg ? shotArg.slice(8) : null;
+
+// independent model of the ETF list (from the published data files) for the filter checks
+const fs = require('fs');
+const ED = JSON.parse(fs.readFileSync('data/etf_momentum.json')), EXF = JSON.parse(fs.readFileSync('data/etf_extras.json'));
+const roleOf = e => { const k = e.k || '', n = (e.n || '') + ' ' + (e.u || '') + ' ' + ((e.x || {}).benchmark || '');
+  if (/hybrid|balanced|multi.?asset|\bplus\b.*\bg-?sec\b|\bg-?sec\b.*\b\d{2}:\d{2}\b/i.test(n)) return 'hyb';
+  if (k === 'Broad Market' || k === 'Next 50, Mid & Small Cap') return 'core'; if (k === 'Gold' || k === 'Silver') return 'com';
+  if (k === 'Liquid & Debt') return 'debt'; if (k === 'International' || /nasdaq|s&p 500|hang seng|nyse|ftse|msci|global|world/i.test(n)) return 'glob'; return 'sat'; };
+const trendOf = e => {
+  const c = (e.c || []).filter(v => v != null && isFinite(v)), n = c.length, p = c[n - 1], stable = roleOf(e) === 'debt' && (e.vol == null || e.vol < 1.5);
+  const sma = (len, off = 0) => { if (n - off < len) return null; let t = 0; for (let i = n - off - len; i < n - off; i++) t += c[i]; return t / len; };
+  const ret = w => n > w ? (p / c[n - 1 - w] - 1) * 100 : null;
+  const judge = (ma, w, x) => { const m = sma(ma), r = ret(w); if (stable || m == null || r == null) return 'na'; const g = (p / m - 1) * 100;
+    return g > 0 && r > 0 && (!x || x.ok !== false) ? 'pos' : g < 0 && r < 0 && (!x || x.okDown !== false) ? 'neg' : 'neu'; };
+  const a = sma(52), b = sma(52, 13), x = a == null || b == null ? null : { ok: a / b > 1, okDown: a / b < 1 };
+  return { st: judge(10, 13), mt: judge(26, 26), lt: judge(52, 52, x) }; };
+const liqLevel = cr => cr == null ? 0 : cr >= 10 ? 4 : cr >= 1 ? 3 : cr >= 0.1 ? 2 : cr >= 0.01 ? 1 : 0;
+const yearsOf = e => e.first ? (Date.parse(ED.asOf) - Date.parse(e.first)) / 31557600000 : 0;
+const EF = {
+  tCat: (e, v) => e.k === v, tRole: (e, v) => roleOf(e) === v, tAmc: (e, v) => e.a === v,
+  tTrend: (e, v) => { const t = trendOf(e); return v === 'lt' ? t.lt === 'pos' : v === 'st' ? t.st === 'pos' : v === 'neg' ? t.lt === 'neg' : t.st === 'pos' && t.mt === 'pos' && t.lt === 'pos'; },
+  tLiq: (e, v) => liqLevel(e.tv) >= +v + 1,
+  tRate: (e, v) => { const o = (EXF.etfs || {})[e.s]; return !!(o && o.rt && o.rt.st >= +v); },
+  tHist: (e, v) => yearsOf(e) >= +v, tTer: (e, v) => !!(e.x && e.x.ter != null && e.x.ter <= +v),
+};
+const eExpect = (k, v) => ED.etfs.filter(e => EF[k](e, v));
 const issues = [];
 let checks = 0;
 function check(ok, msg) { checks++; if (!ok) issues.push(msg); }
@@ -78,6 +105,7 @@ async function pageHealth(p, where) {
       await p.click(`#acls [data-a="${a}"]`); await p.waitForTimeout(60);
       const n = await count(), chip = await p.evaluate(a => +document.querySelector(`#acls [data-a="${a}"] .n`).textContent, a);
       check(n === chip, `${name}: asset ${a || 'all'} shows ${n} vs chip ${chip}`);
+      if (a) check(n === ED.etfs.filter(e => { const r = roleOf(e); return (r === 'core' || r === 'sat' ? 'eq' : r) === a; }).length, `${name}: asset ${a} count ${n} differs from the data`);
     }
     await p.click('#acls [data-a=""]');
     if (await p.isVisible('#fltBtn')) { await p.click('#fltBtn'); await p.waitForTimeout(60); }   // phones: filters fold away
@@ -86,8 +114,13 @@ async function pageHealth(p, where) {
       for (const v of opts) {
         await p.selectOption(`#${sel}`, v); await p.waitForTimeout(40);
         const n = await count();
-        check(v === '' || n >= 0, `${name}: ${sel}=${v} broke the table`);
-        if (v === '') check(n === total, `${name}: ${sel} reset shows ${n} of ${total}`);
+        if (v === '') { check(n === total, `${name}: ${sel} reset shows ${n} of ${total}`); continue; }
+        const exp = eExpect(sel, v), set = new Set(exp.map(e => e.s));
+        check(n === exp.length, `${name}: ${sel}=${v} shows ${n} ETFs, ${exp.length} expected`);
+        const listed = await p.evaluate(() => [...document.querySelectorAll(getComputedStyle(document.getElementById('cardsM')).display !== 'none' ? '#cardsM .mc[data-s]' : '#tbody tr[data-s]')].map(x => x.getAttribute('data-s')));
+        const wrong = listed.filter(x => !set.has(x));
+        check(!wrong.length, `${name}: ${sel}=${v} lists ${wrong.length} ETF(s) outside the filter, e.g. ${wrong.slice(0, 3).join(', ')}`);
+        check(exp.length ? listed.length > 0 : !listed.length, `${name}: ${sel}=${v} lists ${listed.length} rows with ${exp.length} expected`);
       }
       await p.selectOption(`#${sel}`, '');
     }
