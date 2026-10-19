@@ -2709,7 +2709,7 @@ async function buildStatusReport(env){
     if (repo.json){ gh.sizeKB = repo.json.size; gh.private = repo.json.private; gh.pushedAt = repo.json.pushed_at; gh.defaultBranch = repo.json.default_branch; }
     if (runs.json && runs.json.workflow_runs){
       gh.workflows = runs.json.workflow_runs.slice(0,12).map(function(w){ return { name:w.name, status:w.status, conclusion:w.conclusion, event:w.event, at:w.created_at, url:w.html_url }; });
-      gh.failedWorkflows = gh.workflows.filter(function(w){ return w.conclusion && w.conclusion!=='success' && w.conclusion!=='skipped' && w.conclusion!=='neutral'; }).length;
+      gh.failedWorkflows = gh.workflows.filter(function(w){ return w.conclusion && w.conclusion!=='success' && w.conclusion!=='skipped' && w.conclusion!=='neutral' && w.conclusion!=='cancelled'; }).length;   // cancelled = replaced by a newer run, not a failure
     }
     const why = function(res){
       const m = String((res.json && res.json.message) || res.text || '').toLowerCase();

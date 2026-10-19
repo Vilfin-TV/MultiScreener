@@ -6055,7 +6055,7 @@ function _rbRender(r){
     h+=_rbRow('Dependabot alerts','<span class="rb-pill '+(typeof g.dependabotOpen==='number'?depColor:'rb-warn')+'">'+esc(ghTxt(g.dependabotOpen))+'</span>'+(g.dependabotBySeverity?(' '+Object.keys(g.dependabotBySeverity).map(function(k){return esc(k)+':'+g.dependabotBySeverity[k];}).join(', ')):''));
     h+=_rbRow('Code scanning',esc(ghTxt(g.codeScanningOpen)));
     if(g.workflows){g.workflows.slice(0,8).forEach(function(w){
-      var c=w.conclusion==='success'?'rb-ok':(w.conclusion?'rb-bad':'rb-warn');
+      var c=w.conclusion==='success'?'rb-ok':((w.conclusion==='cancelled'||w.conclusion==='skipped')?'rb-warn':(w.conclusion?'rb-bad':'rb-warn'));
       h+=_rbRow(esc(w.name)+' <span style="opacity:.5">('+esc(w.event)+')</span>','<span class="rb-pill '+c+'">'+esc(w.conclusion||w.status)+'</span>');
     });}
   }
