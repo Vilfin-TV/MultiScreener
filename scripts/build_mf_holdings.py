@@ -97,7 +97,14 @@ SOURCES = {
     "Quantum": {"page": "https://www.quantumamc.com/portfolio/combined/-1/1/0/0", "pick": r"/FileCDN/FactSheet/", "date": "content", "scan": 4},
     # the monthly file list loads only after the "Monthly Portfolio" tab is opened (one file per scheme)
     "quant": {"page": "https://www.quantmutual.com/statutory-disclosures", "clicks": [r"^\s*MONTHLY PORTFOLIO\s*$"],
-              "pick": r"/Admin/disclouser/quant_.+_\d{1,2}_[A-Za-z]{3,9}_\d{4}\.xlsx?", "multi": True},
+              # the page lists either one combined monthly file (Monthly_portfolio_sept_30092026.xlsx, …_July26.xlsx)
+              # or one file per fund (quant_<fund>_30_Sep_2026.xlsx); names carry mixed date formats, so files are
+              # dated from their contents and the combined file wins when both exist for the month
+              "pick": r"/Admin/disclouser/(quant_.+_\d{1,2}_[A-Za-z]{3,9}_\d{4}|[^/]*monthly_portfolio[^/]*)\.xlsx?",
+              "date": "content", "scan": 40, "multi": True, "prefer": r"monthly_portfolio"},
+    # the month is chosen in the page address; one file per fund named "… Fund – September-2026.xlsx"
+    "Canara Robeco": {"page": "https://www.canararobeco.com/documents/statutory-disclosures/scheme-monthly-portfolio/?filteryear={Y}&filtermonth={M}",
+                      "pick": r"/wp-content/uploads/\d{4}/\d{2}/[^/]*Canara-Robeco[^/]*\.xlsx?", "multi": True},
     "The Wealth Company": {"page": "https://www.wealthcompanyamc.in/literature-forms/portfolio-documents/monthly/",
                            "pick": r"/uploads/Monthly_Portfolio_", "date": "content", "scan": 30, "multi": True},
 }
@@ -244,6 +251,9 @@ def harvest(ctx, url: str, clicks: list | None = None) -> list[str]:
             if "json" in r.headers.get("content-type", ""):
                 seen_json.append(r.url)
                 body = r.text().replace("\\/", "/").replace("\\u0027", "'")
+                if clicks:
+                    log.info("    data %s · %d file path(s) · request %s", r.url[:110], len(FILE_RX.findall(body)),
+                             (r.request.post_data or "")[:160])
                 found.extend(m if m.startswith("http") else urljoin(r.url, m) for m in FILE_RX.findall(body))
         except Exception:  # noqa: BLE001
             pass
@@ -258,18 +268,22 @@ def harvest(ctx, url: str, clicks: list | None = None) -> list[str]:
         for rx in clicks or []:
             try:
                 loc = p.locator(f"text=/{rx}/i")
-                n, before = loc.count(), len(found)
+                n, before, data0 = loc.count(), len(found), len(seen_json)
                 clicked = False
-                for i in range(min(n, 4)):
-                    if loc.nth(i).is_visible():
-                        loc.nth(i).click(timeout=8000)
-                        clicked = True
-                        try:
-                            p.wait_for_load_state("networkidle", timeout=15000)
-                        except Exception:  # noqa: BLE001
-                            pass
-                        p.wait_for_timeout(4000)
+                for attempt in range(3):                # some tabs ignore a click made before their script is ready
+                    for i in range(min(n, 4)):
+                        if loc.nth(i).is_visible():
+                            loc.nth(i).click(timeout=8000)
+                            clicked = True
+                            try:
+                                p.wait_for_load_state("networkidle", timeout=15000)
+                            except Exception:  # noqa: BLE001
+                                pass
+                            p.wait_for_timeout(4000)
+                            break
+                    if not clicked or len(seen_json) > data0 or len(found) > before:
                         break
+                    p.wait_for_timeout(3000)
                 log.info("click /%s/ on %s: %d match(es), clicked=%s, +%d file link(s), %d data response(s)",
                          rx, url[:60], n, clicked, len(found) - before, len(seen_json))
             except Exception as e:  # noqa: BLE001
@@ -440,6 +454,8 @@ def content_dated(ctx, cfg, links: list[str]) -> dict | None:
         return None
     latest = max(d for d, _ in dated)
     pick = [l for d, l in dated if d == latest]
+    if cfg.get("prefer"):                       # e.g. a combined file over per-fund copies of the same month
+        pick = [l for l in pick if re.search(cfg["prefer"], l, re.I)] or pick
     return {"month": f"{latest[0]}-{latest[1]:02d}", "files": pick if cfg.get("multi") else pick[:1]}
 
 
@@ -462,7 +478,10 @@ def discover(sources: dict) -> dict[str, list[str]]:
                     log.warning("%s: no portfolio files found", amc)
                 continue
             links = []
-            for page in cfg.get("pages") or [cfg["page"]]:
+            pages = cfg.get("pages") or [cfg["page"]]
+            if any("{Y}" in pg for pg in pages):      # month chosen in the address: try the two latest months
+                pages = [pg.replace("{Y}", str(y)).replace("{M}", f"{m:02d}") for pg in pages for y, m in recent_months(2)]
+            for page in pages:
                 try:
                     links += harvest(ctx, page, cfg.get("clicks"))
                 except Exception as e:  # noqa: BLE001
@@ -476,7 +495,9 @@ def discover(sources: dict) -> dict[str, list[str]]:
                     found[amc] = got
                     log.info("%s: %s · %d file(s) (dated from contents)", amc, got["month"], len(got["files"]))
                 else:
-                    log.warning("%s: no dated portfolio files found (%d candidate links)", amc, len(links))
+                    log.warning("%s: no dated portfolio files found (%d candidate links of %d spreadsheet links)", amc, len(links), len(allx))
+                    for l in allx[:15]:
+                        log.warning("    %s", l[:160])
                 continue
             dated = [(link_month(l), l) for l in links]
             dated = [(d, l) for d, l in dated if d]
