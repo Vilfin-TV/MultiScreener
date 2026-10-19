@@ -621,8 +621,10 @@ def market_tilt(u, macro, sentiment, glob=None):
         add("Global macro (dollar, yields, EM flows, rupee, oil)", f"{e:+d} from global checks", 5 if e >= 2 else (-5 if e <= -2 else 0))
     gr = (macro or {}).get("growth") or {}
     if gr.get("checks"):
-        sc = gr.get("score", 0)
-        add("India growth & earnings (GDP, inflation, earnings)", f"{sc:+d} from {len(gr['checks'])} checks", 5 if sc >= 3 else (-5 if sc <= -3 else 0))
+        sc, n = gr.get("score", 0), len(gr["checks"])
+        thr = max(3, round(n * 0.4))               # 40% of the checks agree (3 of 7, 4 of 10): adding checks keeps the sensitivity
+        add("India growth & earnings (GDP, inflation, earnings, profitability)", f"{sc:+d} from {n} checks (±{thr} moves equity)",
+            5 if sc >= thr else (-5 if sc <= -thr else 0))
     tilt = int(clamp(round(t / 5) * 5, -10, 10))
     return tilt, comps
 
