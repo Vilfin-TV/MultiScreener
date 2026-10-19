@@ -110,6 +110,7 @@ def accounts() -> list[dict]:
         for prod in ("mf", "etf"):
             out.append({"id": f"{p['name']}-{prod.upper()}", "name": p["name"], "product": prod, "risk": p["risk"],
                         "freq": p["freq"], "res": p["res"], "plan": CFG["horizon"] + p["risk"],
+                        "role": p.get("role"), "desk": p.get("desk"), "team": p.get("team"),
                         "amount": instalment_amount(p["risk"], p["freq"])})
     return out
 
@@ -524,7 +525,18 @@ def exit_rule(lines, nil=None):
     if nil:
         return {"tiers": [], "days": 0, "known": True}
     tiers, seen = {}, False
+    # the agents place one-time (lump-sum) purchases, so a clause that applies only to SIP purchases is set aside
+    # whenever the terms also state the rule for other purchases
+    other = re.compile(r"other than (?:through |via )?(?:an? )?sip|non-?sip|lump ?sum", re.I)
+    parts = []
     for ln in lines or []:
+        if other.search(ln):                       # separate SIP / non-SIP rules stated → keep the non-SIP one
+            cl = [c.strip() for c in re.split(r"[.;](?!\d)", ln) if c.strip()]
+            keep = [c for c in cl if other.search(c) or not re.search(r"\bsip\b|systematic investment", c, re.I)]
+            parts += keep or [ln]
+        else:
+            parts.append(ln)
+    for ln in parts:
         l = ln.lower().replace("–", "-")
         ps = [float(x) for x in re.findall(r"(\d+(?:\.\d+)?)\s*%", l) if float(x) <= 5]
         if re.search(r"\bnil\b|no exit load|not applicable|0\.0+\s*%|\b0\s*%", l) and not any(p > 0 for p in ps):
@@ -833,11 +845,13 @@ class Engine:
             payout = add_business(nd, 1)
         tds = 0.0
         if acc["res"] == "nri":
-            t = CFG["tax"]
+            # TDS at source on an NRI's capital gains (no ₹1.25 lakh exemption at source — any excess comes back
+            # through the tax return): gains and losses of the same sale are netted within each rate bucket first
+            t, buckets = CFG["tax"], {}
             for g in gains:
-                if g["gain"] > 0:
-                    rate = t["ltcgEquity"] if g["term"] == "LT" else t["stcgEquity"] if g["term"] == "ST" else t["debtSlab"]
-                    tds += g["gain"] * rate * (1 + t["cess"])
+                rate = t["ltcgEquity"] if g["term"] == "LT" else t["stcgEquity"] if g["term"] == "ST" else t["debtSlab"]
+                buckets[rate] = buckets.get(rate, 0.0) + g["gain"]
+            tds = sum(max(0.0, v) * rate * (1 + t["cess"]) for rate, v in buckets.items())
         net = r2(gross - charges["total"] - tds)
         append(self.store, "redeem", oid=o["oid"], navDate=nd.isoformat(), price=px, units=round(units, 6), gross=gross,
                charges=charges, tds=r2(tds), net=net, gains=gains, payout=payout.isoformat(),
@@ -1064,8 +1078,9 @@ class Engine:
                         if not px:
                             continue
                         units, gain, mode = 0.0, 0.0, None
-                        # gain harvesting: long-term lots (FIFO) into the unused exemption
-                        for l in lots:
+                        # gain harvesting: long-term lots (FIFO) into the unused exemption — not for NRI accounts, where
+                        # TDS is deducted on the sale itself and the saving only returns months later through the tax return
+                        for l in (lots if a["res"] != "nri" or H.get("nriGainHarvest") else []):
                             if not lot_free(l, T, tclass, rule, lock) or room - gain <= 0:
                                 break
                             gpu = px - l["cost"] / l["units"]
@@ -1617,7 +1632,8 @@ def scoreboard(view: dict, audit_ok: bool) -> dict:
         value = a["value"] - pend_val + pend_cost
         absr = (value / a["invested"] - 1) * 100 if valued else None
         row = {"name": a["name"], "product": a["product"], "risk": a["riskName"], "freq": a["freqName"],
-               "amt": a["amount"], "nri": a["res"] == "nri", "since": view["start"], "days": a["days"] if valued else 0,
+               "amt": a["amount"], "nri": a["res"] == "nri", "role": a.get("role"), "desk": a.get("desk"), "team": a.get("team"),
+               "since": view["start"], "days": a["days"] if valued else 0,
                "metric": "xirr" if valued and a["days"] >= 365 else "abs",
                "ret": (round((a["xirr"] or 0) * 100, 2) if a["days"] >= 365 else round(absr, 2)) if valued and audit_ok else None}
         if credit_by:

@@ -372,6 +372,24 @@ def main() -> int:
             A.check("rules", f is None or abs(f["amount"] - d["net"]) < 0.01, f"{oid}: switch-in funded {f and f['amount']} vs sale proceeds {d['net']}")
             if o["level"] == "harvest":
                 A.check("rules", str(inn.get("code") or inn.get("sym")) == key, f"{oid}: harvest buy-back is a different fund")
+    # tax at source: residents pay capital-gains tax through their return (no TDS); NRIs have TDS deducted on every
+    # sale — gains and losses of the sale netted within each rate bucket, plus cess, no exemption at source
+    T_ = CFG["tax"]
+    for oid, d in redeems.items():
+        o = orders.get(oid) or {}
+        nri = res.get(o.get("acct", "").rsplit("-", 1)[0]) == "nri"
+        exp = 0.0
+        if nri:
+            bk = {}
+            for g in d["gains"]:
+                rate = T_["ltcgEquity"] if g["term"] == "LT" else T_["stcgEquity"] if g["term"] == "ST" else T_["debtSlab"]
+                bk[rate] = bk.get(rate, 0.0) + g["gain"]
+            exp = sum(max(0.0, v) * rate * (1 + T_["cess"]) for rate, v in bk.items())
+        A.check("rules", abs(d["tds"] - exp) < 0.02, f"{oid}: TDS {d['tds']} vs {r2(exp)} ({'NRI' if nri else 'resident'})")
+        A.check("rules", abs(d["net"] - r2(d["gross"] - d["charges"]["total"] - d["tds"])) < 0.02, f"{oid}: net proceeds")
+        if nri and o.get("level") == "harvest":
+            A.check("rules", not any(g["gain"] > 0 for g in d["gains"]) or CFG["taxHarvest"].get("nriGainHarvest"),
+                    f"{oid}: gain harvesting in an NRI account (TDS at source)")
     for (person, fy), g in harvested.items():
         A.check("rules", g <= CFG["tax"]["ltcgExempt"] + 1, f"{person} FY{fy}: harvested equity gains {g:.0f} exceed the yearly exemption")
 
