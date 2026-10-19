@@ -125,6 +125,7 @@ DEBT_LABEL = {
     ("dmed", "easing"): "Medium-term debt (medium duration / corporate bond)",
 }
 # worst acceptable 3-year drawdown per debt category (a deeper fall means a credit or liquidity event)
+DEBT_TER_CAP = {"dshort": 0.45, "dcore": 0.50, "dmed": 0.60}   # direct-plan expense-ratio ceilings for debt slots
 DURATION_SUBS = {"gilt", "gilt10", "dynbond", "meddur", "medlong", "longdur"}   # rate-sensitive debt: more red 1-year periods are normal
 DEBT_MDD = {"overnight": -0.3, "liquid": -0.5, "money": -0.5, "ultrashort": -0.75, "lowdur": -1.0, "floater": -1.5,
             "shortdur": -2.0, "bankpsu": -2.0, "corpbond": -2.5, "meddur": -3.0, "gilt": -6.0, "gilt10": -7.0, "dynbond": -6.0}
@@ -876,10 +877,11 @@ def fund_checks(u, slot, code, ctx):
         cq = u.credit_share(code)
         chk("Credit quality", cq is None or cq >= 85, f"{cq:.0f}% AAA / sovereign / A1+" if cq is not None else "high-quality category (portfolio not yet published)")
         chk("Rate-cycle fit", sub in subs, f"suits a {ctx['regime']} rate cycle")
-        r1, m1 = g("r1y"), cs.get("r1y")
+        own = u.category_stats([sub])                # returns are compared within the fund's own debt category
+        r1, m1 = g("r1y"), own.get("r1y")
         chk("1Y return vs category", r1 is None or m1 is None or r1 >= m1 - 0.5,
             f"{r1:.2f}% vs median {m1:.2f}%" if r1 is not None and m1 is not None else "–")
-        sh, shm = g("sharpe"), cs.get("sharpe")
+        sh, shm = g("sharpe"), own.get("sharpe")
         chk("Risk-adjusted return vs category", sh is None or shm is None or sh >= shm - max(0.3, abs(shm) * 0.4),
             f"Sharpe {sh:.2f} vs median {shm:.2f}" if sh is not None and shm is not None else "–")
         p1, plim = g("pos1"), (85 if sub in DURATION_SUBS else 95)
@@ -890,6 +892,18 @@ def fund_checks(u, slot, code, ctx):
         t10 = pf.get("top10All")
         chk("Issuer concentration", t10 is None or sov >= 50 or t10 <= 75,
             (f"top 10 holdings {t10:.0f}%" + (" (mostly government securities)" if sov >= 50 else " (limit 75%)")) if t10 is not None else "portfolio not yet published")
+        r3, m3 = g("r3y"), own.get("r3y")
+        chk("3Y return vs category", r3 is None or m3 is None or r3 >= m3 - 0.4,
+            f"{r3:.2f}% vs median {m3:.2f}% a year (within 0.4 pt)" if r3 is not None and m3 is not None else "–")
+        rl, ml = g("roll3"), own.get("roll3")
+        chk("Rolling 3Y return vs category", rl is None or ml is None or rl >= ml - 0.4,
+            f"{rl:.2f}% vs median {ml:.2f}% a year" if rl is not None and ml is not None else "not enough history")
+        cap = DEBT_TER_CAP.get(slot, 0.5)
+        chk("Cost cap", ter is None or ter <= cap, f"{ter:.2f}% (limit {cap:.2f}% for this kind of debt fund)" if ter is not None else "not disclosed")
+        if slot == "dshort":
+            nil = g("exitNil")
+            chk("No exit load", sub == "liquid" or nil is not False,
+                "liquid fund — only the statutory 7-day exit charge" if sub == "liquid" else ("no exit load — money can be taken out any time" if nil else "exit load not confirmed — check the scheme documents"))
     if kind == "arb":
         r1, m1 = g("r1y"), cs.get("r1y")
         chk("1Y return vs category", r1 is None or m1 is None or r1 >= m1 - 0.3, f"{r1:.2f}% vs median {m1:.2f}%" if r1 is not None and m1 is not None else "–")
@@ -916,6 +930,33 @@ def fund_checks(u, slot, code, ctx):
         held = (mix.get("fund") or 0) + (mix.get("commodity") or 0) + (mix.get("gold") or 0) + (mix.get("silver") or 0)
         chk("Backed by the metal", not mix or held >= 90,
             f"{held:.0f}% in {ctx['metal']} ETF units / bullion" if mix else "portfolio not yet published (fund of the house's own ETF)")
+        r3, m3 = g("r3y"), cs.get("r3y")
+        chk("3Y return vs same-metal funds", r3 is None or m3 is None or r3 >= m3 - 0.75,
+            f"{r3:.1f}% vs median {m3:.1f}% a year (within 0.75 pt)" if r3 is not None and m3 is not None else "–")
+        chk("Cost cap", ter is None or ter <= 0.5, f"{ter:.2f}% (limit 0.50% — a metal fund only needs to track the price)" if ter is not None else "not disclosed")
+        sh, shm = g("sharpe"), cs.get("sharpe")
+        chk("Risk-adjusted return vs same-metal funds", sh is None or shm is None or sh >= shm - 0.15,
+            f"Sharpe {sh:.2f} vs median {shm:.2f}" if sh is not None and shm is not None else "–")
+    if slot == "multi":
+        mix = (u.pf.get(code) or {}).get("mix") or {}
+        if mix:
+            eqs = (mix.get("equity") or 0) + (mix.get("overseas") or 0)
+            dbt = (mix.get("debt") or 0) + (mix.get("cashOther") or 0)
+            com = (mix.get("fund") or 0) + (mix.get("commodity") or 0) + (mix.get("gold") or 0) + (mix.get("silver") or 0)
+            chk("Holds all three asset classes", eqs >= 10 and dbt >= 10 and com >= 5,
+                f"equity {eqs:.0f}% · debt & cash {dbt:.0f}% · gold / silver & other funds {com:.0f}%")
+            chk("Equity share in range", 35 <= eqs <= 80, f"{eqs:.0f}% in shares (range 35–80% — the model assumes about 65%)")
+            chk("Gold / silver share", com >= 8, f"{com:.0f}% in gold / silver and other fund units (needs 8%+)")
+            cash = mix.get("cashOther") or 0
+            chk("Cash not idle", cash <= 15, f"{cash:.0f}% in cash & other (limit 15%)")
+        else:
+            chk("Holds all three asset classes", True, "portfolio not yet published — multi-asset funds must hold at least 10% in each of three asset classes")
+        chk("Cost cap", ter is None or ter <= 1.0, f"{ter:.2f}% (limit 1.00%)" if ter is not None else "not disclosed")
+        r3, m3 = g("r3y"), cs.get("r3y")
+        chk("3Y return vs category", r3 is None or m3 is None or r3 >= m3 - 1.0,
+            f"{r3:.1f}% vs median {m3:.1f}% a year (within 1 pt)" if r3 is not None and m3 is not None else "–")
+        md, mm = g("mdd"), cs.get("mdd")
+        chk("Smaller falls than equity funds", md is None or md >= -25, f"worst fall {md:.1f}% (limit −25%)" if md is not None else "–")
     if slot == "theme":
         theme_checks(u, code, ctx, chk)
     return out
@@ -1362,7 +1403,11 @@ def choose(u, slot, ctx, chosen, amc_count, incumbent, review, cache):
             if new is not None:
                 return new, [c for c in cand if c != new][:2], "replaced", "Moved at the monthly review to match current market conditions"
         if not review:
-            return code, [c for c in cand if c != code][:2], "kept", ""
+            if code in ranked:
+                return code, [c for c in cand if c != code][:2], "kept", ""
+            fails = [x[0] for x in fund_checks(u, slot, code, {**ctx, "subs": subs}) if not x[1]]
+            return code, [c for c in cand if c != code][:2], "watch", (
+                "On watch (" + (", ".join(fails[:2]) if fails else "slipped in its category ranking") + ") — reviewed at the next monthly review")
         passes = code in ranked and (ranked.index(code) / max(len(ranked) - 1, 1)) <= 0.6
         strikes = 0 if passes else incumbent.get("strikes", 0) + 1
         incumbent["strikes"] = strikes

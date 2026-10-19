@@ -212,6 +212,10 @@ def checks_for(u: ETFs, slot: str, e: dict, pool: list[dict], min_tv: float, min
         tol = 0.5 if role == "debt" else 1.5
         c.append(["1Y return vs similar ETFs", r1 is None or m1 is None or r1 >= m1 - tol,
                   (f"{r1:.2f}% vs {m1:.2f}% median (within {tol:g} pt)" if r1 is not None and m1 is not None else "not enough history to compare")])
+        r3, m3 = (e.get("r") or {}).get("3y"), med((p.get("r") or {}).get("3y") for p in peers)
+        tol3 = 0.4 if role == "debt" else 1.0
+        c.append(["3Y return vs similar ETFs", r3 is None or m3 is None or r3 >= m3 - tol3,
+                  (f"{r3:.2f}% vs {m3:.2f}% median a year (within {tol3:g} pt)" if r3 is not None and m3 is not None else "less than 3 years of history — not judged")])
         vo, mv = e.get("vol"), med(p.get("vol") for p in peers)
         c.append(["Volatility vs similar ETFs", vo is None or mv is None or vo <= max(mv * 1.15, mv + (0.3 if role == "debt" else 1.0)),
                   (f"{vo:.2f}% vs {mv:.2f}% median" if vo is not None and mv is not None else "not enough history to compare")])
