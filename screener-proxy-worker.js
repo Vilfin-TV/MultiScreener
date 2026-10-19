@@ -2703,13 +2703,13 @@ async function buildStatusReport(env){
     const base = 'https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO;
     const repo = await _fetchJson(base, H);
     const runs = await _fetchJson(base+'/actions/runs?per_page=12', H);
-    const dependabot = await _fetchJson(base+'/dependabot/alerts?state=open&per_page=50', H);
-    const codescan = await _fetchJson(base+'/code-scanning/alerts?state=open&per_page=50', H);
+    const dependabot = await _fetchJson(base+'/dependabot/alerts?state=open&per_page=100', H);
+    const codescan = await _fetchJson(base+'/code-scanning/alerts?state=open&per_page=100', H);
     const gh = { configured:true };
     if (repo.json){ gh.sizeKB = repo.json.size; gh.private = repo.json.private; gh.pushedAt = repo.json.pushed_at; gh.defaultBranch = repo.json.default_branch; }
     if (runs.json && runs.json.workflow_runs){
       gh.workflows = runs.json.workflow_runs.slice(0,12).map(function(w){ return { name:w.name, status:w.status, conclusion:w.conclusion, event:w.event, at:w.created_at, url:w.html_url }; });
-      gh.failedWorkflows = gh.workflows.filter(function(w){ return w.conclusion && w.conclusion!=='success' && w.conclusion!=='skipped' && w.conclusion!=='neutral'; }).length;
+      gh.failedWorkflows = gh.workflows.filter(function(w){ return w.conclusion && w.conclusion!=='success' && w.conclusion!=='skipped' && w.conclusion!=='neutral' && w.conclusion!=='cancelled'; }).length;   // cancelled = replaced by a newer run, not a failure
     }
     const why = function(res){
       const m = String((res.json && res.json.message) || res.text || '').toLowerCase();
@@ -2722,6 +2722,24 @@ async function buildStatusReport(env){
     gh.codeScanningOpen = (codescan.json && Array.isArray(codescan.json)) ? codescan.json.length : why(codescan);
     if (dependabot.json && Array.isArray(dependabot.json)){
       gh.dependabotBySeverity = dependabot.json.reduce(function(a,x){ var s=(x.security_advisory&&x.security_advisory.severity)||'unknown'; a[s]=(a[s]||0)+1; return a; }, {});
+    }
+    // Alert details for the console (package, severity, file, patched version, link)
+    const SEV = { critical:0, high:1, medium:2, moderate:2, low:3, warning:3, note:4, error:1 };
+    if (dependabot.json && Array.isArray(dependabot.json)){
+      gh.dependabotAlerts = dependabot.json.map(function(x){
+        const d = x.dependency||{}, pk = d.package||{}, a = x.security_advisory||{}, v = x.security_vulnerability||{};
+        return { n:x.number, url:x.html_url, pkg:pk.name||'', eco:pk.ecosystem||'', file:d.manifest_path||'', scope:d.scope||'',
+                 sev:a.severity||'unknown', title:a.summary||'', cve:a.cve_id||a.ghsa_id||'',
+                 range:v.vulnerable_version_range||'', fix:(v.first_patched_version&&v.first_patched_version.identifier)||'', at:x.created_at };
+      }).sort(function(a,b){ return (SEV[a.sev]??9)-(SEV[b.sev]??9) || a.pkg.localeCompare(b.pkg); });
+    }
+    if (codescan.json && Array.isArray(codescan.json)){
+      gh.codeScanningAlerts = codescan.json.map(function(x){
+        const r = x.rule||{}, loc = (x.most_recent_instance&&x.most_recent_instance.location)||{};
+        return { n:x.number, url:x.html_url, rule:r.id||'', title:r.description||'', sev:r.security_severity_level||r.severity||'unknown',
+                 file:loc.path||'', line:loc.start_line||0, tool:(x.tool&&x.tool.name)||'', at:x.created_at };
+      }).sort(function(a,b){ return (SEV[a.sev]??9)-(SEV[b.sev]??9) || a.file.localeCompare(b.file); });
+      gh.codeScanningBySeverity = gh.codeScanningAlerts.reduce(function(a,x){ a[x.sev]=(a[x.sev]||0)+1; return a; }, {});
     }
     out.github = gh;
   } else { out.github = { configured:false, note:'GITHUB_TOKEN not set on the worker.' }; }

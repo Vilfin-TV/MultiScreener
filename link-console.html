@@ -883,6 +883,9 @@
     .rb-card .rb-v,.rb-sec h3,.rb-row b{ color:var(--tp-text) !important; }
     .rb-card .rb-k,.rb-card .rb-sub,.rb-row,.rb-lbl,.perm-grid th,.op-tbl th{ color:var(--tp-text2) !important; }
     .perm-grid td,.op-tbl td{ color:var(--tp-text) !important; border-color:var(--tp-border) !important; }
+    .rb-al,.rb-al b{ color:var(--tp-text) !important; } .rb-al td,.rb-al-wrap{ border-color:var(--tp-border) !important; }
+    .rb-al th,.rb-al-h{ color:var(--tp-text2) !important; background:color-mix(in srgb,var(--tp-text) 5%,transparent); }
+    .rb-al-h{ background:none; } .rb-al-note{ color:var(--tp-text3) !important; } .rb-al a{ color:var(--tp-accent) !important; }
     .rb-btn{ background:linear-gradient(135deg,var(--tp-accent),var(--tp-accent2)); color:var(--tp-on-accent); }
     /* theme picker */
     .theme-pick{ display:flex; align-items:center; gap:6px; }
@@ -5860,6 +5863,28 @@ async function saveIptvSettings() {
   .rb-ok{background:rgba(77,219,138,.16);color:#4ddb8a} .rb-warn{background:rgba(255,180,84,.16);color:#ffb454} .rb-bad{background:rgba(255,84,112,.16);color:#ff8888}
   .rb-sec{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:16px;margin-bottom:16px}
   .rb-sec h3{font-size:14px;color:#fff;margin:0 0 12px}
+  .rb-low{background:rgba(120,160,255,.16);color:#9db8ff}
+  .rb-sev{text-transform:capitalize;min-width:64px;text-align:center}
+  .rb-al-h{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;color:#b9b9cc;text-transform:uppercase;letter-spacing:.4px;margin:6px 0 8px}
+  .rb-al-h span{text-transform:none;letter-spacing:0;font-weight:600;opacity:.8}
+  .rb-al-wrap{overflow-x:auto;margin-bottom:14px;border:1px solid rgba(255,255,255,.07);border-radius:10px}
+  .rb-al{width:100%;border-collapse:collapse;font-size:12.5px;color:#cfcfe0}
+  .rb-al th{position:sticky;top:0;background:rgba(255,255,255,.04);color:#b9b9cc;font-size:11px;text-transform:uppercase;letter-spacing:.4px;text-align:left;padding:8px 10px;white-space:nowrap}
+  .rb-al td{padding:8px 10px;border-top:1px solid rgba(255,255,255,.05);vertical-align:top}
+  .rb-al tbody tr:hover{background:rgba(255,255,255,.03)}
+  .rb-al b{color:#fff}
+  .rb-al code{font-family:'JetBrains Mono',monospace;font-size:11.5px;overflow-wrap:anywhere}
+  .rb-al .rb-fix{color:#4ddb8a}
+  .rb-al a{color:#8fb4ff;text-decoration:none;white-space:nowrap}.rb-al a:hover{text-decoration:underline}
+  .rb-al-s{display:block;font-size:11px;opacity:.6;margin-top:2px}
+  .rb-al-note{font-size:11.5px;color:#8a8a9e}
+  @media (max-width:760px){
+    .rb-al thead{display:none}
+    .rb-al,.rb-al tbody,.rb-al tr,.rb-al td{display:block;width:100%}
+    .rb-al tr{padding:8px 4px;border-top:1px solid rgba(255,255,255,.07)}
+    .rb-al td{border:none;padding:3px 8px}
+    .rb-al td[data-l]::before{content:attr(data-l);display:inline-block;min-width:74px;font-size:10.5px;text-transform:uppercase;opacity:.55}
+  }
   .rb-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;color:#cfcfe0}
   .rb-row:last-child{border-bottom:none}
   .rb-row b{color:#fff;font-weight:600}
@@ -6013,6 +6038,33 @@ async function _rbFetch(){
 }
 function _rbPill(s){var c=s==='healthy'?'rb-ok':(s==='attention'?'rb-bad':'rb-warn');return '<span class="rb-pill '+c+'">'+esc(s)+'</span>';}
 function _rbBytes(n){if(n==null)return '—';if(n<1024)return n+' B';if(n<1048576)return (n/1024).toFixed(1)+' KB';if(n<1073741824)return (n/1048576).toFixed(2)+' MB';return (n/1073741824).toFixed(2)+' GB';}
+function _rbSev(s){s=String(s||'unknown').toLowerCase();var c=(s==='critical'||s==='high'||s==='error')?'rb-bad':((s==='medium'||s==='moderate'||s==='warning')?'rb-warn':'rb-low');return '<span class="rb-pill rb-sev '+c+'">'+esc(s)+'</span>';}
+function _rbAlerts(g){
+  var dep=g.dependabotAlerts||[], cs=g.codeScanningAlerts||[];
+  if(!dep.length&&!cs.length) return '';
+  var h='<div class="rb-sec"><h3>🛡️ Security alert details</h3>';
+  var link=function(u,t){return u?'<a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">'+t+'</a>':t;};
+  if(dep.length){
+    h+='<div class="rb-al-h">Dependabot · vulnerable dependencies <span>'+dep.length+' open</span></div><div class="rb-al-wrap"><table class="rb-al"><thead><tr><th>Severity</th><th>Package</th><th>Issue</th><th>File</th><th>Affected</th><th>Fixed in</th><th></th></tr></thead><tbody>';
+    dep.forEach(function(a){
+      h+='<tr><td>'+_rbSev(a.sev)+'</td><td data-l="Package"><b>'+esc(a.pkg)+'</b><span class="rb-al-s">'+esc(a.eco)+(a.scope==='development'?' · dev':'')+'</span></td>'
+        +'<td data-l="Issue">'+esc(a.title)+(a.cve?'<span class="rb-al-s">'+esc(a.cve)+'</span>':'')+'</td>'
+        +'<td data-l="File"><code>'+esc(a.file)+'</code></td><td data-l="Affected"><code>'+esc(a.range)+'</code></td>'
+        +'<td data-l="Fixed in">'+(a.fix?'<code class="rb-fix">'+esc(a.fix)+'</code>':'<span class="rb-al-s">no fix yet</span>')+'</td>'
+        +'<td>'+link(a.url,'#'+a.n+' ↗')+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+  }
+  if(cs.length){
+    h+='<div class="rb-al-h">Code scanning · findings in our code <span>'+cs.length+' open</span></div><div class="rb-al-wrap"><table class="rb-al"><thead><tr><th>Severity</th><th>Rule</th><th>Finding</th><th>Location</th><th></th></tr></thead><tbody>';
+    cs.forEach(function(a){
+      h+='<tr><td>'+_rbSev(a.sev)+'</td><td data-l="Rule"><code>'+esc(a.rule)+'</code></td><td data-l="Finding">'+esc(a.title)+'</td>'
+        +'<td data-l="Location"><code>'+esc(a.file)+(a.line?(':'+a.line):'')+'</code></td><td>'+link(a.url,'#'+a.n+' ↗')+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+  }
+  return h+'<div class="rb-al-note">Dependency alerts close automatically once a patched version is in the repository. Open a row for the full advisory.</div></div>';
+}
 function _rbRow(k,v){return '<div class="rb-row"><span>'+k+'</span><b>'+v+'</b></div>';}
 function _rbRender(r){
   var s=r.summary||{};
@@ -6053,13 +6105,14 @@ function _rbRender(r){
     var depColor=(typeof g.dependabotOpen==='number'&&g.dependabotOpen>0)?'rb-bad':'rb-ok';
     var ghTxt=function(v){return typeof v==='number'?String(v):v==='not-enabled'?'not switched on':v==='no-access'?'token lacks access':'n/a';};
     h+=_rbRow('Dependabot alerts','<span class="rb-pill '+(typeof g.dependabotOpen==='number'?depColor:'rb-warn')+'">'+esc(ghTxt(g.dependabotOpen))+'</span>'+(g.dependabotBySeverity?(' '+Object.keys(g.dependabotBySeverity).map(function(k){return esc(k)+':'+g.dependabotBySeverity[k];}).join(', ')):''));
-    h+=_rbRow('Code scanning',esc(ghTxt(g.codeScanningOpen)));
+    h+=_rbRow('Code scanning','<span class="rb-pill '+(typeof g.codeScanningOpen==='number'?(g.codeScanningOpen>0?'rb-bad':'rb-ok'):'rb-warn')+'">'+esc(ghTxt(g.codeScanningOpen))+'</span>'+(g.codeScanningBySeverity?(' '+Object.keys(g.codeScanningBySeverity).map(function(k){return esc(k)+':'+g.codeScanningBySeverity[k];}).join(', ')):''));
     if(g.workflows){g.workflows.slice(0,8).forEach(function(w){
-      var c=w.conclusion==='success'?'rb-ok':(w.conclusion?'rb-bad':'rb-warn');
+      var c=w.conclusion==='success'?'rb-ok':((w.conclusion==='cancelled'||w.conclusion==='skipped')?'rb-warn':(w.conclusion?'rb-bad':'rb-warn'));
       h+=_rbRow(esc(w.name)+' <span style="opacity:.5">('+esc(w.event)+')</span>','<span class="rb-pill '+c+'">'+esc(w.conclusion||w.status)+'</span>');
     });}
   }
   h+='</div>';
+  h+=_rbAlerts(g);
 
   // cloudflare
   var c=r.cloudflare||{};
