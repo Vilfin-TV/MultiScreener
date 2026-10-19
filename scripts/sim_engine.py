@@ -19,8 +19,9 @@ with real-life order rules:
 
 State is an append-only event log; every event carries the hash of the previous one, so any later edit breaks the
 chain (scripts/audit_sim.py checks it). The ledger, prices used, plan snapshots and daily valuations live in the
-private R2 store (downloaded / uploaded by .github/workflows/sim_ledger.yml); only per-person return percentages are
-published (data/sim_scoreboard.json).
+private R2 store (downloaded / uploaded by .github/workflows/sim_ledger.yml). A daily portfolio summary journal
+(store["days"], its own hash chain) records every account's value, day change, holdings' moves, look-through exposure
+and the day's market moves. Published: data/sim_scoreboard.json and, while the audit passes, data/sim/<person>.json.
 
 Usage: python scripts/sim_engine.py --store sim_store.json [--today YYYY-MM-DD] [--view out.json]
        [--scoreboard data/sim_scoreboard.json] [--backtest-start YYYY-MM-DD] [--no-network]
@@ -1161,6 +1162,7 @@ class Engine:
         self.fund_review_buys()
         self.settle()                    # switch-in buys with the sell proceeds
         self.value()
+        self.journal()
 
     # valuation, XIRR, benchmark
     def value(self):
@@ -1177,8 +1179,8 @@ class Engine:
                     continue
                 px = self.price(a["product"], key, V)
                 val += u * (px or 0)
-            for o in s["orders"]:
-                if "done" not in o and o["side"] == "buy":
+            for o in s["orders"]:                    # ETF money waiting for a fill is still in the account's cash
+                if "done" not in o and o["side"] == "buy" and a["product"] == "mf":
                     pend += o["amount"] if o.get("amount") is not None else funded.get(o["oid"], 0.0)
             if a["product"] == "etf":
                 val += s["cash"]
@@ -1231,6 +1233,208 @@ class Engine:
             units += n
             cash = r2(cash - n * px - ch["total"])
         return units * (self.mkt.etf_latest(sym, V)[1] or 0) + cash
+
+    # ───────────── daily portfolio summary journal ─────────────
+    def prev_price(self, product, key, pd: date):
+        """The official price before pd (previous NAV / previous session close) — the base of the day's move."""
+        if product == "mf":
+            if self.backtest:
+                return self.mkt.mf_latest(int(key), pd - timedelta(days=1))
+            ds = [d for d in self.mkt.mf_dates(int(key)) if d < pd.isoformat()]
+            return (D(ds[-1]), self.mkt.c["mf"][str(key)][ds[-1]]) if ds else (None, None)
+        return self.mkt.etf_latest(key, pd - timedelta(days=1))
+
+    def bench_at(self, a, inst, d: date) -> float:
+        """Same cash on the same dates into the Nifty 50 index fund / ETF, with the same costs and the same credit
+        rule as the account (units count at what was paid until they are credited)."""
+        units, cash = 0.0, 0.0
+        if a["product"] == "mf":
+            code = int(CFG["benchmark"]["mf"])
+            for i in inst:
+                T = D(i["T"])
+                nd, nav = self.nav_date_for(code, T, d)
+                if not nav:
+                    cash += i["amount"]
+                    continue
+                u = trunc(r2(i["amount"] - r2(i["amount"] * CFG["mfRules"]["stampDuty"])) / nav, 3)
+                if add_business(T, CFG["mfRules"]["creditBusinessDays"]) <= d:
+                    units += u
+                else:
+                    cash += i["amount"]
+            return units * (self.mkt.mf_latest(code, d)[1] or 0) + cash
+        sym, pend = CFG["benchmark"]["etf"], 0.0
+        for i in inst:
+            sd, px = self.mkt.etf_session_on_or_after(sym, D(i["T"]), d)
+            cash += i["amount"]
+            if not px:
+                continue
+            n, ch = etf_units_for(cash, px, a["res"], True)
+            cash = r2(cash - n * px - ch["total"])
+            if add_business(sd, CFG["etfFees"]["creditBusinessDays"]) <= d:
+                units += n
+            else:
+                pend += n * px + ch["total"]
+        return units * (self.mkt.etf_latest(sym, d)[1] or 0) + pend + cash
+
+    def lookthrough(self, a, key: str) -> str:
+        """The fund's / ETF's composition from its latest monthly portfolio (all sectors, top stocks) and its asset
+        label, recorded once per portfolio month in store["lookthrough"]; returns that month (the daily record keeps
+        only this reference, so any day's exposure can be recomputed exactly)."""
+        cache = self.__dict__.setdefault("_pfc", {})
+        if a["product"] == "mf":
+            f = self.mkt.fund(int(key)) or {}
+            kind = f.get("sub") or ""
+            if kind not in cache:
+                try:
+                    cache[kind] = json.loads((DATA / "mf" / "p" / f"{kind}.json").read_text()) if kind else {}
+                except Exception:  # noqa: BLE001
+                    cache[kind] = {}
+            pf = cache[kind].get(str(key))
+        else:
+            kind = ((self.mkt.etfs.get(key) or {}).get("k") or "")
+            if "_etf" not in cache:
+                try:
+                    cache["_etf"] = json.loads((DATA / "etf_holdings.json").read_text()).get("etfs", {})
+                except Exception:  # noqa: BLE001
+                    cache["_etf"] = {}
+            pf = cache["_etf"].get(key)
+        lk = kind.lower()
+        label = ("Gold" if "gold" in lk else "Silver" if "silver" in lk
+                 else "International" if any(x in lk for x in ("international", "global", "us", "asia", "nasdaq"))
+                 else "Debt & cash" if any(x in lk for x in ("liquid", "debt", "gilt", "bond", "floater", "money", "overnight", "duration", "credit", "arbitrage")) else None)
+        month = (pf or {}).get("asOf") or "none"
+        book = self.store.setdefault("lookthrough", {}).setdefault(f"{a['product']}:{key}", {})
+        if month not in book:
+            book[month] = {"asset": label,
+                           "sec": [[n.strip(), p] for n, p in (pf or {}).get("sectors") or [] if isinstance(n, str) and any(c.isalpha() for c in n) and n not in ("N.A.", "Others")],
+                           "stk": [[t[0], t[2]] for t in (pf or {}).get("top") or [] if len(t) > 4 and t[4] == "equity"]}
+        return month
+
+    def journal(self):
+        """One summary per account per market day (from the first day it holds credited units) and one record of the
+        day's market moves, appended to store["days"] — a hash chain of its own, never rewritten. Each account
+        summary is computed from the ledger as of that day and the official prices kept in the store, so the audit
+        can recompute it; missed days are filled in order on the next run."""
+        days = self.store.setdefault("days", [])
+        last = {}
+        self._lastlt = {}                    # look-through month references are stored only when they change
+        for e in days:
+            last[e.get("a") or "mkt"] = e
+            if "lt" in e:
+                self._lastlt[e["a"]] = e["lt"]
+        evs = self.store["events"]
+        odate = {e["oid"]: e["T"] for e in evs if e["k"] == "order"}
+
+        def eff(e):
+            return e.get("T") if e["k"] in ("instalment", "order") else odate.get(e.get("oid")) if e["k"] in ("allot", "fill", "redeem") else None
+        Vmax = max(self.valuation_date(a) for a in self.accts)
+        d0 = D(CFG["start"])
+        d = min(D(last[k]["d"]) + timedelta(days=1) if k in last else d0 for k in ["mkt"] + [a["id"] for a in self.accts])
+        while d <= Vmax:
+            if not is_trading(d):
+                d += timedelta(days=1)
+                continue
+            ds = d.isoformat()
+            if d <= D(self.mkt.etf_asof) or self.backtest:
+                lm = last.get("mkt")
+                if not lm or lm["d"] < ds:
+                    m = []
+                    for sym, _ in CFG["daily"]["market"]:
+                        pd, px = self.mkt.etf_latest(sym, d)
+                        if pd != d or not px:
+                            continue
+                        qd, qx = self.prev_price("etf", sym, d)
+                        if qx:
+                            m.append([sym, px, ds, qx, qd.isoformat()])
+                    if m:
+                        last["mkt"] = self._day(days, {"t": "mkt", "d": ds, "m": m})
+            st = None
+            for a in self.accts:
+                le = last.get(a["id"])
+                if (le and le["d"] >= ds) or d > self.valuation_date(a):
+                    continue
+                if st is None:
+                    st = replay([e for e in evs if (eff(e) or "9999") <= ds])
+                e = self.day_entry(a, st.get(a["id"]), d, le, evs, odate)
+                if e:
+                    last[a["id"]] = self._day(days, e)
+            d += timedelta(days=1)
+
+    @staticmethod
+    def _day(days: list, e: dict) -> dict:
+        e = {"seq": len(days) + 1, **e, "prev": days[-1]["h"] if days else "genesis"}
+        e["h"] = ev_hash(e)
+        days.append(e)
+        return e
+
+    def day_entry(self, a, s, d: date, prev, evs, odate):
+        if not s:
+            return None
+        ds, mf = d.isoformat(), a["product"] == "mf"
+        hold, cred_any, val = [], False, 0.0
+        for key, lots in sorted(s["lots"].items()):
+            lots = [l for l in lots if l["units"] > 1e-9]
+            if not lots:
+                continue
+            cu = round(sum(l["units"] for l in lots if D(l["credit"]) <= d), 6)
+            uc = r2(sum(l["cost"] for l in lots if D(l["credit"]) > d))
+            pd, px = (self.mkt.mf_latest(int(key), d) if mf else self.mkt.etf_latest(key, d))
+            qd, qx = self.prev_price(a["product"], key, pd) if pd else (None, None)
+            hv = r2(cu * (px or 0) + uc)
+            if cu > 0 and not px:
+                return None                  # no official price on record for a credited holding — no summary that day
+            cred_any = cred_any or cu > 0
+            hold.append([key, cu, px, pd.isoformat() if pd else None, qx, qd.isoformat() if qd else None, hv, uc])
+            val += hv
+        if not cred_any:
+            return None
+        pend = 0.0
+        if mf:
+            funded = {e["oid"]: e["amount"] for e in evs if e["k"] == "fund"}
+            for o in s["orders"]:
+                if "done" not in o and o["side"] == "buy":
+                    pend += o["amount"] if o.get("amount") is not None else funded.get(o["oid"], 0.0)
+        cash = r2(s["cash"]) if not mf else 0.0
+        val = r2(val + pend + cash)
+        inv = r2(sum(i["amount"] for i in s["inst"]))
+        out = r2(sum(x["net"] for x in s["sells"] if x.get("withdraw")))
+        bval = r2(self.bench_at(a, s["inst"], d))
+        # per-holding change: value now − value at the last summary − money added + sale proceeds
+        ph = {h[0]: h for h in (prev or {}).get("hold", [])}
+        pdate = prev["d"] if prev else "0000"
+        added, sold = {}, {}
+        for o in s["orders"]:
+            if not (pdate < o["T"] <= ds) or "done" not in o:
+                continue
+            k = str(o.get("code") or o.get("sym"))
+            dn = o["done"]
+            if o["side"] == "buy":
+                added[k] = added.get(k, 0) + (dn["amount"] if dn["k"] == "allot" else dn["gross"] + dn["charges"]["total"])
+            else:
+                sold[k] = sold.get(k, 0) + dn["gross"]
+        for h in hold:
+            base = ph[h[0]][6] if h[0] in ph else 0.0
+            if prev:
+                h.append(r2(h[6] - base - added.get(h[0], 0) + sold.get(h[0], 0)))
+            else:
+                h.append(r2(h[6] - sum(l["cost"] for l in s["lots"][h[0]] if l["units"] > 1e-9)))
+        if prev:
+            flow = (inv - prev["inv"]) - (out - prev["out"])
+            chg, bchg = r2(val - prev["val"] - flow), r2(bval - prev["bval"] - flow)
+            pct = round(chg / prev["val"] * 100, 4) if prev["val"] else 0.0
+            bpct = round(bchg / prev["bval"] * 100, 4) if prev["bval"] else 0.0
+        else:
+            net = inv - out
+            chg, bchg = r2(val - net), r2(bval - net)
+            pct = round(chg / net * 100, 4) if net else 0.0
+            bpct = round(bchg / net * 100, 4) if net else 0.0
+        e = {"t": "acct", "d": ds, "a": a["id"], "inv": inv, "out": out, "val": val, "cash": cash, "pend": r2(pend),
+             "chg": chg, "pct": pct, "bval": bval, "bchg": bchg, "bpct": bpct, "first": not prev,
+             "hold": hold}
+        lt = {h[0]: self.lookthrough(a, h[0]) for h in hold if h[1] > 0}
+        if lt != self._lastlt.get(a["id"]):
+            e["lt"] = self._lastlt[a["id"]] = lt
+        return e
 
 
 def tax_class(fund, sym, mkt) -> str:
@@ -1415,8 +1619,98 @@ def scoreboard(view: dict, audit_ok: bool) -> dict:
         rows.append(row)
     # dated by the market data, not the run time — an unchanged scoreboard must not create a new commit every run
     asof = max([a["valuationDate"] for a in view["accounts"] if a.get("valuationDate")] or [min(view.get("mfAsOf") or "", view.get("etfAsOf") or "") or view["start"]])
-    return {"v": 3, "updated": asof, "start": view["start"], "auditOk": audit_ok, "rows": rows}
+    return {"v": 4, "updated": asof, "start": view["start"], "auditOk": audit_ok, "rows": rows}
 
+
+def exposure_from(product: str, hold: list, lt: dict, book: dict) -> dict:
+    """Look-through exposure (% of the portfolio) of a daily record: credited holdings' values × each one's recorded
+    composition (store["lookthrough"]) — top sectors with their market tracker, top stocks and non-equity shares."""
+    vals = {h[0]: h[1] * (h[2] or 0) for h in hold if h[1] > 0}
+    tot = sum(vals.values())
+    if tot <= 0:
+        return {}
+    sec, stk, asset, months = {}, {}, {}, set()
+    for key, v in vals.items():
+        m = lt.get(key)
+        comp = (book.get(f"{product}:{key}") or {}).get(m) or {}
+        w = v / tot * 100
+        if m and m != "none":
+            months.add(m)
+        if comp.get("asset"):
+            asset[comp["asset"]] = asset.get(comp["asset"], 0) + w
+        for n, pct in comp.get("sec", []):
+            k = n.lower()
+            sec[k] = (sec.get(k, (n, 0))[0], sec.get(k, (n, 0))[1] + w * pct / 100)
+        for n, pct in comp.get("stk", []):
+            stk[n] = stk.get(n, 0) + w * pct / 100
+    tr = CFG["daily"]["sectorTracker"]
+    return {"pm": max(months) if months else None,
+            "sec": [[n, round(v, 2), tr.get(k)] for k, (n, v) in sorted(sec.items(), key=lambda x: -x[1][1])[:6]],
+            "stk": [[n, round(v, 2)] for n, v in sorted(stk.items(), key=lambda x: -x[1])[:5]],
+            "asset": [[n, round(v, 2)] for n, v in sorted(asset.items(), key=lambda x: -x[1])]}
+
+def acct_slug(aid: str) -> str:
+    return "".join(c if c.isalnum() else "-" for c in aid.lower()).strip("-")
+
+
+def account_files(store: dict, view: dict, sb: dict) -> dict:
+    """Per-person public files (data/sim/<slug>.json), written only while the audit passes: profile, holdings
+    summary (moved here from the scoreboard), the daily summary series for the Portfolio-vs-Nifty-50 chart and the
+    last few full daily summaries (holdings' moves and contributions, look-through exposure, market moves)."""
+    days = store.get("days", [])
+    labels = {sym: lab for sym, lab in CFG["daily"]["market"]}
+    mkt = {e["d"]: e for e in days if e["t"] == "mkt"}
+    by = {}
+    for e in days:
+        if e["t"] == "acct":
+            by.setdefault(e["a"], []).append(e)
+    names, cats = {}, {}
+    try:
+        sc = json.loads((DATA / "mf" / "screener.json").read_text())
+        c = sc["cols"]
+        subn = {k: v[1] for k, v in sc["subs"].items()}
+        for r in sc["rows"]:
+            cats[str(r[c.index("code")])] = subn.get(r[c.index("sub")], r[c.index("sub")])
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        for x in json.loads((DATA / "etf_momentum.json").read_text())["etfs"]:
+            cats[x["s"]] = x.get("k") or ""
+    except Exception:  # noqa: BLE001
+        pass
+    for a in view["accounts"]:
+        for t in a["txns"]:
+            names[str(t.get("code") or t.get("sym"))] = t["name"]
+
+    def moves(ds):
+        m = mkt.get(ds)
+        if not m:
+            return []
+        return sorted([[labels.get(sym, sym), sym, round((px / qx - 1) * 100, 2)] for sym, px, _, qx, _ in m["m"] if qx],
+                      key=lambda x: -abs(x[2]))
+    keep = CFG["daily"]["keepPublicDays"]
+    book = store.get("lookthrough", {})
+    for es in by.values():                   # look-through references are recorded only when they change
+        lt = {}
+        for e in es:
+            lt = e.get("lt", lt)
+            e["_lt"] = lt
+    out = {}
+    for row, a in zip(sb["rows"], view["accounts"]):
+        es = by.get(a["id"], [])
+        f = acct_slug(a["id"])
+        row["f"] = f
+        if es:
+            row["day"] = {"d": es[-1]["d"], "chg": es[-1]["chg"], "pct": es[-1]["pct"], "first": es[-1]["first"]}
+        out[f] = {"v": 1, "id": a["id"], "updated": sb["updated"], "auditOk": sb["auditOk"],
+                  **{k: row[k] for k in ("name", "product", "risk", "freq", "amt", "nri", "since", "metric", "ret") if k in row},
+                  "credit": row.get("credit"), "detail": row.pop("detail", None),
+                  "series": [[e["d"], e["val"], e["inv"], e["pct"], e["bpct"], e["bval"]] for e in es],
+                  "recent": [{"d": e["d"], "val": e["val"], "inv": e["inv"], "chg": e["chg"], "pct": e["pct"], "bval": e["bval"],
+                              "bchg": e["bchg"], "bpct": e["bpct"], "first": e["first"], "cash": e["cash"], "pend": e["pend"],
+                              "hold": [[names.get(h[0], h[0]), h[0], cats.get(h[0], "")] + h[1:] for h in e["hold"]],
+                              "x": exposure_from(a["product"], e["hold"], e["_lt"], book), "mkt": moves(e["d"])} for e in es[-keep:]]}
+    return out
 
 def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")

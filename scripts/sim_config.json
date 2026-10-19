@@ -76,5 +76,22 @@
     "day": 10,
     "minGain": 1000
   },
-  "tax": {"stcgEquity": 0.20, "ltcgEquity": 0.125, "ltcgExempt": 125000, "debtSlab": 0.30, "cess": 0.04, "ltcgDaysEquity": 365}
+  "tax": {"stcgEquity": 0.20, "ltcgEquity": 0.125, "ltcgExempt": 125000, "debtSlab": 0.30, "cess": 0.04, "ltcgDaysEquity": 365},
+  "daily": {
+    "_comment": "Daily portfolio summary journal (store['days']). Market moves are the official closes of these index-tracking ETFs; look-through sector exposure (from the funds' latest monthly portfolios) is linked to the tracker of the same sector (names matched case-insensitively).",
+    "market": [["NIFTYBEES", "Nifty 50"], ["JUNIORBEES", "Nifty Next 50"], ["MID150BEES", "Nifty Midcap 150"], ["HDFCSML250", "Nifty Smallcap 250"],
+               ["BANKBEES", "Nifty Bank"], ["PSUBNKBEES", "Nifty PSU Bank"], ["ITBEES", "Nifty IT"], ["PHARMABEES", "Nifty Pharma"],
+               ["AUTOBEES", "Nifty Auto"], ["FMCGIETF", "Nifty FMCG"], ["CONSUMBEES", "Nifty India Consumption"], ["INFRABEES", "Nifty Infra"],
+               ["METALIETF", "Nifty Metal"], ["OILIETF", "Nifty Oil & Gas"], ["CPSEETF", "Nifty CPSE"], ["MODEFENCE", "Nifty India Defence"],
+               ["MON100", "Nasdaq 100"], ["MASPTOP50", "S&P 500 Top 50"], ["HNGSNGBEES", "Hang Seng"], ["GOLDBEES", "Gold"], ["SILVERBEES", "Silver"]],
+    "sectorTracker": {"banks": "BANKBEES", "it - software": "ITBEES", "it - services": "ITBEES", "pharmaceuticals & biotechnology": "PHARMABEES",
+                      "healthcare services": "PHARMABEES", "automobiles": "AUTOBEES", "auto components": "AUTOBEES", "diversified fmcg": "FMCGIETF",
+                      "food products": "FMCGIETF", "personal products": "FMCGIETF", "beverages": "FMCGIETF", "cigarettes & tobacco products": "FMCGIETF",
+                      "petroleum products": "OILIETF", "oil": "OILIETF", "gas": "OILIETF", "consumable fuels": "OILIETF",
+                      "ferrous metals": "METALIETF", "non - ferrous metals": "METALIETF", "minerals & mining": "METALIETF", "diversified metals": "METALIETF",
+                      "aerospace & defense": "MODEFENCE", "construction": "INFRABEES", "cement & cement products": "INFRABEES", "power": "INFRABEES",
+                      "telecom - services": "INFRABEES", "transport infrastructure": "INFRABEES", "retailing": "CONSUMBEES",
+                      "consumer durables": "CONSUMBEES", "leisure services": "CONSUMBEES"},
+    "keepPublicDays": 14
+  }
 }
