@@ -17,7 +17,6 @@ const SEC = {
   "X-Robots-Tag": "noindex, nofollow, noarchive",
   "Referrer-Policy": "no-referrer",
   "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "DENY",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
 };
 
@@ -54,7 +53,7 @@ export default {
       return new Response(PAGE, {
         headers: {
           ...SEC, "Content-Type": "text/html; charset=utf-8",
-          "Content-Security-Policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+          "Content-Security-Policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data:; frame-ancestors https://vilfintv.com https://www.vilfintv.com https://vilfin-tv.github.io; base-uri 'none'; form-action 'none'",
         },
       });
     }
