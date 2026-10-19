@@ -286,6 +286,44 @@ def main() -> int:
         if acc is not None:
             A.check("cash", abs((acc.get("cash") or 0) - cash) < 0.02, f"{aid}: cash {acc.get('cash')} vs recomputed {cash}")
 
+    # sell review & tax harvesting rules (sim_config sellRules / taxHarvest)
+    R, TH = CFG["sellRules"], CFG["taxHarvest"]
+    m = start.month - 1 + R["minHoldMonths"]
+    year1 = date(start.year + m // 12, m % 12 + 1, min(start.day, 28))
+    reviews = {e["rid"]: e for e in evs if e["k"] in ("review", "harvest")}
+    redeems = {e["oid"]: e for e in evs if e["k"] == "redeem"}
+    harvested = {}
+    for oid, o in orders.items():
+        if o["side"] != "sell" or o.get("level") not in ("weak", "severe", "harvest"):
+            continue
+        rv = reviews.get(o["iid"])
+        A.check("rules", rv is not None, f"{oid}: sale without its review / harvest record")
+        d = redeems.get(oid)
+        if not d:
+            continue
+        key = str(o.get("code") or o.get("sym"))
+        if o["level"] in ("weak", "harvest"):
+            bad = [g for g in d["gains"] if g["class"] != "debt" and g["term"] != "LT"]
+            A.check("rules", not bad, f"{oid}: {o['level']} sale includes short-term / slab-rate lots {[(g['buyDate'], g['days']) for g in bad][:3]}")
+            A.check("rules", not (d["charges"].get("exitLoad") or 0), f"{oid}: {o['level']} sale paid exit load {d['charges'].get('exitLoad')}")
+        if o["level"] == "weak":
+            it = next((i for i in (rv or {}).get("items", []) if i["key"] == key), {})
+            A.check("rules", day(o["T"]) >= year1, f"{oid}: non-urgent sale inside the account's first year")
+            A.check("rules", it.get("streak", 0) >= R["droppedStreak"], f"{oid}: sold after {it.get('streak')} flagged reviews (needs {R['droppedStreak']})")
+        if o["level"] == "harvest":
+            T = day(o["T"])
+            fy = T.year if T.month >= 4 else T.year - 1
+            person = o["acct"].rsplit("-", 1)[0]
+            harvested[(person, fy)] = harvested.get((person, fy), 0.0) + sum(g["gain"] for g in d["gains"] if g["class"] == "equity")
+        inn = orders.get(oid.replace("|out", "|in"))
+        if inn and d:
+            f = next((e for e in evs if e["k"] == "fund" and e["oid"] == inn["oid"]), None)
+            A.check("rules", f is None or abs(f["amount"] - d["net"]) < 0.01, f"{oid}: switch-in funded {f and f['amount']} vs sale proceeds {d['net']}")
+            if o["level"] == "harvest":
+                A.check("rules", str(inn.get("code") or inn.get("sym")) == key, f"{oid}: harvest buy-back is a different fund")
+    for (person, fy), g in harvested.items():
+        A.check("rules", g <= CFG["tax"]["ltcgExempt"] + 1, f"{person} FY{fy}: harvested equity gains {g:.0f} exceed the yearly exemption")
+
     # holdings & value
     for acc in view["accounts"]:
         aid = acc["id"]

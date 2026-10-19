@@ -33,6 +33,7 @@ import hashlib
 import json
 import logging
 import math
+import re
 import os
 import sys
 from datetime import date, datetime, timedelta, timezone
@@ -161,6 +162,7 @@ class Market:
 
     def __init__(self, store: dict, network: bool, backtest: bool = False):
         self.c = store.setdefault("prices", {"mf": {}, "etf": {}, "amfi": {}})
+        self.known = store.setdefault("funds", {})         # facts of every fund bought (kept if it is later delisted)
         self.c.setdefault("amfi", {})
         self.network, self.backtest = network, backtest
         s = json.loads((DATA / "mf" / "screener.json").read_text())
@@ -173,6 +175,7 @@ class Market:
         self._tail_loaded = set()
         self._bars = {}
         self._hist = {}
+        self._info = {}
 
     # mutual funds
     def _merge_tail(self, code: int):
@@ -233,6 +236,32 @@ class Market:
                     self.c["amfi"].setdefault(dd.isoformat(), {})[p[0]] = v
                     got += 1
             log.info("AMFI official NAVs %s–%s: %d values", win[0], win[-1], got)
+
+    def fund(self, code: int):
+        """Fund facts; for a fund no longer listed, the facts recorded when it was bought (store["funds"])."""
+        f = self.funds.get(code)
+        if f:
+            return f
+        k = self.known.get(str(code))
+        return dict(k, delisted=True) if k else None
+
+    def remember(self, code: int):
+        f = self.funds.get(code)
+        if f:
+            self.known[str(code)] = {k: f.get(k) for k in ("code", "name", "sub", "tax", "exitNil", "lock", "amc")}
+
+    def exit_rule(self, code: int) -> dict:
+        f = self.fund(code) or {}
+        if f.get("exitNil"):
+            return exit_rule([], True)
+        sub = f.get("sub")
+        if sub not in self._info:
+            try:
+                self._info[sub] = {int(k): (v.get("info") or {}).get("exitLoad") for k, v in
+                                   json.loads((DATA / "mf" / "d" / f"{sub}.json").read_text()).items()}
+            except Exception:  # noqa: BLE001
+                self._info[sub] = {}
+        return exit_rule(self._info[sub].get(code))
 
     def mf_nav(self, code: int, d: date):
         self._merge_tail(code)
@@ -454,6 +483,109 @@ def replay(events: list[dict]) -> dict:
     return st
 
 
+
+# ───────────────────────────── exit loads & sale estimates ─────────────────────────────
+UNIT = {"day": 1, "month": 365 / 12, "year": 365, "week": 7}
+def exit_rule(lines, nil=None):
+    """Exit-load lines → {"tiers": [[days, pct], …] (a sale held fewer than `days` days pays `pct` %, first match),
+    "days": load-free after, "known": parsed?}. Unreadable terms → a cautious 1% within 365 days."""
+    if nil:
+        return {"tiers": [], "days": 0, "known": True}
+    tiers, seen = {}, False
+    for ln in lines or []:
+        l = ln.lower().replace("–", "-")
+        ps = [float(x) for x in re.findall(r"(\d+(?:\.\d+)?)\s*%", l) if float(x) <= 5]
+        if re.search(r"\bnil\b|no exit load|not applicable|0\.0+\s*%|\b0\s*%", l) and not any(p > 0 for p in ps):
+            seen = True
+            continue
+        if not ps or max(ps) <= 0:
+            continue
+        per = [int(round(float(n) * UNIT[u])) for n, u in re.findall(r"(\d+(?:\.\d+)?)\s*(day|week|month|year)s?\b", l)]
+        per += [int(n) for n in re.findall(r"\bday\s*(\d+)\b", l)]
+        if not per:
+            continue
+        seen = True
+        if re.search(r"\b(after|beyond|more than|exceeding|onwards|greater than)\b", l) and not re.search(r"within|up ?to|less than|before|on or before|prior|<", l):
+            continue
+        d = max(per)
+        d = 365 if d in (360, 366) else d
+        tiers[d] = max(tiers.get(d, 0.0), max(ps))
+    if not seen:
+        return {"tiers": [[365, 1.0]], "days": 365, "known": False}
+    t = sorted([d, p] for d, p in tiers.items())
+    return {"tiers": t, "days": t[-1][0] if t else 0, "known": True}
+
+def load_pct(rule, held_days):
+    for d, p in rule["tiers"]:
+        if held_days < d:
+            return p
+    return 0.0
+
+
+LT_DAYS = {"equity": 365, "listed": 365, "other": 730, "debt": 0}
+
+
+def sale_estimate(lots: list[dict], units: float, px: float, T: date, tclass: str, rule: dict, exempt_left: float) -> dict:
+    """FIFO sale of `units` at `px` on T: exit load, gains by term and an estimated resident tax (slab 30% where it
+    applies, 4% cess; equity long-term gains above the remaining yearly exemption at 12.5%)."""
+    t = CFG["tax"]
+    left, load, st, lt, slab, value = units, 0.0, 0.0, 0.0, 0.0, 0.0
+    for l in lots:
+        if left <= 1e-9:
+            break
+        take = min(left, l["units"])
+        days = (T - D(l["date"])).days
+        val, cost = take * px, l["cost"] * take / l["units"]
+        load += val * load_pct(rule, days) / 100
+        g = val - cost
+        term = term_for(tclass, days)
+        if term == "LT":
+            lt += g
+        elif term == "ST":
+            st += g
+        else:
+            slab += g
+        value += val
+        left -= take
+    rate_lt = t["ltcgEquity"]
+    lt_taxable = max(0.0, lt - exempt_left) if tclass == "equity" else max(0.0, lt)
+    tax = (max(0.0, st) * t["stcgEquity"] + lt_taxable * rate_lt + max(0.0, slab) * t["debtSlab"]) * (1 + t["cess"])
+    return {"value": r2(value), "exitLoad": r2(load), "gainST": r2(st), "gainLT": r2(lt), "gainSlab": r2(slab),
+            "tax": r2(tax), "cost": r2(load + tax)}
+
+
+def lot_free(l: dict, T: date, tclass: str, rule: dict, lock_years: int) -> bool:
+    """A lot may be sold without exit load, at the long-term rate and outside any lock-in."""
+    days = (T - D(l["date"])).days
+    long_term = days > LT_DAYS[tclass] if tclass in ("equity", "listed", "other") else True    # long term = MORE than 365 / 730 days
+    return long_term and load_pct(rule, days) == 0 and days >= 365 * (lock_years or 0)
+
+
+def free_from(l: dict, tclass: str, rule: dict, lock_years: int) -> date:
+    d0 = D(l["date"])
+    return d0 + timedelta(days=max(LT_DAYS.get(tclass, 365) + (1 if tclass in ("equity", "listed", "other") else 0),
+                                   rule.get("days") or 0, 365 * (lock_years or 0)))
+
+
+def person_gains(st: dict, name: str, T: date, skip_iid_tag: str = "") -> dict:
+    """Realised equity gains of a person (MF + ETF accounts together) in the financial year of T, by term — the
+    yearly LTCG exemption is per person, not per account."""
+    fy0 = date(T.year if T.month >= 4 else T.year - 1, 4, 1)
+    out = {"lt": 0.0, "st": 0.0, "other": 0.0}
+    for aid in (f"{name}-MF", f"{name}-ETF"):
+        orders = {o["oid"]: o for o in (st.get(aid) or {}).get("orders", [])}
+        for s_ in (st.get(aid) or {}).get("sells", []):
+            o = orders.get(s_["oid"]) or {}
+            if not (fy0 <= D(o.get("T", s_["payout"])) <= T):
+                continue
+            if skip_iid_tag and skip_iid_tag in (orders.get(s_["oid"]) or {}).get("iid", ""):
+                continue                                   # counted from the harvest plan instead
+            for g in s_["gains"]:
+                k = "lt" if g["term"] == "LT" and g["class"] == "equity" else "st" if g["term"] == "ST" else "other"
+                out[k] += g["gain"]
+    return out
+
+
 # ───────────────────────────── engine ─────────────────────────────
 class Engine:
     def __init__(self, store: dict, today: date, network: bool, backtest: bool = False):
@@ -466,12 +598,10 @@ class Engine:
 
     # plan in force on a date
     def plan_on(self, d: date) -> dict:
-        refs = sorted(self.store["plans"])
-        best = None
-        for r in refs:
-            if self.store["plans"][r].get("since", r[:10]) <= d.isoformat():
-                best = r
-        return self.store["plans"][best or refs[0]]
+        plans = self.store["plans"]
+        ok = [r for r in plans if plans[r].get("since", r[:10]) <= d.isoformat()]
+        best = max(ok, key=lambda r: (plans[r].get("since", r[:10]), r)) if ok else min(plans, key=lambda r: (plans[r].get("since", r[:10]), r))
+        return plans[best]
 
     def snapshot(self):
         ref, snap = plan_snapshot()
@@ -511,6 +641,11 @@ class Engine:
         for s in legs:
             code, note = s["code"], []
             f = funds.get(code) or {}
+            if code not in funds:                                          # no longer listed → the model's next listed alternate
+                alt = next((c for c in (s["src"].get("alts") or []) if funds.get(c)), None)
+                if alt:
+                    note.append("fund no longer listed — bought the model's alternate")
+                    code, f = alt, funds[alt]
             if f.get("buy") is not None and "L" not in f["buy"]:          # fresh lump sums paused → next open alternate
                 alt = next((c for c in (s["src"].get("alts") or []) if funds.get(c) and "L" in (funds[c].get("buy") or "L")), None)
                 if alt:
@@ -522,6 +657,7 @@ class Engine:
                 note.append("weekly-SIP alternate (the simulator's rule)")
             if s["merged"]:
                 note.append("includes " + ", ".join(s["merged"]) + " (amount below the fund minimum)")
+            self.mkt.remember(code)
             append(self.store, "order", oid=f"{iid}|{s['key']}", iid=iid, acct=a["id"], T=T.isoformat(), side="buy",
                    code=code, name=(funds.get(code) or {}).get("name"), slot=s["key"], label=s["label"], asset=s["asset"],
                    weight=s["w"], amount=float(s["amt"]), note="; ".join(note), ref=plan["ref"])
@@ -568,7 +704,7 @@ class Engine:
                     self.redeem(o, T, mf_upto if o.get("code") else etf_upto, acc)
 
     def nav_date_for(self, code: int, T: date, upto: date):
-        f = self.mkt.funds.get(code) or {}
+        f = self.mkt.fund(code) or {}
         if f.get("sub") in CFG["mfRules"]["liquidSubs"]:
             d = T - timedelta(days=1)                       # liquid / overnight: NAV of the previous calendar day
             for k in range(0, 6):
@@ -631,14 +767,17 @@ class Engine:
             return
         if o.get("code"):
             nd, px = self.nav_date_for(int(o["code"]), T, upto)
+            if not px and int(o["code"]) not in self.mkt.funds and (upto - T).days >= 3:
+                nd, px = self.mkt.mf_latest(int(o["code"]), T)       # wound up / merged: last official NAV
         else:
             nd, px = self.mkt.etf_session_on_or_after(o["sym"], T, upto)
         if not px:
             return
         gross = r2(units * px)
-        f = self.mkt.funds.get(int(o["code"])) if o.get("code") else None
+        f = self.mkt.fund(int(o["code"])) if o.get("code") else None
         equity = (f or {}).get("tax") in ("equity", "elss") if f else self.mkt.etf_equity(o["sym"])
         tclass = tax_class(f, o.get("sym"), self.mkt)
+        rule = self.mkt.exit_rule(int(o["code"])) if f is not None else {"tiers": [], "days": 0, "known": True}
         left, gains, exit_load = units, [], 0.0
         for l in lots:
             if left <= 1e-9:
@@ -647,8 +786,8 @@ class Engine:
             cost = l["cost"] * take / l["units"]
             days = (T - D(l["date"])).days
             val = take * px
-            if f is not None and days < 365 and not f.get("exitNil"):
-                exit_load += val * CFG["mfRules"]["exitLoadIfUnknown"]
+            if f is not None:
+                exit_load += val * load_pct(rule, days) / 100
             gains.append({"buyDate": l["date"], "units": round(take, 6), "cost": r2(cost), "value": r2(val), "gain": r2(val - cost),
                           "days": days, "term": term_for(tclass, days), "class": tclass})
             left -= take
@@ -668,73 +807,297 @@ class Engine:
                     tds += g["gain"] * rate * (1 + t["cess"])
         net = r2(gross - charges["total"] - tds)
         append(self.store, "redeem", oid=o["oid"], navDate=nd.isoformat(), price=px, units=round(units, 6), gross=gross,
-               charges=charges, tds=r2(tds), net=net, gains=gains, payout=payout.isoformat())
+               charges=charges, tds=r2(tds), net=net, gains=gains, payout=payout.isoformat(),
+               exitRule=rule["tiers"] if f is not None else None)
 
-    # annual review — switch only very weak holdings
-    def review(self):
-        start = D(CFG["start"])
-        st = replay(self.store["events"])
-        for a in self.accts:
-            k = 1
-            while True:
-                ann = date(start.year + k, start.month, start.day)
-                if ann > self.today:
-                    break
-                T = next_trading(ann)
-                rid = f"{a['id']}|review|{T.isoformat()}"
-                if any(e.get("rid") == rid for e in self.store["events"] if e["k"] == "review"):
-                    k += 1
-                    continue
-                switches = []
-                acct = st.get(a["id"], {"lots": {}})
-                plan = self.plan_on(T)
-                for key, lots in acct["lots"].items():
-                    if sum(l["units"] for l in lots) <= 0:
-                        continue
-                    bad, why = self.very_weak(a["product"], key)
-                    if bad:
-                        target = self.model_choice(a, plan, key, st)
-                        if target and str(target) != key:
-                            switches.append({"from": key, "to": target, "why": why})
-                append(self.store, "review", rid=rid, acct=a["id"], T=T.isoformat(), switches=switches)
-                for s in switches:
-                    oid = f"{rid}|{s['from']}"
-                    fld = "code" if a["product"] == "mf" else "sym"
-                    frm = int(s["from"]) if a["product"] == "mf" else s["from"]
-                    append(self.store, "order", oid=oid + "|out", iid=rid, acct=a["id"], T=T.isoformat(), side="sell",
-                           units="all", reason="Annual review: " + s["why"], **{fld: frm})
-                    append(self.store, "order", oid=oid + "|in", iid=rid, acct=a["id"], T=add_business(T, 3 if a["product"] == "mf" else 1).isoformat(),
-                           side="buy", amount=None, fromOid=oid + "|out", slot="review", label="Review switch",
-                           **{fld: (int(s["to"]) if a["product"] == "mf" else s["to"])})
-                k += 1
+    # monthly sell review — tax- and exit-load-aware (CFG["sellRules"]); the agents follow it exactly
+    def review_dates(self) -> list[date]:
+        start, sc = D(CFG["start"]), CFG["schedule"]
+        out, y, m = [], start.year, start.month
+        while True:
+            m += 1
+            if m > 12:
+                y, m = y + 1, 1
+            T = next_trading(date(y, m, min(sc["anchorDay"], 28)))
+            if T > self.today:
+                return out
+            out.append(T)
 
-    def very_weak(self, product, key):
-        if product == "mf":
-            f = self.mkt.funds.get(int(key))
-            if not f:
-                return True, "fund no longer listed"
-            if f.get("status") == "Out of track":
-                return True, "VilfinTV status 'Out of track'"
-            return False, ""
-        e = self.mkt.etfs.get(key)
-        if not e:
-            return True, "ETF no longer listed"
-        if e.get("q") not in ("ok", None):
-            return True, "not traded regularly"
-        try:
-            rt = json.loads((DATA / "etf_extras.json").read_text())["etfs"].get(key, {}).get("rt")
-        except Exception:  # noqa: BLE001
-            rt = None
-        if rt and rt.get("st", 3) <= 1:
-            return True, "VilfinTV rating 1 star"
-        return False, ""
+    def slot_of(self, acct_state: dict, key: str):
+        buys = [o for o in acct_state["orders"] if str(o.get("code") or o.get("sym")) == key and o["side"] == "buy"]
+        return buys[-1].get("slot") if buys else None
 
-    def model_choice(self, a, plan, key, st):
-        orders = [o for o in st[a["id"]]["orders"] if str(o.get("code") or o.get("sym")) == key and o["side"] == "buy"]
-        slot = orders[-1]["slot"] if orders else None
+    def in_model(self, a, plan, key, slot) -> bool:
+        """Still the model's choice for the holding's own role (its slot: the fund, an alternate or the amount upgrade);
+        a holding whose slot no longer exists counts only if it is some slot's main choice."""
         if a["product"] == "mf":
-            return next((s["code"] for s in plan["mf"][a["plan"]] if s["key"] == slot and (s.get("w") or 0) > 0), None)
-        return next((x["sym"] for x in plan["etf"][a["plan"]] if x["id"] == slot), None)
+            slots = plan["mf"][a["plan"]]
+            own = [sl for sl in slots if sl["key"] == slot]
+            if own:
+                sl = own[0]
+                ids = {str(sl["code"])} | {str(c) for c in (sl.get("alts") or [])} | ({str(sl["upgrade"]["code"])} if sl.get("upgrade") else set())
+                return key in ids
+            return any(str(sl["code"]) == key for sl in slots)
+        own = [x for x in plan["etf"][a["plan"]] if x["id"] == slot]
+        return own[0]["sym"] == key if own else any(x["sym"] == key for x in plan["etf"][a["plan"]])
+
+    def target_for(self, a, plan, slot, key):
+        """Where the proceeds go: the model's current choice for the holding's role — or, when that is the holding
+        itself (no longer listed), the role's first listed alternate; else the largest other role. Never None for
+        mutual funds (an MF account holds no cash)."""
+        if a["product"] == "mf":
+            slots = plan["mf"][a["plan"]]
+            own = [x for x in slots if x["key"] == slot]
+            rest = sorted([x for x in slots if x["key"] != slot], key=lambda x: -(x.get("w") or 0))
+            for sl in own + rest:
+                for c in [sl["code"]] + list(sl.get("alts") or []):
+                    if str(c) != key and int(c) in self.mkt.funds:
+                        return c
+            return None
+        slots = plan["etf"][a["plan"]]
+        own = [x for x in slots if x["id"] == slot]
+        rest = sorted([x for x in slots if x["id"] != slot], key=lambda x: -x["w"])
+        return next((x["sym"] for x in own + rest if x["sym"] != key and x["sym"] in self.mkt.etfs), None)
+
+    def assess(self, a, key, plan, slot):
+        """'severe' (no longer listed) · 'weak' (no longer the model's choice) · 'ok'."""
+        if a["product"] == "mf":
+            if int(key) not in self.mkt.funds:
+                return "severe", "fund no longer listed (merged or wound up)"
+        elif key not in self.mkt.etfs:
+            return "severe", "ETF no longer listed"
+        if not self.in_model(a, plan, key, slot):
+            return "weak", "no longer the model portfolio's choice for this role"
+        return "ok", ""
+
+    def review(self):
+        R = CFG["sellRules"]
+        start = D(CFG["start"])
+        m = start.month - 1 + R["minHoldMonths"]
+        first_year_end = date(start.year + m // 12, m % 12 + 1, min(start.day, 28))
+        done = {e["rid"] for e in self.store["events"] if e["k"] == "review"}
+        for a in self.accts:
+            prev = []                                            # this account's earlier reviews (for streaks)
+            for T in self.review_dates():
+                rid = f"{a['id']}|review|{T.isoformat()}"
+                if rid in done:
+                    prev.append(next(e for e in self.store["events"] if e["k"] == "review" and e["rid"] == rid))
+                    continue
+                st = replay(self.store["events"])
+                acct = st.get(a["id"])
+                if not acct:
+                    continue
+                plan = self.plan_on(T)
+                exempt_left = max(0.0, CFG["tax"]["ltcgExempt"] - person_gains(st, a["name"], T)["lt"])
+                items, sells = [], []
+                for key, lots in acct["lots"].items():
+                    lots = [l for l in lots if l["units"] > 1e-9 and D(l["date"]) <= T]
+                    units = round(sum(l["units"] for l in lots), 6)
+                    if units <= 0 or any(o.get("side") == "sell" and str(o.get("code") or o.get("sym")) == key and "done" not in o
+                                         for o in acct["orders"]):
+                        continue
+                    slot = self.slot_of(acct, key)
+                    level, why = self.assess(a, key, plan, slot)
+                    streak, flagged = 0, [T]
+                    for e in reversed(prev):
+                        it = next((x for x in e.get("items", []) if x["key"] == key), None)
+                        if it and it["level"] in ("weak", "severe"):
+                            streak += 1
+                            flagged.append(D(e["T"]))
+                        else:
+                            break
+                    streak = streak + 1 if level != "ok" else 0
+                    flagged = sorted(flagged)
+                    f = self.mkt.fund(int(key)) if a["product"] == "mf" else None
+                    tclass = tax_class(f, None if f else key, self.mkt) if (f or a["product"] == "etf") else "equity"
+                    rule = self.mkt.exit_rule(int(key)) if a["product"] == "mf" else {"tiers": [], "days": 0, "known": True}
+                    lock = int((f or {}).get("lock") or 0)
+                    px = self.price(a["product"], key, min(T, self.valuation_date(a))) or lots[-1]["price"]
+                    item = {"key": key, "slot": slot, "level": level, "why": why, "streak": streak, "units": units,
+                            "tclass": tclass, "exitDays": rule.get("days"), "lock": lock}
+                    if level == "ok":
+                        item["action"] = "hold"
+                    elif level == "weak" and streak < R["droppedStreak"]:
+                        item["action"] = "watch"
+                        item["note"] = f"flagged {streak} of {R['droppedStreak']} reviews needed before selling"
+                    else:
+                        free = [l for l in lots if (T - D(l["date"])).days >= 365 * lock] if level == "severe" else []
+                        if level == "severe":
+                            sell_lots = []
+                            for l in lots:                                      # FIFO; stop at the first locked lot
+                                if (T - D(l["date"])).days < 365 * lock:
+                                    break
+                                sell_lots.append(l)
+                            why_now = "severe: sold whatever the tax / exit load"
+                        elif T < first_year_end:
+                            sell_lots, why_now = [], "no non-urgent sales in the account's first year"
+                        else:
+                            # the deferral clock starts when a sale first became allowed (confirmed flag, after year one)
+                            allowed = max(flagged[min(R["droppedStreak"] - 1, len(flagged) - 1)], first_year_end)
+                            deferred = (T - allowed).days >= R["deferMaxMonths"] * 365 / 12 - 3
+                            sell_lots = []
+                            for l in lots:
+                                if deferred or lot_free(l, T, tclass, rule, lock):
+                                    sell_lots.append(l)
+                                else:
+                                    break
+                            why_now = "deferral limit reached — sold now" if deferred else "lots free of exit load and short-term tax"
+                            if sell_lots and not deferred and tclass == "equity" and T.month in R["harvestMonths"]:
+                                keep, gain = [], 0.0
+                                for l in sell_lots:                             # stay within the yearly LTCG exemption
+                                    g = l["units"] * px - l["cost"]
+                                    if gain + max(g, 0) > exempt_left and keep:
+                                        break
+                                    keep.append(l)
+                                    gain += max(g, 0)
+                                if len(keep) < len(sell_lots):
+                                    why_now = "Jan–Mar: long-term gains kept within this year's exemption; the rest after 1 April"
+                                sell_lots = keep
+                        sell_units = round(sum(l["units"] for l in sell_lots), 6)
+                        if a["product"] == "etf":
+                            sell_units = int(sell_units)
+                        rest = [l for l in lots[len(sell_lots):]]
+                        item["estNow"] = sale_estimate(lots, units, px, T, tclass, rule, exempt_left)
+                        if rest and level == "weak":
+                            nxt = max(free_from(rest[0], tclass, rule, lock), first_year_end)
+                            item["waitUntil"] = nxt.isoformat()
+                            item["estAtWait"] = sale_estimate(lots, units, px, nxt, tclass, rule, CFG["tax"]["ltcgExempt"])
+                        if sell_units > 0:
+                            target = self.target_for(a, plan, slot, key)
+                            item.update(action="sell", sellUnits=sell_units, to=target, note=why_now)
+                            sells.append((key, sell_units, target, why, level, slot))
+                        else:
+                            item.update(action="wait", note=why_now)
+                    items.append(item)
+                ev = append(self.store, "review", rid=rid, acct=a["id"], T=T.isoformat(), items=items,
+                            switches=[{"from": k, "to": t, "units": u, "why": w, "level": lv} for k, u, t, w, lv, _ in sells])
+                prev.append(ev)
+                for key, u, target, why, level, slot in sells:
+                    oid = f"{rid}|{key}"
+                    fld = "code" if a["product"] == "mf" else "sym"
+                    frm = int(key) if a["product"] == "mf" else key
+                    append(self.store, "order", oid=oid + "|out", iid=rid, acct=a["id"], T=T.isoformat(), side="sell",
+                           units=u, level=level, reason=f"Sell review ({level}): {why}", **{fld: frm})
+                    if target:
+                        append(self.store, "order", oid=oid + "|in", iid=rid, acct=a["id"],
+                               T=add_business(T, 3 if a["product"] == "mf" else 1).isoformat(), side="buy", amount=None,
+                               fromOid=oid + "|out", slot=slot or "review", label="Review switch",
+                               **{fld: (int(target) if a["product"] == "mf" else target)})
+                if sells:                                # carry out what the prices on file allow before the next review
+                    self.settle()
+                    self.fund_review_buys()
+                    self.settle()
+
+    # yearly tax harvesting (CFG["taxHarvest"]) — per person, MF account first
+    def harvest(self):
+        H, t = CFG["taxHarvest"], CFG["tax"]
+        start = D(CFG["start"])
+        done = {e["rid"] for e in self.store["events"] if e["k"] == "harvest"}
+        for y in range(start.year, self.today.year + 1):
+            T = next_trading(date(y, H["month"], H["day"]))
+            if T < start or T > self.today:
+                continue
+            for name in dict.fromkeys(a["name"] for a in self.accts):
+                for a in [x for x in self.accts if x["name"] == name]:
+                    rid = f"{a['id']}|harvest|{T.isoformat()}"
+                    if rid in done:
+                        continue
+                    st = replay(self.store["events"])
+                    acct = st.get(a["id"])
+                    if not acct:
+                        continue
+                    pg = person_gains(st, name, T, skip_iid_tag=f"|harvest|{T.isoformat()}")
+                    planned = sum(it["gain"] for e in self.store["events"] if e["k"] == "harvest" and e["T"] == T.isoformat()
+                                  and e["acct"].rsplit("-", 1)[0] == name for it in e["items"]
+                                  if it["action"] == "harvest" and it["mode"] == "gain")
+                    room = max(0.0, t["ltcgExempt"] - pg["lt"] - planned)  # unused exemption this year (both accounts)
+                    taxable = max(0.0, pg["lt"] - t["ltcgExempt"]) + max(0.0, pg["st"])
+                    items, sells = [], []
+                    for key, lots in acct["lots"].items():
+                        lots = [l for l in lots if l["units"] > 1e-9 and D(l["date"]) <= T]
+                        if not lots or any(o.get("side") == "sell" and str(o.get("code") or o.get("sym")) == key and "done" not in o
+                                           for o in acct["orders"]):
+                            continue
+                        f = self.mkt.fund(int(key)) if a["product"] == "mf" else None
+                        if a["product"] == "mf" and not f:
+                            continue
+                        tclass = tax_class(f, None if f else key, self.mkt)
+                        if tclass != "equity":
+                            continue
+                        rule = self.mkt.exit_rule(int(key)) if f else {"tiers": [], "days": 0, "known": True}
+                        lock = int((f or {}).get("lock") or 0)
+                        px = self.price(a["product"], key, min(T, self.valuation_date(a)))
+                        if not px:
+                            continue
+                        units, gain, mode = 0.0, 0.0, None
+                        # gain harvesting: long-term lots (FIFO) into the unused exemption
+                        for l in lots:
+                            if not lot_free(l, T, tclass, rule, lock) or room - gain <= 0:
+                                break
+                            gpu = px - l["cost"] / l["units"]
+                            take = l["units"] if gpu <= 0 else min(l["units"], (room - gain) / gpu)
+                            take = int(take) if a["product"] == "etf" else math.floor(take * 1000) / 1000
+                            if take <= 0:
+                                break
+                            units += take
+                            gain += take * gpu
+                            mode = "gain"
+                            if take < l["units"]:
+                                break
+                        # loss harvesting: only against taxable gains already realised this year
+                        if mode == "gain" and gain < H["minGain"]:
+                            units, gain, mode = 0.0, 0.0, None            # FIFO reached loss lots first — nothing worth booking
+                        if mode is None and taxable > 0:
+                            loss, units = 0.0, 0.0
+                            for l in lots:
+                                gpu = px - l["cost"] / l["units"]
+                                if gpu >= 0 or (T - D(l["date"])).days < 365 * lock or load_pct(rule, (T - D(l["date"])).days) > 0:
+                                    break
+                                take = l["units"] if a["product"] == "mf" else int(l["units"])
+                                units += take
+                                loss += take * gpu
+                                if -loss >= taxable:
+                                    break
+                            if units > 0:
+                                gain, mode = loss, "loss"
+                        if not mode or units <= 0:
+                            continue
+                        value = units * px
+                        if a["product"] == "mf":
+                            cost = value * (CFG["mfRules"]["sttRedeemEquity"] + CFG["mfRules"]["stampDuty"])
+                        else:
+                            cost = etf_charges(value, "sell", a["res"], True)["total"] + etf_charges(value, "buy", a["res"], True)["total"]
+                        # gain mode: 12.5% (+cess) saved later on gains moved into this year's exemption; loss mode: tax on the
+                        # realised gains the booked loss offsets (at the long-term rate — the lower one, to stay conservative)
+                        saving = max(gain, 0) * t["ltcgEquity"] * (1 + t["cess"]) if mode == "gain" else min(-gain, taxable) * t["ltcgEquity"] * (1 + t["cess"])
+                        ok = abs(gain) >= H["minGain"] and saving > cost
+                        items.append({"key": key, "mode": mode, "units": round(units, 6), "gain": r2(gain), "saving": r2(saving),
+                                      "cost": r2(cost), "action": "harvest" if ok else "skip",
+                                      "note": ("long-term gains booked within the unused exemption and bought back" if mode == "gain"
+                                               else "losses booked against this year's taxable gains and bought back") if ok
+                                      else "saving does not beat the round-trip costs / too small"})
+                        if ok:
+                            sells.append((key, units, mode, gain))
+                            if mode == "gain":
+                                room -= max(gain, 0)
+                            else:
+                                taxable = max(0.0, taxable + gain)
+                    append(self.store, "harvest", rid=rid, acct=a["id"], T=T.isoformat(), items=items,
+                           exemptLeft=r2(max(0.0, t["ltcgExempt"] - pg["lt"] - planned)))
+                    for key, u, mode, gain in sells:
+                        oid = f"{rid}|{key}"
+                        fld = "code" if a["product"] == "mf" else "sym"
+                        k = int(key) if a["product"] == "mf" else key
+                        slot = self.slot_of(acct, key)
+                        append(self.store, "order", oid=oid + "|out", iid=rid, acct=a["id"], T=T.isoformat(), side="sell",
+                               units=round(u, 6), level="harvest", reason=f"Tax harvesting ({mode}s)", **{fld: k})
+                        append(self.store, "order", oid=oid + "|in", iid=rid, acct=a["id"],
+                               T=add_business(T, 3 if a["product"] == "mf" else 1).isoformat(), side="buy", amount=None,
+                               fromOid=oid + "|out", slot=slot or "harvest", label="Tax harvesting buy-back", **{fld: k})
+                    if sells:
+                        self.settle()
+                        self.fund_review_buys()
+                        self.settle()
 
     def manual_sells(self):
         for s in CFG.get("sells", []):
@@ -760,7 +1123,8 @@ class Engine:
         self.manual_sells()
         self.settle()
         self.review()
-        self.settle()                    # review sells
+        self.harvest()
+        self.settle()                    # review / harvest sells
         self.fund_review_buys()
         self.settle()                    # switch-in buys with the sell proceeds
         self.value()
@@ -886,8 +1250,9 @@ def build_view(store: dict, eng: Engine) -> dict:
     st = replay(store["events"])
     funded = {e["oid"]: e["amount"] for e in store["events"] if e["k"] == "fund"}
     reviews = [e for e in store["events"] if e["k"] == "review"]
+    harvests = [e for e in store["events"] if e["k"] == "harvest"]
     out = {"v": 1, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "start": CFG["start"],
-           "config": {k: CFG[k] for k in ("riskNames", "freqNames", "benchmark", "etfFees", "mfRules", "tax", "schedule", "monthly")},
+           "config": {k: CFG[k] for k in ("riskNames", "freqNames", "benchmark", "etfFees", "mfRules", "tax", "schedule", "monthly", "sellRules", "taxHarvest")},
            "mfAsOf": eng.mkt.mf_asof, "etfAsOf": eng.mkt.etf_asof, "accounts": [], "plans": store["plans"],
            "events": len(store["events"]), "head": store["events"][-1]["h"] if store["events"] else None}
     for a in eng.accts:
@@ -942,7 +1307,8 @@ def build_view(store: dict, eng: Engine) -> dict:
                                 "benchValue": last[3] if last else 0, "xirr": x, "benchXirr": xb, "days": days,
                                 "cash": r2(s["cash"]) if a["product"] == "etf" else None, "carry": s.get("carry", {}),
                                 "txns": txns, "holdings": holdings, "series": ser,
-                                "reviews": [r for r in reviews if r["acct"] == a["id"]]})
+                                "reviews": [r for r in reviews if r["acct"] == a["id"]],
+                                "harvests": [h for h in harvests if h["acct"] == a["id"]]})
     # price history of everything held or bought (statements for any past date are valued from it)
     keys = {"mf": {str(CFG["benchmark"]["mf"])}, "etf": {CFG["benchmark"]["etf"]}}
     for a in out["accounts"]:
