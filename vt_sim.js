@@ -248,14 +248,19 @@
       h += '<p class="vts-note">These checks will appear after the next daily data refresh.</p></div>';
       return '<div class="vts-pane">' + h + '</div>';
     }
+    var now = (g.gdp || []).filter(function (x) { return x.y === g.fy; })[0], e50 = (g.earnings || {}).n50 || {}, e500 = (g.earnings || {}).n500 || {};
+    var pct = function (v) { return v == null ? '–' : (v > 0 ? '+' : '') + num(v) + '%'; };
+    var cards = now && now.real != null ? [
+        ['Real GDP growth ' + esc(now.fy || ''), num(now.real) + '%', g.src === 'wb' ? 'latest published year' : 'forecast for this fiscal year'],
+        ['Nominal GDP growth', num(g.nominal) + '%', 'real growth + inflation']]
+      : [['Nifty 500 earnings', pct(e500.g1), 'last 12 months'], ['Nifty 50 earnings', e50.g3 != null ? num(e50.g3) + '%' : '–', 'a year over 3 years']];
     h += '<div class="vts-kpis" style="margin-bottom:12px">' +
       '<div class="vts-k"><small>Total score</small><b>' + (g.score > 0 ? '+' : '') + g.score + ' <i>/ ' + checks.length + '</i></b><em>' + (comp ? (comp.p > 0 ? '+5 equity points this month' : comp.p < 0 ? '−5 equity points this month' : 'no change to equity this month') : '') + '</em></div>' +
-      '<div class="vts-k"><small>Real GDP growth ' + esc(((g.gdp || []).filter(function (x) { return x.y === g.fy; })[0] || {}).fy || '') + '</small><b>' + num(((g.gdp || []).filter(function (x) { return x.y === g.fy; })[0] || {}).real) + '%</b><em>' + (g.src === 'wb' ? 'latest published year' : 'forecast for this fiscal year') + '</em></div>' +
-      '<div class="vts-k"><small>Nominal GDP growth</small><b>' + num(g.nominal) + '%</b><em>real growth + inflation</em></div>' +
-      '<div class="vts-k"><small>Nifty 50 earnings</small><b>' + (((g.earnings || {}).n50 || {}).g1 != null ? (g.earnings.n50.g1 > 0 ? '+' : '') + num(g.earnings.n50.g1) + '%' : '–') + '</b><em>last 12 months</em></div>' +
-      '</div><ul class="vts-cl">' + checks.map(function (c) { return '<li>' + sig(c.s) + '<span class="k">' + esc(c.k) + '</span><span class="v">' + esc(c.v) + '</span><span class="w">' + esc(c.why) + '</span></li>'; }).join('') + '</ul></div>';
+      cards.map(function (c) { return '<div class="vts-k"><small>' + c[0] + '</small><b>' + c[1] + '</b><em>' + c[2] + '</em></div>'; }).join('') +
+      '<div class="vts-k"><small>Nifty 50 earnings</small><b>' + pct(e50.g1) + '</b><em>last 12 months</em></div>' +
+      '</div>' + (now && now.real != null ? '' : '<p class="vts-note" style="margin:0 0 8px">GDP, inflation and growth checks are being refreshed and will appear after the next data update; the earnings checks below are current.</p>') + '<ul class="vts-cl">' + checks.map(function (c) { return '<li>' + sig(c.s) + '<span class="k">' + esc(c.k) + '</span><span class="v">' + esc(c.v) + '</span><span class="w">' + esc(c.why) + '</span></li>'; }).join('') + '</ul></div>';
     var gd = g.gdp || [];
-    h += '<div class="vts-grid2">';
+    h += '<div class="' + (gd.length ? 'vts-grid2' : 'vts-pane') + '">';
     if (gd.length) {
       h += '<div class="vts-box"><h3>India GDP by fiscal year</h3><p class="vts-sub">April–March fiscal years.' + (g.src === 'wb' ? ' Published figures (forecasts are added when available).' : ' <b>F</b> = forecast.') + ' Nominal growth is approximated as real growth plus consumer-price inflation.</p><div class="vts-tw"><table class="vts-t" style="min-width:0"><thead><tr><th>Year</th><th class="n">Real GDP</th><th class="n">Inflation</th><th class="n">Nominal</th><th class="n">GDP size</th><th class="n">World</th></tr></thead><tbody>' +
         gd.map(function (x) {
