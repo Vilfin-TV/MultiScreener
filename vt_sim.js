@@ -310,9 +310,17 @@
       return /^g/.test(k) ? '<span class="' + (v >= 0 ? 'up' : 'dn') + '">' + (v > 0 ? '+' : '') + t + '</span>' : t;
     };
     var nm = function (k) { return esc(String(names[k] || k).replace(/^Nifty /, earnState.view === 'broad' ? 'Nifty ' : '')); };
-    return keys.map(function (k) {
+    var rows = keys.map(function (k) {
       return '<tr><td>' + nm(k) + '</td>' + EARN_COLS.map(function (c) { return '<td class="n">' + f(c[0], e[k][c[0]]) + '</td>'; }).join('') + '</tr>';
-    }).join('') || '<tr><td colspan="10" class="vts-note">Figures appear after the next data update.</td></tr>';
+    }).join('');
+    var gi = g.gidx;
+    if (earnState.view === 'broad' && gi && (gi.order || []).length) {      // global indices, after the Indian broad market
+      rows += '<tr class="vts-earn-sec"><td colspan="' + (EARN_COLS.length + 1) + '">Global indices</td></tr>' + gi.order.map(function (k) {
+        var x = gi.earnings[k] || {};
+        return '<tr><td>' + esc(gi.names[k] || k) + '<small class="vts-earn-via">via ' + esc((gi.via || {})[k] || '') + ' holdings</small></td>' + EARN_COLS.map(function (c) { return '<td class="n">' + f(c[0], x[c[0]]) + '</td>'; }).join('') + '</tr>';
+      }).join('');
+    }
+    return rows || '<tr><td colspan="10" class="vts-note">Figures appear after the next data update.</td></tr>';
   }
   function earnBox(g) {
     var e = g.earnings || {}, broad = g.broad || ['n50', 'nn50', 'mid150', 'sml250', 'micro250', 'n500', 'totalmkt'], nSec = Object.keys(e).filter(function (k) { return broad.indexOf(k) < 0; }).length;
@@ -320,13 +328,14 @@
       var on = earnState.view !== 'broad' && earnState.sort === c[0];
       return '<th class="n" title="' + esc(c[2]) + '">' + (earnState.view === 'broad' ? c[1] : '<button type="button" class="vts-es' + (on ? ' on' : '') + '" data-es="' + c[0] + '" aria-label="Sort by ' + esc(c[1]) + '">' + c[1] + (on ? (earnState.dir < 0 ? ' ▾' : ' ▴') : '') + '</button>') + '</th>';
     }).join('');
-    return '<div class="vts-box vts-earnbox"><h3>Company earnings &amp; valuation — every Nifty index</h3>' +
+    return '<div class="vts-box vts-earnbox"><h3>Company earnings &amp; valuation — every Nifty index' + (g.gidx ? ' and key global indices' : '') + '</h3>' +
       '<p class="vts-sub">Earnings per index unit = index level ÷ P/E, compared with the same month in earlier years (3- and 5-year growth is per year). ROE = P/B ÷ P/E. Tap a column name in Sectors &amp; themes to sort.</p>' +
       '<div class="vts-seg" role="tablist" aria-label="Index group"><button type="button" role="tab" data-ev="broad" aria-selected="' + (earnState.view === 'broad') + '" class="' + (earnState.view === 'broad' ? 'on' : '') + '">Broad market</button>' +
       (nSec ? '<button type="button" role="tab" data-ev="sector" aria-selected="' + (earnState.view !== 'broad') + '" class="' + (earnState.view !== 'broad' ? 'on' : '') + '">Sectors &amp; themes (' + nSec + ')</button>' : '') + '</div>' +
       '<div class="vts-tw vts-earnw"><table class="vts-t vts-earn"><thead><tr><th>Index</th>' + head + '</tr></thead><tbody>' + earnRows(g) + '</tbody></table></div>' +
       '<p class="vts-note">Earnings outlook (model): over long periods company earnings tend to grow roughly in line with nominal GDP' + (g.nominalNext != null ? ', so the model uses next year\'s nominal GDP forecast of <b>' + num(g.nominalNext) + '%</b> as the expected earnings growth' : '') +
-      '. Young indices have shorter histories, so some 3- and 5-year figures are blank. Very large growth figures usually come from a low base — companies moving from losses or thin profits to solid profits — and rarely repeat. This is a simple model, not a forecast of actual company results.</p></div>';
+      '. Young indices have shorter histories, so some 3- and 5-year figures are blank. Very large growth figures usually come from a low base — companies moving from losses or thin profits to solid profits — and rarely repeat. This is a simple model, not a forecast of actual company results.</p>' +
+      (g.gidx ? '<p class="vts-note">Global indices: P/E, P/B and dividend yield of the holdings of a large exchange-traded fund that tracks each index (shown under its name), in that market\'s currency. Their earnings growth is measured from VilfinTV\'s own monthly records' + (g.gidx.since ? ' kept since ' + esc(g.gidx.since) : '') + ', so 1-, 3- and 5-year figures fill in as those records age.</p>' : '') + '</div>';
   }
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest && ev.target.closest('.vts-earnbox [data-ev], .vts-earnbox [data-es]');
@@ -696,6 +705,8 @@
     drawSwitch();
     load();
   }
+  CSS += '.vts-earn .vts-earn-sec td{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);background:var(--surface2,rgba(127,127,127,.06));padding-top:9px;padding-bottom:7px}' +
+    '.vts-earn-via{display:block;font-size:10.5px;color:var(--text2);font-weight:500}';
   CSS += '.vts-buy-rule{border:1px solid var(--border2,var(--border));border-radius:10px;background:rgba(74,144,226,.06);padding:10px 14px;margin:0 0 12px;font-size:12.5px;line-height:1.55;color:var(--text2,var(--text))}' +
     '.vts-buy-rule>summary{cursor:pointer;font-weight:700;color:var(--text);font-size:13px}.vts-buy-rule[open]>summary{margin-bottom:4px}.vts-buy-rule ul{margin:0;padding-left:18px}.vts-buy-rule li{margin:2px 0}.vts-buy-rule li b{color:var(--text)}';
   CSS += '.vts-buy{border:1px solid var(--border2,var(--border));border-left:4px solid #f5a524;border-radius:var(--radius,12px);background:var(--surface);padding:14px 16px;margin:0 0 16px;min-width:0;overflow:hidden}' +
