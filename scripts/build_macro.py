@@ -446,11 +446,23 @@ def eps_growth(hist: dict, key: str) -> dict:
         k = f"{y - n:04d}-{mo:02d}"
         return eps.get(k)
     out = {"eps": round(now, 1), "pe": lat[0]}
+    if lat[1]:
+        out["pb"] = lat[1]
+        out["roe"] = round(lat[1] / lat[0] * 100, 1)              # return on equity = P/B ÷ P/E
+    if lat[2] is not None:
+        out["dy"] = lat[2]
+    out["ey"] = round(100 / lat[0], 2)                             # earnings yield
     for n in (1, 3, 5):
         b = back(n)
         if b:
             out[f"g{n}"] = round(((now / b) ** (1 / n) - 1) * 100, 1)
+    if out.get("g3") and out["g3"] > 0:
+        out["peg"] = round(lat[0] / out["g3"], 2)                  # P/E per point of 3-year earnings growth
     return out
+
+
+BROAD = ["n50", "nn50", "mid150", "sml250", "micro250", "n500"]
+NAME_OF = {v: k for k, v in INDICES.items()}
 
 
 def growth_block(S, prev: dict) -> dict:
@@ -503,6 +515,22 @@ def growth_block(S, prev: dict) -> dict:
         add("Earnings outlook vs valuation (model)", f"P/E {n50['pe']:.1f} ÷ {eg:.1f}% expected growth = {peg:.2f}",
             1 if peg <= 1.5 else (-1 if peg >= 2.5 else 0),
             "Model earnings growth = next year's nominal GDP forecast; a lower P/E per point of growth is more attractive.")
+    if n50.get("roe") is not None:
+        r = n50["roe"]
+        add("Profitability of Nifty 50 companies (return on equity)", f"{r:.1f}% (P/B {n50['pb']:.2f} ÷ P/E {n50['pe']:.1f})",
+            1 if r >= 15 else (-1 if r < 12 else 0),
+            "Fund-house analysts watch return on equity: 15%+ shows companies earn well on shareholders' money; below 12% is weak.")
+    allx = {k: eps_growth(hist, k) for k in (hist.get("keys") or [])}
+    sect = [x for k, x in allx.items() if k not in BROAD and x.get("g1") is not None]
+    if len(sect) >= 10:
+        up = sum(1 for x in sect if x["g1"] > 0) / len(sect) * 100
+        add("Earnings breadth (sector indices with rising earnings)", f"{up:.0f}% of {len(sect)} sector & theme indices",
+            1 if up >= 60 else (-1 if up < 40 else 0),
+            "Broad-based profit growth across sectors is healthier than gains led by a few sectors.")
+    if n500.get("g1") is not None:
+        g = n500["g1"]
+        add("Broad-market earnings growth (Nifty 500, last 12 months)", f"{g:+.1f}%", 1 if g >= 10 else (-1 if g < 0 else 0),
+            "The 500 largest listed companies, about 90% of the market's value, show the trend beyond the top 50.")
     if r1 is None and len(past) >= 2 and r0 is not None:
         prev_y = real.get(fy - 1)
         if prev_y is not None:
@@ -511,10 +539,13 @@ def growth_block(S, prev: dict) -> dict:
                 1 if d >= 0.3 else (-1 if d <= -0.5 else 0), "Accelerating growth is a tailwind; a slowdown is a headwind.")
     yrs = sorted(y for y in real if fy - 6 <= y <= fy + 3)
     return {"fy": fy, "src": src, "checks": checks, "score": sum(c["s"] for c in checks),
+            "thr": max(3, round(len(checks) * 0.4)),     # the planners move equity when the total reaches ±thr (40% of the checks)
             "gdp": [{"y": y, "fy": f"{y}-{str(y + 1)[2:]}", "real": real.get(y), "infl": infl.get(y),
                      "usd": (gdp.get("usd") or {}).get(y), "world": world.get(y), "f": fc and y >= fy} for y in yrs],
-            "nominal": nom, "nominalNext": nom1, "earnings": {"n50": n50, "nn50": eps_growth(hist, "nn50"), "mid150": eps_growth(hist, "mid150"),
-                         "sml250": eps_growth(hist, "sml250"), "micro250": eps_growth(hist, "micro250"), "n500": n500},
+            "nominal": nom, "nominalNext": nom1,
+            "earnings": {k: x for k, x in sorted(allx.items(), key=lambda kv: (kv[0] not in BROAD, BROAD.index(kv[0]) if kv[0] in BROAD else 0,
+                                                                                 NAME_OF.get(kv[0], kv[0]))) if x},
+            "names": {k: NAME_OF.get(k, k) for k, x in allx.items() if x}, "broad": [k for k in BROAD if allx.get(k)],
             "gdpRaw": {**{k: {str(y): x for y, x in v.items()} for k, v in gdp.items()}, "src": src}}
 
 

@@ -85,7 +85,15 @@
     '.vts-cl .v{font-variant-numeric:tabular-nums;font-size:13px;text-align:right;color:var(--text)}' +
     '.sg.pos{background:rgba(34,197,94,.15);color:#22c55e}.sg.neu{background:rgba(148,163,184,.16);color:var(--text2)}.sg.neg{background:rgba(248,113,113,.15);color:#f87171}' +
     '.vts-grid2{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px}' +
-    '@media (max-width:520px){.vts-earn th,.vts-earn td{padding:8px 4px;font-size:12px}.vts-earn th{font-size:10.5px;letter-spacing:0}.vts-earn td:first-child{white-space:normal}}' +
+    '.vts-seg{display:inline-flex;flex-wrap:wrap;gap:4px;background:var(--surface2,transparent);border:1px solid var(--border);border-radius:10px;padding:3px;margin:4px 0 10px}' +
+    '.vts-seg button{border:0;background:none;color:var(--text2);font:inherit;font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:7px;cursor:pointer}' +
+    '.vts-seg button.on{background:var(--accent,#2563eb);color:#fff}' +
+    '.vts-earnw{max-height:520px;overflow:auto;border:1px solid var(--border);border-radius:10px;margin:0}' +
+    '.vts-earn{min-width:820px!important}.vts-earn thead th{position:sticky;top:0;background:var(--surface);z-index:2}' +
+    '.vts-earn td:first-child,.vts-earn th:first-child{position:sticky;left:0;background:var(--surface);z-index:1;white-space:nowrap}.vts-earn thead th:first-child{z-index:3}' +
+    '.vts-earn .up{color:#16a34a;font-weight:700}.vts-earn .dn{color:#dc2626;font-weight:700}' +
+    '.vts-es{border:0;background:none;color:inherit;font:inherit;text-transform:inherit;letter-spacing:inherit;cursor:pointer;padding:0;white-space:nowrap}.vts-es.on{color:var(--accent2,var(--accent,#2563eb))}' +
+    '@media (max-width:520px){.vts-earn th,.vts-earn td{padding:8px 6px;font-size:12px}.vts-earn th{font-size:10.5px;letter-spacing:0}.vts-earnw{max-height:440px}}' +
     '.vts-t td.fc{color:var(--text2)}.vts-t td.fc::after{content:" F";font-size:10px;font-weight:800;color:var(--accent2)}' +
     '.vts-note{font-size:12px;color:var(--text2);line-height:1.55;margin-top:10px}' +
     '@media (max-width:900px){.vts-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.vts-grid2{grid-template-columns:1fr}}' +
@@ -238,13 +246,16 @@
   }
 
   // g: market.growth {fy, checks:[{k,v,s,why}], score, gdp:[{fy, real, infl, usd, world, f}], nominal, nominalNext, earnings:{n50, n500}}
+  var lastEco = null;          // ecoPanel returns a string; the earnings box re-renders itself from this on tab / sort clicks
   function ecoPanel(g, comps) {
     g = g || {};
+    lastEco = g;
     var sig = function (s) { return s > 0 ? '<span class="sg pos">Supportive</span>' : s < 0 ? '<span class="sg neg">Headwind</span>' : '<span class="sg neu">Neutral</span>'; };
     var comp = (comps || []).filter(function (c) { return /growth/i.test(c.k); })[0];
     var checks = g.checks || [];
-    var h = '<div class="vts-box"><h3>India economy &amp; earnings checks</h3><p class="vts-sub">Seven checks on growth, inflation and company earnings, each scored +1 (supportive for shares), 0 or −1 (a headwind). ' +
-      'A total of +3 or more adds 5 points of equity to the model portfolios of 5+ years, −3 or less removes 5 points — one input alongside valuation, interest rates, market falls, sentiment and global markets.</p>';
+    var nck = (g.checks || []).length, thr = g.thr || Math.max(3, Math.round(nck * 0.4));
+    var h = '<div class="vts-box"><h3>India economy &amp; earnings checks</h3><p class="vts-sub">' + (nck || 'These') + ' checks on growth, inflation, company earnings and profitability — the figures fund-house analysts track — each scored +1 (supportive for shares), 0 or −1 (a headwind). ' +
+      'A total of +' + thr + ' or more adds 5 points of equity to the model portfolios of 5+ years, −' + thr + ' or less removes 5 points — one input alongside valuation, interest rates, market falls, sentiment and global markets.</p>';
     if (!checks.length) {
       h += '<p class="vts-note">These checks will appear after the next daily data refresh.</p></div>';
       return '<div class="vts-pane">' + h + '</div>';
@@ -261,7 +272,7 @@
       '<div class="vts-k"><small>Nifty 50 earnings</small><b>' + pct(e50.g1) + '</b><em>last 12 months</em></div>' +
       '</div>' + (now && now.real != null ? '' : '<p class="vts-note" style="margin:0 0 8px">GDP, inflation and growth checks are being refreshed and will appear after the next data update; the earnings checks below are current.</p>') + '<ul class="vts-cl">' + checks.map(function (c) { return '<li>' + sig(c.s) + '<span class="k">' + esc(c.k) + '</span><span class="v">' + esc(c.v) + '</span><span class="w">' + esc(c.why) + '</span></li>'; }).join('') + '</ul></div>';
     var gd = g.gdp || [];
-    h += '<div class="' + (gd.length ? 'vts-grid2' : 'vts-pane') + '">';
+    h += '<div class="vts-pane">';
     if (gd.length) {
       h += '<div class="vts-box"><h3>India GDP by fiscal year</h3><p class="vts-sub">April–March fiscal years.' + (g.src === 'wb' ? ' Published figures (forecasts are added when available).' : ' <b>F</b> = forecast.') + ' Nominal growth is approximated as real growth plus consumer-price inflation.</p><div class="vts-tw"><table class="vts-t" style="min-width:0"><thead><tr><th>Year</th><th class="n">Real GDP</th><th class="n">Inflation</th><th class="n">Nominal</th><th class="n">GDP size</th><th class="n">World</th></tr></thead><tbody>' +
         gd.map(function (x) {
@@ -269,16 +280,63 @@
           return '<tr><td>' + esc(x.fy) + (x.y === g.fy ? ' <small style="color:var(--accent2);font-weight:700">now</small>' : '') + '</td><td' + fc + '>' + num(x.real) + '%</td><td' + fc + '>' + num(x.infl) + '%</td><td' + fc + '>' + num(nom) + '%</td><td' + fc + '>' + (x.usd ? '$' + num(x.usd / 1000, 2) + ' tn' : '–') + '</td><td' + fc + '>' + num(x.world) + '%</td></tr>';
         }).join('') + '</tbody></table></div></div>';
     }
-    var e = g.earnings || {}, er = function (lbl, x) { x = x || {}; return '<tr><td>' + lbl + '</td><td class="n">' + num(x.pe) + '</td><td class="n">' + (x.g1 != null ? num(x.g1) + '%' : '–') + '</td><td class="n">' + (x.g3 != null ? num(x.g3) + '%' : '–') + '</td><td class="n">' + (x.g5 != null ? num(x.g5) + '%' : '–') + '</td></tr>'; };
-    h += '<div class="vts-box"><h3>Company earnings</h3><p class="vts-sub">Earnings per index unit = index level ÷ P/E, compared with the same month in earlier years (3- and 5-year figures are per year).</p><div class="vts-tw"><table class="vts-t vts-earn" style="min-width:0"><thead><tr><th>Index</th><th class="n">P/E</th><th class="n">1 year</th><th class="n">3 years</th><th class="n">5 years</th></tr></thead><tbody>' +
-      er('Nifty 50', e.n50) + er('Nifty Next 50', e.nn50) + er('Nifty Midcap 150', e.mid150) + er('Nifty Smallcap 250', e.sml250) +
-      er('Nifty Microcap 250', e.micro250) + er('Nifty 500', e.n500) + '</tbody></table></div>' +
-      (e.micro250 && e.micro250.pe != null ? '' : '<p class="vts-note" style="margin-top:6px">Nifty Microcap 250 figures appear after its history is added in the next data update.</p>') +
-      '<p class="vts-note">Earnings outlook (model): over long periods company earnings tend to grow roughly in line with nominal GDP' + (g.nominalNext != null ? ', so the model uses next year\'s nominal GDP forecast of <b>' + num(g.nominalNext) + '%</b> as the expected earnings growth' : '') +
-      '. This is a simple model, not a forecast of actual company results.</p></div></div>';
+    h += '</div>' + earnBox(g);
     h += '<p class="vts-note">GDP and inflation figures are ' + (g.src === 'wb' ? 'the latest published official international figures for India' : 'the latest official international forecasts for India, updated a few times a year') + '; earnings are updated every trading day. Economic data is often revised. For education only.</p>';
     return '<div class="vts-pane">' + h + '</div>';
   }
+
+  /* Company earnings for every Nifty index: broad market and sector / theme views, sortable columns.
+     e: {key: {pe, pb, roe, dy, ey, g1, g3, g5, peg}} · names: {key: index name} · broad: [keys] */
+  var EARN_COLS = [['pe', 'P/E', 'Price ÷ trailing earnings — lower is cheaper'], ['pb', 'P/B', 'Price ÷ book value'],
+    ['roe', 'ROE', 'Return on equity = P/B ÷ P/E — how much profit companies earn on shareholders\' money'],
+    ['dy', 'Div. yield', 'Dividends paid in the last year ÷ price'], ['ey', 'Earn. yield', 'Earnings ÷ price (1 ÷ P/E) — compare with the 10-year government bond yield'],
+    ['g1', 'EPS 1Y', 'Earnings growth over the last 12 months'], ['g3', 'EPS 3Y', 'Earnings growth a year over 3 years'],
+    ['g5', 'EPS 5Y', 'Earnings growth a year over 5 years'], ['peg', 'PEG', 'P/E ÷ 3-year earnings growth — below 1.5 is attractive, above 2.5 expensive']];
+  var earnState = { view: 'broad', sort: 'g1', dir: -1 };
+  function earnRows(g) {
+    var e = g.earnings || {}, names = g.names || {}, broad = g.broad || ['n50', 'nn50', 'mid150', 'sml250', 'micro250', 'n500'];
+    var keys = Object.keys(e).filter(function (k) { return earnState.view === 'broad' ? broad.indexOf(k) >= 0 : broad.indexOf(k) < 0; });
+    if (earnState.view === 'broad') keys.sort(function (a, b) { return broad.indexOf(a) - broad.indexOf(b); });
+    else keys.sort(function (a, b) {
+      var x = e[a][earnState.sort], y = e[b][earnState.sort];
+      if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
+      return (x - y) * earnState.dir;
+    });
+    var f = function (k, v) {
+      if (v == null) return '–';
+      if (k === 'pe' || k === 'pb' || k === 'peg') return num(v, k === 'pe' ? 1 : 2);
+      var t = num(v, 1) + '%';
+      return /^g/.test(k) ? '<span class="' + (v >= 0 ? 'up' : 'dn') + '">' + (v > 0 ? '+' : '') + t + '</span>' : t;
+    };
+    var nm = function (k) { return esc(String(names[k] || k).replace(/^Nifty /, earnState.view === 'broad' ? 'Nifty ' : '')); };
+    return keys.map(function (k) {
+      return '<tr><td>' + nm(k) + '</td>' + EARN_COLS.map(function (c) { return '<td class="n">' + f(c[0], e[k][c[0]]) + '</td>'; }).join('') + '</tr>';
+    }).join('') || '<tr><td colspan="10" class="vts-note">Figures appear after the next data update.</td></tr>';
+  }
+  function earnBox(g) {
+    var e = g.earnings || {}, broad = g.broad || ['n50', 'nn50', 'mid150', 'sml250', 'micro250', 'n500'], nSec = Object.keys(e).filter(function (k) { return broad.indexOf(k) < 0; }).length;
+    var head = EARN_COLS.map(function (c) {
+      var on = earnState.view !== 'broad' && earnState.sort === c[0];
+      return '<th class="n" title="' + esc(c[2]) + '">' + (earnState.view === 'broad' ? c[1] : '<button type="button" class="vts-es' + (on ? ' on' : '') + '" data-es="' + c[0] + '" aria-label="Sort by ' + esc(c[1]) + '">' + c[1] + (on ? (earnState.dir < 0 ? ' ▾' : ' ▴') : '') + '</button>') + '</th>';
+    }).join('');
+    return '<div class="vts-box vts-earnbox"><h3>Company earnings &amp; valuation — every Nifty index</h3>' +
+      '<p class="vts-sub">Earnings per index unit = index level ÷ P/E, compared with the same month in earlier years (3- and 5-year growth is per year). ROE = P/B ÷ P/E. Tap a column name in Sectors &amp; themes to sort.</p>' +
+      '<div class="vts-seg" role="tablist" aria-label="Index group"><button type="button" role="tab" data-ev="broad" aria-selected="' + (earnState.view === 'broad') + '" class="' + (earnState.view === 'broad' ? 'on' : '') + '">Broad market</button>' +
+      (nSec ? '<button type="button" role="tab" data-ev="sector" aria-selected="' + (earnState.view !== 'broad') + '" class="' + (earnState.view !== 'broad' ? 'on' : '') + '">Sectors &amp; themes (' + nSec + ')</button>' : '') + '</div>' +
+      '<div class="vts-tw vts-earnw"><table class="vts-t vts-earn"><thead><tr><th>Index</th>' + head + '</tr></thead><tbody>' + earnRows(g) + '</tbody></table></div>' +
+      '<p class="vts-note">Earnings outlook (model): over long periods company earnings tend to grow roughly in line with nominal GDP' + (g.nominalNext != null ? ', so the model uses next year\'s nominal GDP forecast of <b>' + num(g.nominalNext) + '%</b> as the expected earnings growth' : '') +
+      '. Young indices have shorter histories, so some 3- and 5-year figures are blank. Very large growth figures usually come from a low base — companies moving from losses or thin profits to solid profits — and rarely repeat. This is a simple model, not a forecast of actual company results.</p></div>';
+  }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('.vts-earnbox [data-ev], .vts-earnbox [data-es]');
+    if (!b) return;
+    var box = b.closest('.vts-earnbox'), g = box && (box._g || lastEco);
+    if (!g) return;
+    if (b.hasAttribute('data-ev')) earnState.view = b.getAttribute('data-ev');
+    else { var k = b.getAttribute('data-es'); earnState.dir = earnState.sort === k ? -earnState.dir : -1; earnState.sort = k; }
+    var tmp = document.createElement('div'); tmp.innerHTML = earnBox(g);
+    var nb = tmp.firstChild; nb._g = g; box.parentNode.replaceChild(nb, box);
+  });
 
   /* FAQ accordion: opening one question closes the one that was open (the 'toggle' event does not bubble, so listen
      in the capture phase); the newly opened question stays in view even when a longer one above it closes */
@@ -320,18 +378,30 @@
             '<span>10+ yr ' + esc(r.risk) + ' · ' + esc(r.freq) + (r.amt ? ' ' + inr(r.amt) : '') + '</span></div><strong class="' + cls(r).trim() + '">' + retTxt(r) +
             (r.ret != null ? '<small>' + (r.metric === 'xirr' ? 'XIRR' : 'abs') + '</small>' : '') + '</strong></div>';
         };
-        el.innerHTML = '<section class="vts-buy" aria-label="Simulator Buy — simulated accounts">' +
-          '<div class="vts-buy-h"><div class="vts-buy-t1"><b>🧾 Simulator Buy</b><span class="vts-buy-badge">Simulation · not real money</span></div>' +
-          '<span class="vts-buy-sub">' + rows.length + ' simulated ' + what + ' accounts of VilfinTV agents following this simulator\'s 10+ year model portfolios' +
-          (anyRet ? ' since ' + esc(d(sb.start)) + ' · ' + metric : ' · simulated buying from ' + esc(d(sb.start))) + '</span></div>' +
+        var best = rows.filter(function (r) { return r.ret != null; })[0];
+        var peek = best ? 'Top: ' + esc(best.name) + ' ' + retTxt(best) + ' · ' + rows.length + ' accounts'
+          : rows.length + ' accounts · ' + (started ? (sb.auditOk === false ? 'under review' : 'buy in progress') : 'starts ' + esc(d(sb.start)));
+        el.innerHTML = '<details class="vts-buy">' +
+          '<summary class="vts-buy-h" aria-label="Simulator Buy — simulated accounts. Show or hide details">' +
+          '<div class="vts-buy-t1"><b>🧾 Simulator Buy</b><span class="vts-buy-badge">Simulation · not real money</span><span class="vts-buy-peek">' + peek + '</span>' +
+          '<span class="vts-buy-tg" aria-hidden="true"><span class="o">Show</span><span class="c">Hide</span><i>▾</i></span></div>' +
+          '<span class="vts-buy-sub">How ' + rows.length + ' simulated ' + what + ' accounts of VilfinTV agents are doing while following this simulator\'s 10+ year model portfolios' +
+          (anyRet ? ' since ' + esc(d(sb.start)) + ' · ' + metric : ' · simulated buying from ' + esc(d(sb.start))) + '</span></summary>' +
+          '<div class="vts-buy-b">' +
           '<p class="vts-buy-warn"><b>Disclaimer:</b> This is a <b>simulation for education only — not a real purchase</b>. No real money is invested, no units are bought or held for anyone, and the agents are internal test accounts, not real investors. Figures are calculated from official end-of-day prices with stamp duty' + (prod === 'etf' ? ', brokerage and exchange charges' : '') + ', exit loads, taxes and settlement days, to show how the model portfolios would have behaved. Not investment advice; not a recommendation to buy any fund. Past or simulated results do not predict future returns.</p>' +
           '<div class="vts-buy-g" role="list" aria-label="Simulated accounts">' + rows.map(card).join('') + '</div>' +
-          '<p class="vts-buy-n">' + (anyRet ? 'Return: absolute for accounts under one year old, XIRR after. ' : '') + 'Updated ' + esc(d(sb.updated)) + (sb.auditOk === false ? ' · figures withheld while a data check is resolved' : '') + '.</p></section>';
+          '<p class="vts-buy-n">' + (anyRet ? 'Return: absolute for accounts under one year old, XIRR after. ' : '') + 'Updated ' + esc(d(sb.updated)) + (sb.auditOk === false ? ' · figures withheld while a data check is resolved' : '') + '.</p></div></details>';
       });
     }).catch(function () {});
   }
   CSS += '.vts-buy{border:1px solid var(--border2,var(--border));border-left:4px solid #f5a524;border-radius:var(--radius,12px);background:var(--surface);padding:14px 16px;margin:0 0 16px;min-width:0;overflow:hidden}' +
-    '.vts-buy-h{display:flex;flex-direction:column;gap:4px}.vts-buy-t1{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:15px}' +
+    '.vts-buy-h{display:flex;flex-direction:column;gap:4px;cursor:pointer;list-style:none;margin:-14px -16px;padding:14px 16px;border-radius:inherit}.vts-buy-h::-webkit-details-marker{display:none}' +
+    '.vts-buy-h:hover{background:rgba(245,165,36,.05)}.vts-buy-h:focus-visible{outline:2px solid #f5a524;outline-offset:-2px}' +
+    '.vts-buy-t1{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:15px}' +
+    '.vts-buy-peek{color:var(--text2);font-size:12.5px;font-weight:600}' +
+    '.vts-buy-tg{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--text);border:1px solid var(--border2,var(--border));border-radius:999px;padding:4px 10px;white-space:nowrap}' +
+    '.vts-buy-tg i{font-style:normal;transition:transform .2s}.vts-buy[open] .vts-buy-tg i{transform:rotate(180deg)}.vts-buy-tg .c,.vts-buy[open] .vts-buy-tg .o{display:none}.vts-buy[open] .vts-buy-tg .c{display:inline}' +
+    '.vts-buy[open] .vts-buy-h{margin-bottom:0}.vts-buy-b{padding-top:14px}' +
     '.vts-buy-badge{display:inline-block;background:rgba(245,165,36,.16);color:#c77800;border:1px solid rgba(245,165,36,.55);border-radius:999px;padding:2px 10px;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}' +
     '[data-theme="dark"] .vts-buy-badge,.dark .vts-buy-badge{color:#f5b54a}' +
     '@media (prefers-color-scheme:dark){.vts-buy-badge{color:#f5b54a}}' +
@@ -344,7 +414,8 @@
     '.vts-buy-c strong{font-variant-numeric:tabular-nums;font-size:13px;text-align:right;white-space:nowrap}.vts-buy-c strong small{display:block;font-size:10px;color:var(--text2);font-weight:600}' +
     '.vts-buy .up{color:#16a34a}.vts-buy .dn{color:#dc2626}.vts-buy .na{color:var(--text2);font-weight:600;font-size:12px}' +
     '.vts-buy-n{margin:8px 0 0;font-size:11px;color:var(--text3,var(--text2))}' +
-    '@media (max-width:520px){.vts-buy{padding:12px}.vts-buy-g{grid-template-columns:1fr}}' +
+    '@media (max-width:520px){.vts-buy{padding:12px}.vts-buy-h{margin:-12px;padding:12px}.vts-buy-g{grid-template-columns:1fr}' +
+    '.vts-buy-t1>b{order:0}.vts-buy-tg{order:1}.vts-buy-badge{order:2}.vts-buy-peek{order:3;flex-basis:100%}.vts-buy:not([open]) .vts-buy-sub{display:none}}' +
     '';
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', simBuy); else simBuy();
 
