@@ -290,45 +290,69 @@
     if (moved) { var shift = d.getBoundingClientRect().top - top; if (Math.abs(shift) > 1) window.scrollBy(0, shift); }
   }, true);
 
-  /* Simulator Buy strip: simulated agent accounts that buy the model portfolio with real-life order rules since the start
-     date. Public data = data/sim_scoreboard.json (name, model, frequency, return % only — absolute under one year, XIRR
-     after). Fills every element with data-vts-buy="mf" | "etf". */
+  /* Simulator Buy card: SIMULATED agent accounts that follow the 10+ year model portfolios with real-life order rules
+     from the start date. Public data = data/sim_scoreboard.json (name, model, schedule, return % only — absolute under
+     one year, XIRR after; null until an account has been valued). Fills every element with data-vts-buy="mf" | "etf".
+     No real money is invested and nothing is bought on anyone's behalf — the card says so prominently. */
   function simBuy() {
     var els = document.querySelectorAll('[data-vts-buy]');
     if (!els.length || !window.fetch) return;
     fetch('data/sim_scoreboard.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (sb) {
       if (!sb) return;
       style();
-      var d = function (x) { return new Date(x + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); };
+      var d = function (x) { return new Date(String(x).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); };
+      var inr = function (v) { return '₹' + Number(v).toLocaleString('en-IN'); };
+      var started = new Date() >= new Date(sb.start + 'T00:00:00');
       els.forEach(function (el) {
-        var prod = el.getAttribute('data-vts-buy'), rows = (sb.rows || []).filter(function (r) { return r.product === prod; });
+        var prod = el.getAttribute('data-vts-buy'), what = prod === 'etf' ? 'ETF' : 'mutual fund';
+        var rows = (sb.rows || []).filter(function (r) { return r.product === prod; });
+        if (!rows.length) { el.innerHTML = ''; return; }
         rows.sort(function (a, b) { return (b.ret == null ? -1e9 : b.ret) - (a.ret == null ? -1e9 : a.ret); });
-        var head = '<div class="vts-buy-h"><b>🧾 Simulator Buy</b><span>' + (rows.length
-          ? 'VilfinTV agents buying the 10+ year model portfolios with real-life order rules since ' + esc(d(sb.start)) + ' · ' + (rows[0].metric === 'xirr' ? 'XIRR' : 'absolute return so far')
-          : 'VilfinTV agents start buying the 10+ year model portfolios with real-life order rules on ' + esc(d(sb.start || '2026-10-21'))) + '</span></div>';
-        if (!rows.length) { el.innerHTML = '<div class="vts-buy">' + head + '</div>'; return; }
+        var anyRet = rows.some(function (r) { return r.ret != null; });
+        var metric = rows.some(function (r) { return r.metric === 'xirr'; }) ? 'XIRR (annualised)' : 'absolute return so far';
+        var retTxt = function (r) {
+          if (r.ret != null) return (r.ret > 0 ? '+' : '') + r.ret.toFixed(2) + '%';
+          return started ? (sb.auditOk === false ? 'Under review' : 'Buy in progress') : 'Starts ' + d(sb.start).replace(/ \d{4}$/, '');
+        };
+        var cls = function (r) { return r.ret == null ? ' na' : r.ret >= 0 ? ' up' : ' dn'; };
         var chip = function (r) {
-          var c = r.ret == null ? '' : r.ret >= 0 ? ' up' : ' dn';
-          return '<span class="vts-buy-c"><b>' + esc(r.name) + '</b>' + (r.nri ? '<i>NRI</i>' : '') + '<em>' + esc(r.risk) + ' · ' + esc(r.freq) + '</em><strong class="' + c + '">' +
-            (r.ret == null ? '–' : (r.ret > 0 ? '+' : '') + r.ret.toFixed(2) + '%') + '</strong></span>';
+          return '<span class="vts-buy-c" role="listitem"><b>' + esc(r.name) + '</b>' + (r.nri ? '<i>NRI</i>' : '') + '<em>' + esc(r.risk) + ' · ' + esc(r.freq) + '</em><strong class="' + cls(r).trim() + '">' + retTxt(r) + '</strong></span>';
         };
         var line = rows.map(chip).join('');
-        el.innerHTML = '<div class="vts-buy">' + head + '<div class="vts-buy-m" role="list" aria-label="Simulator Buy accounts"><div class="vts-buy-t" style="animation-duration:' + Math.max(30, rows.length * 4) + 's">' + line + '<span aria-hidden="true">' + line + '</span></div></div>' +
-          '<p class="vts-buy-n">Simulated accounts for learning — not real investors, not advice. Returns are after stamp duty' + (prod === 'etf' ? ', brokerage and exchange charges' : '') + '; past results do not predict future returns. Updated ' + esc(d(String(sb.updated).slice(0, 10))) + '.</p></div>';
+        var table = '<div class="vts-buy-tw"><table class="vts-t vts-buy-tbl"><thead><tr><th>Agent (simulated)</th><th class="vts-buy-hm">Model portfolio</th><th>Simulated buys</th><th class="n">Return</th></tr></thead><tbody>' +
+          rows.map(function (r) { return '<tr><td><b>' + esc(r.name) + '</b>' + (r.nri ? ' <i class="vts-buy-nri">NRI</i>' : '') + '<small class="vts-buy-sm">' + esc(r.risk) + '</small></td><td class="vts-buy-hm">10+ years · ' + esc(r.risk) + '</td><td>' + esc(r.freq) + (r.amt ? ' ' + inr(r.amt) : '') + '</td><td class="n' + cls(r) + '">' + retTxt(r) + (r.ret != null ? '<small>' + (r.metric === 'xirr' ? ' XIRR' : ' abs') + '</small>' : '') + '</td></tr>'; }).join('') +
+          '</tbody></table></div>';
+        el.innerHTML = '<section class="vts-buy" aria-label="Simulator Buy — simulated accounts">' +
+          '<div class="vts-buy-h"><div class="vts-buy-t1"><b>🧾 Simulator Buy</b><span class="vts-buy-badge">Simulation · not real money</span></div>' +
+          '<span class="vts-buy-sub">' + rows.length + ' simulated ' + what + ' accounts of VilfinTV agents following the Portfolio Simulator\'s 10+ year model portfolios' +
+          (anyRet ? ' since ' + esc(d(sb.start)) + ' · ' + metric : ' · simulated buying starts ' + esc(d(sb.start))) + '</span></div>' +
+          '<p class="vts-buy-warn"><b>Disclaimer:</b> This is a <b>simulation for education only — not a real purchase</b>. No real money is invested, no units are bought or held for anyone, and the agents are internal test accounts, not real investors. Figures are calculated from official end-of-day prices with stamp duty' + (prod === 'etf' ? ', brokerage and exchange charges' : '') + ' and settlement days, to show how the model portfolios would have behaved. Not investment advice; not a recommendation to buy any fund. Past or simulated results do not predict future returns.</p>' +
+          '<div class="vts-buy-m" role="list" aria-label="Simulated account returns"><div class="vts-buy-tk" style="animation-duration:' + Math.max(40, rows.length * 4) + 's">' + line + '<span aria-hidden="true">' + line + '</span></div></div>' +
+          '<details class="vts-buy-all"><summary>View all ' + rows.length + ' simulated accounts</summary>' + table + '</details>' +
+          '<p class="vts-buy-n">' + (anyRet ? 'Return: absolute for accounts under one year old, XIRR after. ' : '') + 'Updated ' + esc(d(sb.updated)) + (sb.auditOk === false ? ' · figures withheld while a data check is resolved' : '') + '.</p></section>';
       });
     }).catch(function () {});
   }
-  CSS += '.vts-buy{border:1px solid var(--border);border-radius:var(--radius,12px);background:var(--surface);padding:10px 12px;margin:0 0 14px;min-width:0;overflow:hidden}' +
-    '.vts-buy-h{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;font-size:13px}.vts-buy-h span{color:var(--text2);font-size:12px}' +
-    '.vts-buy-m{overflow:hidden;margin-top:8px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent)}' +
-    '.vts-buy-t{display:inline-flex;gap:8px;white-space:nowrap;animation:vtsBuy linear infinite}.vts-buy-t>span[aria-hidden]{display:inline-flex;gap:8px}' +
-    '.vts-buy-m:hover .vts-buy-t,.vts-buy-m:focus-within .vts-buy-t{animation-play-state:paused}' +
+  CSS += '.vts-buy{border:1px solid var(--border2,var(--border));border-left:4px solid #f5a524;border-radius:var(--radius,12px);background:var(--surface);padding:14px 16px;margin:0 0 16px;min-width:0;overflow:hidden}' +
+    '.vts-buy-h{display:flex;flex-direction:column;gap:4px}.vts-buy-t1{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:15px}' +
+    '.vts-buy-badge{display:inline-block;background:rgba(245,165,36,.16);color:#c77800;border:1px solid rgba(245,165,36,.55);border-radius:999px;padding:2px 10px;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}' +
+    '[data-theme="dark"] .vts-buy-badge,.dark .vts-buy-badge{color:#f5b54a}' +
+    '@media (prefers-color-scheme:dark){.vts-buy-badge{color:#f5b54a}}' +
+    '.vts-buy-sub{color:var(--text2);font-size:12.5px}' +
+    '.vts-buy-warn{margin:10px 0 0;background:rgba(245,165,36,.09);border:1px solid rgba(245,165,36,.35);border-radius:8px;padding:9px 12px;font-size:12px;line-height:1.55;color:var(--text2)}.vts-buy-warn b{color:var(--text)}' +
+    '.vts-buy-m{overflow:hidden;margin-top:10px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent)}' +
+    '.vts-buy-tk{display:inline-flex;gap:8px;white-space:nowrap;animation:vtsBuy linear infinite}.vts-buy-tk>span[aria-hidden]{display:inline-flex;gap:8px}' +
+    '.vts-buy-m:hover .vts-buy-tk,.vts-buy-m:focus-within .vts-buy-tk{animation-play-state:paused}' +
     '@keyframes vtsBuy{from{transform:translateX(0)}to{transform:translateX(calc(-50% - 4px))}}' +
-    '.vts-buy-c{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:999px;padding:4px 10px;font-size:12.5px}' +
-    '.vts-buy-c em{font-style:normal;color:var(--text2);font-size:11.5px}.vts-buy-c i{font-style:normal;font-size:10px;font-weight:800;color:var(--text2);border:1px solid var(--border2);border-radius:4px;padding:0 4px}' +
-    '.vts-buy-c strong{font-variant-numeric:tabular-nums}.vts-buy-c .up{color:#16a34a}.vts-buy-c .dn{color:#dc2626}' +
+    '.vts-buy-c{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:999px;padding:4px 10px;font-size:12.5px;background:var(--surface2,transparent)}' +
+    '.vts-buy-c em{font-style:normal;color:var(--text2);font-size:11.5px}.vts-buy-c i,.vts-buy-nri{font-style:normal;font-size:10px;font-weight:800;color:var(--text2);border:1px solid var(--border2,var(--border));border-radius:4px;padding:0 4px}' +
+    '.vts-buy-c strong{font-variant-numeric:tabular-nums}.vts-buy .up{color:#16a34a}.vts-buy .dn{color:#dc2626}.vts-buy .na{color:var(--text2);font-weight:600}' +
+    '.vts-buy-all{margin-top:10px}.vts-buy-all>summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--accent,#3b82f6)}' +
+    '.vts-buy-tw{overflow-x:auto;margin-top:8px}.vts-buy-tbl{min-width:0!important}.vts-buy-tbl td small{color:var(--text2);font-weight:600}' +
     '.vts-buy-n{margin:8px 0 0;font-size:11px;color:var(--text3,var(--text2))}' +
-    '@media (prefers-reduced-motion:reduce){.vts-buy-t{animation:none;flex-wrap:wrap;white-space:normal}.vts-buy-t>span[aria-hidden]{display:none}}';
+    '.vts-buy-sm{display:none}' +
+    '@media (max-width:520px){.vts-buy{padding:12px}.vts-buy-tbl th,.vts-buy-tbl td{padding:7px 5px;font-size:12px}.vts-buy-hm{display:none}.vts-buy-sm{display:block;color:var(--text2);font-size:11px}}' +
+    '@media (prefers-reduced-motion:reduce){.vts-buy-tk{animation:none;flex-wrap:wrap;white-space:normal}.vts-buy-tk>span[aria-hidden]{display:none}}';
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', simBuy); else simBuy();
 
   window.VTSim = { gate: gate, accepted: accepted, faqCols: faqCols, riskPanel: riskPanel, ecoPanel: ecoPanel, risk10: risk10, css: style, simBuy: simBuy };
