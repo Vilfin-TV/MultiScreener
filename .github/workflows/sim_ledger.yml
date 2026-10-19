@@ -11,6 +11,14 @@ on:
   workflow_run:
     workflows: ["India MF Screener Data", "ETF Momentum Mode Data"]
     types: [completed]
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/sim_engine.py'
+      - 'scripts/sim_config.json'
+      - 'scripts/audit_sim.py'
+      - 'scripts/sim_xirr.js'
+      - '.github/workflows/sim_ledger.yml'
   schedule:
     - cron: '25 16 * * *'        # 21:55 IST daily fallback
   workflow_dispatch:
