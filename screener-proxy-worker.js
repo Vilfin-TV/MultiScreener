@@ -2649,10 +2649,23 @@ async function _ghWriteJsonFile(env, file, data, sha, message){
 // Academy lesson hubs that education.html appends from lessons.json
 const LESSON_HUBS = ['finance','micro','macro','ai','programming','web','info','finlit','career','growth'];
 
+// pages and data feeds watched by the console's Status report (kind: page | data)
 const STATUS_PAGES = [
-  'https://vilfintv.com/','https://vilfintv.com/iptv.html','https://vilfintv.com/news.html',
-  'https://vilfintv.com/story.html','https://vilfintv.com/education.html','https://vilfintv.com/link-console.html',
-  'https://vilfintv.com/content.json'
+  { url:'https://vilfintv.com/', label:'Home (MultiScreener)', kind:'page' },
+  { url:'https://vilfintv.com/news.html', label:'News', kind:'page' },
+  { url:'https://vilfintv.com/story.html', label:'Stories', kind:'page' },
+  { url:'https://vilfintv.com/education.html', label:'Academy', kind:'page' },
+  { url:'https://vilfintv.com/blog_intelligence_hub.html', label:'Blog', kind:'page' },
+  { url:'https://vilfintv.com/india_mf_screener.html', label:'India MF Screener', kind:'page' },
+  { url:'https://vilfintv.com/etf_momentum.html', label:'ETF Momentum', kind:'page' },
+  { url:'https://vilfintv.com/market_sentiment_score.html', label:'Market Sentiment', kind:'page' },
+  { url:'https://vilfintv.com/iptv.html', label:'IPTV', kind:'page' },
+  { url:'https://vilfintv.com/link-console.html', label:'Link Console', kind:'page' },
+  { url:'https://vilfintv-sim.vilfintv.workers.dev/', label:'Simulator Buy (private ledger)', kind:'page' },
+  { url:'https://vilfintv.com/content.json', label:'Content feed', kind:'data' },
+  { url:'https://vilfintv.com/data/mf/screener.json', label:'MF screener data', kind:'data', asOf:'asOf' },
+  { url:'https://vilfintv.com/data/etf_momentum.json', label:'ETF data', kind:'data' },
+  { url:'https://vilfintv.com/data/sim_scoreboard.json', label:'Simulator Buy scoreboard', kind:'data', asOf:'updated' }
 ];
 const GH_OWNER = 'Vilfin-TV', GH_REPO = 'MultiScreener';
 
@@ -2666,18 +2679,20 @@ async function buildStatusReport(env){
   const out = { generatedAt:new Date().toISOString(), pages:[], github:null, cloudflare:null, summary:{} };
 
   // 1) Page uptime checks (with size, content-type, cache + cf-cache info)
-  const pageChecks = await Promise.all(STATUS_PAGES.map(async function(u){
-    const t0 = Date.now();
+  const pageChecks = await Promise.all(STATUS_PAGES.map(async function(pg){
+    const u = pg.url, t0 = Date.now();
     try { const r = await fetch(u, { method:'GET', cf:{ cacheTtl:0 } });
       const buf = await r.arrayBuffer();
-      return { url:u, status:r.status, ok:r.ok, ms: Date.now()-t0,
+      let asOf = null;
+      if (pg.asOf && r.ok){ try { asOf = JSON.parse(new TextDecoder().decode(buf))[pg.asOf] || null; } catch(e){} }
+      return { url:u, label:pg.label, kind:pg.kind, asOf:asOf, status:r.status, ok:r.ok, ms: Date.now()-t0,
         bytes: buf.byteLength,
         type: (r.headers.get('content-type')||'').split(';')[0],
         server: r.headers.get('server')||'',
         cache: r.headers.get('cache-control')||'',
         cfCache: r.headers.get('cf-cache-status')||'',
         lastModified: r.headers.get('last-modified')||'' }; }
-    catch(e){ return { url:u, status:0, ok:false, ms: Date.now()-t0, error:String(e&&e.message||e) }; }
+    catch(e){ return { url:u, label:pg.label, kind:pg.kind, status:0, ok:false, ms: Date.now()-t0, error:String(e&&e.message||e) }; }
   }));
   out.pages = pageChecks;
 
@@ -2695,8 +2710,15 @@ async function buildStatusReport(env){
       gh.workflows = runs.json.workflow_runs.slice(0,12).map(function(w){ return { name:w.name, status:w.status, conclusion:w.conclusion, event:w.event, at:w.created_at, url:w.html_url }; });
       gh.failedWorkflows = gh.workflows.filter(function(w){ return w.conclusion && w.conclusion!=='success' && w.conclusion!=='skipped' && w.conclusion!=='neutral'; }).length;
     }
-    gh.dependabotOpen = (dependabot.json && Array.isArray(dependabot.json)) ? dependabot.json.length : (dependabot.status===403?'no-access':'n/a');
-    gh.codeScanningOpen = (codescan.json && Array.isArray(codescan.json)) ? codescan.json.length : (codescan.status===403||codescan.status===404?'not-enabled':'n/a');
+    const why = function(res){
+      const m = String((res.json && res.json.message) || res.text || '').toLowerCase();
+      if (/disabled|not enabled|no analysis|advanced security/.test(m)) return 'not-enabled';
+      if (res.status===403 || res.status===401) return 'no-access';
+      if (res.status===404) return 'not-enabled';
+      return 'n/a';
+    };
+    gh.dependabotOpen = (dependabot.json && Array.isArray(dependabot.json)) ? dependabot.json.length : why(dependabot);
+    gh.codeScanningOpen = (codescan.json && Array.isArray(codescan.json)) ? codescan.json.length : why(codescan);
     if (dependabot.json && Array.isArray(dependabot.json)){
       gh.dependabotBySeverity = dependabot.json.reduce(function(a,x){ var s=(x.security_advisory&&x.security_advisory.severity)||'unknown'; a[s]=(a[s]||0)+1; return a; }, {});
     }
@@ -2737,10 +2759,16 @@ async function buildStatusReport(env){
         for (const b of r2.json.result.buckets){
           const usage = await _fetchJson(ab+'/r2/buckets/'+encodeURIComponent(b.name)+'/usage', H);
           let sizeBytes=null, objects=null;
-          if (usage.json && usage.json.result){ sizeBytes = usage.json.result.payloadSize!=null?usage.json.result.payloadSize:usage.json.result.metadataSize; objects = usage.json.result.objectCount; }
+          if (usage.json && usage.json.result){
+            const u = usage.json.result;            // the API returns these as strings ("12345")
+            sizeBytes = Number(u.payloadSize || 0) + Number(u.metadataSize || 0);
+            objects = u.objectCount != null ? Number(u.objectCount) : null;
+            if (!isFinite(sizeBytes)) sizeBytes = null;
+          }
           cf.r2.push({ name:b.name, sizeBytes:sizeBytes, objects:objects });
         }
-        cf.r2TotalBytes = cf.r2.reduce(function(a,x){ return a + (x.sizeBytes||0); }, 0);
+        cf.r2TotalBytes = cf.r2.reduce(function(a,x){ return a + (Number(x.sizeBytes)||0); }, 0);
+        cf.r2TotalObjects = cf.r2.reduce(function(a,x){ return a + (Number(x.objects)||0); }, 0);
       } else if (r2.status===403){ cf.r2 = 'no-access'; }
 
       // Workers scripts deployed
@@ -2784,6 +2812,9 @@ async function buildStatusReport(env){
   const totalBytes = out.pages.reduce(function(a,p){ return a + (p.bytes||0); }, 0);
   out.summary = {
     pagesTotal: out.pages.length, pagesDown: down, pagesTotalBytes: totalBytes,
+    pagesOnly: out.pages.filter(function(p){ return p.kind!=='data'; }).length,
+    feedsOnly: out.pages.filter(function(p){ return p.kind==='data'; }).length,
+    r2TotalObjects: (out.cloudflare && out.cloudflare.r2TotalObjects) || 0,
     avgLatencyMs: Math.round(out.pages.reduce(function(a,p){ return a+(p.ms||0); },0) / (out.pages.length||1)),
     githubFailedWorkflows: out.github && out.github.failedWorkflows || 0,
     githubDependabotOpen: out.github ? out.github.dependabotOpen : 'n/a',
