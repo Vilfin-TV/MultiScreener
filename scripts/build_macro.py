@@ -550,6 +550,79 @@ def growth_block(S, prev: dict) -> dict:
             "gdpRaw": {**{k: {str(y): x for y, x in v.items()} for k, v in gdp.items()}, "src": src}}
 
 
+# Global indices: valuation of each index from the holdings of a large ETF that tracks it (the published portfolio
+# P/E and P/B of the ETF's holdings), month-end snapshots kept in GVHIST so earnings growth builds up over time.
+GIDX = [("g_ndx", "Nasdaq 100", "QQQ"), ("g_spx", "S&P 500", "SPY"), ("g_dji", "Dow Jones Industrial Average", "DIA"),
+        ("g_eur", "S&P Europe 350", "IEV"), ("g_ezn", "MSCI Eurozone", "EZU"), ("g_uk", "MSCI United Kingdom", "EWU"),
+        ("g_n225", "Nikkei 225", "1321.T"), ("g_chn", "MSCI China", "MCHI"), ("g_hsi", "Hang Seng", "2800.HK"),
+        ("g_twn", "MSCI Taiwan", "EWT"), ("g_em", "MSCI Emerging Markets", "EEM"), ("g_wld", "MSCI World", "URTH"),
+        ("g_acwi", "MSCI ACWI (all countries)", "ACWI")]
+GVHIST = HIST.parent / "global_val_hist.json"
+
+
+def global_valuations(S, prev: dict) -> dict:
+    keep = ((prev.get("growth") or {}).get("gidx")) or {}
+    try:
+        S.get("https://fc.yahoo.com", timeout=20)
+        crumb = S.get("https://query1.finance.yahoo.com/v1/test/getcrumb", timeout=20).text.strip()
+    except Exception as e:  # noqa: BLE001
+        log.warning("global index valuations unavailable: %s", e)
+        return keep
+    h = load(GVHIST, {"months": {}})
+    today = date.today()
+    mk = f"{today.year}-{today.month:02d}"
+    got = {}
+    for key, label, sym in GIDX:
+        try:
+            r = S.get(f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{requests.utils.quote(sym)}",
+                      params={"modules": "topHoldings,summaryDetail,price", "crumb": crumb}, timeout=30)
+            j = r.json()["quoteSummary"]["result"][0]
+            eh = (j.get("topHoldings") or {}).get("equityHoldings") or {}
+            ey = (eh.get("priceToEarnings") or {}).get("raw")          # published as earnings ÷ price
+            by = (eh.get("priceToBook") or {}).get("raw")              # published as book ÷ price
+            px = ((j.get("price") or {}).get("regularMarketPrice") or {}).get("raw")
+            dy = ((j.get("summaryDetail") or {}).get("yield") or {}).get("raw")
+        except Exception as e:  # noqa: BLE001
+            log.warning("global valuation %s (%s): %s", label, sym, e)
+            continue
+        if not ey or ey <= 0 or not px:
+            continue
+        pe, pb = round(1 / ey, 2), (round(1 / by, 2) if by and by > 0 else None)
+        if not 3 <= pe <= 150:                                         # implausible → skip rather than publish
+            continue
+        got[key] = (pe, pb, round(dy * 100, 2) if dy is not None and dy >= 0.001 else None, px)   # <0.1% = not reported properly
+        h["months"].setdefault(mk, {})[key] = [px, pe]
+        time.sleep(0.4)
+    if len(got) < len(GIDX) // 2:
+        log.warning("global index valuations: only %d of %d — keeping the previous figures", len(got), len(GIDX))
+        return keep
+    h["latest"] = {"d": today.isoformat(), "v": {k: list(v) for k, v in got.items()}}
+    GVHIST.write_text(json.dumps(h, separators=(",", ":")))
+    out = {}
+    for key, label, sym in GIDX:
+        if key not in got:
+            if key in (keep.get("earnings") or {}):
+                out[key] = keep["earnings"][key]
+            continue
+        pe, pb, dy, px = got[key]
+        eps_now = px / pe
+        x = {"pe": pe, "ey": round(100 / pe, 2)}
+        if pb:
+            x["pb"], x["roe"] = pb, round(pb / pe * 100, 1)
+        if dy is not None:
+            x["dy"] = dy
+        for n in (1, 3, 5):                                            # same month n years ago (builds up over time)
+            old = h["months"].get(f"{today.year - n}-{today.month:02d}", {}).get(key)
+            if old and old[1]:
+                x[f"g{n}"] = round(((eps_now / (old[0] / old[1])) ** (1 / n) - 1) * 100, 1)
+        if x.get("g3") and x["g3"] > 0:
+            x["peg"] = round(pe / x["g3"], 2)
+        out[key] = x
+    log.info("global index valuations: %d indices", len(out))
+    return {"earnings": out, "names": {k: lab for k, lab, _ in GIDX if k in out}, "via": {k: s for k, _, s in GIDX if k in out},
+            "order": [k for k, _, _ in GIDX if k in out], "asOf": today.isoformat(),
+            "since": date.fromisoformat(min(h["months"]) + "-01").strftime("%b %Y")}
+
 def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     S = requests.Session()
@@ -577,6 +650,12 @@ def main() -> int:
     except Exception as e:  # noqa: BLE001
         log.warning("growth checks unavailable: %s", e)
         growth = prev.get("growth") or {}
+    try:
+        gi = global_valuations(S, prev)
+        if gi:
+            growth["gidx"] = gi
+    except Exception as e:  # noqa: BLE001
+        log.warning("global index valuations failed: %s", e)
     out = {"generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "rates": rates, "rateHist": hist,
            "valuation": val, "valuationAsOf": val_asof, "global": glob, "growth": growth}
     if not rates and not val:
