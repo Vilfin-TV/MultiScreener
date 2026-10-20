@@ -1634,6 +1634,22 @@ def stable(state, key, new_value, review, strong=False):
     return rec["value"]
 
 
+def data_since(macro: dict) -> dict:
+    """First month on record for every index in the earnings table (val_hist.json; global indices from VilfinTV's own
+    monthly record), so the page can say when a 1 / 3 / 5-year figure will first be available instead of a blank."""
+    out = {}
+    for path, pre in ((MF / "val_hist.json", ""), (MF / "global_val_hist.json", "")):
+        try:
+            months = json.loads(path.read_text()).get("months") or {}
+        except Exception:  # noqa: BLE001
+            continue
+        for m in sorted(months):
+            row = months[m]
+            for k in (row.get("v") if isinstance(row, dict) and "v" in row else row) or {}:
+                out.setdefault(pre + k, m)
+    return out
+
+
 def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     scr = load(MF / "screener.json")
@@ -1800,7 +1816,7 @@ def main() -> int:
     out = {"v": VERSION, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "asOf": scr["asOf"],
            "reviewed": state["reviewed"], "nextReview": date(today.year + (today.month == 12), today.month % 12 + 1, 1).isoformat(),
            "market": {"tilt": tilt, "tiltNow": tilt_now, "components": tilt_comps, "rotation": rotation, "gates": gates,
-                      "growth": {k: v for k, v in ((macro or {}).get("growth") or {}).items() if k != "gdpRaw"},
+                      "growth": {**{k: v for k, v in ((macro or {}).get("growth") or {}).items() if k != "gdpRaw"}, "since": data_since(macro)},
                       "n50": {k: (val.get("n50") or {}).get(k) for k in ("pe", "pb", "dy", "pePct", "pbPct", "peMed", "pbMed", "r12m")},
                       "valuationAsOf": macro.get("valuationAsOf")},
            "rates": {**rr, "applied": regime},

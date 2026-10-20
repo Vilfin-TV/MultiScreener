@@ -142,8 +142,9 @@ def charges(value, side, res, equity):
 
 def dip_walk(cl, second):
     """Independent re-implementation of the dip signal (sim_config dipRule): returns {day: state} for signal days."""
-    lb, ep, out = DIP["lookback"], 0, {}
+    lb, ep, out, prev = DIP["lookback"], 0, {}, 0
     tiers = sorted(DIP["tiers"], key=lambda t: -t[0])
+    amt_of = {t: max(DIP["min"], min(DIP["max"], a)) for t, a in tiers}
     for i in range(lb - 1, len(cl)):
         d, c = cl[i]
         win = cl[i - lb + 1:i + 1]
@@ -153,7 +154,10 @@ def dip_walk(cl, second):
         mv = (c / cl[i - 1][1] - 1) * 100
         w2 = [second[x] for x, _ in win if second.get(x)]
         f2 = (1 - second[d] / max(w2)) * 100 if second.get(d) and len(w2) >= 0.9 * lb else None
-        t, amt = next(((t, max(DIP["min"], min(DIP["max"], a))) for t, a in tiers if fall >= t), (0, 0))
+        raw = next((t for t, _ in tiers if fall >= t), 0)
+        t = min(raw, prev)                                   # the level must hold for two closes
+        prev = raw
+        amt = amt_of.get(t, 0)
         if fall < DIP["resetPct"]:
             ep = 0
         if t > ep and f2 is not None and abs(f2 - fall) <= DIP["confirmPts"] and mv >= DIP["crashDayPct"] and fall <= DIP["maxFallPct"]:
@@ -201,7 +205,7 @@ def audit_dips(A, store, evs, orders, done, funded, prices, today, start):
         key = "code" if aid.endswith("-MF") else "sym"
         A.check("dip", legs and str(legs[0].get(key)) == str(rv.get(key)) == str(e.get(key)), f"{aid}: reserve parked in {legs and legs[0].get(key)} — the published reserve fund is {rv.get(key)}")
 
-    # refills: once dip buys leave less than the minimum, the reserve is refilled to the full amount on the first
+    # refills: once dip buys leave less than the minimum, the same amount (DIP reserve) is added on the first
     # trading day of the following month, into the same fund / ETF — never otherwise
     buys_of = {}
     for e in dips:
@@ -229,9 +233,9 @@ def audit_dips(A, store, evs, orders, done, funded, prices, today, start):
             if nxt is None:
                 A.check("dip", due is None or due > today, f"{aid}: reserve used up — refill due {due} is missing")
                 continue
-            A.check("dip", due is not None and nxt["T"] == iso(due) and abs(nxt["amount"] - (DIP["reserve"] - left)) < 0.011
+            A.check("dip", due is not None and nxt["T"] == iso(due) and abs(nxt["amount"] - DIP["reserve"]) < 0.011
                     and str(nxt.get("code") or nxt.get("sym")) == str(rsv[aid].get("code") or rsv[aid].get("sym")),
-                    f"{aid}: refill #{nxt['n']} ₹{nxt['amount']} on {nxt['T']} — the rule gives {due} ₹{DIP['reserve'] - left}")
+                    f"{aid}: refill #{nxt['n']} ₹{nxt['amount']} on {nxt['T']} — the rule gives {due} ₹{DIP['reserve']}")
             o = orders.get(nxt["iid"] + "|liquid")
             A.check("dip", o is not None and o["slot"] == "reserve" and o["side"] == "buy" and abs(o["amount"] - nxt["amount"]) < 1e-9 and o["T"] == nxt["T"],
                     f"{aid}: refill #{nxt['n']} purchase order")
@@ -263,6 +267,7 @@ def audit_dips(A, store, evs, orders, done, funded, prices, today, start):
     for e in dips:
         got.setdefault(e["acct"], {})[(e["D"], e["seg"])] = e
         A.check("dip", e["acct"] in accts, f"{e['did']}: dip decision for an account outside the dip rule")
+        A.check("dip", e["D"] > iso(start) and e["T"] > iso(start), f"{e['did']}: dip decision on or before the start date {iso(start)}")
     for aid in accts:
         if aid not in rsv:
             continue
