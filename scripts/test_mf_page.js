@@ -134,7 +134,8 @@ const subsOf = a => [...new Set(F.filter(f => f.asset === a).map(f => f.sub))];
       await p.click(`#stCards [data-stf="${st}"]`); await p.waitForTimeout(200);
       await verify({ asset: 'Equity' }, {}, `status card ${st} (tapped again = cleared)`);
     }
-    const strip = await p.$$eval('#amcStrip [data-amcf]', x => x.map(e => [e.getAttribute('data-amcf'), +e.querySelector('small').textContent]));
+    if (await p.$eval('#amcMore', e => !e.hidden)) { await p.$eval('#amcMore', e => e.click()); await p.waitForTimeout(150); }   // full list
+    const strip = await p.$$eval('#amcStrip [data-amcf]', x => x.map(e => [e.getAttribute('data-amcf'), parseInt(e.querySelector('small').textContent, 10)]));
     const inEq = {}; F.filter(f => f.asset === 'Equity').forEach(f => { inEq[f.amc] = (inEq[f.amc] || 0) + 1; });
     ok(strip.length === Object.keys(inEq).length, 'fund-house strip', `${strip.length} fund houses shown, ${Object.keys(inEq).length} expected`);
     strip.forEach(([i, n]) => ok(n === inEq[i], 'fund-house strip', `${D.amcs[i]} shows ${n}, expected ${inEq[i]}`));
