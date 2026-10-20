@@ -461,13 +461,13 @@
           '<li><b>When:</b> every purchase is placed on its plan date before the 3 pm IST cut-off.</li>' +
           '<li><b>Unit price:</b> the fund\'s <b>official NAV of that business day</b> (liquid and overnight funds: the NAV of the previous calendar day); if the fund house has no NAV that day, the next NAV day. Stamp duty of 0.005% is taken first; units are rounded down to 3 decimals and credited two business days later (market holidays skipped). Until then the purchase shows as "buy in progress" — no return, gain or stamp duty is shown before the units are credited.</li>' +
           '<li><b>Record:</b> each purchase in the ledger stores its NAV date and NAV, and the daily audit checks it against the official NAV file.</li>' +
-          '<li><b>Market-dip buys</b> (Govind, Nithin and Aishwarya only): a one-time ₹20,000 reserve sits in a liquid fund. After a confirmed dip close, the dip amount is redeemed the next trading day at the liquid fund\'s applicable NAV, paid out the following business day and invested in the segment\'s model fund at that day\'s NAV — the same cut-off, stamp duty and T+2 credit rules apply.</li></ul></details>'
+          '<li><b>Market-dip buys</b> (Govind, Nithin and Aishwarya only): a ₹20,000 reserve sits in a liquid fund (refilled to ₹20,000 on the first trading day of the month after it is used up). After a confirmed dip close, the dip amount is redeemed the next trading day at the liquid fund\'s applicable NAV, paid out the following business day and invested in the segment\'s model fund at that day\'s NAV — the same cut-off, stamp duty and T+2 credit rules apply.</li></ul></details>'
         : '<details class="vts-buy-rule"><summary>⏱ How each ETF trade is priced</summary><ul>' +
           '<li><b>When:</b> every buy (and any sale) is placed on its plan date and treated as a market-on-close order — it executes at the end of that day\'s trading session, <b>3:30 pm IST</b>.</li>' +
           '<li><b>Unit price:</b> the exchange\'s <b>official closing price</b> of that session (the weighted average price of the last 30 minutes of trading, 3:00–3:30 pm IST). If the market is closed (weekend or exchange holiday) or the ETF did not trade that day, it executes at the close of the next session it trades.</li>' +
           '<li><b>Units:</b> whole units only, as many as the amount buys after charges; cash left over is added to the next buy of the same ETF. Units are credited the next trading day (T+1).</li>' +
           '<li><b>Record:</b> each trade in the ledger stores this rule, its trade date and the closing price used, and the daily audit checks every trade against the exchange\'s published closing price for that session.</li>' +
-          '<li><b>Market-dip buys</b> (Govind, Nithin and Aishwarya only): a one-time ₹20,000 reserve sits in a liquid ETF. After a confirmed dip close, whole liquid-ETF units worth the dip amount are sold at the next session\'s close and the segment\'s model ETF is bought at the following session\'s close, once the sale proceeds settle.</li></ul></details>') +
+          '<li><b>Market-dip buys</b> (Govind, Nithin and Aishwarya only): a ₹20,000 reserve sits in a liquid ETF (refilled to ₹20,000 on the first trading day of the month after it is used up). After a confirmed dip close, whole liquid-ETF units worth the dip amount are sold at the next session\'s close and the segment\'s model ETF is bought at the following session\'s close, once the sale proceeds settle.</li></ul></details>') +
       '<div class="vts-pf"><div class="vts-pf-bar"><button type="button" class="vts-pf-me" aria-haspopup="dialog"></button><span class="vts-pf-st vts-pf-cur"></span>' +
       '<button type="button" class="vts-pf-sw" aria-haspopup="listbox" aria-expanded="false">Switch <i>▾</i></button></div>' +
       '<div class="vts-pf-list" role="listbox" aria-label="Switch account" hidden></div></div>' +
@@ -534,9 +534,9 @@
                     : 'Every March, long-term equity gains up to the ₹1.25 lakh yearly exemption are booked and bought back the same day to raise the cost base (tax harvesting)'],
         ['Discipline', r.dip ? 'Never sells because prices fell and never adds or withdraws money outside the plan — the only extra buys are the market-dip lump sums from the reserve'
                              : 'Never times the market, never sells because prices fell, never adds or withdraws money outside the plan']
-      ].concat(r.dip ? [['Dips', 'Keeps a one-time ₹20,000 reserve in a ' + (mf ? 'liquid fund' : 'liquid ETF') + '. When the Nifty 50, Midcap 150, Smallcap 250, gold or silver closes 3% / 5% / 10% below its 3-month high, the next trading day ₹5,000 / ₹10,000 / ₹20,000 of the reserve is ' +
+      ].concat(r.dip ? [['Dips', 'Keeps a ₹20,000 reserve in a ' + (mf ? 'liquid fund' : 'liquid ETF') + ', refilled to ₹20,000 on the first trading day of the month after it is used up. When the Nifty 50, Midcap 150, Smallcap 250, gold or silver closes 5% / 10% / 15% below its 3-month high, the next trading day ₹5,000 / ₹10,000 / ₹20,000 of the reserve is ' +
         (mf ? 'redeemed and invested in that segment\'s model fund when the money arrives the next business day' : 'sold and invested in that segment\'s model ETF at the next session\'s close') +
-        ' — once per new tier in a fall, only after all 26 checks pass and only while reserve money is left']] : []);
+        ' — once per new tier in a fall, only after all 26 checks pass (stricter value checks: P/E below the 80th percentile and within 1.15× its 10-year median) and only while reserve money is left']] : []);
     }
     function profile(r, a) {
       var x = (a && a.detail) || r.detail, nri = !!r.nri, tm = TEAM[r.team] || ['VilfinTV team', nri ? 'Outside India (NRI)' : 'India'];
@@ -562,12 +562,13 @@
         row('Total return', r.ret != null ? '<span class="' + cl(r.ret) + '">' + spct(r.ret) + '</span>' + (r.metric === 'xirr' ? ' XIRR' : '') : (r.credit ? 'Units credited ' + esc(dt(r.credit)) : '–')) +
         '<h4>How ' + esc(r.name) + ' buys</h4><ol class="vts-pm-steps">' + strategy(r, x, nri).map(function (t) { return '<li><b>' + t[0] + '</b><span>' + t[1] + '</span></li>'; }).join('') + '</ol>' +
         (x && x.dip ? '<h4>Market-dip reserve</h4>' + row('Reserve', inr(x.dip.reserve, 0) + (x.dip.fund ? ' in ' + esc(x.dip.fund) : '') + (x.dip.date ? ' · since ' + esc(dt(x.dip.date)) : '')) +
+          (x.dip.refills && x.dip.refills.length ? row('Refilled', x.dip.refills.length + '× · ' + inr(x.dip.paid - x.dip.reserve, 0) + ' added (latest ' + esc(dt(x.dip.refills[x.dip.refills.length - 1].T)) + ')') : '') +
           row('Used for dip buys', inr(x.dip.used, 0)) + row('Left', inr(x.dip.left, 0)) +
           ((x.dip.ev || []).length ? '<ul class="vts-pm-dip">' + x.dip.ev.slice().reverse().map(function (e) {
             return '<li><b>' + esc(dt(e.D)) + ' · ' + esc(e.seg === 'large' ? 'Large cap' : e.seg === 'mid' ? 'Mid cap' : e.seg === 'small' ? 'Small cap' : e.seg === 'gold' ? 'Gold' : 'Silver') + ' −' + Number(e.fall).toFixed(2) + '%</b> ' +
               (e.action === 'buy' ? 'bought ' + inr(e.amt, 0) + (e.name ? ' of ' + esc(e.name) : '') : 'no buy — ' + esc(e.why)) + '</li>';
           }).join('') + '</ul>' : '<p class="vts-pv-e">No dip buys yet — the reserve waits for the first confirmed fall.</p>') +
-          (x.dip.empty ? '<p class="vts-pv-e">' + x.dip.empty + ' later dip signal' + (x.dip.empty > 1 ? 's' : '') + ' passed without a buy because the reserve was used up.</p>' : '') : '') +
+          (x.dip.empty ? '<p class="vts-pv-e">' + x.dip.empty + ' dip signal' + (x.dip.empty > 1 ? 's' : '') + ' passed without a buy while the reserve was used up (it is refilled on the first trading day of the next month).</p>' : '') : '') +
         '<h4>Charges</h4><ul>' + costs.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' +
         '<h4>Tax rules for this account</h4><ul>' + tax.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' +
         '<p class="vts-pv-e">Simulated account of a VilfinTV team member for education — not real money and not advice. Every figure comes from the audited ledger.</p></div>';
@@ -1006,7 +1007,7 @@
       '<p class="vts-dip-n">' + (who ? 'In Simulator Buy, ' + esc(who) + ' follow this rule. Each of their accounts holds a one-time <b>' + inr(R.reserve) + ' reserve</b> in ' +
         (etf ? 'a liquid ETF (' + esc(rv.sym || 'liquid ETF') + ')' : 'a liquid fund (' + esc(rv.name || 'liquid fund') + ')') +
         '. On the next trading day after a dip close, the simulation redeems the dip amount from the reserve and buys the segment\'s model ' + (etf ? 'ETF' : 'fund') +
-        ' with the proceeds when they arrive the next business day. When less than the tier amount is left, the remainder is used (never below ' + inr(R.min) + '). ' : '') +
+        ' with the proceeds when they arrive the next business day. When less than the tier amount is left, the remainder is used (never below ' + inr(R.min) + '); once the reserve is used up it is refilled to ' + inr(R.reserve) + ' on the first trading day of the following month. ' : '') +
         'A fall is confirmed by a second ' + (etf ? 'ETF' : 'index fund') + ' on the same index; a fall ends when the index is back within ' + (R.resetPct || 1) + '% of its high. Educational model — not investment advice.</p></section>';
   }
   CSS += '.vts-eco{border:1px solid var(--border);border-radius:var(--radius,14px);background:var(--surface);margin:0 0 12px;overflow:hidden}' +

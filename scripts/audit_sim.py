@@ -165,7 +165,11 @@ def dip_walk(cl, second):
 def audit_dips(A, store, evs, orders, done, funded, prices, today, start):
     accts = [f"{n}-{p}" for n in DIP["persons"] for p in ("MF", "ETF")]
     plans = store.get("plans", {})
-    rsv = {e["acct"]: e for e in evs if e["k"] == "reserve"}
+    rsv = {e["acct"]: e for e in evs if e["k"] == "reserve" and not e.get("n")}
+    refills = {}
+    for e in evs:
+        if e["k"] == "reserve" and e.get("n"):
+            refills.setdefault(e["acct"], []).append(e)
     dips = [e for e in evs if e["k"] == "dip"]
     scans = [e for e in evs if e["k"] == "dipscan"]
     since = lambda p: p.get("since", p["ref"][:10])      # noqa: E731
@@ -196,6 +200,41 @@ def audit_dips(A, store, evs, orders, done, funded, prices, today, start):
                 and abs(legs[0]["amount"] - DIP["reserve"]) < 1e-9 and legs[0]["T"] == e["T"], f"{aid}: reserve purchase order")
         key = "code" if aid.endswith("-MF") else "sym"
         A.check("dip", legs and str(legs[0].get(key)) == str(rv.get(key)) == str(e.get(key)), f"{aid}: reserve parked in {legs and legs[0].get(key)} — the published reserve fund is {rv.get(key)}")
+
+    # refills: once dip buys leave less than the minimum, the reserve is refilled to the full amount on the first
+    # trading day of the following month, into the same fund / ETF — never otherwise
+    buys_of = {}
+    for e in dips:
+        if e["action"] == "buy":
+            buys_of.setdefault(e["acct"], []).append(e)
+    for aid in accts:
+        if aid not in rsv:
+            A.check("dip", not refills.get(aid), f"{aid}: refill without a first reserve")
+            continue
+        chain = [rsv[aid]] + sorted(refills.get(aid, []), key=lambda e: e["n"])
+        A.check("dip", [e.get("n", 0) for e in chain] == list(range(len(chain))), f"{aid}: refills not numbered in order")
+        bs = sorted(buys_of.get(aid, []), key=lambda e: (e["T"], e["seq"]))
+        for k in range(len(chain) + 1):
+            nxt = chain[k] if k < len(chain) else None
+            prev = chain[k - 1] if k else None
+            if prev is None:
+                continue
+            before = [b for b in bs if nxt is None or b["T"] < nxt["T"]]
+            left = sum(e["amount"] for e in chain[:k]) - sum(b["amt"] for b in before)
+            last = max((b for b in before if b["T"] >= prev["T"]), key=lambda b: (b["T"], b["seq"]), default=None)
+            due = None
+            if left < DIP["min"] and last is not None:
+                t = day(last["T"])
+                due = roll(date(t.year + (t.month == 12), t.month % 12 + 1, 1))
+            if nxt is None:
+                A.check("dip", due is None or due > today, f"{aid}: reserve used up — refill due {due} is missing")
+                continue
+            A.check("dip", due is not None and nxt["T"] == iso(due) and abs(nxt["amount"] - (DIP["reserve"] - left)) < 0.011
+                    and str(nxt.get("code") or nxt.get("sym")) == str(rsv[aid].get("code") or rsv[aid].get("sym")),
+                    f"{aid}: refill #{nxt['n']} ₹{nxt['amount']} on {nxt['T']} — the rule gives {due} ₹{DIP['reserve'] - left}")
+            o = orders.get(nxt["iid"] + "|liquid")
+            A.check("dip", o is not None and o["slot"] == "reserve" and o["side"] == "buy" and abs(o["amount"] - nxt["amount"]) < 1e-9 and o["T"] == nxt["T"],
+                    f"{aid}: refill #{nxt['n']} purchase order")
 
     # the frozen tracker closes
     ser = store.get("dipSeries", {})
@@ -235,10 +274,13 @@ def audit_dips(A, store, evs, orders, done, funded, prices, today, start):
         # decisions in order (day, deepest fall first), the reserve drawn down exactly
         seq = sorted(mine.values(), key=lambda e: e["seq"])
         A.check("dip", [(e["D"], -e["fall"], e["seg"]) for e in seq] == sorted((e["D"], -e["fall"], e["seg"]) for e in seq), f"{aid}: dip decisions out of order")
-        left, units, prod = float(DIP["reserve"]), None, "mf" if aid.endswith("-MF") else "etf"
+        units, prod = None, "mf" if aid.endswith("-MF") else "etf"
+        used = 0.0
         ro = orders.get(f"{aid}|reserve|liquid")
         rdone = done.get(f"{aid}|reserve|liquid")
-        units = rdone["units"] if rdone else 0.0
+        rlist = [rsv[aid]] + refills.get(aid, [])
+        units_of = lambda T: sum(done[r["iid"] + "|liquid"]["units"] for r in rlist if r["iid"] + "|liquid" in done and r["T"] <= T)   # noqa: E731
+        sold = 0.0
         pid = CFG["horizon"] + persons[aid.rsplit("-", 1)[0]]["risk"]
         for e in seq:
             x = expect.get((e["D"], e["seg"]))
@@ -252,11 +294,14 @@ def audit_dips(A, store, evs, orders, done, funded, prices, today, start):
             plan = dip_plan(T)
             A.check("dip", e.get("ref") == plan.get("ref"), f"{e['did']}: decided on plan {e.get('ref')}, the plan in force was {plan.get('ref')}")
             ent = ((plan.get("dip") or {}).get(prod) or {}).get(pid, {}).get(e["seg"])
+            paid = sum(r["amount"] for r in rlist if (done.get(r["iid"] + "|liquid") or {}).get("credit", "9999") <= iso(T))
+            left = paid - used
             amt = min(x["amount"], left)
             act = "skip" if not ent or not ent["fundOk"] or amt < DIP["min"] else "buy"
             A.check("dip", e["action"] == act and abs(e["amt"] - (amt if act == "buy" else 0)) < 1e-9, f"{e['did']}: {e['action']} ₹{e['amt']} — the rule gives {act} ₹{amt if act == 'buy' else 0}")
             if act == "buy":
                 left -= amt
+                used += amt
             A.check("dip", abs(e["left"] - left) < 1e-9, f"{e['did']}: reserve left {e['left']} vs {left}")
             legs = {o["oid"]: o for o in orders.values() if o.get("iid") == e["did"]}
             if e["action"] != "buy":
@@ -280,12 +325,14 @@ def audit_dips(A, store, evs, orders, done, funded, prices, today, start):
                 A.check("dip", day(d["navDate"]) <= nd and (nd - day(d["navDate"])).days <= 5, f"{out['oid']}: liquid redemption NAV of {d['navDate']} (rule: {iso(nd)})")
                 rec = (prices.get("mf", {}).get(str(out["code"])) or {}).get(d["navDate"])
                 A.check("dip", rec is not None and abs(rec - px) < 1e-9, f"{out['oid']}: NAV {px} not the recorded NAV of {d['navDate']}")
+                units = round(units_of(out["T"]) - sold, 6)
                 want = min(units, math.ceil(out["amountOut"] / px * 1000 - 1e-6) / 1000)
                 A.check("dip", d["payout"] == iso(biz_add(T, 1)), f"{out['oid']}: liquid payout {d['payout']} (T+1)")
             else:
+                units = round(units_of(out["T"]) - sold, 6)
                 want = min(units, float(math.ceil(out["amountOut"] / px - 1e-9)))
             A.check("dip", abs(d["units"] - round(want, 6)) < 1e-6, f"{out['oid']}: redeemed {d['units']} units vs {want}")
-            units = round(units - d["units"], 6)
+            sold = round(sold + d["units"], 6)
             f = funded.get(inn["oid"])
             A.check("dip", f is None or abs(f - d["net"]) < 0.01, f"{out['oid']}: dip buy funded {f} vs the sale proceeds {d['net']}")
         # the reserve's units are never sold by reviews / harvesting
@@ -295,7 +342,8 @@ def audit_dips(A, store, evs, orders, done, funded, prices, today, start):
                        and str(orders[x["oid"]].get("code") or orders[x["oid"]].get("sym")) == k) - \
                 sum(x["units"] for x in evs if x["k"] == "redeem" and orders.get(x["oid"], {}).get("acct") == aid
                     and str(orders[x["oid"]].get("code") or orders[x["oid"]].get("sym")) == k)
-            A.check("dip", held >= units - 1e-6, f"{aid}: holds {round(held, 6)} units of the reserve fund but {units} still belong to the reserve")
+            rest = round(units_of("9999") - sold, 6)
+            A.check("dip", held >= rest - 1e-6, f"{aid}: holds {round(held, 6)} units of the reserve fund but {rest} still belong to the reserve")
 
 
 def main() -> int:
@@ -344,8 +392,9 @@ def main() -> int:
             A.check("chain", e["oid"] not in seen_f, f"order {e['oid']} funded more than once")
             seen_f.add(e["oid"])
         elif e["k"] == "reserve":
-            A.check("chain", ("R", e["acct"]) not in seen_i and e["iid"] == f"{e['acct']}|reserve", f"second or mislabelled dip reserve for {e['acct']}")
-            seen_i.add(("R", e["acct"]))
+            n = e.get("n", 0)
+            A.check("chain", ("R", e["acct"], n) not in seen_i and e["iid"] == f"{e['acct']}|reserve" + (str(n) if n else ""), f"duplicate or mislabelled dip reserve {e['acct']} #{n}")
+            seen_i.add(("R", e["acct"], n))
         elif e["k"] == "dip":
             A.check("chain", ("D", e["did"]) not in seen_i and e["did"] == f"{e['acct']}|dip|{e['D']}|{e['seg']}", f"duplicate or mislabelled dip decision {e['did']}")
             seen_i.add(("D", e["did"]))
@@ -643,7 +692,7 @@ def main() -> int:
             key = str(o.get("code") or o.get("sym"))
             if x["k"] == "redeem":
                 left = x["units"]
-                for l in lots.get(key, []):
+                for l in sorted(lots.get(key, []), key=lambda l: (l[3], l[4])):     # FIFO by purchase date
                     take = min(left, l[1])
                     if take <= 0:
                         continue
@@ -656,7 +705,7 @@ def main() -> int:
                     cash += x["net"]
                 continue
             cost = x["amount"] if x["k"] == "allot" else x["gross"] + x["charges"]["total"]
-            lots.setdefault(key, []).append([x["credit"], x["units"], cost])
+            lots.setdefault(key, []).append([x["credit"], x["units"], cost, o["T"], o["oid"]])
             if not mf:
                 cash -= x["gross"] + x["charges"]["total"]
         if mf:

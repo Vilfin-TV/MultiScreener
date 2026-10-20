@@ -5,7 +5,7 @@ build_etf_smart.py) and the Simulator Buy engine. One source of truth: sim_confi
 
 Signal (per segment: large / mid / small cap, gold, silver), from official closes of the segment's index tracker:
   fall     = how far the close is below the highest close of the last `lookback` sessions (≈ 3 months)
-  tier     = 3% → ₹5,000 · 5% → ₹10,000 · 10% → ₹20,000 (never below `min`, never above `max`)
+  tier     = 5% → ₹5,000 · 10% → ₹10,000 · 15% → ₹20,000 (sim_config dipRule tiers) (never below `min`, never above `max`)
   buy day  = the first close at a deeper tier in the current fall (at most one buy per tier); the fall ends when
              the index is back within `resetPct` of its high, and tiers start again
   confirm  = a second tracker of the same index shows the same fall (± `confirmPts`), the day's own move is not
@@ -24,6 +24,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 RULE = json.loads((ROOT / "scripts" / "sim_config.json").read_text())["dipRule"]
+V = RULE["value"]                      # valuation limits (checks 9, 10, 14; metals 9, 10)
 
 
 def tier_of(fall: float) -> tuple[int, int]:
@@ -101,14 +102,14 @@ def trigger_checks(st: dict, data_date: str) -> list:
     reached = "first close at this tier in the current fall" if st["signal"] else (
         f"tier {st['ep']}% already used in this fall — next buy at a deeper tier" if st["ep"] and t and t <= st["ep"] else "no new tier today")
     return [
-        _chk("Fall from 3-month high ≥ 3%", st["fall"] >= RULE["tiers"][-1][0],
+        _chk(f"Fall from 3-month high ≥ {min(t for t, _ in RULE['tiers'])}%", st["fall"] >= min(t for t, _ in RULE["tiers"]),
              f"{st['fall']:.2f}% below the highest close {st['high']:.2f} ({st['highDate']})"),
         _chk("Official close up to date", age <= 5, f"close of {st['d']} ({age} days before the latest data)"),
         _chk("Fall confirmed by a second tracker", st["conf"],
              f"second tracker {st['fall2']:.2f}% (within {RULE['confirmPts']} pt)" if st["fall2"] is not None else "second tracker has no close that day (or too few in the window)"),
         _chk("Not a crash-day print", st["day"] >= RULE["crashDayPct"], f"day's move {st['day']:+.2f}% (limit {RULE['crashDayPct']:.0f}%)"),
         _chk(f"Fall within {RULE['maxFallPct']:.0f}%", st["fall"] <= RULE["maxFallPct"], f"{st['fall']:.2f}%"),
-        _chk("Dip tier and amount", t > 0, f"{t}% tier → ₹{amt:,}" if t else "below the 3% tier — no dip amount"),
+        _chk("Dip tier and amount", t > 0, f"{t}% tier → ₹{amt:,}" if t else "below the first tier — no dip amount"),
         _chk("New tier in this fall", st["signal"], reached),
     ]
 
@@ -120,8 +121,8 @@ def valuation_checks(seg: str, macro: dict, gate: dict | None, metal_choice: str
     g8 = _chk("Model not pausing this segment", (gate or {}).get("now") not in ("pause", "zero", "0"),
               f"valuation gate: {(gate or {}).get('now', 'not gated')}")
     n50pct = n50.get("pePct")
-    c14 = _chk("Broad market not overheated", n50pct is not None and n50pct < 0.9,
-               f"Nifty 50 P/E at the {round((n50pct or 0) * 100)}th percentile of 10 years (limit 90th)" if n50pct is not None else "no valuation on file")
+    c14 = _chk("Broad market not overheated", n50pct is not None and n50pct < V["n50PctMax"],
+               f"Nifty 50 P/E at the {round((n50pct or 0) * 100)}th percentile of 10 years (limit {round(V['n50PctMax'] * 100)}th)" if n50pct is not None else "no valuation on file")
     if s.get("val"):
         v = val.get(s["val"]) or {}
         pe, pct, med = v.get("pe"), v.get("pePct"), v.get("peMed")
@@ -129,16 +130,16 @@ def valuation_checks(seg: str, macro: dict, gate: dict | None, metal_choice: str
         ey = 100 / pe if pe else None
         eg = ((macro.get("growth") or {}).get("earnings") or {}).get(s["val"]) or {}
         return [g8,
-                _chk("P/E below the 90th percentile", pct is not None and pct < 0.9, f"{s['index']} P/E {pe} at the {round((pct or 0) * 100)}th percentile of 10 years" if pct is not None else "no valuation on file"),
-                _chk("P/E within 1.25× its 10-year median", pe and med and pe <= 1.25 * med, f"P/E {pe} vs median {med}" if pe and med else "no valuation on file"),
+                _chk(f"P/E below the {round(V['pePctMax'] * 100)}th percentile", pct is not None and pct < V["pePctMax"], f"{s['index']} P/E {pe} at the {round((pct or 0) * 100)}th percentile of 10 years" if pct is not None else "no valuation on file"),
+                _chk(f"P/E within {V['peMedMax']:g}× its 10-year median", pe and med and pe <= V["peMedMax"] * med, f"P/E {pe} vs median {med}" if pe and med else "no valuation on file"),
                 _chk("Earnings yield vs 10-year G-Sec", ey is not None and g10 is not None and ey - g10 >= s["eyGapMin"],
                      f"{ey:.2f}% vs {g10:.2f}% (gap {ey - g10:+.2f} pt, limit {s['eyGapMin']:+.1f})" if ey and g10 else "not on file"),
                 _chk("Earnings not collapsing", eg.get("g1") is not None and eg["g1"] >= -15, f"12-month earnings growth {eg['g1']:+.1f}% (limit −15%)" if eg.get("g1") is not None else "no earnings history"),
                 _chk(*extra), c14]
     gl = ((macro.get("global") or {}).get(s["metal"]) or {})
     return [g8,
-            _chk("Price not at a 2-year extreme", gl.get("pct2y") is not None and gl["pct2y"] < 0.95, f"{round((gl.get('pct2y') or 0) * 100)}th percentile of 2 years (limit 95th)" if gl.get("pct2y") is not None else "not on file"),
-            _chk("Not stretched above its 200-day average", gl.get("vs200") is not None and gl["vs200"] <= 20, f"{gl['vs200']:+.1f}% vs 200-day average (limit +20%)" if gl.get("vs200") is not None else "not on file"),
+            _chk("Price not at a 2-year extreme", gl.get("pct2y") is not None and gl["pct2y"] < V["metalPctMax"], f"{round((gl.get('pct2y') or 0) * 100)}th percentile of 2 years (limit {round(V['metalPctMax'] * 100)}th)" if gl.get("pct2y") is not None else "not on file"),
+            _chk("Not stretched above its 200-day average", gl.get("vs200") is not None and gl["vs200"] <= V["metalVs200Max"], f"{gl['vs200']:+.1f}% vs 200-day average (limit +{V['metalVs200Max']:g}%)" if gl.get("vs200") is not None else "not on file"),
             _chk("Model's metal choice", metal_choice == s["metal"], f"model holds {metal_choice or 'no metal'}"),
             _chk("12-month trend not broken", gl.get("c12m") is not None and gl["c12m"] > -25, f"12-month change {gl['c12m']:+.1f}% (limit −25%)" if gl.get("c12m") is not None else "not on file"),
             _chk(*extra), c14]
