@@ -38,4 +38,5 @@ jobs:
       - name: Build, audit and write data/global_etf.json
         run: python scripts/build_global_etf.py
       - name: Publish
-        run: bash scripts/push_data.sh "chore(data): refresh global ETF momentum [skip ci]" data/global_etf.json
+        run: |
+          bash scripts/push_data.sh "chore(data): refresh global ETF momentum [skip ci]" data/global_etf.json
