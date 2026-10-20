@@ -283,6 +283,34 @@ def audit_smartsip() -> int:
                     W(f"{sid}: alternate {alt} is no longer in the screener")
             if s["w"] > 0 and code not in have_pf:
                 pf_missing.add((code, g(code, "name"), g(code, "amc")))
+    # ── market-dip lump sums (dip block): 7 trigger checks per segment, 19 fund checks per candidate, 26 per plan entry,
+    # tier amounts within the rule, the candidate is the plan's own fund for that segment, fund verdicts consistent
+    dp = sip.get("dip") or {}
+    rule = dp.get("rule") or {}
+    tiers = sorted(rule.get("tiers") or [], key=lambda t: -t[0])
+    if not dp.get("segments") or not tiers:
+        E("dip: block missing")
+    for k, sg in (dp.get("segments") or {}).items():
+        want = next(((t, max(rule["min"], min(rule["max"], a))) for t, a in tiers if sg["fall"] >= t), (0, 0))
+        if (sg["tier"], sg["amount"]) != want:
+            E(f"dip {k}: tier / amount {sg['tier']} / {sg['amount']} vs {want} for a {sg['fall']}% fall")
+        if len(sg.get("checks") or []) != 7 or (sg["signal"] and not all(c[1] for c in sg["checks"])):
+            E(f"dip {k}: trigger checks")
+    cands = dp.get("cands") or []
+    for i, c in enumerate(cands):
+        if len(c["checks"]) != 19 or c["fundOk"] != all(x[1] for x in c["checks"][:18]) or c["code"] not in F:
+            E(f"dip candidate {i} ({c.get('name')}): checks / verdict / fund")
+    rv = dp.get("reserve") or {}
+    if rv.get("code") not in F or g(rv.get("code"), "sub") != "liquid" or "L" not in (g(rv.get("code"), "buy") or ""):
+        E(f"dip: reserve fund {rv.get('code')} not an open liquid fund")
+    for pid, ents in (dp.get("plans") or {}).items():
+        codes = {sl["key"]: sl["code"] for sl in sip["plans"][pid]["slots"]}
+        for seg, x in ents.items():
+            c = cands[x["c"]] if 0 <= x["c"] < len(cands) else None
+            allc = (dp["segments"][seg]["checks"] if seg in dp.get("segments", {}) else []) + (c["checks"] if c else [])
+            if not c or c["seg"] != seg or codes.get(c["slot"]) != c["code"] or x["n"] != 26 or x["passed"] != sum(1 for y in allc if y[1]) \
+                    or x["ok"] != all(y[1] for y in allc) or len(allc) != 26:
+                E(f"dip {pid} {seg}: entry does not match the plan's fund / its 26 checks")
     if pf_missing:
         amcs = scr["amcs"]
         W(f"{len(pf_missing)} recommended funds have no current portfolio (credit-quality / fund P/E checks use "

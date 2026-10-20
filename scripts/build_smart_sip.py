@@ -46,6 +46,9 @@ import sys
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
+import dip_rules
+from sim_engine import exit_rule
+
 ROOT = Path(__file__).resolve().parent.parent
 MF = ROOT / "data" / "mf"
 OUT = MF / "smartsip.json"
@@ -1787,6 +1790,13 @@ def main() -> int:
         state["reviewed"] = month
     state["updated"] = today.isoformat()
     val = macro.get("valuation") or {}
+    row = lambda c: {k: u.g(c, k) for k in u.cols} if c in u.rows else None   # noqa: E731
+    by_sub = {}
+    for c in u.rows:
+        by_sub.setdefault(u.g(c, "sub"), []).append(row(c))
+    dip = dip_rules.mf_block(plans, row, lambda c: by_sub.get(u.g(c, "sub"), []),
+                     lambda c: exit_rule(u.info(c).get("exitLoad"), u.g(c, "exitNil")),
+                     lambda c: fund_pe_info(u, c, fpe), macro, gates, metal_choice, scr["asOf"], [row(c) for c in u.rows])
     out = {"v": VERSION, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "asOf": scr["asOf"],
            "reviewed": state["reviewed"], "nextReview": date(today.year + (today.month == 12), today.month % 12 + 1, 1).isoformat(),
            "market": {"tilt": tilt, "tiltNow": tilt_now, "components": tilt_comps, "rotation": rotation, "gates": gates,
@@ -1801,7 +1811,7 @@ def main() -> int:
            "assumptions": ASSUMPTIONS,
            "horizons": [{"id": h, "label": l, "years": y, "min": a, "max": b} for h, l, y, a, b in HORIZONS],
            "risks": [{"id": r, "label": l} for r, l in RISKS],
-           "plans": plans}
+           "plans": plans, "dip": dip}
     OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")))
     STATE.write_text(json.dumps(state, ensure_ascii=False, separators=(",", ":")))
     log.info("Smart SIP v2: regime %s (score %s) · tilt %+d · sector %s · metal %s · review=%s",

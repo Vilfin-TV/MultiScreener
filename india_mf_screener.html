@@ -1310,6 +1310,7 @@ footer a{color:var(--text2)}
     <div id="sipRisk"></div>
     <div id="sipEco"></div>
     <div id="sipBody" class="sp-plan"><div class="card"><div class="skel" style="height:260px"></div></div></div>
+    <div class="sp-plan" id="sipDip"></div>
     <div class="sp-plan" data-vts-buy="mf"></div>
     <a class="card etf-alt sp-plan" href="etf_momentum.html#smart"><span class="etf-alt-i">📈</span><span><b>Prefer ETFs with a demat account?</b> The same plan built with low-cost ETFs — Indian equity, debt, gold and global — in ETF Portfolio Simulator.</span><span class="etf-alt-go">Open ETF Portfolio Simulator →</span></a>
     <div class="card sip-guide sp-plan" id="sipGuide" data-col="mf-guide" data-col-hint="KYC, opening a direct account, choosing your day, placing each order, timing by way of investing, NRI rules and common mistakes.">
@@ -3827,6 +3828,7 @@ function renderSip(){
   var cut = h.indexOf('<div class="mi-head">');
   $('sipBody').innerHTML = cut < 0 ? h : h.slice(0, cut);
   $('sipMarket').innerHTML = cut < 0 ? '' : h.slice(cut);
+  $('sipDip').innerHTML = window.VTSim && VTSim.dipPanel ? VTSim.dipPanel({blk: SIP.dip, pid: P.hz + P.rk, kind: 'mf'}) : '';
   bindDonuts();
 }
 function bindSip(){

@@ -193,7 +193,26 @@ if (fs.existsSync(smFile)) {
   }
   const eqOf = pid => (SMJ.plans[pid] || {}).mix ? (SMJ.plans[pid].mix.Equity || 0) + (SMJ.plans[pid].mix.Global || 0) : 0;
   for (const hz of ['h3', 'h5', 'h7', 'h10']) if (!(eqOf(hz + 'c') <= eqOf(hz + 'b') && eqOf(hz + 'b') <= eqOf(hz + 'a') + 5)) fail(`smart: ${hz} equity not rising with risk`);
-  console.log(`smart invest: ${plans.length} plans · ${Object.keys(SMJ.slots || {}).length} ETF slots`);
+  // market-dip lump sums: 7 trigger checks per segment, 19 ETF checks per candidate, 26 per plan entry, tier amounts
+  const dp = SMJ.dip || {}, rule = dp.rule || {}, tiers = (rule.tiers || []).slice().sort((a, b) => b[0] - a[0]);
+  if (!dp.segments || !tiers.length) fail('smart: dip block missing');
+  for (const [k, sg] of Object.entries(dp.segments || {})) {
+    const t = tiers.find(x => sg.fall >= x[0]), want = t ? [t[0], Math.max(rule.min, Math.min(rule.max, t[1]))] : [0, 0];
+    if (sg.tier !== want[0] || sg.amount !== want[1]) fail(`smart: dip ${k} tier/amount ${sg.tier}/${sg.amount} vs ${want}`);
+    if ((sg.checks || []).length !== 7 || (sg.signal && sg.checks.some(c => !c[1]))) fail(`smart: dip ${k} trigger checks`);
+  }
+  const dc = dp.cands || [];
+  dc.forEach((c, i) => { if (c.checks.length !== 19 || c.fundOk !== c.checks.slice(0, 18).every(x => x[1]) || !etfBy[c.sym]) fail(`smart: dip candidate ${i} ${c.sym}`); });
+  if (!dp.reserve || !etfBy[dp.reserve.sym]) fail('smart: dip reserve ETF unknown');
+  for (const [pid, ents] of Object.entries(dp.plans || {})) {
+    const ids = new Set(((SMJ.plans[pid] || {}).slots || []).map(s => s.id));
+    for (const [seg, x] of Object.entries(ents)) {
+      const c = dc[x.c], all = ((dp.segments[seg] || {}).checks || []).concat(c ? c.checks : []);
+      if (!c || c.seg !== seg || !ids.has(c.slot) || (SMJ.slots[c.slot] || {}).sym !== c.sym || x.n !== 26 || all.length !== 26 ||
+          x.passed !== all.filter(y => y[1]).length || x.ok !== all.every(y => y[1])) fail(`smart: dip ${pid} ${seg} entry`);
+    }
+  }
+  console.log(`smart invest: ${plans.length} plans · ${Object.keys(SMJ.slots || {}).length} ETF slots · dip ${Object.keys(dp.segments || {}).length} segments / ${dc.length} candidates`);
 } else fail('etf_smart.json missing');
 const dDir = path.join(root, 'etf', 'd');
 if (fs.existsSync(dDir)) {

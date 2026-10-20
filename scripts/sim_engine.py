@@ -43,6 +43,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 CFG = json.loads((ROOT / "scripts" / "sim_config.json").read_text())
+DIP = CFG["dipRule"]
 log = logging.getLogger("sim")
 AMFI_HIST = "https://portal.amfiindia.com/DownloadNAVHistoryReport_Po.aspx?tp=1&frmdt={f}&todt={t}"
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -364,7 +365,24 @@ def plan_snapshot() -> tuple[str, dict]:
         etf[pid] = [{"id": x["id"], "w": x["w"], "sym": es["slots"][x["id"]]["sym"], "name": es["slots"][x["id"]].get("name"),
                      "label": es["slots"][x["id"]].get("label")} for x in p["slots"]]
     ref = f"{ss.get('generated', '')[:10]}|{es.get('generated', '')[:10]}"
-    return ref, {"ref": ref, "mfAsOf": ss.get("asOf"), "etfAsOf": es.get("asOf"), "mf": mf, "etf": etf}
+    snap = {"ref": ref, "mfAsOf": ss.get("asOf"), "etfAsOf": es.get("asOf"), "mf": mf, "etf": etf}
+    # market-dip lump sums (dipRule): the published fund / ETF for every segment of the agents' plans and whether it
+    # passed checks 8–25; the agents recompute the market trigger (checks 1–7) from recorded closes themselves
+    dip = {"mf": {}, "etf": {}}
+    for prod, src, key in (("mf", ss, "code"), ("etf", es, "sym")):
+        blk = src.get("dip") or {}
+        for pid, segs in (blk.get("plans") or {}).items():
+            if not pid.startswith(CFG["horizon"]):
+                continue
+            dip[prod][pid] = {}
+            for seg, x in segs.items():
+                c = blk["cands"][x["c"]]
+                dip[prod][pid][seg] = {key: c[key], "slot": c["slot"], "name": c.get("name"), "fundOk": bool(c["fundOk"]),
+                                       "fail": [k[0] for k in c["checks"][:18] if not k[1]]}
+        dip[prod + "Reserve"] = blk.get("reserve")
+    if dip["mf"] or dip["etf"]:
+        snap["dip"] = dip
+    return ref, snap
 
 
 MERGE_TO = {"theme": "flexi", "intl": "flexi", "small": "mid", "mid": "flexi", "flexi": "core", "core": "flexi",
@@ -443,6 +461,12 @@ def ev_key(kind: str, data: dict):
         return ("done", data["oid"])            # every order completes exactly once
     if kind == "fund":
         return ("fund", data["oid"])
+    if kind == "reserve":
+        return ("reserve", data["acct"])            # one dip reserve per account, ever
+    if kind == "dip":
+        return ("dip", data["did"])                 # one decision per account, signal day and segment
+    if kind == "dipscan":
+        return ("dipscan", data["through"])
     return None
 
 
@@ -469,15 +493,25 @@ def append(store: dict, kind: str, **data) -> dict:
     return ev
 
 
+def carry_key(o: dict) -> str:
+    """ETF cash left over after whole units is carried per holding role; switch-ins (sell reviews, tax harvesting, dip
+    buys) keep their own carry, so a ledger does not depend on the order in which a catch-up run fills orders."""
+    iid = o.get("iid", "")
+    pre = "dip:" if "|dip|" in iid else "rv:" if "|review|" in iid else "hv:" if "|harvest|" in iid else ""
+    return pre + str(o.get("slot"))
+
+
 def replay(events: list[dict]) -> dict:
     """Current state of every account from the event log (the only source of truth)."""
     st = {}
     orders = {}
     for ev in events:
         k = ev["k"]
-        if k == "instalment":
+        if k in ("instalment", "reserve"):            # the dip reserve is money paid in, like an instalment
             a = st.setdefault(ev["acct"], {"inst": [], "orders": [], "lots": {}, "cash": 0.0, "carry": {}, "sells": []})
             a["inst"].append(ev)
+            if k == "reserve":
+                a["reserve"] = ev
             if ev["acct"].endswith("-ETF"):
                 a["cash"] += ev["amount"]
         elif k == "order":
@@ -494,7 +528,7 @@ def replay(events: list[dict]) -> dict:
                                                   "price": ev.get("nav", ev.get("price")), "oid": o["oid"], "credit": ev["credit"]})
             if k == "fill":
                 a["cash"] = r2(a["cash"] - ev["gross"] - ev["charges"]["total"])
-                a["carry"][o["slot"]] = ev["carry"]
+                a["carry"][carry_key(o)] = ev["carry"]
         elif k == "redeem":
             o = orders[ev["oid"]]
             o["done"] = ev
@@ -639,6 +673,8 @@ class Engine:
         store.setdefault("plans", {})
         store.setdefault("series", {})
         store.setdefault("meta", {"start": CFG["start"], "created": datetime.now(timezone.utc).isoformat()})
+        if backtest:
+            store["meta"]["backtest"] = True
 
     # plan in force on a date
     def plan_on(self, d: date) -> dict:
@@ -649,6 +685,9 @@ class Engine:
 
     def snapshot(self):
         ref, snap = plan_snapshot()
+        old = self.store["plans"].get(ref)
+        if old is not None and "dip" not in old and "dip" in snap:      # same build day, recorded before the dip rule
+            ref = snap["ref"] = ref + "|dip"
         if ref not in self.store["plans"]:
             snap["since"] = self.today.isoformat() if self.store["plans"] else CFG["start"]
             if self.backtest:
@@ -661,7 +700,7 @@ class Engine:
         st = replay(self.store["events"])
         start = D(CFG["start"])
         for a in self.accts:
-            have = {e["T"] for e in st.get(a["id"], {}).get("inst", [])}
+            have = {e["T"] for e in st.get(a["id"], {}).get("inst", []) if e["k"] == "instalment"}
             for nominal, T in schedule(a["freq"], self.today):
                 if T < start or T.isoformat() in have:
                     continue
@@ -743,7 +782,7 @@ class Engine:
                 elif o["side"] == "buy":
                     done = self.fill_etf(o, T, etf_upto, acc["res"], carry)
                     if done:
-                        carry[o["slot"]] = done["carry"]
+                        carry[carry_key(o)] = done["carry"]
                 elif o["side"] == "sell":
                     self.redeem(o, T, mf_upto if o.get("code") else etf_upto, acc)
 
@@ -769,6 +808,18 @@ class Engine:
                     return T + timedelta(days=k), v
         return None, None
 
+    def liquid_redeem_nav(self, code: int, T: date, upto: date):
+        """Liquid / overnight redemptions before the cut-off: NAV of the calendar day before the next business day
+        (Friday's request → Sunday's NAV); paid out the next business day."""
+        d = add_business(T, 1) - timedelta(days=1)
+        if d > upto:
+            return None, None
+        for k in range(0, 6):
+            v = self.mkt.mf_nav(code, d - timedelta(days=k))
+            if v:
+                return d - timedelta(days=k), v
+        return None, None
+
     def allot_mf(self, o, T, upto):
         if T > upto:
             return
@@ -788,7 +839,7 @@ class Engine:
         d, px = self.mkt.etf_session_on_or_after(o["sym"], T, upto)
         if not px:
             return None
-        budget = r2(o["amount"] + carry.get(o["slot"], 0.0))
+        budget = r2(o["amount"] + carry.get(carry_key(o), 0.0))
         eq = self.mkt.etf_equity(o["sym"])
         n, ch = etf_units_for(budget, px, res, eq)
         gross = r2(n * px)
@@ -806,11 +857,17 @@ class Engine:
         key = str(o.get("code") or o.get("sym"))
         lots = [l for l in a["lots"].get(key, []) if l["units"] > 0]
         have = round(sum(l["units"] for l in lots), 6)
+        if o.get("level") == "dip":                   # a dip buy redeems only the reserve's own units
+            have = min(have, self.reserve_units(a, key))
         units = have if o.get("units") in (None, "all") else min(float(o["units"]), have)
         if units <= 0:
             append(self.store, "note", oid=o["oid"], text="nothing to sell")
             return
-        if o.get("code"):
+        f = self.mkt.fund(int(o["code"])) if o.get("code") else None
+        liquid = (f or {}).get("sub") in CFG["mfRules"]["liquidSubs"]
+        if o.get("code") and liquid:
+            nd, px = self.liquid_redeem_nav(int(o["code"]), T, upto)
+        elif o.get("code"):
             nd, px = self.nav_date_for(int(o["code"]), T, upto)
             if not px and int(o["code"]) not in self.mkt.funds and (upto - T).days >= 3:
                 nd, px = self.mkt.mf_latest(int(o["code"]), T)       # wound up / merged: last official NAV
@@ -818,8 +875,12 @@ class Engine:
             nd, px = self.mkt.etf_session_on_or_after(o["sym"], T, upto)
         if not px:
             return
+        if o.get("amountOut") is not None:
+            # redemption by amount (dip buys): units worth the amount at the applicable price — mutual funds to 3 decimals
+            # (rounded up), ETFs in whole units (rounded up) — never more than the holding
+            need = o["amountOut"] / px
+            units = min(have, math.ceil(need * 1000 - 1e-6) / 1000 if o.get("code") else float(math.ceil(need - 1e-9)))
         gross = r2(units * px)
-        f = self.mkt.fund(int(o["code"])) if o.get("code") else None
         equity = (f or {}).get("tax") in ("equity", "elss") if f else self.mkt.etf_equity(o["sym"])
         tclass = tax_class(f, o.get("sym"), self.mkt)
         rule = self.mkt.exit_rule(int(o["code"])) if f is not None else {"tiers": [], "days": 0, "known": True}
@@ -839,7 +900,7 @@ class Engine:
         if f is not None:
             charges = {"exitLoad": r2(exit_load), "stt": r2(gross * CFG["mfRules"]["sttRedeemEquity"]) if equity else 0.0}
             charges["total"] = r2(sum(charges.values()))
-            payout = add_business(nd, 3)
+            payout = add_business(T, 1) if liquid else add_business(nd, 3)      # liquid / overnight funds pay out T+1
         else:
             charges = etf_charges(gross, "sell", acc["res"], equity)
             payout = add_business(nd, 1)
@@ -871,8 +932,18 @@ class Engine:
                 return out
             out.append(T)
 
+    @staticmethod
+    def reserve_units(acct_state: dict, key: str) -> float:
+        """Units of `key` that still belong to the dip reserve: the reserve purchase less what dip buys redeemed."""
+        ro = next((o for o in acct_state["orders"] if o.get("slot") == "reserve" and o["side"] == "buy"), None)
+        if not ro or not ro.get("done") or str(ro.get("code") or ro.get("sym")) != key:
+            return 0.0
+        u = ro["done"]["units"] - sum(o["done"]["units"] for o in acct_state["orders"]
+                                      if o.get("level") == "dip" and o["side"] == "sell" and o.get("done"))
+        return round(max(0.0, u), 6)
+
     def slot_of(self, acct_state: dict, key: str):
-        buys = [o for o in acct_state["orders"] if str(o.get("code") or o.get("sym")) == key and o["side"] == "buy"]
+        buys = [o for o in acct_state["orders"] if str(o.get("code") or o.get("sym")) == key and o["side"] == "buy" and o.get("slot") != "reserve"]
         return buys[-1].get("slot") if buys else None
 
     def in_model(self, a, plan, key, slot) -> bool:
@@ -944,6 +1015,10 @@ class Engine:
                     if units <= 0 or any(o.get("side") == "sell" and str(o.get("code") or o.get("sym")) == key and "done" not in o
                                          for o in acct["orders"]):
                         continue
+                    rsv = self.reserve_units(acct, key)          # the dip reserve is not part of the model portfolio
+                    units = round(units - rsv, 6)
+                    if units <= 1e-9:
+                        continue
                     slot = self.slot_of(acct, key)
                     level, why = self.assess(a, key, plan, slot)
                     streak, flagged = 0, [T]
@@ -1001,7 +1076,7 @@ class Engine:
                                 if len(keep) < len(sell_lots):
                                     why_now = "Jan–Mar: long-term gains kept within this year's exemption; the rest after 1 April"
                                 sell_lots = keep
-                        sell_units = round(sum(l["units"] for l in sell_lots), 6)
+                        sell_units = min(units, round(sum(l["units"] for l in sell_lots), 6))
                         if a["product"] == "etf":
                             sell_units = int(sell_units)
                         rest = [l for l in lots[len(sell_lots):]]
@@ -1166,11 +1241,167 @@ class Engine:
                 if not any(e["k"] == "fund" and e["oid"] == o["oid"] for e in self.store["events"]):
                     append(self.store, "fund", oid=o["oid"], amount=orders[o["fromOid"]]["done"]["net"])
 
+    # ───────────── market-dip lump sums (sim_config "dipRule") ─────────────
+    def dip_accts(self) -> list[dict]:
+        return [a for a in self.accts if a["name"] in DIP["persons"]]
+
+    def reserve_date(self) -> date:
+        start = D(CFG["start"])
+        return next_trading(start if self.backtest else max(start, D(DIP["reserveFrom"])))
+
+    def dip_plan(self, d: date) -> dict:
+        """The plan snapshot in force on d that carries dip data (else the nearest later one) — snapshots recorded
+        before the dip rule existed have none."""
+        plans = [p for p in self.store["plans"].values() if p.get("dip")]
+        if not plans:
+            return {}
+        since = lambda p: p.get("since", p["ref"][:10])       # noqa: E731
+        ok = [p for p in plans if since(p) <= d.isoformat()]
+        return max(ok, key=lambda p: (since(p), p["ref"])) if ok else min(plans, key=lambda p: (since(p), p["ref"]))
+
+    def place_reserves(self):
+        """Each dip agent's account pays in a one-time reserve (DIP["reserve"]) on the reserve date and parks it in
+        the liquid fund / liquid ETF the model publishes; dip buys are paid from it."""
+        T = self.reserve_date()
+        if T > self.today:
+            return
+        st = replay(self.store["events"])
+        plan = self.dip_plan(T)
+        for a in self.dip_accts():
+            if (st.get(a["id"]) or {}).get("reserve"):
+                continue
+            rv = (plan.get("dip") or {}).get(a["product"] + "Reserve")
+            if not rv:
+                log.warning("dip reserve for %s waits for a plan snapshot with a published reserve fund", a["id"])
+                continue
+            rid = f"{a['id']}|reserve"
+            fld = {"code": int(rv["code"])} if a["product"] == "mf" else {"sym": rv["sym"]}
+            if a["product"] == "mf":
+                self.mkt.remember(int(rv["code"]))
+            append(self.store, "reserve", acct=a["id"], iid=rid, T=T.isoformat(), amount=float(DIP["reserve"]), ref=plan["ref"], **fld)
+            append(self.store, "order", oid=f"{rid}|liquid", iid=rid, acct=a["id"], T=T.isoformat(), side="buy",
+                   name=rv.get("name") or rv.get("sym"), slot="reserve", label="Dip reserve (liquid)", asset="Debt",
+                   amount=float(DIP["reserve"]), note="cash reserve for market-dip lump sums", ref=plan["ref"], **fld)
+
+    def update_series(self):
+        """Append-only official closes of every segment's two index trackers (store["dipSeries"]): dates only ever
+        added after the last one on record, so a past signal can never change."""
+        ser = self.store.setdefault("dipSeries", {})
+        start = (D(CFG["start"]) - timedelta(days=150)).isoformat() if self.backtest else DIP["historyFrom"]
+        upto = (self.today if self.backtest else min(self.today, D(self.mkt.etf_asof))).isoformat()
+        scanned = max([e["through"] for e in self.store["events"] if e["k"] == "dipscan"] or [""])
+        for sg in DIP["segments"].values():
+            for sym in (sg["trk"], sg["trk2"]):
+                rows = ser.setdefault(sym, [])
+                last = max(rows[-1][0] if rows else "", scanned)     # a scanned day's closes are final
+                for d in sorted(self.mkt.bars(sym)):
+                    if d > last and start <= d <= upto and self.mkt.bars(sym)[d]:
+                        rows.append([d, self.mkt.bars(sym)[d]])
+
+    def dip_signals(self) -> dict:
+        """{signal day: [(segment, state), …]} from the recorded closes (dip_rules.walk — the same rule the pages show)."""
+        import dip_rules
+        ser, out = self.store.get("dipSeries", {}), {}
+        for seg, sg in DIP["segments"].items():
+            cl = [(d, c) for d, c in ser.get(sg["trk"], [])]
+            for x in dip_rules.walk(cl, {d: c for d, c in ser.get(sg["trk2"], [])}):
+                if x["signal"]:
+                    out.setdefault(x["d"], []).append((seg, x))
+        return out
+
+    def dips(self):
+        accts = self.dip_accts()
+        if not accts:
+            return
+        ser = self.store.get("dipSeries", {})
+        prim = [sg["trk"] for sg in DIP["segments"].values()]
+        days = sorted({d for s in prim for d, _ in ser.get(s, [])})
+        lasts = [rows[-1][0] if rows else "" for rows in (ser.get(s, []) for s in sorted({x for sg in DIP["segments"].values() for x in (sg["trk"], sg["trk2"])}))]
+        first = add_business(self.reserve_date(), CFG["mfRules"]["creditBusinessDays"]).isoformat()
+        evs = self.store["events"]
+        scans = [e["through"] for e in evs if e["k"] == "dipscan"]
+        prev = max(scans) if scans else ""
+        done = {e["did"] for e in evs if e["k"] == "dip"}
+        sigs = self.dip_signals()
+        rd = self.reserve_date().isoformat()
+        for d in days:
+            if d <= prev or d < rd:                    # nothing to decide before the reserve exists
+                continue
+            T = next_trading(D(d) + timedelta(days=1))
+            if T > self.today:
+                break
+            # every tracker's closes must have caught up to d (a tracker still missing it after 5 later sessions is
+            # treated as having no close that day), so a day is decided once, on complete data
+            if not all(l >= d for l in lasts) and sum(1 for x in days if x > d) < 5:
+                break
+            if d >= first and d in sigs:
+                st = replay(self.store["events"])
+                ready = all((st.get(a["id"]) or {}).get("reserve") and self.reserve_credited(st[a["id"]], T) for a in accts)
+                if not ready:
+                    log.info("dip signal %s waits for the agents' reserves to be credited", d)
+                    break
+                for a in accts:
+                    for seg, x in sorted(sigs[d], key=lambda z: (-z[1]["fall"], z[0])):
+                        did = f"{a['id']}|dip|{d}|{seg}"
+                        if did not in done:
+                            self.dip_decide(a, did, d, T, seg, x)
+            # one scan record per market day (so catch-up runs write the same ledger), sealing the closes it used
+            body = json.dumps({s: [r for r in rows if r[0] <= d] for s, rows in sorted(ser.items())}, sort_keys=True, separators=(",", ":"))
+            append(self.store, "dipscan", through=d, sha=hashlib.sha256(body.encode()).hexdigest())
+
+    @staticmethod
+    def reserve_credited(s: dict, T: date) -> bool:
+        o = next((o for o in s["orders"] if o.get("slot") == "reserve" and o["side"] == "buy"), None)
+        return bool(o and o.get("done") and D(o["done"]["credit"]) <= T)
+
+    def dip_decide(self, a, did, d, T, seg, x):
+        evs = self.store["events"]
+        used = sum(e["amt"] for e in evs if e["k"] == "dip" and e["acct"] == a["id"] and e["action"] == "buy")
+        left = DIP["reserve"] - used
+        plan = self.dip_plan(T)
+        ent = ((plan.get("dip") or {}).get(a["product"]) or {}).get(a["plan"], {}).get(seg)
+        amt = min(x["amount"], left)
+        sg = DIP["segments"][seg]
+        if not ent:
+            action, why = "skip", f"{sg['label']} is not part of this model portfolio"
+        elif not ent["fundOk"]:
+            action, why = "skip", f"{ent.get('name')} did not pass every check: " + "; ".join(ent.get("fail") or [])
+        elif amt < DIP["min"]:
+            action, why = "skip", f"reserve left ₹{left:,.0f} — below the ₹{DIP['min']:,} minimum"
+        else:
+            action, why = "buy", f"{sg['index']} {x['fall']:.2f}% below its 3-month high → {x['tier']}% tier · ₹{x['amount']:,}" + \
+                (f" (₹{amt:,.0f} left in the reserve)" if amt < x["amount"] else "")
+        st = replay(evs)
+        rkey = next(o for o in st[a["id"]]["orders"] if o.get("slot") == "reserve" and o["side"] == "buy")
+        fld = "code" if a["product"] == "mf" else "sym"
+        append(self.store, "dip", did=did, acct=a["id"], D=d, T=T.isoformat(), seg=seg, trk=sg["trk"], close=x["close"],
+               high=x["high"], highDate=x["highDate"], fall=round(x["fall"], 4), fall2=round(x["fall2"], 4), day=round(x["day"], 4),
+               tier=x["tier"], amount=x["amount"], amt=float(amt) if action == "buy" else 0.0,
+               left=float(left - (amt if action == "buy" else 0)), action=action, why=why, ref=plan.get("ref"),
+               slot=(ent or {}).get("slot"), **({fld: ent[fld], "name": ent.get("name")} if ent else {}))
+        if action != "buy":
+            return
+        out = f"{did}|out"
+        append(self.store, "order", oid=out, iid=did, acct=a["id"], T=T.isoformat(), side="sell", amountOut=float(amt),
+               level="dip", reason=f"Dip buy: liquid reserve redeemed for {sg['label'].lower()}", **{fld: rkey[fld]})
+        tgt = int(ent["code"]) if a["product"] == "mf" else ent["sym"]
+        if a["product"] == "mf":
+            self.mkt.remember(tgt)
+        append(self.store, "order", oid=f"{did}|in", iid=did, acct=a["id"], T=add_business(T, 1).isoformat(), side="buy",
+               amount=None, fromOid=out, slot=ent["slot"], label=f"Dip buy · {sg['label']}", name=ent.get("name"),
+               note=why, ref=plan.get("ref"), **{fld: tgt})
+
     def run(self):
         self.snapshot()
         self.place_orders()
+        self.place_reserves()
         self.manual_sells()
         self.settle()
+        self.update_series()
+        self.dips()
+        self.settle()                    # dip sells of the liquid reserve
+        self.fund_review_buys()
+        self.settle()                    # dip buys with the proceeds
         self.review()
         self.harvest()
         self.settle()                    # review / harvest sells
@@ -1226,7 +1457,7 @@ class Engine:
         units, cash = 0.0, 0.0
         if a["product"] == "mf":
             code = int(CFG["benchmark"]["mf"])
-            for i in inst:
+            for i in sorted(inst, key=lambda i: (i["T"], i["k"] != "instalment")):     # date order (the reserve is recorded later)
                 T = D(i["T"])
                 if T > V:
                     cash += i["amount"]
@@ -1238,7 +1469,7 @@ class Engine:
                 units += trunc(r2(i["amount"] - r2(i["amount"] * CFG["mfRules"]["stampDuty"])) / nav, 3)
             return units * (self.mkt.mf_latest(code, V)[1] or 0) + cash
         sym = CFG["benchmark"]["etf"]
-        for i in inst:
+        for i in sorted(inst, key=lambda i: (i["T"], i["k"] != "instalment")):     # date order (the reserve is recorded later)
             T = D(i["T"])
             d, px = self.mkt.etf_session_on_or_after(sym, T, V)
             cash += i["amount"]
@@ -1265,7 +1496,7 @@ class Engine:
         units, cash = 0.0, 0.0
         if a["product"] == "mf":
             code = int(CFG["benchmark"]["mf"])
-            for i in inst:
+            for i in sorted(inst, key=lambda i: (i["T"], i["k"] != "instalment")):     # date order (the reserve is recorded later)
                 T = D(i["T"])
                 nd, nav = self.nav_date_for(code, T, d)
                 if not nav:
@@ -1278,7 +1509,7 @@ class Engine:
                     cash += i["amount"]
             return units * (self.mkt.mf_latest(code, d)[1] or 0) + cash
         sym, pend = CFG["benchmark"]["etf"], 0.0
-        for i in inst:
+        for i in sorted(inst, key=lambda i: (i["T"], i["k"] != "instalment")):     # date order (the reserve is recorded later)
             sd, px = self.mkt.etf_session_on_or_after(sym, D(i["T"]), d)
             cash += i["amount"]
             if not px:
@@ -1347,9 +1578,10 @@ class Engine:
                 self._lastlt[e["a"]] = e["lt"]
         evs = self.store["events"]
         odate = {e["oid"]: e["T"] for e in evs if e["k"] == "order"}
+        self._infrom = {e["fromOid"]: e["T"] for e in evs if e["k"] == "order" and e.get("fromOid")}
 
         def eff(e):
-            return e.get("T") if e["k"] in ("instalment", "order") else odate.get(e.get("oid")) if e["k"] in ("allot", "fill", "redeem") else None
+            return e.get("T") if e["k"] in ("instalment", "reserve", "order") else odate.get(e.get("oid")) if e["k"] in ("allot", "fill", "redeem") else None
         Vmax = max(self.valuation_date(a) for a in self.accts)
         d0 = D(CFG["start"])
         d = min(D(last[k]["d"]) + timedelta(days=1) if k in last else d0 for k in ["mkt"] + [a["id"] for a in self.accts])
@@ -1417,6 +1649,10 @@ class Engine:
             for o in s["orders"]:
                 if "done" not in o and o["side"] == "buy":
                     pend += o["amount"] if o.get("amount") is not None else funded.get(o["oid"], 0.0)
+            # sale proceeds on their way to a switch-in order dated after this day (switches, dip buys) stay in the account
+            for o in s["orders"]:
+                if o["side"] == "sell" and "done" in o and not o.get("withdraw") and self._infrom.get(o["oid"], "") > ds:
+                    pend += o["done"]["net"]
         cash = r2(s["cash"]) if not mf else 0.0
         val = r2(val + pend + cash)
         inv = r2(sum(i["amount"] for i in s["inst"]))
@@ -1527,7 +1763,9 @@ def build_view(store: dict, eng: Engine) -> dict:
             row = {"oid": o["oid"], "T": o["T"], "side": o["side"], "code": o.get("code"), "sym": o.get("sym"),
                    "name": o.get("name") or (eng.mkt.funds.get(int(o["code"])) or {}).get("name") if o.get("code") else o.get("name") or o.get("sym"),
                    "slot": o.get("slot"), "label": o.get("label"), "amount": amount, "note": o.get("note") or o.get("reason"), "ref": o.get("ref"),
-                   "src": "withdraw" if o.get("withdraw") else "review" if o.get("iid", "").count("|review|") else "plan"}
+                   "src": "withdraw" if o.get("withdraw") else "review" if o.get("iid", "").count("|review|") else
+                   "dip" if "|dip|" in o.get("iid", "") else "reserve" if o.get("slot") == "reserve" else
+                   "harvest" if "|harvest|" in o.get("iid", "") else "plan"}
             if done and done["k"] == "allot":
                 row |= {"navDate": done["navDate"], "price": done["nav"], "units": done["units"], "stamp": done["stamp"], "net": done["net"],
                         "credit": done["credit"], "verified": done.get("verified"),
@@ -1571,6 +1809,7 @@ def build_view(store: dict, eng: Engine) -> dict:
                                 "benchValue": last[3] if last else 0, "xirr": x, "benchXirr": xb, "days": days,
                                 "cash": r2(s["cash"]) if a["product"] == "etf" else None, "carry": s.get("carry", {}),
                                 "txns": txns, "holdings": holdings, "series": ser,
+                                "dip": dip_summary(store, a, s),
                                 "reviews": [r for r in reviews if r["acct"] == a["id"]],
                                 "harvests": [h for h in harvests if h["acct"] == a["id"]]})
     # price history of everything held or bought (statements for any past date are valued from it)
@@ -1580,6 +1819,21 @@ def build_view(store: dict, eng: Engine) -> dict:
             keys["mf" if t.get("code") else "etf"].add(str(t.get("code") or t.get("sym")))
     out["px"] = {p: {k: dict(sorted((store["prices"].get(p, {}).get(k) or {}).items())) for k in sorted(ks)} for p, ks in keys.items()}
     return out
+
+
+def dip_summary(store: dict, a: dict, s: dict) -> dict | None:
+    """The account's dip reserve and every dip decision (buys and skips) — None for accounts outside the dip rule."""
+    if a["name"] not in DIP["persons"]:
+        return None
+    rv = s.get("reserve")
+    ds = [e for e in store["events"] if e["k"] == "dip" and e["acct"] == a["id"]]
+    used = sum(e["amt"] for e in ds if e["action"] == "buy")
+    ro = next((o for o in s["orders"] if o.get("slot") == "reserve" and o["side"] == "buy"), None)
+    return {"reserve": DIP["reserve"], "date": (rv or {}).get("T"), "fund": (ro or {}).get("name"),
+            "key": str((ro or {}).get("code") or (ro or {}).get("sym") or "") or None,
+            "used": r2(used), "left": r2(DIP["reserve"] - used), "units": Engine.reserve_units(s, str((ro or {}).get("code") or (ro or {}).get("sym"))) if ro else 0,
+            "events": [{k: e.get(k) for k in ("D", "T", "seg", "fall", "tier", "amount", "amt", "left", "action", "why", "name", "code", "sym")}
+                       for e in ds]}
 
 
 def account_detail(a: dict, valued: bool, sub_names: dict, today: date) -> dict:
@@ -1608,6 +1862,13 @@ def account_detail(a: dict, valued: bool, sub_names: dict, today: date) -> dict:
            "asOf": a["valuationDate"], "next": nxt, "hold": hold, "pend": pend[:12]}
     if not mf:
         out["cash"] = a.get("cash")
+    if a.get("dip"):
+        dp = a["dip"]
+        empty = [e for e in dp["events"] if e["action"] == "skip" and e["why"].startswith("reserve left")]
+        dp = dict(dp, events=[e for e in dp["events"] if not (e["action"] == "skip" and "not part of this model" in e["why"])])
+        out["dip"] = {"left": dp["left"], "used": dp["used"], "reserve": dp["reserve"], "fund": dp["fund"], "date": dp["date"],
+                      "ev": [{k: e.get(k) for k in ("D", "seg", "fall", "tier", "amt", "action", "why", "name")}
+                             for e in dp["events"] if e not in empty][-8:], "empty": len(empty)}
     return out
 
 
@@ -1633,6 +1894,7 @@ def scoreboard(view: dict, audit_ok: bool) -> dict:
         absr = (value / a["invested"] - 1) * 100 if valued else None
         row = {"name": a["name"], "product": a["product"], "risk": a["riskName"], "freq": a["freqName"],
                "amt": a["amount"], "nri": a["res"] == "nri", "role": a.get("role"), "desk": a.get("desk"), "team": a.get("team"),
+               "dip": a["name"] in DIP["persons"],
                "since": view["start"], "days": a["days"] if valued else 0,
                "metric": "xirr" if valued and a["days"] >= 365 else "abs",
                "ret": (round((a["xirr"] or 0) * 100, 2) if a["days"] >= 365 else round(absr, 2)) if valued and audit_ok else None}

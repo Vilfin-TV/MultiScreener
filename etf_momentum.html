@@ -975,6 +975,7 @@ details.faq ul+p{margin-top:8px}
     <div id="smRiskPane"></div>
     <div id="smEcoPane"></div>
     <div id="smBody" class="sm-plan"><div class="skel" style="height:260px"></div></div>
+    <div class="sm-plan" id="smDip"></div>
     <div class="sm-plan" data-vts-buy="etf"></div>
     <div class="sm-guide sm-plan vts-col-card" id="smGuide" data-col="etf-guide" data-col-hint="Demat account and KYC, adding funds, choosing your day, limit orders, timing by way of investing, ETF tax, NRI rules and common mistakes.">
       <div class="sec-title">How ETF investing works — a beginner's guide</div>
@@ -2238,6 +2239,7 @@ function renderSmart(){
     '</div></div></div>';
   h += '<div class="note"><span>⚠️</span><span>Educational model portfolio, not investment advice. Historical model estimates are long-term figures from today\'s valuations and yields; real returns vary every year and red years are normal — stay invested for the full horizon. The projection uses those estimates, today\'s tax rules (equity 12.5% on gains above ₹1.25 lakh, gold / global 12.5%, debt at your slab, plus 4% cess) and ' + ((dc.inflation) || 5) + '% inflation. Research every ETF yourself or consult a SEBI-registered investment adviser before investing.</span></div>';
   $('smBody').innerHTML = h;
+  $('smDip').innerHTML = window.VTSim && VTSim.dipPanel ? VTSim.dipPanel({blk: SM.dip, pid: sm.hz + sm.rk, kind: 'etf'}) : '';
 }
 function smURL(){ try { var u = new URL(location.href); u.searchParams.set('plan', sm.hz + sm.rk); u.searchParams.set('amt', sm.amt); u.searchParams.set('fq', sm.fq); history.replaceState(null, '', u.pathname + u.search + u.hash); } catch(e){} store('viltv_etfm_smart', JSON.stringify(sm)); }
 function initSmart(){
