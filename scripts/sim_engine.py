@@ -367,7 +367,7 @@ def plan_snapshot() -> tuple[str, dict]:
     ref = f"{ss.get('generated', '')[:10]}|{es.get('generated', '')[:10]}"
     snap = {"ref": ref, "mfAsOf": ss.get("asOf"), "etfAsOf": es.get("asOf"), "mf": mf, "etf": etf}
     # market-dip lump sums (dipRule): the published fund / ETF for every segment of the agents' plans and whether it
-    # passed checks 8–25; the agents recompute the market trigger (checks 1–7) from recorded closes themselves
+    # passed checks 9–36; the agents recompute the market trigger (checks 1–8) from recorded closes themselves
     dip = {"mf": {}, "etf": {}}
     for prod, src, key in (("mf", ss, "code"), ("etf", es, "sym")):
         blk = src.get("dip") or {}

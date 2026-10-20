@@ -51,6 +51,7 @@
     '.vts-tabs button{flex:1 0 auto;height:40px;padding:0 14px;border:0;border-radius:9px;background:none;color:var(--text2);font-weight:700;font-size:13.5px;cursor:pointer;white-space:nowrap}' +
     '.vts-tabs button.on{background:var(--accent);color:var(--accent-ink,#fff)}' +
     '.vts-tabs button:not(.on):hover{background:var(--surface2);color:var(--text)}' +
+    '@media (max-width:560px){.vts-tabs{overflow:visible;gap:4px}.vts-tabs button{flex:1 1 0;min-width:0;height:auto;min-height:46px;padding:6px 6px;white-space:normal;line-height:1.25;font-size:12.5px}}' +
     '.vts-tabs button:focus-visible{outline:none;box-shadow:var(--focus)}' +
     '.vts-pane{display:grid;gap:14px;min-width:0}.vts-pane>*,.vts-grid2>*{min-width:0}.vts-t td:first-child{white-space:nowrap}' +
     '.vts-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius,14px);padding:18px}' +
@@ -553,7 +554,7 @@
                              : 'Never times the market, never sells because prices fell, never adds or withdraws money outside the plan']
       ].concat(r.dip ? [['Dips', 'Keeps a ₹20,000 reserve in a ' + (mf ? 'liquid fund' : 'liquid ETF') + ', topped up with the same ₹20,000 on the first trading day of the month after it is used up. When the Nifty 50, Midcap 150, Smallcap 250, gold or silver closes 5% / 10% / 15% below its 3-month high, the next trading day ₹5,000 / ₹10,000 / ₹20,000 of the reserve is ' +
         (mf ? 'redeemed and invested in that segment\'s model fund when the money arrives the next business day' : 'sold and invested in that segment\'s model ETF at the next session\'s close') +
-        ' — once per new tier in a fall, only when the fall holds for two closes and all 30 checks pass (strict value checks: P/E and P/B below the 80th percentile, P/E within 1.15× its 10-year median); signals count only from the 19 Oct 2026 start and only while reserve money is left']] : []);
+        ' — once per new tier in a fall, only when the fall holds for two closes and all 37 checks pass (strict value checks: P/E and P/B below the 80th percentile, P/E within 1.15× its 10-year median); signals count only from the 19 Oct 2026 start and only while reserve money is left']] : []);
     }
     function profile(r, a) {
       var x = (a && a.detail) || r.detail, nri = !!r.nri, tm = TEAM[r.team] || ['VilfinTV team', nri ? 'Outside India (NRI)' : 'India'];
@@ -975,14 +976,14 @@
     '.vts-hist-r>span[data-l]::before{content:attr(data-l);display:block;font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}.vts-ch-k b{font-size:15px}}';
   /* ── Market-dip lump sums (data: smartsip.json / etf_smart.json → dip). When a segment's index tracker closes 3% or
      more below its 3-month high, the model adds a one-time amount (₹5,000 · ₹10,000 at 5% · ₹20,000 at 10%), once per
-     new tier in a fall, only when all 30 checks pass. Shown for the selected plan, just above Simulator Buy. ── */
+     new tier in a fall, only when all 37 checks pass. Shown for the selected plan, just above Simulator Buy. ── */
   function dipPanel(o) {
     var b = o && o.blk;
     if (!b || !b.segments) return '';
     style();
     var R = b.rule || {}, segs = b.segments, plan = (b.plans || {})[o.pid] || {}, etf = o.kind === 'etf', what = etf ? 'ETF' : 'fund';
     var tiers = (R.tiers || []).slice().sort(function (x, y) { return x[0] - y[0]; }), first = tiers.length ? tiers[0][0] : 5;
-    var start = R.start || '2026-10-19';
+    var start = R.start || '2026-10-19', NM = (R.n || {}).mkt || 14, NA = (R.n || {}).all || 37;
     var inr = function (v) { return '₹' + Number(v || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 }); };
     var dt = function (x, y) { return x ? new Date(String(x).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-GB', y ? { day: 'numeric', month: 'short', year: 'numeric' } : { day: 'numeric', month: 'short' }) : ''; };
     var last = Object.keys(segs).reduce(function (m, k) { return segs[k].d > m ? segs[k].d : m; }, '');
@@ -1013,7 +1014,7 @@
                          (next ? ' Next model amount only if it reaches ' + next[0] + '% (' + inr(next[1]) + ').' : ' No deeper level is left in this fall.');
       else st = 'Down ' + fall.toFixed(1) + '% — no new level today.';
       if (tone === 'go') buys.push({ seg: s.label, amt: s.amount, name: etf ? c.sym : c.name });
-      var tag = !c ? '<span class="vts-dip-tag q">' + (alt ? 'Info only · model holds ' + (k === 'silver' ? 'gold' : 'silver') + ' now' : 'Not in this plan') + '</span>'
+      var tag = !c ? '<span class="vts-dip-tag q">' + (alt ? /model holds/.test((alt.checks[NM] || [])[2] || '') ? 'Info only · model holds ' + (k === 'silver' ? 'gold' : 'silver') + ' now' : 'Info only · not in this plan' : 'Not in this plan') + '</span>'
         : tone === 'go' ? '<span class="vts-dip-tag go">✓ Can buy today · ' + inr(s.amount) + ' (optional)</span>'
         : tone === 'no' ? '<span class="vts-dip-tag no">✕ Not today — ' + esc(firstFail || 'a check failed') + '</span>'
         : '<span class="vts-dip-tag q">No dip buy today</span>';
@@ -1023,9 +1024,9 @@
         }).join('') + '</div>';
       };
       var det = grp('Market trigger', 1, s.checks || []) +
-        (mc ? grp('Market & valuation', 9, mc.checks.slice(0, 10)) + grp(etf ? 'ETF checks' : 'Fund checks', 19, mc.checks.slice(10)) +
-             (alt ? '<p class="vts-dip-na">' + esc(s.label) + ' is not part of this model portfolio this month, so no dip amount applies. The top-ranked ' + what + ' is shown for information, with every check.</p>' : '')
-           : grp('Market & valuation', 9, s.mkt || []) + '<p class="vts-dip-na">' + esc(s.label) + ' is not part of this model portfolio, so the ' + what + ' checks (19–30) do not apply and no dip amount is shown.</p>');
+        (mc ? grp('Market & valuation', 9, mc.checks.slice(0, NM)) + grp(etf ? 'ETF checks' : 'Fund checks', 9 + NM, mc.checks.slice(NM)) +
+             (alt ? '<p class="vts-dip-na">' + esc(s.label) + ' is not part of this model portfolio, so no dip amount applies. ' + (/model holds/.test((alt.checks[NM] || [])[2] || '') ? 'The top-ranked ' + what : 'The model\'s ' + what + ' for this segment (from the other plans)') + ' is shown for information, with every check.</p>' : '')
+           : grp('Market & valuation', 9, s.mkt || []) + '<p class="vts-dip-na">' + esc(s.label) + ' is not part of this model portfolio, so the ' + what + ' checks (' + (9 + NM) + '–' + NA + ') do not apply and no dip amount is shown.</p>');
       var n = mc ? all.length : (s.checks || []).length + (s.mkt || []).length;
       var nOk = mc ? ok : (s.checks || []).concat(s.mkt || []).filter(function (x) { return x[1]; }).length;
       return '<details class="vts-dip-r ' + tone + '"><summary>' +
@@ -1040,8 +1041,8 @@
     var rv = b.reserve || {}, who = (R.persons || []).join(', ').replace(/, ([^,]*)$/, ' and $1');
     var banner = buys.length
       ? '<div class="vts-dip-ban go"><b>Optional dip lump sum today</b><span>' + buys.map(function (x) { return esc(x.seg) + ': ' + inr(x.amt) + ' in ' + esc(x.name); }).join(' · ') +
-        '. This is an extra, one-time amount on top of your regular plan above — every one of the 30 checks passed on the ' + esc(dt(last)) + ' close.</span></div>'
-      : '<div class="vts-dip-ban q"><b>No dip lump sum today — continue your regular plan above</b><span>The model adds an optional one-time amount only when an index has stayed ' + first + '%+ below its 3-month high for two closes and all 30 checks pass. A one-day dip that recovers the next session is never bought. Latest close: ' + esc(dt(last, true)) + '.</span></div>';
+        '. This is an extra, one-time amount on top of your regular plan above — every one of the ' + NA + ' checks passed on the ' + esc(dt(last)) + ' close.</span></div>'
+      : '<div class="vts-dip-ban q"><b>No dip lump sum today — continue your regular plan above</b><span>The model adds an optional one-time amount only when an index has stayed ' + first + '%+ below its 3-month high for two closes and all ' + NA + ' checks pass. A one-day dip that recovers the next session is never bought. Latest close: ' + esc(dt(last, true)) + '.</span></div>';
     return '<section class="vts-dip" aria-labelledby="vtsDipT">' +
       '<div class="vts-dip-h"><div><h3 id="vtsDipT">📉 Market-dip lump sums</h3><span class="vts-dip-b">Optional · model rule</span></div>' +
       '<p>When an index falls <b>' + tiers.map(function (t) { return t[0] + '%'; }).join(' / ') + '</b> below its highest close of the last 3 months — and stays there for <b>two closes</b> — the model adds a one-time ' +
@@ -1049,7 +1050,7 @@
       banner +
       '<div class="vts-dip-lg" aria-hidden="true"><span><i class="go"></i>Can buy today (optional)</span><span><i class="no"></i>Dip today, but a check failed</span><span><i class="q"></i>No dip buy today</span></div>' +
       '<div class="vts-dip-l"><div class="vts-dip-hd" aria-hidden="true"><span>Segment</span><span>Fall</span><span>What the model does</span><span>Model ' + what + '</span><span>Checks</span><span></span></div>' + rows + '</div>' +
-      '<p class="vts-dip-n">Checks: 1–8 market trigger (fall, two-close hold, confirmation by a second ' + (etf ? 'ETF' : 'tracker') + ', crash-day and data guards), 9–18 market & valuation (P/E, P/B, earnings, bond yields, 5-session and 52-week trend), 19–30 the ' + what + ' itself. Tap a segment for every check and its figure. ' +
+      '<p class="vts-dip-n">Checks: 1–8 market trigger (fall, two-close hold, confirmation by a second ' + (etf ? 'ETF' : 'tracker') + ', crash-day and data guards), 9–' + (8 + NM) + ' market & valuation (P/E, P/B, earnings, bond yields, economy, volatility, 5-session, 10-close, 200-day and 52-week trend), ' + (9 + NM) + '–' + NA + ' the ' + what + ' itself (cost, size, returns, risk, tracking, NAV). Tap a segment for every check and its figure. ' +
       (who ? 'In Simulator Buy, ' + esc(who) + ' follow this rule with a ' + inr(R.reserve) + ' reserve in ' + (etf ? 'a liquid ETF (' + esc(rv.sym || 'liquid ETF') + ')' : 'a liquid fund (' + esc(rv.name || 'liquid fund') + ')') +
         ', topped up with the same ' + inr(R.reserve) + ' on the first trading day of the month after it is used up. ' : '') +
       'Educational model — not investment advice.</p></section>';
