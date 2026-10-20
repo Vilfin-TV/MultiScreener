@@ -473,8 +473,10 @@ def main() -> int:
             if subs.get(o["code"]) in liquid:
                 A.check("mf", nd < T and (T - nd).days <= 6, f"{oid}: liquid-fund NAV date {nd} should precede {T}")
             else:
-                A.check("mf", nd == T or (nd > T and (nd - T).days <= 7 and (prices.get("mf", {}).get(str(o["code"])) or {}).get(iso(T)) is None),
-                        f"{oid}: NAV date {nd} for trade date {T}")
+                rec_days = sorted(x for x in (prices.get("mf", {}).get(str(o["code"])) or {}) if x > iso(T))
+                A.check("mf", nd == T or (nd > T and (nd - T).days <= 7 and (prices.get("mf", {}).get(str(o["code"])) or {}).get(iso(T)) is None
+                                          and len(rec_days) >= 2 and rec_days[0] == iso(nd)),
+                        f"{oid}: NAV date {nd} for trade date {T} (the next NAV day is used only once two later NAVs are published)")
             stamp = r2(amt * CFG["mfRules"]["stampDuty"])
             A.check("mf", abs(d["stamp"] - stamp) < 0.005 and abs(d["net"] - r2(amt - stamp)) < 0.005, f"{oid}: stamp duty / net amount")
             units = math.floor(r2(amt - stamp) / d["nav"] * 1000 + 1e-9) / 1000

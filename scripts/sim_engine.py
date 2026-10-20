@@ -215,7 +215,11 @@ class Market:
         if not self.network or not days or not codes:
             return
         import requests
-        want = sorted({d for d in days if d.isoformat() not in self.c["amfi"]})
+        # a day is fetched again while any wanted fund still has no NAV for it (funds with overseas holdings publish
+        # their NAV a day late, after the first fetch of that day), for up to 10 days
+        recent = max(days) - timedelta(days=10)
+        want = sorted({d for d in days if d.isoformat() not in self.c["amfi"]
+                       or (d >= recent and any(d.isoformat() not in self.c["mf"].get(str(c), {}) for c in codes))})
         for end in want:
             win = [end - timedelta(days=k) for k in range(3, -1, -1)]
             url = AMFI_HIST.format(f=win[0].strftime("%d-%b-%Y"), t=win[-1].strftime("%d-%b-%Y"))
@@ -800,7 +804,9 @@ class Engine:
         if v:
             return T, v
         later = [x for x in self.mkt.mf_dates(code) if T.isoformat() < x <= upto.isoformat()]
-        if later and not self.backtest:                     # no NAV on T (a fund-house holiday) → next NAV day
+        # no NAV on T → the next NAV day, but only once the fund has published NAVs for two later days: a fund that
+        # publishes late (overseas holdings) keeps the order waiting for T's own NAV instead of a later price
+        if len(later) >= 2 and not self.backtest:
             return D(later[0]), self.mkt.c["mf"][str(code)][later[0]]
         if self.backtest:
             for k in range(1, 8):
