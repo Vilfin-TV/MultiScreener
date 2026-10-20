@@ -28,6 +28,7 @@ STATIC_PAGES = [
     (f'{SITE}/screener_query_generator.html', '0.8', 'monthly'),
     (f'{SITE}/mutual_fund_analyser.html', '0.8', 'daily'),
     (f'{SITE}/etf_momentum.html', '0.8', 'daily'),
+    (f'{SITE}/global_etf_momentum.html', '0.8', 'daily'),
     (f'{SITE}/india_mf_screener.html', '0.8', 'daily'),
     (f'{SITE}/stock_research.html', '0.8', 'daily'),
     (f'{SITE}/pre_market_briefing.html', '0.8', 'daily'),

@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>US &amp; Global ETF Momentum — VilfinTV Screener | Accelerating, Recovering &amp; More</title>
+<meta name="description" content="See whether any US-listed or global ETF is Accelerating, Decelerating, Recovering or Underperforming against the S&amp;P 500, Nasdaq-100, MSCI ACWI and other benchmarks. Weekly relative rotation for 120+ ETFs across US sectors, global markets, bonds, commodities and digital assets.">
+<link rel="canonical" href="https://vilfintv.com/global_etf_momentum.html">
+<meta property="og:title" content="US &amp; Global ETF Momentum — VilfinTV Screener">
+<meta property="og:description" content="Accelerating, Decelerating, Recovering or Underperforming? Relative rotation analysis for US and global ETFs.">
+<meta property="og:image" content="https://vilfintv.com/images/vilfintv-logo.jpg">
+<meta property="og:url" content="https://vilfintv.com/global_etf_momentum.html">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0A1F44; --navy-2:#13306a; --accent:#1A56DB; --accent-soft:#E8EFFD;
+  --canvas:#F3F5F9; --surface:#FFFFFF; --surface-2:#F8FAFC; --line:#E2E7EF; --line-2:#EEF1F6;
+  --ink:#14213D; --ink-2:#4A5672; --ink-3:#7A859E;
+  --acc:#0B8A5F; --acc-bg:#E6F5EF; --dec:#B7791F; --dec-bg:#FBF2E2;
+  --rec:#2563EB; --rec-bg:#E8EFFD; --und:#D1343B; --und-bg:#FCEBEC;
+  --pos:#0B8A5F; --neg:#D1343B; --shadow:0 1px 2px rgba(10,31,68,.06),0 4px 16px rgba(10,31,68,.05);
+  --r-lg:14px; --r-md:10px; --r-sm:6px;
+  --font:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --canvas:#08111F; --surface:#0F1B30; --surface-2:#13223B; --line:#22324F; --line-2:#1A2942;
+  --ink:#E7ECF6; --ink-2:#AAB6CC; --ink-3:#7D8BA5; --accent:#5B8DEF; --accent-soft:#16294A;
+  --acc:#2FBF8A; --acc-bg:#0F2E25; --dec:#E0A445; --dec-bg:#33270F; --rec:#6E9BFF; --rec-bg:#152848;
+  --und:#F06A70; --und-bg:#3A1A1F; --pos:#2FBF8A; --neg:#F06A70; --shadow:none; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --canvas:#08111F; --surface:#0F1B30; --surface-2:#13223B; --line:#22324F; --line-2:#1A2942;
+  --ink:#E7ECF6; --ink-2:#AAB6CC; --ink-3:#7D8BA5; --accent:#5B8DEF; --accent-soft:#16294A;
+  --acc:#2FBF8A; --acc-bg:#0F2E25; --dec:#E0A445; --dec-bg:#33270F; --rec:#6E9BFF; --rec-bg:#152848;
+  --und:#F06A70; --und-bg:#3A1A1F; --pos:#2FBF8A; --neg:#F06A70; --shadow:none; color-scheme:dark;}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-behavior:smooth;scroll-padding-top:calc(72px + env(safe-area-inset-top,0px))}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{margin:0;background:var(--canvas);color:var(--ink);font:400 15px/1.55 var(--font);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--navy);z-index:60}
+a{color:var(--accent)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1320px;margin:0 auto;padding:0 20px}
+.num{font-variant-numeric:tabular-nums}
+.pos{color:var(--pos)} .neg{color:var(--neg)} .muted{color:var(--ink-3)}
+
+/* Top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--navy);color:#fff;border-bottom:1px solid rgba(255,255,255,.08)}
+.topbar .wrap{display:flex;align-items:center;gap:18px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:700;letter-spacing:.02em}
+.brand img{width:30px;height:30px;border-radius:7px}
+.brand small{display:block;white-space:nowrap;font-weight:400;font-size:12px;color:#B8C4DC;letter-spacing:0}
+.nav{display:flex;gap:2px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav a{color:#C9D3E8;text-decoration:none;font-size:13.5px;padding:7px 11px;border-radius:7px;white-space:nowrap}
+.nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav a[aria-current="page"]{background:rgba(255,255,255,.12);color:#fff;font-weight:600}
+.iconbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:8px;height:34px;padding:0 11px;cursor:pointer;font-size:13px;white-space:nowrap}
+.iconbtn:hover{background:rgba(255,255,255,.16)}
+.menubtn{display:none}
+@media (max-width:900px){.nav{display:none;position:absolute;top:60px;left:0;right:0;flex-direction:column;background:var(--navy);padding:8px 12px 14px;border-bottom:1px solid rgba(255,255,255,.1)}.nav.open{display:flex}.nav a{padding:11px 12px;font-size:15px}.brand small{display:none}.menubtn{display:inline-block;margin-left:auto}.topbar .wrap{position:relative}}
+
+/* Hero */
+.crumbs{font-size:12.5px;color:var(--ink-3);padding:16px 0 0}
+.crumbs a{color:var(--ink-2);text-decoration:none}.crumbs a:hover{text-decoration:underline}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:end;padding:10px 0 22px}
+.hero h1{font-size:clamp(26px,3.4vw,38px);line-height:1.12;margin:0 0 10px;font-weight:700;letter-spacing:-.015em;color:var(--ink)}
+.hero p{margin:0;max-width:68ch;color:var(--ink-2);font-size:15.5px}
+.status{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;min-width:260px;box-shadow:var(--shadow)}
+.status .row{display:flex;justify-content:space-between;gap:16px;font-size:13px;padding:3px 0}
+.status .row > span:first-child{color:var(--ink-3)}
+.status .ok{color:var(--acc);font-weight:600}.status .warn{color:var(--dec);font-weight:600}
+@media (max-width:820px){.hero{grid-template-columns:1fr}.status{min-width:0}}
+
+/* Control bar */
+.controls{position:sticky;top:calc(60px + env(safe-area-inset-top,0px));z-index:40;background:color-mix(in srgb,var(--canvas) 92%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line);margin:0 -20px;padding:10px 20px}
+.controls .inner{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.search{position:relative;flex:1 1 260px;min-width:200px}
+.search input{width:100%;height:40px;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:0 36px 0 36px;font-size:14.5px}
+.search input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.search svg{position:absolute;left:11px;top:11px;width:18px;height:18px;color:var(--ink-3)}
+.search .clear{position:absolute;right:6px;top:6px;width:28px;height:28px;border:0;background:none;color:var(--ink-3);cursor:pointer;border-radius:6px;display:none}
+.field{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-3)}
+select.sel{height:40px;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:0 30px 0 11px;font-size:14px;color:var(--ink);appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink-3) 50%),linear-gradient(135deg,var(--ink-3) 50%,transparent 50%);background-position:calc(100% - 15px) 17px,calc(100% - 10px) 17px;background-size:5px 5px;background-repeat:no-repeat;cursor:pointer}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:1px}
+.chips::-webkit-scrollbar{display:none}
+.chip{height:34px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-size:13px;cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+:root[data-theme="dark"] .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent)}}
+.row2{margin-top:8px}
+
+/* Mode tiles */
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
+.mode{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:13px 14px 12px;cursor:pointer;box-shadow:var(--shadow);transition:border-color .15s}
+.mode::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:var(--c)}
+.mode .k{display:flex;align-items:center;gap:7px;font-weight:600;font-size:14px;color:var(--c)}
+.mode .v{display:block;font-size:28px;font-weight:700;color:var(--ink);line-height:1.15;margin-top:3px}
+.mode .d{display:block;font-size:12.5px;color:var(--ink-3)}
+.mode[aria-pressed="true"]{border-color:var(--c);background:var(--cb)}
+.mode:hover{border-color:var(--c)}
+.m-acc{--c:var(--acc);--cb:var(--acc-bg)} .m-dec{--c:var(--dec);--cb:var(--dec-bg)}
+.m-rec{--c:var(--rec);--cb:var(--rec-bg)} .m-und{--c:var(--und);--cb:var(--und-bg)}
+@media (max-width:820px){.modes{grid-template-columns:repeat(2,1fr);gap:10px}.mode .v{font-size:24px}}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.card-h{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line-2);flex-wrap:wrap}
+.card-h h2{font-size:17px;margin:0;font-weight:600}
+.card-h .sub{font-size:13px;color:var(--ink-3)}
+.card-h .spacer{flex:1}
+.grid2{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:16px;margin-bottom:16px}
+@media (max-width:1000px){.grid2{grid-template-columns:1fr}}
+
+/* Rotation map */
+.mapbox{padding:8px 10px 12px}
+#map{width:100%;height:auto;display:block;touch-action:manipulation}
+#map .q text{font-size:12.5px;font-weight:600}
+#map .ax{stroke:var(--line);stroke-width:1}
+#map .mid{stroke:var(--ink-3);stroke-width:1;stroke-dasharray:3 4;opacity:.6}
+#map .tick{fill:var(--ink-3);font-size:11px}
+#map .dot{cursor:pointer;stroke:var(--surface);stroke-width:1.5}
+#map .lab{font-size:11.5px;font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3px;pointer-events:none}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);padding:0 6px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
+.toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2);cursor:pointer;user-select:none}
+.toggle input{accent-color:var(--accent);width:16px;height:16px}
+.tip{position:fixed;z-index:70;pointer-events:none;background:var(--navy);color:#fff;font-size:12.5px;border-radius:8px;padding:8px 10px;box-shadow:0 6px 20px rgba(0,0,0,.2);opacity:0;transition:opacity .1s;max-width:240px}
+.tip b{font-size:13px}
+
+/* Leaders */
+.leaders{padding:6px 0}
+.lgrp{padding:6px 16px 10px}
+.lgrp h3{font-size:13.5px;font-weight:600;margin:6px 0;color:var(--ink-2);display:flex;align-items:center;gap:7px}
+.lrow{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 6px;border-radius:8px;cursor:pointer;border:0;background:none;width:100%;text-align:left}
+.lrow:hover{background:var(--surface-2)}
+.lrow .tk{font-weight:700;font-size:13.5px}
+.lrow .nm{font-size:12.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow .rt{font-size:13px;font-weight:600;text-align:right}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:var(--cb);color:var(--c)}
+.badge.na{--c:var(--ink-3);--cb:var(--line-2)}
+.glyph{font-size:10px}
+.conf{font-size:12px;color:var(--ink-2)}
+.conf b{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--line);margin-right:2px;vertical-align:1px}
+.conf b.on{background:var(--accent)}
+.trend{display:inline-flex;gap:3px}
+.trend span{width:22px;height:20px;border-radius:5px;font-size:10.5px;font-weight:700;display:inline-grid;place-items:center}
+.trend .t1{background:var(--acc-bg);color:var(--acc)} .trend .t-1{background:var(--und-bg);color:var(--und)} .trend .t0,.trend .tn{background:var(--line-2);color:var(--ink-3)}
+
+/* Table */
+.tabs{display:flex;gap:2px;background:var(--line-2);padding:3px;border-radius:9px}
+.tab{border:0;background:none;height:32px;padding:0 13px;border-radius:7px;font-size:13.5px;color:var(--ink-2);cursor:pointer;font-weight:500}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(10,31,68,.12);font-weight:600}
+.filters{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line-2);background:var(--surface-2)}
+.filters select.sel{height:36px;font-size:13px;background-position:calc(100% - 15px) 15px,calc(100% - 10px) 15px}
+.btn.fbtn{display:none}
+@media (max-width:820px){.btn.fbtn{display:inline-flex}.filters{display:none}.filters.open{display:flex}.filters select.sel{flex:1 1 calc(50% - 8px);min-width:0}}
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media (min-width:900px){.tablewrap{max-height:calc(100vh - 210px);overflow:auto}}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:13.5px}
+thead th{position:sticky;top:0;z-index:2;background:var(--surface);text-align:right;font-weight:600;font-size:12.5px;color:var(--ink-3);padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:first-child,tbody td:first-child{text-align:left;position:sticky;left:0;z-index:1;background:var(--surface)}
+thead th:first-child{z-index:3}
+thead th[aria-sort] {color:var(--ink)}
+thead th[aria-sort="descending"]::after{content:" ▾"} thead th[aria-sort="ascending"]::after{content:" ▴"}
+tbody td{padding:10px 12px;border-bottom:1px solid var(--line-2);text-align:right;white-space:nowrap}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--surface-2)}
+td.c,th.c{text-align:center}
+.etf{display:flex;flex-direction:column;min-width:190px;max-width:260px}
+.etf .tk{font-weight:700;font-size:14px;color:var(--ink)}
+.etf .nm{font-size:12px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis}
+tbody td:first-child::after{content:"";position:absolute;top:0;right:-1px;bottom:0;width:1px;background:var(--line-2)}
+.more{display:flex;justify-content:center;align-items:center;gap:12px;padding:14px;font-size:13px;color:var(--ink-3)}
+.btn{height:38px;padding:0 16px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:13.5px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{filter:brightness(1.08);color:#fff}
+.empty{padding:48px 20px;text-align:center;color:var(--ink-2)}
+.empty h3{margin:0 0 6px;color:var(--ink);font-size:17px}
+.skel{height:14px;border-radius:5px;background:linear-gradient(90deg,var(--line-2),var(--line),var(--line-2));background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+
+/* Sections */
+section.block{margin:28px 0}
+.block > h2{font-size:21px;margin:0 0 6px;font-weight:700;letter-spacing:-.01em}
+.block > p.lead{margin:0 0 16px;color:var(--ink-2);max-width:75ch}
+.how{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.how .q{padding:14px;border-radius:var(--r-md);background:var(--cb);border:1px solid color-mix(in srgb,var(--c) 22%,transparent)}
+.how .q b{color:var(--c);display:block;margin-bottom:3px}
+.how .q span{font-size:13px;color:var(--ink-2)}
+@media (max-width:820px){.how{grid-template-columns:1fr 1fr}}
+.formula{margin-top:14px;padding:14px 16px;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--line);font-size:14px;color:var(--ink-2)}
+.formula code{font-family:inherit;font-weight:600;color:var(--ink);background:var(--line-2);padding:1px 6px;border-radius:5px}
+
+/* Ways to invest */
+.routes .tabs{display:inline-flex;margin-bottom:14px;flex-wrap:wrap}
+.rpanel{display:none}.rpanel.on{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.rcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
+.rcard h3{margin:0;font-size:15.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rcard p,.rcard li{font-size:13.5px;color:var(--ink-2);margin:0}
+.rcard ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.tag{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.tag.soon{background:var(--dec-bg);color:var(--dec)}
+.rcard .btn{align-self:flex-start;margin-top:auto}
+.note{font-size:12.5px;color:var(--ink-3);margin-top:12px;max-width:90ch}
+
+/* FAQ */
+.faq details{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:8px}
+.faq summary{list-style:none;cursor:pointer;padding:14px 44px 14px 16px;font-weight:600;font-size:14.5px;position:relative}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";position:absolute;right:16px;top:11px;font-size:20px;color:var(--ink-3);font-weight:400}
+.faq details[open] summary::after{content:"−"}
+.faq .a{padding:0 16px 14px;color:var(--ink-2);font-size:14px;max-width:85ch}
+.faq .a p{margin:0 0 8px}.faq .a ul{margin:0 0 8px;padding-left:20px}.faq .a li{margin-bottom:4px}
+.faq table{font-size:13px;margin:6px 0 10px}.faq table td,.faq table th{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line-2);position:static;white-space:normal}
+.faq table th{color:var(--ink);font-weight:600;cursor:default}
+
+/* Brokers, share, footer */
+.brokers{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.brokers a{display:flex;flex-direction:column;gap:2px;padding:13px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);text-decoration:none;color:var(--ink)}
+.brokers a:hover{border-color:var(--accent)}
+.brokers a span{font-size:12.5px;color:var(--ink-3)}
+.share{display:flex;flex-wrap:wrap;gap:8px}
+.disc{font-size:12.5px;color:var(--ink-3);line-height:1.6;border-top:1px solid var(--line);padding-top:16px}
+footer{padding:22px 0 40px;font-size:12.5px;color:var(--ink-3)}
+footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:underline}
+
+/* Drawer */
+.scrim{position:fixed;inset:0;background:rgba(6,16,36,.45);z-index:80;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--surface);z-index:90;transform:translateX(102%);transition:transform .25s ease;display:flex;flex-direction:column;box-shadow:-10px 0 40px rgba(6,16,36,.2);padding-top:env(safe-area-inset-top,0px)}
+.drawer.on{transform:none}
+.dh{padding:16px 18px 12px;border-bottom:1px solid var(--line-2);display:flex;gap:12px;align-items:flex-start}
+.dh .t{font-size:22px;font-weight:700;line-height:1.1}
+.dh .n{font-size:13px;color:var(--ink-3);margin-top:3px}
+.dh .x{margin-left:auto;width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:18px;color:var(--ink-2);flex:none}
+.db{overflow-y:auto;padding:14px 18px calc(24px + env(safe-area-inset-bottom,0px));flex:1}
+.pxrow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.pxrow .p{font-size:26px;font-weight:700}
+.pxrow .c{font-weight:600}
+.sect{margin:16px 0 8px;font-size:13.5px;font-weight:600;color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-md);overflow:hidden}
+.stats > div{background:var(--surface);padding:10px 12px;box-shadow:0 0 0 .5px var(--line-2)}
+.stats > div > span{display:block;font-size:11.5px;color:var(--ink-3)}
+.stats > div > b{font-size:14.5px;font-weight:600}
+@media (max-width:480px){.stats{grid-template-columns:repeat(2,1fr)}}
+.trail{display:flex;gap:4px}
+.trail span{flex:1;height:28px;border-radius:6px;background:var(--cb);color:var(--c);display:grid;place-items:center;font-size:10.5px;font-weight:700}
+.trail-l{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-3);margin-top:4px}
+#dchart{width:100%;height:auto;display:block}
+#dchart .gl{stroke:var(--line-2)}
+#dchart text{fill:var(--ink-3);font-size:11px}
+.chk{list-style:none;padding:0;margin:0;display:grid;gap:6px;font-size:13px;color:var(--ink-2)}
+.chk li{display:flex;gap:8px}
+.chk li b{width:16px;flex:none}
+@media (max-width:820px){
+  .controls{position:static;backdrop-filter:none;-webkit-backdrop-filter:none;background:none;border:0;padding:0 20px 4px}
+  .controls .field{flex:1 1 100%}.controls .field select{flex:1}
+  .etf{min-width:132px;max-width:150px}.etf .nm{font-size:11.5px}
+  thead th,tbody td{padding:9px 10px}
+  .simtabs .tabs{display:flex!important;width:100%}.simtabs .tab{flex:1;white-space:nowrap;font-size:12.5px;padding:0 6px}
+  .card-h .tabs{order:3;width:100%}.card-h .tabs .tab{flex:1;white-space:nowrap;padding:0 8px;font-size:13px}
+}
+/* Portfolio Simulator */
+.simlink{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-weight:600;font-size:14px;text-decoration:none;color:var(--accent);background:var(--accent-soft);padding:8px 14px;border-radius:9px}
+.simlink:hover{filter:brightness(.97)}
+#sim{margin:16px 0}
+.gate{padding:18px 16px;display:grid;gap:12px;max-width:80ch}
+.gate p{margin:0;color:var(--ink-2);font-size:14px}
+.gate label{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer}
+.gate input{accent-color:var(--accent);width:18px;height:18px;margin-top:2px;flex:none}
+.simin{display:flex;flex-wrap:wrap;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line-2);background:var(--surface-2)}
+.simin > *{flex:1 1 190px;min-width:0}.simin > .riskf{flex:1 1 290px}
+.simin label.f{display:grid;gap:5px;font-size:12.5px;color:var(--ink-3);font-weight:500}
+.simin .sel,.simin input[type=number]{width:100%}
+.simin input[type=number]{height:40px;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:0 11px;font-size:14px;color:var(--ink)}
+.seg{display:flex;background:var(--line-2);padding:3px;border-radius:9px;gap:2px}
+.seg button{flex:1;border:0;background:none;height:34px;border-radius:7px;font-size:13px;color:var(--ink-2);cursor:pointer;white-space:nowrap;padding:0 6px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(10,31,68,.12)}
+.simtabs{padding:12px 16px 0}
+.simbody{padding:14px 16px 18px}
+.alloc{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--line-2);margin:4px 0 8px}
+.alloc i{display:block;height:100%}
+.alegend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--ink-2);margin-bottom:12px}
+.alegend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+.notes{display:grid;gap:8px;margin:12px 0 0}
+.notes div{font-size:13px;color:var(--ink-2);padding:10px 12px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--line-2)}
+.notes div.w{background:var(--dec-bg);border-color:transparent;color:var(--ink)}
+.simtbl td:first-child,.simtbl th:first-child{position:static}
+.simtbl tbody tr{cursor:pointer}
+.simtbl td:first-child::after{display:none}
+.slotlab{font-size:12px;color:var(--ink-3)}
+.ck{width:100%;font-size:13px;margin-bottom:6px}
+.ck td,.ck th{text-align:center;padding:7px 8px;white-space:nowrap}
+.ck td:first-child,.ck th:first-child{text-align:left;position:static}
+.ck td:first-child::after{display:none}
+.ck tr.pick td{background:var(--acc-bg)}
+.ck .y{color:var(--acc);font-weight:700}.ck .n{color:var(--und);font-weight:700}
+.slotcard{border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:12px;overflow:hidden}
+.slotcard h4{margin:0;padding:10px 12px;font-size:14px;background:var(--surface-2);border-bottom:1px solid var(--line-2);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.slotcard .tablewrap{max-height:none}
+#simchart{width:100%;max-width:760px;height:auto;display:block}
+#simchart text{fill:var(--ink-3);font-size:11px}
+#simchart .gl{stroke:var(--line-2)}
+.steps{margin:14px 0 0;padding-left:20px;font-size:13.5px;color:var(--ink-2);display:grid;gap:6px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="https://vilfintv.com/index.html" title="VilfinTV Multiscreener">
+      <img src="https://vilfintv.com/images/vilfintv-logo.jpg" alt="" width="30" height="30">
+      <span>VILFINTV<small>US &amp; Global ETF Momentum</small></span>
+    </a>
+    <nav class="nav" id="siteNav" aria-label="Site">
+      <a href="https://vilfintv.com/index.html">Multiscreener</a>
+      <a href="https://vilfintv.com/news.html">News</a>
+      <a href="https://vilfintv.com/story.html">Stories</a>
+      <a href="https://vilfintv.com/education.html">Academy</a>
+      <a href="https://vilfintv.com/blog_intelligence_hub.html">Blog</a>
+      <a href="https://vilfintv.com/india_mf_screener.html">India MF Screener</a>
+      <a href="https://vilfintv.com/etf_momentum.html">India ETF Momentum</a>
+      <a href="https://vilfintv.com/global_etf_momentum.html" aria-current="page">Global ETF Momentum</a>
+      <a href="https://vilfintv.com/market_sentiment_score.html">Market Sentiment</a>
+    </nav>
+    <button class="iconbtn menubtn" id="menuBtn" type="button" aria-expanded="false" aria-controls="siteNav">Menu</button>
+    <button class="iconbtn" id="themeBtn" type="button" aria-label="Switch colour theme">Theme</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="crumbs"><a href="https://vilfintv.com/index.html">Multiscreener</a> › Market &amp; Trade › VilfinTV Screeners › US &amp; Global ETF Momentum</div>
+
+  <div class="hero">
+    <div>
+      <h1>US &amp; Global ETF Momentum</h1>
+      <p>Track how 120+ US-listed ETFs — US sectors and factors, developed and emerging markets, bonds, commodities and digital assets — are rotating against the benchmark you choose, from weekly relative strength and its momentum.</p>
+      <a class="simlink" href="#sim">Portfolio Simulator — explore a diversified global ETF model portfolio</a>
+    </div>
+    <div class="status" id="status" aria-live="polite">
+      <div class="row"><span>Data as of</span><span id="stAsOf"><span class="skel" style="display:inline-block;width:90px"></span></span></div>
+      <div class="row"><span>ETFs covered</span><span id="stCount">–</span></div>
+      <div class="row"><span>Accuracy audit</span><span id="stAudit">–</span></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="inner">
+      <label class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Search ETF, ticker, category or issuer" autocomplete="off" aria-label="Search ETFs">
+        <button class="clear" id="qClear" type="button" aria-label="Clear search">✕</button>
+      </label>
+      <label class="field">Benchmark
+        <select class="sel" id="bench" aria-label="Benchmark">
+          <option value="SPY">S&amp;P 500 (SPY)</option>
+          <option value="QQQ">Nasdaq-100 (QQQ)</option>
+          <option value="IWM">Russell 2000 (IWM)</option>
+          <option value="ACWI">MSCI ACWI (ACWI)</option>
+          <option value="EFA">Developed ex-US (EFA)</option>
+          <option value="EEM">Emerging Markets (EEM)</option>
+          <option value="AGG">US Aggregate Bond (AGG)</option>
+          <option value="GLD">Gold (GLD)</option>
+        </select>
+      </label>
+    </div>
+    <div class="chips row2" id="acChips" role="group" aria-label="Asset class"></div>
+  </div>
+
+  <div class="modes" role="group" aria-label="Filter by momentum mode">
+    <button class="mode m-acc" data-mode="ACC" aria-pressed="false"><span class="k"><span class="glyph">▲</span>Accelerating</span><span class="v" id="cACC">–</span><span class="d">Leading and gaining strength</span></button>
+    <button class="mode m-dec" data-mode="DEC" aria-pressed="false"><span class="k"><span class="glyph">◢</span>Decelerating</span><span class="v" id="cDEC">–</span><span class="d">Leading, momentum fading</span></button>
+    <button class="mode m-rec" data-mode="REC" aria-pressed="false"><span class="k"><span class="glyph">◤</span>Recovering</span><span class="v" id="cREC">–</span><span class="d">Lagging, momentum improving</span></button>
+    <button class="mode m-und" data-mode="UND" aria-pressed="false"><span class="k"><span class="glyph">▼</span>Underperforming</span><span class="v" id="cUND">–</span><span class="d">Lagging and losing strength</span></button>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-h">
+        <h2>Rotation map</h2><span class="sub" id="mapSub">Last 8 weeks vs benchmark</span>
+        <span class="spacer"></span>
+        <label class="toggle"><input type="checkbox" id="showAll"> Show all ETFs</label>
+      </div>
+      <div class="mapbox">
+        <svg id="map" viewBox="0 0 640 460" role="img" aria-label="Relative rotation map"></svg>
+        <div class="legend"><span><i style="background:var(--acc)"></i>Accelerating</span><span><i style="background:var(--dec)"></i>Decelerating</span><span><i style="background:var(--rec)"></i>Recovering</span><span><i style="background:var(--und)"></i>Underperforming</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Rotation leaders</h2><span class="sub">Within your filters</span></div>
+      <div class="leaders" id="leaders"></div>
+    </div>
+  </div>
+
+  <div class="card" id="screener">
+    <div class="card-h">
+      <h2 id="listTitle">All ETFs</h2><span class="sub" id="listCount">–</span>
+      <span class="spacer"></span>
+      <div class="tabs" role="tablist" aria-label="Table view">
+        <button class="tab" role="tab" data-tab="mom" aria-selected="true">Momentum</button>
+        <button class="tab" role="tab" data-tab="ret" aria-selected="false">Returns</button>
+        <button class="tab" role="tab" data-tab="risk" aria-selected="false">Risk &amp; Cost</button>
+      </div>
+      <button class="btn fbtn" id="fBtn" type="button" aria-expanded="false" aria-controls="filters">Filters</button>
+    </div>
+    <div class="filters" id="filters">
+      <select class="sel" id="fReg" aria-label="Region"><option value="all">All regions</option></select>
+      <select class="sel" id="fRole" aria-label="Role"><option value="all">All roles</option></select>
+      <select class="sel" id="fIss" aria-label="Issuer"><option value="all">All issuers</option></select>
+      <select class="sel" id="fTrend" aria-label="Trend">
+        <option value="any">Any trend</option><option value="lpos">Long-term positive</option><option value="all3">Positive on all three</option><option value="spos">Short-term positive</option><option value="lneg">Long-term negative</option>
+      </select>
+      <select class="sel" id="fLiq" aria-label="Liquidity">
+        <option value="0">Any liquidity</option><option value="10e6">Traded ≥ $10M/day</option><option value="100e6">Traded ≥ $100M/day</option><option value="1e9">Traded ≥ $1B/day</option>
+      </select>
+      <select class="sel" id="fEr" aria-label="Expense ratio">
+        <option value="any">Any expense ratio</option><option value="0.1">≤ 0.10%</option><option value="0.2">≤ 0.20%</option><option value="0.5">≤ 0.50%</option><option value="1">≤ 1.00%</option>
+      </select>
+      <select class="sel" id="fAum" aria-label="Fund size">
+        <option value="0">Any fund size</option><option value="1e9">≥ $1B</option><option value="1e10">≥ $10B</option><option value="1e11">≥ $100B</option>
+      </select>
+      <select class="sel" id="fAge" aria-label="Track record">
+        <option value="0">Any track record</option><option value="1">1Y+ history</option><option value="3">3Y+ history</option><option value="5">5Y+ history</option>
+      </select>
+      <select class="sel" id="fSort" aria-label="Sort">
+        <option value="strength">Sort: Strongest first</option><option value="ratio">Sort: RS-Ratio</option><option value="mom">Sort: RS-Momentum</option>
+        <option value="r1m">Sort: 1M return</option><option value="r3m">Sort: 3M return</option><option value="r6m">Sort: 6M return</option><option value="rytd">Sort: YTD return</option><option value="r1y">Sort: 1Y return</option><option value="r3y">Sort: 3Y return (CAGR)</option><option value="r5y">Sort: 5Y return (CAGR)</option>
+        <option value="er">Sort: Lowest expense ratio</option><option value="aum">Sort: Largest fund size</option><option value="vol">Sort: Lowest volatility</option><option value="adv">Sort: Liquidity</option><option value="t">Sort: Ticker A–Z</option>
+      </select>
+      <button class="btn" id="fReset" type="button">Reset filters</button>
+    </div>
+    <div class="tablewrap" id="tablewrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+    <div class="more" id="more"></div>
+  </div>
+
+  <section class="card" id="sim" aria-labelledby="simTitle">
+    <div class="card-h"><h2 id="simTitle">Portfolio Simulator — Global ETF</h2><span class="sub">A diversified, rules-based model portfolio built from today’s audited data</span></div>
+    <div class="gate" id="simGate">
+      <p><b>Educational simulation.</b> The simulator shows an illustrative mix of US-listed ETFs for a goal, built from fixed rules and published data. It does not know your income, existing investments or tax position, and markets can fall sharply. VilfinTV is not a SEBI-registered investment adviser.</p>
+      <label><input type="checkbox" id="simAccept"> I understand this is for learning only, is not investment advice, and that I am responsible for my own decisions.</label>
+      <button class="btn primary" id="simOpen" type="button" disabled style="justify-self:start">Open Portfolio Simulator</button>
+    </div>
+    <div id="simApp" hidden>
+      <div class="simin">
+        <label class="f">Goal — how long you will stay invested
+          <select class="sel" id="sH"><option value="h1">Under 1 year</option><option value="h3">1–3 years</option><option value="h5">3–5 years</option><option value="h10" selected>5–10 years</option><option value="h15">10 years or more</option></select></label>
+        <div class="f riskf" style="display:grid;gap:5px;font-size:12.5px;color:var(--ink-3);font-weight:500">Risk level
+          <div class="seg" id="sR" role="group" aria-label="Risk level"><button data-v="c" aria-pressed="false">Conservative</button><button data-v="b" aria-pressed="true">Balanced</button><button data-v="a" aria-pressed="false">Aggressive</button></div></div>
+        <label class="f">Amount per purchase (US$)<input type="number" id="sA" min="50" step="50" value="500" inputmode="decimal"></label>
+        <label class="f">How you invest
+          <select class="sel" id="sF"><option value="12">Monthly</option><option value="52">Weekly</option><option value="4">Quarterly</option><option value="1">Yearly</option><option value="0">One-time</option></select></label>
+        <label class="f">Where you are tax-resident
+          <select class="sel" id="sRes"><option value="res">Resident Indian</option><option value="nri">NRI</option><option value="jp">Japan resident (NISA)</option></select></label>
+        <label class="toggle" style="align-self:end;height:40px"><input type="checkbox" id="sFrac"> My broker allows fractional shares</label>
+      </div>
+      <div class="simtabs"><div class="tabs" role="tablist" aria-label="Simulator view" style="display:inline-flex">
+        <button class="tab" role="tab" data-st="mix" aria-selected="true">Model portfolio</button>
+        <button class="tab" role="tab" data-st="risk" aria-selected="false">Risk &amp; behaviour</button>
+        <button class="tab" role="tab" data-st="why" aria-selected="false">Why these ETFs</button>
+      </div></div>
+      <div class="simbody" id="simBody"></div>
+    </div>
+  </section>
+
+  <section class="block" id="method">
+    <h2>How modes are assigned</h2>
+    <p class="lead">Each ETF’s weekly total-return price is divided by the benchmark to get its relative strength. Two readings are derived from it, both centred on 100.</p>
+    <div class="how">
+      <div class="q m-rec"><b>◤ Recovering</b><span>RS-Ratio below 100, RS-Momentum 100 or above</span></div>
+      <div class="q m-acc"><b>▲ Accelerating</b><span>RS-Ratio 100 or above, RS-Momentum 100 or above</span></div>
+      <div class="q m-und"><b>▼ Underperforming</b><span>RS-Ratio below 100, RS-Momentum below 100</span></div>
+      <div class="q m-dec"><b>◢ Decelerating</b><span>RS-Ratio 100 or above, RS-Momentum below 100</span></div>
+    </div>
+    <div class="formula">
+      <code>Relative strength = 100 × ETF ÷ benchmark</code> · <code>RS-Ratio = 100 × 3-week EMA ÷ 10-week average of relative strength</code> · <code>RS-Momentum = 100 + change in RS-Ratio over 3 weeks</code>
+      <p style="margin:10px 0 0">ETFs typically rotate clockwise: Recovering, then Accelerating, then Decelerating, then Underperforming. Readings within 1 point of the centre are treated as noise and carry low confidence.</p>
+    </div>
+  </section>
+
+  <section class="block routes" id="invest">
+    <h2>Ways to invest in these ETFs</h2>
+    <p class="lead">The right route depends on where you are tax-resident. Choose yours.</p>
+    <div class="tabs" role="tablist" aria-label="Investor residence">
+      <button class="tab" role="tab" data-route="res" aria-selected="true">Resident Indian</button>
+      <button class="tab" role="tab" data-route="nri" aria-selected="false">NRI</button>
+      <button class="tab" role="tab" data-route="jp" aria-selected="false">Japan resident (NISA)</button>
+    </div>
+
+    <div class="rpanel on" id="r-res" role="tabpanel">
+      <div class="rcard">
+        <h3>GIFT City account <span class="tag">NSE IX</span></h3>
+        <p>Open a global trading account with a broker registered in GIFT City (IFSC) to buy US-listed ETFs through NSE International Exchange’s global access route.</p>
+        <ul><li>Funded under the Liberalised Remittance Scheme (LRS), up to US$250,000 per financial year</li><li>Holdings are in US dollars</li><li>Check the broker’s supported ETF list and charges before you fund</li></ul>
+      </div>
+      <div class="rcard">
+        <h3>Dhan <span class="tag">Available</span></h3>
+        <p>Indian and US markets from one app — buy US-listed ETFs alongside your Indian portfolio.</p>
+        <ul><li>LRS remittance from your Indian bank account</li><li>Fractional and whole-unit orders where supported</li></ul>
+        <a class="btn primary" href="https://join.dhan.co/?invite=VFZJN04428" target="_blank" rel="noopener sponsored">Open a Dhan account</a>
+      </div>
+      <div class="rcard">
+        <h3>Zerodha <span class="tag soon">Coming soon</span></h3>
+        <p>Zerodha’s international investing route has been announced but is not yet open. Check Zerodha’s website for the launch date and supported ETFs.</p>
+        <a class="btn" href="https://zerodha.com/open-account?c=XKQ288" target="_blank" rel="noopener sponsored">Open a Zerodha account</a>
+      </div>
+    </div>
+
+    <div class="rpanel" id="r-nri" role="tabpanel">
+      <div class="rcard">
+        <h3>Interactive Brokers <span class="tag">170 exchanges</span></h3>
+        <p>NRIs can invest in US-listed ETFs directly through an Interactive Brokers account opened in their country of residence.</p>
+        <ul><li>Fund from your overseas bank account or NRE account</li><li>Low commissions and direct access to US exchanges</li><li>Submit Form W-8BEN so US dividend withholding follows your country’s tax treaty</li></ul>
+        <a class="btn primary" href="https://www.interactivebrokers.co.jp/en/accounts/what-you-need-jp.php" target="_blank" rel="noopener">Open an IBKR account</a>
+      </div>
+      <div class="rcard">
+        <h3>Before you invest</h3>
+        <ul><li>Your country of residence taxes these gains — Indian tax applies only if you are an Indian tax resident</li><li>Holdings above US$60,000 can face US estate tax for non-US persons; see the FAQ below</li><li>Some brokers do not onboard residents of every country — confirm eligibility first</li></ul>
+      </div>
+    </div>
+
+    <div class="rpanel" id="r-jp" role="tabpanel">
+      <div class="rcard">
+        <h3>NISA growth quota <span class="tag">Tax-free in Japan</span></h3>
+        <p>Japan residents, including NRIs living in Japan, can hold US-listed ETFs inside NISA through a Japanese securities account.</p>
+        <ul><li>US-listed ETFs are bought within the growth investment quota (成長投資枠), up to ¥2.4 million a year and ¥12 million lifetime</li><li>Gains and dividends are free of Japanese tax inside NISA</li><li>US withholding tax of 10% on dividends still applies and cannot be reclaimed inside NISA</li></ul>
+      </div>
+      <div class="rcard">
+        <h3>Choosing a Japanese broker</h3>
+        <ul><li>Major online brokers such as SBI Securities, Rakuten Securities and Monex offer US-listed ETFs in NISA</li><li>Compare currency-exchange spreads and per-trade commissions — several brokers waive US ETF commissions for NISA</li><li>Only one NISA account is allowed per person at a time</li></ul>
+      </div>
+    </div>
+    <p class="note">This section is general education, not tax or legal advice. Rules, limits and broker availability change — confirm the current terms with your broker and a qualified tax professional.</p>
+  </section>
+
+  <section class="block faq" id="faq">
+    <h2>Questions</h2>
+    <details><summary>Is the data on this page accurate?</summary><div class="a">
+      <p>After every US trading session, prices, returns, risk, liquidity and fund facts (expense ratio, fund size, yield, inception) are refreshed. Two independent checks run before anything is published:</p>
+      <ul><li><b>Accuracy audit</b> — every ETF is checked for valid prices, the price sitting inside its 52-week range, recomputed returns, realistic volatility and drawdown, expense ratios in a valid range, a complete weekly history, and day-over-day continuity against the previous publish. If any critical check fails, the update is held back and the previous day’s data stays online.</li><li><b>Engine check</b> — when the page loads, it recomputes every momentum mode against the S&amp;P 500 and compares it with the published reference. The result is shown at the top of the page.</li></ul>
+      <p>Prices are end-of-day in US dollars and total-return (dividends reinvested) for returns and momentum. Always confirm the live price on your broker before placing an order.</p></div></details>
+    <details><summary>Accelerating, Decelerating, Recovering or Underperforming — what do they mean for me?</summary><div class="a">
+      <ul><li><b>▲ Accelerating</b> — beating the benchmark and gaining strength: the strongest current trend, but it can be late in the move. Buy in parts and watch for a shift to Decelerating.</li><li><b>◤ Recovering</b> — still behind but improving: an early turn with higher reward and higher risk. Wait for two or three weeks of confirmation.</li><li><b>◢ Decelerating</b> — still ahead but fading: hold or book partial profits rather than add new money.</li><li><b>▼ Underperforming</b> — behind and weakening: avoid for momentum.</li></ul>
+      <p>Modes describe past relative performance. Broad core ETFs can be bought regularly whatever their mode.</p></div></details>
+    <details><summary>Which benchmark should I use?</summary><div class="a">
+      <p>Use the S&amp;P 500 for US equity ETFs, the Nasdaq-100 to judge growth and technology funds, the Russell 2000 for small caps, MSCI ACWI for a global view, Developed ex-US or Emerging Markets for country funds, US Aggregate Bond for bond ETFs and Gold for precious metals. Comparing a fund with its own parent market shows whether it leads within that market.</p></div></details>
+    <details><summary>What does Confidence mean?</summary><div class="a">
+      <p>Four checks cross-examine each mode: whether the ETF actually beat the benchmark over 13 weeks on the side its RS-Ratio shows, whether its last 4 weeks of relative return improved on the 4 weeks before (matching RS-Momentum), whether it trades at least $10 million a day, and whether its reading sits outside the noise band. <b>High</b> = all four agree, <b>Medium</b> = three, <b>Low</b> = two or fewer.</p></div></details>
+    <details><summary>What do the Trend S·M·L chips and roles mean?</summary><div class="a">
+      <p><b>S</b> (short term) compares price with its 10-week average and the 13-week return; <b>M</b> (medium) with its 26-week average and 26-week return; <b>L</b> (long) with its 52-week average, whether that average is rising, and the 1-year return. Green = positive, red = negative, grey = mixed.</p>
+      <p><b>Roles:</b> Core (broad markets — most long-term money), Factor (growth, value, dividend, momentum, quality, low volatility), Sector, Thematic, Country, Bond, Commodity and Digital (spot bitcoin and ether). Sector, thematic, country and digital funds are usually held as smaller satellites.</p></div></details>
+    <details><summary>Why is an ETF “Not classified”?</summary><div class="a"><p>At least 20 weeks of clean trading history are needed. Recently launched funds are listed but not classified, to avoid misleading signals.</p></div></details>
+    <details><summary>How are US-listed ETFs taxed for resident Indians?</summary><div class="a">
+      <table><thead><tr><th>Income</th><th>Tax in India</th></tr></thead><tbody>
+        <tr><td>Gains, units held more than 24 months</td><td>12.5% long-term capital gains (no indexation)</td></tr>
+        <tr><td>Gains, units held up to 24 months</td><td>Your income-tax slab</td></tr>
+        <tr><td>Dividends</td><td>Your slab; the US withholds 25% under the India–US tax treaty (with Form W-8BEN), which you can claim as a credit by filing Form 67</td></tr>
+      </tbody></table>
+      <ul><li>Remittances for investment above ₹10 lakh a financial year attract 20% tax collected at source (TCS), adjustable against your income tax or refundable when you file.</li><li>Report foreign holdings in Schedule FA of your income-tax return every year, even with no income from them.</li><li>Add surcharge and 4% cess. Rules change with each Union Budget — confirm with a tax professional.</li></ul></div></details>
+    <details><summary>What is the US estate-tax risk for non-US investors?</summary><div class="a">
+      <p>For people who are neither US citizens nor US residents, US-listed ETFs are US-situs assets. If their total value exceeds US$60,000 at death, the estate can owe US estate tax of up to 40%, and India has no estate-tax treaty with the US. Investors with larger holdings often consider Ireland-domiciled UCITS ETFs listed in London, which are generally outside US estate tax and suffer 15% US dividend withholding at fund level. Japan’s treaty with the US provides some relief for Japan residents. Take professional advice for large portfolios.</p></div></details>
+    <details><summary>US-listed ETFs or Indian international funds — which is better?</summary><div class="a">
+      <p>Indian-listed international ETFs and fund-of-funds need no LRS remittance, but industry overseas limits often push international ETFs to trade well above their NAV, and new investments can be paused. US-listed ETFs trade close to their value at very low cost, but need a remittance, US-dollar exposure and extra tax reporting. Compare both on the <a href="https://vilfintv.com/etf_momentum.html">India ETF Momentum</a> page.</p></div></details>
+    <details><summary>How current is the data?</summary><div class="a"><p>End-of-day closes, refreshed after the US market close every trading day. The latest week runs up to the date shown at the top. Fund facts are refreshed daily and can lag the issuer by a few days.</p></div></details>
+    <details><summary>How does the Global Portfolio Simulator choose ETFs?</summary><div class="a">
+      <p>Each plan starts from an asset mix for your goal and risk level — equity, US investment-grade bonds, gold and Treasury bills. Equity is split between US large and total-market funds, US small and mid caps, developed markets outside the US, emerging markets and, for goals of 3 years or more, a small factor satellite.</p>
+      <p>Every slot has a short list of ETFs doing the same job. Each must pass up to nine checks: in today’s audited data, at least 3 years of returns, traded at least $20 million a day, fund size of at least $1 billion, expense ratio under the slot’s cap, 1-year return close to similar ETFs, volatility no more than 1.3 times similar ETFs, a clean year of weekly prices and, for the factor slot, an Accelerating mode against the S&amp;P 500 with Medium or High confidence. Survivors are ranked on cost 35% · liquidity 25% · size 20% · track record 10% · consistency with peers 10%.</p>
+      <p><b>Market-condition overlay:</b> for goals of 3 years or more, when the S&amp;P 500’s long-term trend turns negative (below a falling 52-week average with a negative 1-year return), 10 points move from equity into bonds, trimmed evenly across the equity slots. The money moves back when the trend recovers. The “Why these ETFs” tab shows every check with its figure.</p></div></details>
+    <details><summary>Is the “Risk &amp; behaviour” view a forecast?</summary><div class="a"><p>No. It replays how the exact model mix moved over the last 60 weeks of audited weekly prices, rebalanced to its target weights each week, and compares it with the S&amp;P 500. Past behaviour over a short window is an illustration only and does not predict future returns.</p></div></details>
+    <details><summary>Is this investment advice?</summary><div class="a"><p>No. VilfinTV is a free educational platform and is not a SEBI-registered investment adviser or research analyst. Modes and rankings describe past prices and do not predict future returns. Research every ETF and consult a qualified adviser for your situation.</p></div></details>
+  </section>
+
+  <section class="block" id="share">
+    <h2>Share VilfinTV with friends &amp; family</h2>
+    <p class="lead">VilfinTV is a free, educational initiative. If this page helped you, please share it.</p>
+    <div class="share" id="shareBtns"></div>
+  </section>
+
+  <section class="block" id="brokers">
+    <h2>Best brokers &amp; apps for global investing</h2>
+    <p class="lead">Accounts and money tools for investing outside India.</p>
+    <div class="brokers">
+      <a href="https://join.dhan.co/?invite=VFZJN04428" target="_blank" rel="noopener sponsored"><b>Dhan</b><span>India and US markets in one account</span></a>
+      <a href="https://www.interactivebrokers.co.jp/en/accounts/what-you-need-jp.php" target="_blank" rel="noopener"><b>Interactive Brokers</b><span>Global markets, 170 exchanges</span></a>
+      <a href="https://zerodha.com/open-account?c=XKQ288" target="_blank" rel="noopener sponsored"><b>Zerodha</b><span>India’s largest broker — international coming soon</span></a>
+      <a href="https://wise.com/invite/ihpc/vilfinm" target="_blank" rel="noopener sponsored"><b>Wise</b><span>Best-rate international transfers</span></a>
+      <a href="https://revolut.com/referral/?referral-code=vilfingeorge!APR1-26-AR-JP-H1&amp;geo-redirect" target="_blank" rel="noopener sponsored"><b>Revolut</b><span>Multi-currency account and card</span></a>
+      <a href="https://referral-link.onelink.me/gbf1/a43c48ca?deep_link_sub1=referral&amp;deep_link_value=cWkMb3" target="_blank" rel="noopener sponsored"><b>Instarem</b><span>Asia remittance</span></a>
+    </div>
+    <p class="note">Some links are referral links — signing up through them may give you a welcome benefit at no extra cost and helps keep this platform free.</p>
+  </section>
+
+  <p class="disc"><b>Disclaimer:</b> Investments in securities markets are subject to market risks, including currency risk for foreign-currency assets. Read all scheme documents carefully before investing. This page is for educational and informational purposes only. Market data is end-of-day from third-party providers and is provided “as is”. VilfinTV is not a SEBI-registered investment adviser. Momentum modes describe past relative performance and do not predict future returns. Please do your own research or consult a qualified financial adviser before investing.</p>
+</main>
+
+<footer class="wrap">
+  © <span id="yr"></span> VilfinTV · US &amp; Global ETF Momentum —
+  <a href="https://vilfintv.com/index.html">Multiscreener</a> · <a href="https://vilfintv.com/etf_momentum.html">India ETF Momentum</a> · <a href="https://vilfintv.com/india_mf_screener.html">India MF Screener</a> · <a href="https://vilfintv.com/market_sentiment_score.html">Market Sentiment</a> · <a href="https://vilfintv.com/legal.html">Legal</a> · <a href="https://vilfintv.com/privacy.html">Privacy</a> · <a href="https://vilfintv.com/terms.html">Terms</a>
+</footer>
+
+<div class="tip" id="tip" role="tooltip"></div>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" aria-labelledby="dTitle" role="dialog">
+  <div class="dh"><div><div class="t" id="dTitle"></div><div class="n" id="dName"></div></div><button class="x" id="dClose" type="button" aria-label="Close details">✕</button></div>
+  <div class="db" id="dBody"></div>
+</aside>
+
+<script>
+(() => {
+"use strict";
+const DATA_URL = "data/global_etf.json";
+const ENGINE_MIN_WEEKS = 20, TAIL = 8, NOISE = 1;
+const MODES = {
+  ACC:{name:"Accelerating",g:"▲",cls:"m-acc",col:"var(--acc)"},
+  DEC:{name:"Decelerating",g:"◢",cls:"m-dec",col:"var(--dec)"},
+  REC:{name:"Recovering",g:"◤",cls:"m-rec",col:"var(--rec)"},
+  UND:{name:"Underperforming",g:"▼",cls:"m-und",col:"var(--und)"}
+};
+const BENCH_NAMES = {SPY:"S&P 500",QQQ:"Nasdaq-100",IWM:"Russell 2000",ACWI:"MSCI ACWI",EFA:"Developed ex-US",EEM:"Emerging Markets",AGG:"US Aggregate Bond",GLD:"Gold"};
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------- Theme ---------- */
+const root = document.documentElement;
+try { const t = localStorage.getItem("vf-theme"); if (t) root.dataset.theme = t; } catch(e){}
+$("#themeBtn").onclick = () => {
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+  try { localStorage.setItem("vf-theme", root.dataset.theme); } catch(e){}
+};
+$("#yr").textContent = new Date().getFullYear();
+$("#menuBtn").onclick = () => { const n = $("#siteNav"); n.classList.toggle("open"); $("#menuBtn").setAttribute("aria-expanded", String(n.classList.contains("open"))); };
+
+/* ---------- Momentum engine (identical to the data builder) ---------- */
+function ema(a, n){ const k = 2/(n+1); let p = null; return a.map(v => p = (p === null ? v : p + k*(v-p))); }
+function engine(etfW, benchW){
+  const idx = [];
+  for (let i = 0; i < etfW.length; i++){ const e = etfW[i], b = benchW[i]; if (e != null && b != null && e > 0 && b > 0) idx.push(i); }
+  if (idx.length < ENGINE_MIN_WEEKS) return null;
+  const rs = idx.map(i => 100 * etfW[i] / benchW[i]);
+  const em = ema(rs, 3), ratio = new Array(rs.length).fill(null), mom = new Array(rs.length).fill(null);
+  for (let i = 9; i < rs.length; i++){ let s = 0; for (let j = i-9; j <= i; j++) s += rs[j]; ratio[i] = 100 * em[i] / (s/10); }
+  for (let i = 3; i < rs.length; i++) if (ratio[i] != null && ratio[i-3] != null) mom[i] = 100 + (ratio[i] - ratio[i-3]);
+  const n = rs.length - 1, r = ratio[n], m = mom[n];
+  if (r == null || m == null) return null;
+  const mode = r >= 100 ? (m >= 100 ? "ACC" : "DEC") : (m >= 100 ? "REC" : "UND");
+  const tail = [], modes = [];
+  for (let i = Math.max(0, n - TAIL + 1); i <= n; i++) if (ratio[i] != null && mom[i] != null){
+    tail.push([ratio[i], mom[i]]);
+    modes.push(ratio[i] >= 100 ? (mom[i] >= 100 ? "ACC" : "DEC") : (mom[i] >= 100 ? "REC" : "UND"));
+  }
+  const rel = (a, b) => (n - a >= 0 && n - b >= 0) ? (rs[n-a] / rs[n-b] - 1) * 100 : null;
+  const rel13 = rel(0, 13), rel4 = rel(0, 4), relPrev4 = rel(4, 8);
+  return { ratio:r, mom:m, mode, tail, modes, rel13, relImp: (rel4 != null && relPrev4 != null) ? rel4 - relPrev4 : null };
+}
+
+/* ---------- Formatting ---------- */
+const fmtPct = (v, d=1) => v == null ? '<span class="muted">–</span>' : `<span class="${v>0?"pos":v<0?"neg":""}">${v>0?"+":""}${v.toFixed(d)}%</span>`;
+const fmtNum = (v, d=1) => v == null ? '<span class="muted">–</span>' : v.toFixed(d);
+function fmtUsd(v){ if (v == null) return '<span class="muted">–</span>';
+  const a = Math.abs(v); return "$" + (a>=1e12?(v/1e12).toFixed(2)+"T":a>=1e9?(v/1e9).toFixed(1)+"B":a>=1e6?(v/1e6).toFixed(1)+"M":a>=1e3?(v/1e3).toFixed(0)+"K":v.toFixed(0)); }
+const fmtDate = s => s ? new Date(s + "T00:00:00Z").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"}) : "–";
+const yearsSince = s => s ? (Date.now() - Date.parse(s + "T00:00:00Z")) / 31557600000 : null;
+const badge = m => m ? `<span class="badge ${MODES[m].cls}"><span class="glyph">${MODES[m].g}</span>${MODES[m].name}</span>` : '<span class="badge na">Not classified</span>';
+const confHtml = c => c == null ? '<span class="muted">–</span>' : `<span class="conf">${[1,2,3].map(i=>`<b class="${c>=i+1?"on":""}"></b>`).join("")} ${c>=4?"High":c===3?"Medium":"Low"}</span>`;
+const trendHtml = t => `<span class="trend">${["S","M","L"].map((k,i)=>`<span class="t${t&&t[i]!=null?t[i]:"n"}" title="${["Short","Medium","Long"][i]} term: ${t&&t[i]===1?"positive":t&&t[i]===-1?"negative":"neutral"}">${k}</span>`).join("")}</span>`;
+
+/* ---------- State ---------- */
+const S = { data:null, bench:"SPY", mode:null, q:"", ac:"all", reg:"all", role:"all", iss:"all", trend:"any", liq:0, er:"any", aum:0, age:0, sort:"strength", sortDir:-1, tab:"mom", limit:40, showAll:false, rows:[] };
+const params = new URLSearchParams(location.search);
+if (params.get("bench")) S.bench = params.get("bench").toUpperCase();
+
+/* ---------- Load ---------- */
+async function load(){
+  renderSkeleton();
+  try {
+    const res = await fetch(DATA_URL, {cache:"no-cache"});
+    if (!res.ok) throw new Error(res.status);
+    const d = await res.json();
+    if (!d || !Array.isArray(d.etfs) || !d.etfs.length) throw new Error("empty");
+    S.data = d;
+    d.by = Object.fromEntries(d.etfs.map(e => [e.t, e]));
+    if (!d.by[S.bench]) S.bench = "SPY";
+    $("#bench").value = S.bench;
+    setupFilters(); verifyEngine(); compute(); renderAll(); renderSim();
+  } catch (e) { renderUnavailable(); }
+}
+
+function verifyEngine(){
+  const d = S.data, ref = d.by[d.engineRef || "SPY"];
+  let n = 0, bad = 0;
+  for (const e of d.etfs){ if (!("m" in e)) continue; const g = engine(e.w, ref.w); const m = g ? g.mode : null; n++; if (m !== e.m) bad++; }
+  const a = d.audit || {}, total = (a.passed || 0) + n;
+  $("#stAsOf").textContent = fmtDate(d.asOf);
+  $("#stCount").textContent = d.etfs.length;
+  $("#stAudit").innerHTML = (a.critical || bad)
+    ? `<span class="warn">${bad} engine mismatch${bad===1?"":"es"}</span>`
+    : `<span class="ok">${total.toLocaleString("en-US")} checks passed</span>`;
+}
+
+/* ---------- Compute ---------- */
+function compute(){
+  const b = S.data.by[S.bench];
+  for (const e of S.data.etfs){
+    const g = (e.t === S.bench) ? null : engine(e.w, b.w);
+    e.g = g;
+    if (g){
+      let c = 0;
+      if (g.rel13 != null && (g.rel13 >= 0) === (g.ratio >= 100)) c++;
+      if (g.relImp != null && (g.relImp >= 0) === (g.mom >= 100)) c++;
+      if ((e.adv || 0) >= 10e6) c++;
+      if (Math.abs(g.ratio - 100) >= NOISE || Math.abs(g.mom - 100) >= NOISE) c++;
+      e.conf = c;
+      e.strength = (g.ratio - 100) + 0.5 * (g.mom - 100);
+    } else { e.conf = null; e.strength = null; }
+  }
+}
+
+function passes(e, ignoreMode){
+  if (!ignoreMode && S.mode && (!e.g || e.g.mode !== S.mode)) return false;
+  if (S.ac !== "all" && e.ac !== S.ac) return false;
+  if (S.reg !== "all" && e.reg !== S.reg) return false;
+  if (S.role !== "all" && e.role !== S.role) return false;
+  if (S.iss !== "all" && e.iss !== S.iss) return false;
+  if (S.liq && (e.adv || 0) < S.liq) return false;
+  if (S.er !== "any" && (e.er == null || e.er > +S.er + 1e-9)) return false;
+  if (S.aum && (e.aum || 0) < S.aum) return false;
+  if (S.age && !((yearsSince(e.inc) ?? (e.r && e.r["5y"] != null ? 5 : e.r && e.r["3y"] != null ? 3 : e.r && e.r["1y"] != null ? 1 : 0)) >= S.age)) return false;
+  const t = e.trend || [];
+  if (S.trend === "lpos" && t[2] !== 1) return false;
+  if (S.trend === "all3" && !(t[0] === 1 && t[1] === 1 && t[2] === 1)) return false;
+  if (S.trend === "spos" && t[0] !== 1) return false;
+  if (S.trend === "lneg" && t[2] !== -1) return false;
+  if (S.q){
+    const q = S.q.toLowerCase();
+    if (!(`${e.t} ${e.n} ${e.cat} ${e.iss} ${e.reg} ${e.ac}`.toLowerCase().includes(q))) return false;
+  }
+  return true;
+}
+
+const SORTS = {
+  strength: e => e.strength, ratio: e => e.g && e.g.ratio, mom: e => e.g && e.g.mom,
+  r1w: e => e.r["1w"], r1m: e => e.r["1m"], r3m: e => e.r["3m"], r6m: e => e.r["6m"], rytd: e => e.r.ytd, r1y: e => e.r["1y"], r3y: e => e.r["3y"], r5y: e => e.r["5y"],
+  er: e => e.er, aum: e => e.aum, vol: e => e.vol, mdd: e => e.mdd, beta: e => e.beta, yld: e => e.yld, adv: e => e.adv, conf: e => e.conf, px: e => e.px, t: e => e.t,
+  pos52: e => (e.hi > e.lo ? (e.px - e.lo) / (e.hi - e.lo) : null)
+};
+const ASC_DEFAULT = new Set(["er","vol","t"]);
+function sortRows(rows){
+  const f = SORTS[S.sort] || SORTS.strength, dir = S.sortDir;
+  return rows.sort((a, b) => {
+    const x = f(a), y = f(b);
+    if (x == null && y == null) return a.t.localeCompare(b.t);
+    if (x == null) return 1; if (y == null) return -1;
+    const cmp = typeof x === "string" ? x.localeCompare(y) : x - y;
+    return dir === 1 ? cmp : -cmp;
+  });
+}
+
+/* ---------- Render ---------- */
+function renderAll(){
+  const base = S.data.etfs.filter(e => passes(e, true));
+  const counts = {ACC:0,DEC:0,REC:0,UND:0};
+  base.forEach(e => { if (e.g) counts[e.g.mode]++; });
+  for (const k in counts) $("#c" + k).textContent = counts[k];
+  $$(".mode").forEach(b => b.setAttribute("aria-pressed", String(S.mode === b.dataset.mode)));
+  S.rows = sortRows(base.filter(e => passes(e, false)));
+  $("#listTitle").textContent = S.mode ? MODES[S.mode].name + " ETFs" : "All ETFs";
+  $("#listCount").textContent = `${S.rows.length} of ${S.data.etfs.length} · vs ${BENCH_NAMES[S.bench]}`;
+  $("#mapSub").textContent = `Last ${TAIL} weeks vs ${BENCH_NAMES[S.bench]}`;
+  renderMap(S.rows); renderLeaders(base); renderTable();
+  writeUrl();
+}
+
+function renderSkeleton(){
+  $("#tbl tbody").innerHTML = Array.from({length:8}, () => `<tr><td colspan="9"><div class="skel" style="width:${50+Math.random()*45}%"></div></td></tr>`).join("");
+}
+function renderUnavailable(){
+  $("#stAsOf").textContent = "Update in progress"; $("#stCount").textContent = "–"; $("#stAudit").textContent = "–";
+  $("#tbl thead").innerHTML = ""; $("#more").innerHTML = "";
+  $("#tbl tbody").innerHTML = `<tr><td colspan="9" style="position:static"><div class="empty"><h3>Today’s ETF data is being prepared</h3><p>The latest audited update has not been published yet. Please check back after the US market close, or explore the <a href="https://vilfintv.com/etf_momentum.html">India ETF Momentum</a> page.</p><button class="btn" type="button" onclick="location.reload()">Reload</button></div></td></tr>`;
+  $("#leaders").innerHTML = '<p class="muted" style="padding:16px">Leaders appear once data is available.</p>';
+  $("#map").innerHTML = "";
+}
+
+/* Rotation map */
+function renderMap(rows){
+  const svg = $("#map"), W = 640, H = 460, P = {l:42,r:16,t:16,b:34};
+  const classified = rows.filter(e => e.g);
+  let shown;
+  if (S.showAll) shown = classified;
+  else shown = [...classified].sort((a,b) => Math.abs(b.strength) - Math.abs(a.strength)).slice(0, 14);
+  const tails = S.showAll ? shown.filter(e => S.mode || classified.length <= 14 || e === S.sel) : shown;
+  let ext = 2;
+  for (const e of shown){ const pts = tails.includes(e) ? e.g.tail : [[e.g.ratio, e.g.mom]]; for (const [r,m] of pts) ext = Math.max(ext, Math.abs(r-100), Math.abs(m-100)); }
+  ext = Math.ceil(ext * 1.12 * 2) / 2;
+  const X = r => P.l + (r - (100 - ext)) / (2*ext) * (W - P.l - P.r);
+  const Y = m => P.t + ((100 + ext) - m) / (2*ext) * (H - P.t - P.b);
+  const cx = X(100), cy = Y(100);
+  const q = (x,y,w,h,col,label,ax,ay,anchor) => `<g class="q"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${col}" opacity=".07"/><text x="${ax}" y="${ay}" fill="${col}" text-anchor="${anchor}">${label}</text></g>`;
+  let s = "";
+  s += q(cx, P.t, W-P.r-cx, cy-P.t, "var(--acc)", "Accelerating", W-P.r-8, P.t+18, "end");
+  s += q(P.l, P.t, cx-P.l, cy-P.t, "var(--rec)", "Recovering", P.l+8, P.t+18, "start");
+  s += q(P.l, cy, cx-P.l, H-P.b-cy, "var(--und)", "Underperforming", P.l+8, H-P.b-10, "start");
+  s += q(cx, cy, W-P.r-cx, H-P.b-cy, "var(--dec)", "Decelerating", W-P.r-8, H-P.b-10, "end");
+  s += `<rect x="${P.l}" y="${P.t}" width="${W-P.l-P.r}" height="${H-P.t-P.b}" fill="none" class="ax"/>`;
+  s += `<line class="mid" x1="${cx}" y1="${P.t}" x2="${cx}" y2="${H-P.b}"/><line class="mid" x1="${P.l}" y1="${cy}" x2="${W-P.r}" y2="${cy}"/>`;
+  const step = ext <= 3 ? 1 : ext <= 8 ? 2 : ext <= 20 ? 5 : 10;
+  for (let v = Math.ceil((100-ext)/step)*step; v <= 100+ext; v += step){
+    s += `<text class="tick" x="${X(v)}" y="${H-P.b+16}" text-anchor="middle">${v}</text>`;
+    s += `<text class="tick" x="${P.l-6}" y="${Y(v)+4}" text-anchor="end">${v}</text>`;
+  }
+  s += `<text class="tick" x="${(W+P.l)/2}" y="${H-4}" text-anchor="middle">RS-Ratio</text>`;
+  s += `<text class="tick" transform="translate(11 ${(H-P.b+P.t)/2}) rotate(-90)" text-anchor="middle">RS-Momentum</text>`;
+  if (!shown.length) s += `<text class="tick" x="${W/2}" y="${H/2-20}" text-anchor="middle">No classified ETFs match your filters</text>`;
+  for (const e of shown) if (tails.includes(e) && e.g.tail.length > 1){
+    const col = MODES[e.g.mode].col;
+    s += `<polyline points="${e.g.tail.map(([r,m]) => X(r).toFixed(1)+","+Y(m).toFixed(1)).join(" ")}" fill="none" stroke="${col}" stroke-width="1.6" opacity=".55" stroke-linejoin="round"/>`;
+    s += e.g.tail.slice(0,-1).map(([r,m]) => `<circle cx="${X(r).toFixed(1)}" cy="${Y(m).toFixed(1)}" r="2.2" fill="${col}" opacity=".5"/>`).join("");
+  }
+  const placed = []; let labels = "";
+  for (const e of shown){
+    const col = MODES[e.g.mode].col, x = X(e.g.ratio), y = Y(e.g.mom), big = tails.includes(e);
+    const w = e.t.length * 7.5 + 4, lx = x + 9, ly = y + 4;
+    const free = big && !placed.some(p => lx < p[0] + p[2] && p[0] < lx + w && Math.abs(ly - p[1]) < 13);
+    if (free) placed.push([lx, ly, w]);
+    s += `<circle class="dot" data-t="${esc(e.t)}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${big?6:4.5}" fill="${col}" tabindex="0" role="button" aria-label="${esc(e.t)} ${MODES[e.g.mode].name}"/>`;
+    if (free) labels += `<text class="lab" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}">${esc(e.t)}</text>`;
+  }
+  svg.innerHTML = s + labels;
+}
+
+function renderLeaders(base){
+  const pick = (mode, n) => base.filter(e => e.g && e.g.mode === mode).sort((a,b) => b.strength - a.strength).slice(0, n);
+  const row = e => `<button class="lrow" data-t="${esc(e.t)}"><span class="tk">${esc(e.t)}</span><span class="nm">${esc(e.cat)} · ${esc(e.n)}</span><span class="rt">${fmtPct(e.r["3m"])}<span class="muted" style="font-weight:400"> 3M</span></span></button>`;
+  const grp = (mode, n, empty) => { const l = pick(mode, n); return `<div class="lgrp"><h3><span class="badge ${MODES[mode].cls}"><span class="glyph">${MODES[mode].g}</span>${MODES[mode].name}</span></h3>${l.length ? l.map(row).join("") : `<p class="muted" style="font-size:13px;margin:4px 6px">${empty}</p>`}</div>`; };
+  $("#leaders").innerHTML = grp("ACC", 5, "None right now.") + grp("REC", 4, "None right now.");
+}
+
+/* Table */
+const COLS = {
+  mom: [
+    {k:"etf", h:"ETF"}, {k:"mode", h:"Mode", c:1, s:"strength"}, {k:"ratio", h:"RS-Ratio", s:"ratio"}, {k:"momv", h:"RS-Mom", s:"mom"},
+    {k:"conf", h:"Confidence", s:"conf", c:1}, {k:"trend", h:"Trend S·M·L", c:1}, {k:"r1m", h:"1M", s:"r1m"}, {k:"r3m", h:"3M", s:"r3m"}, {k:"adv", h:"Traded/day", s:"adv"}
+  ],
+  ret: [
+    {k:"etf", h:"ETF"}, {k:"px", h:"Price", s:"px"}, {k:"r1d", h:"1D"}, {k:"r1w", h:"1W", s:"r1w"}, {k:"r1m", h:"1M", s:"r1m"}, {k:"r3m", h:"3M", s:"r3m"},
+    {k:"r6m", h:"6M", s:"r6m"}, {k:"rytd", h:"YTD", s:"rytd"}, {k:"r1y", h:"1Y", s:"r1y"}, {k:"r3y", h:"3Y CAGR", s:"r3y"}, {k:"r5y", h:"5Y CAGR", s:"r5y"}
+  ],
+  risk: [
+    {k:"etf", h:"ETF"}, {k:"er", h:"Expense", s:"er"}, {k:"aum", h:"Fund size", s:"aum"}, {k:"vol", h:"Volatility 1Y", s:"vol"}, {k:"mdd", h:"Max fall 3Y", s:"mdd"},
+    {k:"beta", h:"Beta", s:"beta"}, {k:"yld", h:"Yield", s:"yld"}, {k:"pos52", h:"52W range", s:"pos52", c:1}, {k:"inc", h:"Since"}
+  ]
+};
+function cell(e, k){
+  const r = e.r || {};
+  switch (k){
+    case "etf": return `<div class="etf"><span class="tk">${esc(e.t)}</span><span class="nm">${esc(e.n)}</span></div>`;
+    case "mode": return badge(e.g && e.g.mode);
+    case "ratio": return fmtNum(e.g && e.g.ratio, 2);
+    case "momv": return fmtNum(e.g && e.g.mom, 2);
+    case "conf": return confHtml(e.conf);
+    case "trend": return trendHtml(e.trend);
+    case "adv": return fmtUsd(e.adv);
+    case "px": return e.px == null ? "–" : "$" + e.px.toFixed(2);
+    case "r1d": return fmtPct(r["1d"], 2);
+    case "r1w": return fmtPct(r["1w"]); case "r1m": return fmtPct(r["1m"]); case "r3m": return fmtPct(r["3m"]); case "r6m": return fmtPct(r["6m"]);
+    case "rytd": return fmtPct(r.ytd); case "r1y": return fmtPct(r["1y"]); case "r3y": return fmtPct(r["3y"]); case "r5y": return fmtPct(r["5y"]);
+    case "er": return e.er == null ? '<span class="muted">–</span>' : e.er.toFixed(2) + "%";
+    case "aum": return fmtUsd(e.aum);
+    case "vol": return e.vol == null ? '<span class="muted">–</span>' : e.vol.toFixed(1) + "%";
+    case "mdd": return fmtPct(e.mdd);
+    case "beta": return fmtNum(e.beta, 2);
+    case "yld": return e.yld == null ? '<span class="muted">–</span>' : e.yld.toFixed(2) + "%";
+    case "pos52": { const p = SORTS.pos52(e); if (p == null) return "–"; const pct = Math.max(0, Math.min(1, p))*100;
+      return `<span title="Low $${e.lo} · High $${e.hi}" style="display:inline-block;width:72px;height:6px;border-radius:3px;background:var(--line);position:relative;vertical-align:middle"><i style="position:absolute;left:calc(${pct.toFixed(0)}% - 4px);top:-2px;width:8px;height:10px;border-radius:3px;background:var(--accent)"></i></span>`; }
+    case "inc": return e.inc ? String(e.inc).slice(0,4) : '<span class="muted">–</span>';
+  }
+  return "";
+}
+function renderTable(){
+  const cols = COLS[S.tab];
+  $("#tbl thead").innerHTML = "<tr>" + cols.map(c => {
+    const sorted = c.s && c.s === S.sort; const dir = S.sortDir === -1 ? "descending" : "ascending";
+    return `<th class="${c.c?"c":""}" ${c.s?`data-s="${c.s}" tabindex="0"`:""} ${sorted?`aria-sort="${dir}"`:""} scope="col">${c.h}</th>`;
+  }).join("") + "</tr>";
+  const rows = S.rows.slice(0, S.limit);
+  $("#tbl tbody").innerHTML = rows.length
+    ? rows.map(e => `<tr data-t="${esc(e.t)}" tabindex="0">${cols.map(c => `<td class="${c.c?"c":""}">${cell(e, c.k)}</td>`).join("")}</tr>`).join("")
+    : `<tr><td colspan="${cols.length}" style="position:static"><div class="empty"><h3>No ETFs match these filters</h3><p>Widen a filter or clear the search to see more funds.</p><button class="btn" type="button" id="emptyReset">Reset filters</button></div></td></tr>`;
+  const left = S.rows.length - rows.length;
+  $("#more").innerHTML = left > 0 ? `<span>Showing ${rows.length} of ${S.rows.length}</span><button class="btn" id="moreBtn" type="button">Show ${Math.min(40,left)} more</button>` : (S.rows.length ? `<span>Showing all ${S.rows.length}</span>` : "");
+  const er = $("#emptyReset"); if (er) er.onclick = resetFilters;
+  const mb = $("#moreBtn"); if (mb) mb.onclick = () => { S.limit += 40; renderTable(); };
+}
+
+/* ---------- Detail drawer ---------- */
+function openDrawer(t){
+  const e = S.data.by[t]; if (!e) return;
+  S.sel = e;
+  const g = e.g, b = S.data.by[S.bench], r = e.r || {};
+  $("#dTitle").textContent = e.t;
+  $("#dName").textContent = `${e.n} · ${e.iss}`;
+  const trail = g ? `<div class="trail">${g.modes.map(m => `<span class="${MODES[m].cls}" title="${MODES[m].name}">${MODES[m].g}</span>`).join("")}</div><div class="trail-l"><span>${g.modes.length} weeks ago</span><span>This week</span></div>` : '<p class="muted">Needs at least 20 weeks of history to classify.</p>';
+  const stat = (l, v) => `<div><span>${l}</span><b>${v}</b></div>`;
+  const tchk = (i, lab) => { const v = e.trend && e.trend[i]; return `<li><b>${v===1?'<span class="pos">▲</span>':v===-1?'<span class="neg">▼</span>':'<span class="muted">●</span>'}</b><span>${lab}: ${v===1?"positive":v===-1?"negative":"neutral"}</span></li>`; };
+  $("#dBody").innerHTML = `
+    <div class="pxrow"><span class="p">${e.px!=null?"$"+e.px.toFixed(2):"–"}</span><span class="c">${fmtPct(r["1d"],2)} today</span><span class="muted" style="font-size:12.5px">Close ${fmtDate(e.asOf)}${e.stale?" · not traded recently":""}</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${badge(g&&g.mode)} ${confHtml(e.conf)} <span class="tag">${esc(e.role)}</span><span class="tag">${esc(e.cat)}</span></div>
+    <div class="sect">Performance vs ${esc(BENCH_NAMES[S.bench])}, last ${S.data.weeks.length} weeks</div>
+    <svg id="dchart" viewBox="0 0 520 200" role="img" aria-label="Price compared with benchmark"></svg>
+    <div class="legend" style="padding:0"><span><i style="background:var(--accent)"></i>${esc(e.t)}</span><span><i style="background:var(--ink-3)"></i>${esc(S.bench)}</span></div>
+    <div class="sect">Mode over the last ${TAIL} weeks</div>${trail}
+    ${g?`<div class="stats" style="margin-top:12px">${stat("RS-Ratio", g.ratio.toFixed(2))}${stat("RS-Momentum", g.mom.toFixed(2))}${stat("Relative 13W", fmtPct(g.rel13))}</div>`:""}
+    <div class="sect">Returns</div>
+    <div class="stats">${stat("1 month",fmtPct(r["1m"]))}${stat("3 months",fmtPct(r["3m"]))}${stat("6 months",fmtPct(r["6m"]))}${stat("YTD",fmtPct(r.ytd))}${stat("1 year",fmtPct(r["1y"]))}${stat("3Y CAGR",fmtPct(r["3y"]))}</div>
+    <div class="sect">Risk, cost &amp; liquidity</div>
+    <div class="stats">${stat("Expense ratio",e.er!=null?e.er.toFixed(2)+"%":"–")}${stat("Fund size",fmtUsd(e.aum))}${stat("Traded/day",fmtUsd(e.adv))}${stat("Volatility 1Y",e.vol!=null?e.vol.toFixed(1)+"%":"–")}${stat("Max fall 3Y",fmtPct(e.mdd))}${stat("Beta vs S&P 500",fmtNum(e.beta,2))}${stat("52W low",e.lo!=null?"$"+e.lo.toFixed(2):"–")}${stat("52W high",e.hi!=null?"$"+e.hi.toFixed(2):"–")}${stat("Yield",e.yld!=null?e.yld.toFixed(2)+"%":"–")}</div>
+    <div class="sect">Trend</div>
+    <ul class="chk">${tchk(0,"Short term (10-week average, 13-week return)")}${tchk(1,"Medium term (26-week average, 26-week return)")}${tchk(2,"Long term (52-week average rising, 1-year return)")}</ul>
+    <div class="sect">Fund facts</div>
+    <div class="stats">${stat("Region",esc(e.reg))}${stat("Asset class",esc(e.ac))}${stat("Listed since",e.inc?fmtDate(e.inc):"–")}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
+      <a class="btn primary" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(e.t)}" target="_blank" rel="noopener">Open full chart</a>
+      <a class="btn" href="#invest" id="dInvest">Ways to invest</a>
+    </div>`;
+  drawChart(e, b);
+  $("#dInvest").onclick = () => closeDrawer();
+  $("#drawer").classList.add("on"); $("#scrim").classList.add("on"); $("#drawer").setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+  $("#dClose").focus();
+  history.replaceState(null, "", setParam("etf", e.t));
+  if (S.showAll) renderMap(S.rows);
+}
+function closeDrawer(){
+  $("#drawer").classList.remove("on"); $("#scrim").classList.remove("on"); $("#drawer").setAttribute("aria-hidden","true");
+  document.body.style.overflow = ""; S.sel = null; history.replaceState(null, "", setParam("etf", null));
+}
+function drawChart(e, b){
+  const W = 520, H = 200, P = {l:38,r:10,t:10,b:22}, weeks = S.data.weeks;
+  let i0 = 0; while (i0 < e.w.length && (e.w[i0] == null || b.w[i0] == null)) i0++;
+  const svg = $("#dchart"); if (i0 >= e.w.length - 1){ svg.innerHTML = ""; return; }
+  const a = e.w.slice(i0).map(v => v == null ? null : v / e.w[i0] * 100), c = b.w.slice(i0).map(v => v == null ? null : v / b.w[i0] * 100);
+  const all = [...a, ...c].filter(v => v != null); let lo = Math.min(...all), hi = Math.max(...all); const pad = (hi-lo)*0.08 || 1; lo -= pad; hi += pad;
+  const X = i => P.l + i/(a.length-1)*(W-P.l-P.r), Y = v => P.t + (hi - v)/(hi - lo)*(H-P.t-P.b);
+  const path = arr => arr.map((v,i) => v == null ? "" : `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).filter(Boolean).join(" ");
+  let s = "";
+  for (let k = 0; k <= 3; k++){ const v = lo + (hi-lo)*k/3; s += `<line class="gl" x1="${P.l}" x2="${W-P.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${P.l-5}" y="${Y(v)+4}" text-anchor="end">${(v-100).toFixed(0)}%</text>`; }
+  s += `<text x="${P.l}" y="${H-5}">${fmtDate(weeks[i0])}</text><text x="${W-P.r}" y="${H-5}" text-anchor="end">${fmtDate(weeks[weeks.length-1])}</text>`;
+  s += `<polyline points="${path(c)}" fill="none" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  s += `<polyline points="${path(a)}" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"/>`;
+  svg.innerHTML = s;
+}
+
+/* ---------- Tooltip on map ---------- */
+const tip = $("#tip");
+$("#map").addEventListener("mousemove", ev => {
+  const d = ev.target.closest(".dot"); if (!d){ tip.style.opacity = 0; return; }
+  const e = S.data.by[d.dataset.t];
+  tip.innerHTML = `<b>${esc(e.t)}</b> · ${MODES[e.g.mode].name}<br>${esc(e.n)}<br>RS-Ratio ${e.g.ratio.toFixed(2)} · RS-Mom ${e.g.mom.toFixed(2)}`;
+  tip.style.left = Math.min(ev.clientX + 14, innerWidth - 250) + "px"; tip.style.top = (ev.clientY + 14) + "px"; tip.style.opacity = 1;
+});
+$("#map").addEventListener("mouseleave", () => tip.style.opacity = 0);
+
+/* ---------- Filters ---------- */
+function setupFilters(){
+  const d = S.data, uniq = k => [...new Set(d.etfs.map(e => e[k]).filter(Boolean))];
+  const acOrder = ["Equity","Bond","Commodity","Real Estate","Digital Assets"];
+  const acs = uniq("ac").sort((a,b) => acOrder.indexOf(a) - acOrder.indexOf(b));
+  $("#acChips").innerHTML = `<button class="chip" data-ac="all" aria-pressed="true">All assets</button>` + acs.map(a => `<button class="chip" data-ac="${esc(a)}" aria-pressed="false">${esc(a)}</button>`).join("");
+  const fill = (sel, vals) => { $(sel).innerHTML = $(sel).options[0].outerHTML + vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join(""); };
+  const regOrder = ["US","Global","Developed ex-US","Europe","Asia-Pacific","Americas","Emerging"];
+  fill("#fReg", uniq("reg").sort((a,b) => regOrder.indexOf(a) - regOrder.indexOf(b)));
+  const roleOrder = ["Core","Factor","Sector","Thematic","Country","Bond","Commodity","Digital"];
+  fill("#fRole", uniq("role").sort((a,b) => roleOrder.indexOf(a) - roleOrder.indexOf(b)));
+  fill("#fIss", uniq("iss").sort());
+  readUrl();
+}
+function resetFilters(){
+  Object.assign(S, {mode:null, q:"", ac:"all", reg:"all", role:"all", iss:"all", trend:"any", liq:0, er:"any", aum:0, age:0, sort:"strength", sortDir:-1, limit:40});
+  syncControls(); renderAll();
+}
+function syncControls(){
+  $("#q").value = S.q; $("#qClear").style.display = S.q ? "block" : "none";
+  $$("#acChips .chip").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.ac === S.ac)));
+  $("#fReg").value = S.reg; $("#fRole").value = S.role; $("#fIss").value = S.iss; $("#fTrend").value = S.trend;
+  $("#fLiq").value = String(S.liq || 0) === "0" ? "0" : $("#fLiq").value; $("#fEr").value = S.er; $("#fSort").value = S.sort;
+  if (!S.liq) $("#fLiq").value = "0"; if (!S.aum) $("#fAum").value = "0"; if (!S.age) $("#fAge").value = "0";
+}
+function setParam(k, v){ const p = new URLSearchParams(location.search); v == null ? p.delete(k) : p.set(k, v); const s = p.toString(); return location.pathname + (s ? "?" + s : "") + location.hash; }
+function writeUrl(){
+  const p = new URLSearchParams(location.search);
+  S.bench !== "SPY" ? p.set("bench", S.bench) : p.delete("bench");
+  S.mode ? p.set("mode", S.mode.toLowerCase()) : p.delete("mode");
+  S.ac !== "all" ? p.set("asset", S.ac) : p.delete("asset");
+  S.q ? p.set("q", S.q) : p.delete("q");
+  const s = p.toString(); history.replaceState(null, "", location.pathname + (s ? "?" + s : "") + location.hash);
+}
+function readUrl(){
+  const m = (params.get("mode") || "").toUpperCase(); if (MODES[m]) S.mode = m;
+  if (params.get("asset")) S.ac = params.get("asset");
+  if (params.get("q")) S.q = params.get("q");
+  syncControls();
+}
+
+/* ---------- Events ---------- */
+let qt;
+$("#q").addEventListener("input", ev => { clearTimeout(qt); qt = setTimeout(() => { S.q = ev.target.value.trim(); S.limit = 40; $("#qClear").style.display = S.q ? "block" : "none"; if (S.data) renderAll(); }, 120); });
+$("#qClear").onclick = () => { S.q = ""; $("#q").value = ""; $("#qClear").style.display = "none"; if (S.data) renderAll(); $("#q").focus(); };
+document.addEventListener("keydown", ev => {
+  if (ev.key === "/" && document.activeElement.tagName !== "INPUT"){ ev.preventDefault(); $("#q").focus(); }
+  if (ev.key === "Escape" && $("#drawer").classList.contains("on")) closeDrawer();
+  if (ev.key === "Enter" && ev.target.matches && ev.target.matches("tbody tr, .dot")) openDrawer(ev.target.dataset.t);
+  if (ev.key === "Enter" && ev.target.matches && ev.target.matches("th[data-s]")) ev.target.click();
+});
+$("#bench").onchange = ev => { S.bench = ev.target.value; if (S.data){ compute(); renderAll(); } };
+$("#acChips").addEventListener("click", ev => { const c = ev.target.closest(".chip"); if (!c) return; S.ac = c.dataset.ac; S.limit = 40; syncControls(); renderAll(); });
+$$(".mode").forEach(b => b.onclick = () => { if (!S.data) return; S.mode = S.mode === b.dataset.mode ? null : b.dataset.mode; S.limit = 40; renderAll(); });
+const bindSel = (id, key, num) => $(id).onchange = ev => { S[key] = num ? +ev.target.value : ev.target.value; S.limit = 40; if (S.data) renderAll(); };
+bindSel("#fReg","reg"); bindSel("#fRole","role"); bindSel("#fIss","iss"); bindSel("#fTrend","trend");
+bindSel("#fLiq","liq",1); bindSel("#fEr","er"); bindSel("#fAum","aum",1); bindSel("#fAge","age",1);
+$("#fSort").onchange = ev => { S.sort = ev.target.value; S.sortDir = ASC_DEFAULT.has(S.sort) ? 1 : -1; if (S.data) renderAll(); };
+$("#fReset").onclick = resetFilters;
+$("#fBtn").onclick = () => { const f = $("#filters"); f.classList.toggle("open"); $("#fBtn").setAttribute("aria-expanded", String(f.classList.contains("open"))); };
+$("#showAll").onchange = ev => { S.showAll = ev.target.checked; if (S.data) renderMap(S.rows); };
+$$("#screener .tab").forEach(t => t.onclick = () => { S.tab = t.dataset.tab; $$("#screener .tab").forEach(x => x.setAttribute("aria-selected", String(x === t))); if (S.data) renderTable(); });
+$("#tbl thead").addEventListener("click", ev => {
+  const th = ev.target.closest("th[data-s]"); if (!th) return;
+  const k = th.dataset.s;
+  if (S.sort === k) S.sortDir *= -1; else { S.sort = k; S.sortDir = ASC_DEFAULT.has(k) ? 1 : -1; }
+  $("#fSort").value = [...$("#fSort").options].some(o => o.value === k) ? k : $("#fSort").value;
+  S.rows = sortRows(S.rows); renderTable();
+});
+$("#tbl tbody").addEventListener("click", ev => { const tr = ev.target.closest("tr[data-t]"); if (tr) openDrawer(tr.dataset.t); });
+$("#map").addEventListener("click", ev => { const d = ev.target.closest(".dot"); if (d) openDrawer(d.dataset.t); });
+$("#leaders").addEventListener("click", ev => { const r = ev.target.closest(".lrow"); if (r) openDrawer(r.dataset.t); });
+$("#scrim").onclick = closeDrawer; $("#dClose").onclick = closeDrawer;
+$$(".routes .tab").forEach(t => t.onclick = () => {
+  $$(".routes .tab").forEach(x => x.setAttribute("aria-selected", String(x === t)));
+  $$(".rpanel").forEach(p => p.classList.toggle("on", p.id === "r-" + t.dataset.route));
+});
+
+/* Share */
+(() => {
+  const url = "https://vilfintv.com/global_etf_momentum.html", txt = "US & Global ETF Momentum on VilfinTV — see which ETFs are Accelerating, Recovering or fading:";
+  const u = encodeURIComponent(url), tx = encodeURIComponent(txt);
+  const links = [["WhatsApp",`https://api.whatsapp.com/send?text=${tx}%20${u}`],["Telegram",`https://t.me/share/url?url=${u}&text=${tx}`],["Facebook",`https://www.facebook.com/sharer/sharer.php?u=${u}`],["X (Twitter)",`https://twitter.com/intent/tweet?text=${tx}&url=${u}`],["LinkedIn",`https://www.linkedin.com/sharing/share-offsite/?url=${u}`],["Email",`mailto:?subject=${encodeURIComponent("US & Global ETF Momentum — VilfinTV")}&body=${tx}%20${u}`]];
+  $("#shareBtns").innerHTML = links.map(([n,h]) => `<a class="btn" href="${h}" target="_blank" rel="noopener">${n}</a>`).join("") + `<button class="btn" type="button" id="copyLink">Copy link</button>`;
+  $("#copyLink").onclick = async () => { try { await navigator.clipboard.writeText(url); $("#copyLink").textContent = "Link copied"; } catch(e){ $("#copyLink").textContent = url; } };
+})();
+
+/* ================= Portfolio Simulator — Global ETF ================= */
+const SIM = { h:"h10", risk:"b", amt:500, freq:12, res:"res", frac:false, tab:"mix" };
+const ALLOC = { // equity, bond (aggregate), short (short Treasuries), gold, cash (T-bills)
+  h1:  { c:{cash:100}, b:{cash:100}, a:{cash:100} },
+  h3:  { c:{cash:60, short:40}, b:{cash:40, short:40, eq:20}, a:{cash:30, short:30, eq:40} },
+  h5:  { c:{eq:35, bond:45, gold:10, cash:10}, b:{eq:55, bond:30, gold:10, cash:5}, a:{eq:70, bond:20, gold:10} },
+  h10: { c:{eq:50, bond:35, gold:10, cash:5}, b:{eq:70, bond:20, gold:10}, a:{eq:85, bond:5, gold:10} },
+  h15: { c:{eq:60, bond:30, gold:10}, b:{eq:80, bond:10, gold:10}, a:{eq:90, gold:10} }
+};
+const EQSPLIT = {
+  c:{us_core:65, us_small:5, intl:22, em:8},
+  b:{us_core:55, us_small:10, intl:20, em:10, factor:5},
+  a:{us_core:50, us_small:12, intl:18, em:12, factor:8}
+};
+const SLOTS = {
+  us_core: {label:"US large & total market", grp:"eq", cands:["VOO","IVV","VTI","ITOT","SCHB","SPY"], cap:0.10, tol:2.5},
+  us_small:{label:"US small & mid caps", grp:"eq", cands:["IJR","VB","IJH","VO","IWM","MDY"], cap:0.25, tol:null},
+  intl:    {label:"Developed markets ex-US", grp:"eq", cands:["IEFA","VEA","EFA"], cap:0.35, tol:3},
+  em:      {label:"Emerging markets", grp:"eq", cands:["IEMG","VWO","EEM"], cap:0.75, tol:4},
+  factor:  {label:"Factor satellite", grp:"eq", cands:["MTUM","QUAL","USMV","VTV","VUG","SCHG","SCHD","DGRO","COWZ"], cap:0.60, tol:null, momentum:true},
+  bond:    {label:"US investment-grade bonds", grp:"bond", cands:["AGG","BND"], cap:0.10, tol:1},
+  short:   {label:"Short Treasuries", grp:"bond", cands:["SHY"], cap:0.20, tol:null},
+  gold:    {label:"Gold", grp:"gold", cands:["GLDM","IAU","GLD"], cap:0.45, tol:1.5},
+  cash:    {label:"Treasury bills", grp:"cash", cands:["SGOV","BIL"], cap:0.20, tol:0.5}
+};
+const GRP = { eq:{n:"Equity",c:"linear-gradient(90deg,#0A1F44,#5B8DEF)"}, bond:{n:"Bonds",c:"#0E8C8C"}, gold:{n:"Gold",c:"#C9971C"}, cash:{n:"Treasury bills",c:"#8A94A8"} };
+const SLOT_SHADE = { us_core:"#0A1F44", us_small:"#13306a", intl:"#1A56DB", em:"#5B8DEF", factor:"#9DB8F5", bond:"#0E8C8C", short:"#4FB3B3", gold:"#C9971C", cash:"#8A94A8" };
+const median = a => { const v = a.filter(x => x != null).sort((x,y) => x-y); if (!v.length) return null; const m = v.length >> 1; return v.length % 2 ? v[m] : (v[m-1]+v[m])/2; };
+const pctRank = (arr, v, higherBetter) => { const xs = arr.filter(x => x != null); if (xs.length < 2 || v == null) return 0.5; const below = xs.filter(x => higherBetter ? x < v : x > v).length; return below / (xs.length - 1); };
+function confOf(e, g){ if (!g) return 0; let c = 0;
+  if (g.rel13 != null && (g.rel13 >= 0) === (g.ratio >= 100)) c++;
+  if (g.relImp != null && (g.relImp >= 0) === (g.mom >= 100)) c++;
+  if ((e.adv||0) >= 10e6) c++;
+  if (Math.abs(g.ratio-100) >= NOISE || Math.abs(g.mom-100) >= NOISE) c++;
+  return c; }
+
+function evalSlot(key){
+  const sl = SLOTS[key], by = S.data.by, spy = by.SPY;
+  const list = sl.cands.map(t => by[t]).filter(Boolean);
+  const r1yMed = median(list.map(e => e.r && e.r["1y"])), volMed = median(list.map(e => e.vol));
+  const rows = list.map(e => {
+    const g = sl.momentum ? engine(e.w, spy.w) : null, conf = sl.momentum ? confOf(e, g) : null;
+    const weeks = (e.w||[]).filter(v => v != null).length;
+    const ck = [
+      ["In today’s audited data", !e.stale, e.stale ? "Not traded recently" : fmtDate(e.asOf)],
+      ["3+ years of returns", e.r && e.r["3y"] != null, e.r && e.r["3y"] != null ? "Yes" : "No"],
+      ["Traded ≥ $20M a day", (e.adv||0) >= 20e6, fmtUsd(e.adv).replace(/<[^>]+>/g,"")],
+      ["Fund size ≥ $1B", (e.aum||0) >= 1e9, fmtUsd(e.aum).replace(/<[^>]+>/g,"")],
+      [`Expense ratio ≤ ${sl.cap.toFixed(2)}%`, e.er != null && e.er <= sl.cap + 1e-9, e.er != null ? e.er.toFixed(2)+"%" : "–"]
+    ];
+    if (sl.tol != null && list.length > 1) { const d = e.r && e.r["1y"] != null && r1yMed != null ? e.r["1y"] - r1yMed : null;
+      ck.push([`1Y return within ±${sl.tol} pts of peers`, d != null && Math.abs(d) <= sl.tol, d != null ? (d>0?"+":"")+d.toFixed(2)+" pts" : "–"]); }
+    if (!sl.momentum && list.length > 1) ck.push(["Volatility ≤ 1.3× peers", e.vol != null && volMed != null && e.vol <= 1.3*volMed + 1e-9, e.vol != null ? e.vol.toFixed(1)+"%" : "–"]);
+    ck.push(["52+ weeks of clean prices", weeks >= 52, weeks + " weeks"]);
+    if (sl.momentum) ck.push(["Accelerating vs S&P 500, confidence Medium+", !!g && g.mode === "ACC" && conf >= 3, g ? MODES[g.mode].name + (g.mode === "ACC" ? (conf >= 4 ? ", High" : conf === 3 ? ", Medium" : ", Low") : "") : "Not classified"]);
+    return { e, g, ck, pass: ck.every(c => c[1]), passed: ck.filter(c => c[1]).length };
+  });
+  const surv = rows.filter(r => r.pass);
+  const yrs = r => r.e.r["5y"] != null ? 5 : r.e.r["3y"] != null ? 3 : 1;
+  for (const r of surv){
+    const cost = pctRank(surv.map(x => x.e.er), r.e.er, false), liq = pctRank(surv.map(x => x.e.adv), r.e.adv, true),
+          size = pctRank(surv.map(x => x.e.aum), r.e.aum, true), age = pctRank(surv.map(yrs), yrs(r), true);
+    const cons = sl.momentum ? pctRank(surv.map(x => x.g.ratio + 0.5*x.g.mom), r.g.ratio + 0.5*r.g.mom, true)
+                             : pctRank(surv.map(x => Math.abs((x.e.r["1y"]??0) - (r1yMed??0))), Math.abs((r.e.r["1y"]??0) - (r1yMed??0)), false);
+    r.score = Math.round(100 * (0.35*cost + 0.25*liq + 0.20*size + 0.10*age + 0.10*cons));
+  }
+  surv.sort((a,b) => b.score - a.score || (a.e.er??9) - (b.e.er??9));
+  return { key, sl, rows, pick: surv[0] || null };
+}
+
+function buildPlan(){
+  const base = { ...ALLOC[SIM.h][SIM.risk] }, notes = [], longGoal = ["h5","h10","h15"].includes(SIM.h);
+  const spy = S.data.by.SPY;
+  if (longGoal && base.eq && spy && spy.trend && spy.trend[2] === -1){
+    const s = Math.min(10, base.eq); base.eq -= s; base.bond = (base.bond||0) + s;
+    notes.push(["w", `Market-condition overlay is on: the S&P 500’s long-term trend is negative, so ${s} points moved from equity into bonds. They move back automatically when the trend recovers.`]);
+  }
+  const w = {};
+  if (base.eq){
+    const split = SIM.h === "h3" ? {us_core:100} : EQSPLIT[SIM.risk];
+    for (const k in split) w[k] = base.eq * split[k] / 100;
+    if (!longGoal) delete w.factor;
+  }
+  for (const k of ["bond","short","gold","cash"]) if (base[k]) w[k] = base[k];
+  const res = {};
+  for (const k of Object.keys(w)) res[k] = evalSlot(k);
+  // redistribute empty slots
+  for (const k of Object.keys(w)){
+    if (res[k].pick || !w[k]) continue;
+    const to = SLOTS[k].grp === "eq" ? "us_core" : "cash";
+    if (k === to) continue;
+    if (!res[to]) res[to] = evalSlot(to);
+    w[to] = (w[to]||0) + w[k];
+    notes.push([k === "factor" ? "" : "w", k === "factor"
+      ? `No factor ETF is Accelerating against the S&P 500 with enough confidence today, so the factor share (${w[k].toFixed(1)}%) stays in US large caps. It is filled again when a factor ETF qualifies.`
+      : `No ETF passed every check for ${SLOTS[k].label.toLowerCase()} today; its ${w[k].toFixed(1)}% moved to ${SLOTS[to].label.toLowerCase()}.`]);
+    w[k] = 0;
+  }
+  const rows = Object.keys(w).filter(k => w[k] > 0).map(k => {
+    const r = res[k], pick = r.pick || r.rows.slice().sort((a,b) => b.passed - a.passed)[0];
+    if (!r.pick && pick) notes.push(["w", `${SLOTS[k].label}: no ETF passed every check today, so the best available (${pick.e.t}) is shown. Review it before buying.`]);
+    return { k, w:w[k], e: pick && pick.e, r };
+  }).filter(x => x.e).sort((a,b) => Object.keys(SLOTS).indexOf(a.k) - Object.keys(SLOTS).indexOf(b.k));
+  const tot = rows.reduce((s,x) => s + x.w, 0);
+  rows.forEach(x => x.w = x.w / tot * 100);
+  return { rows, notes, res };
+}
+
+function mixHistory(rows){
+  const spy = S.data.by.SPY, n = S.data.weeks.length;
+  let i0 = 0; while (i0 < n && !(rows.every(x => x.e.w[i0] != null) && spy.w[i0] != null)) i0++;
+  if (n - i0 < 13) return null;
+  const mix = [100], ref = [100], rets = [];
+  for (let i = i0 + 1; i < n; i++){
+    let r = 0; for (const x of rows) r += x.w/100 * (x.e.w[i] / x.e.w[i-1] - 1);
+    rets.push(r); mix.push(mix[mix.length-1] * (1 + r)); ref.push(ref[ref.length-1] * (spy.w[i] / spy.w[i-1]));
+  }
+  const mean = rets.reduce((a,b) => a+b, 0) / rets.length;
+  const sd = Math.sqrt(rets.reduce((a,b) => a + (b-mean)**2, 0) / (rets.length - 1));
+  const dd = arr => { let pk = arr[0], m = 0; for (const v of arr){ pk = Math.max(pk, v); m = Math.min(m, v/pk - 1); } return m*100; };
+  const sret = []; for (let i = i0+1; i < n; i++) sret.push(spy.w[i]/spy.w[i-1]-1);
+  const smean = sret.reduce((a,b)=>a+b,0)/sret.length, ssd = Math.sqrt(sret.reduce((a,b)=>a+(b-smean)**2,0)/(sret.length-1));
+  return { i0, mix, ref, weeks: rets.length, ret: (mix[mix.length-1]/100-1)*100, sret:(ref[ref.length-1]/100-1)*100,
+    vol: sd*Math.sqrt(52)*100, svol: ssd*Math.sqrt(52)*100, mdd: dd(mix), smdd: dd(ref), best: Math.max(...rets)*100, worst: Math.min(...rets)*100 };
+}
+
+function residenceNotes(annual){
+  const a = annual ? `about US$${Math.round(annual).toLocaleString("en-US")} a year` : "a one-time amount";
+  if (SIM.res === "res") return [
+    `Your plan sends ${a} abroad under the Liberalised Remittance Scheme (limit US$250,000 per financial year). Remittances above ₹10 lakh in a financial year attract 20% TCS, adjustable against your income tax.`,
+    "Buy through a GIFT City (NSE IX) account or Dhan; Zerodha’s international route is coming soon. Submit Form W-8BEN so dividends are withheld at the 25% treaty rate.",
+    "US-listed ETFs above US$60,000 in total can face US estate tax for non-US persons — see the FAQ before your holdings grow past that."];
+  if (SIM.res === "nri") return [
+    `Your plan invests ${a}. NRIs can buy these ETFs through Interactive Brokers, funded from an overseas or NRE account.`,
+    "Your country of residence taxes the gains; submit Form W-8BEN so US dividend withholding follows its tax treaty.",
+    "Holdings above US$60,000 can face US estate tax for non-US persons — consider this as the portfolio grows."];
+  return [
+    `Your plan invests ${a}. Inside NISA, US-listed ETFs use the growth investment quota of ¥2.4 million a year — convert at today’s exchange rate to check your plan fits.`,
+    "Gains and dividends are free of Japanese tax inside NISA, but the 10% US withholding on dividends cannot be reclaimed there.",
+    "Treasury-bill and bond ETFs pay most of their return as dividends, so they lose more to withholding inside NISA — some investors hold them outside NISA or use yen bond funds instead."];
+}
+
+function renderSim(){
+  if (!S.data || $("#simApp").hidden) return;
+  const P = buildPlan(), amt = Math.max(0, +SIM.amt || 0), annual = SIM.freq ? amt * SIM.freq : 0;
+  const body = $("#simBody");
+  if (!P.rows.length){ body.innerHTML = '<div class="empty"><h3>No model portfolio today</h3><p>None of the ETFs passed their checks in today’s data. Please try again after the next update.</p></div>'; return; }
+  const er = P.rows.reduce((s,x) => s + x.w/100 * (x.e.er ?? 0), 0);
+  if (SIM.tab === "mix"){
+    const grp = {}; P.rows.forEach(x => { const g = SLOTS[x.k].grp; grp[g] = (grp[g]||0) + x.w; });
+    const per = SIM.freq === 0 ? "one-time" : ({12:"month",52:"week",4:"quarter",1:"year"})[SIM.freq];
+    body.innerHTML = `
+      <div class="alloc" role="img" aria-label="Allocation">${P.rows.map(x => `<i style="width:${x.w}%;background:${SLOT_SHADE[x.k]}" title="${esc(SLOTS[x.k].label)} ${x.w.toFixed(1)}%"></i>`).join("")}</div>
+      <div class="alegend">${Object.keys(GRP).filter(g => grp[g]).map(g => `<span><i style="background:${GRP[g].c}"></i>${GRP[g].n} ${grp[g].toFixed(0)}%</span>`).join("")}<span>Weighted expense ratio ${er.toFixed(3)}%</span></div>
+      <div class="tablewrap" style="max-height:none"><table class="simtbl"><thead><tr><th style="cursor:default">Slot &amp; ETF</th><th style="cursor:default">Weight</th><th style="cursor:default">Amount</th><th style="cursor:default">Price</th><th style="cursor:default">${SIM.frac ? "Shares" : "Whole shares"}</th><th style="cursor:default">Expense</th><th class="c" style="cursor:default">Mode vs S&amp;P 500</th></tr></thead><tbody>
+      ${P.rows.map(x => {
+        const a = amt * x.w / 100, px = x.e.px || 0, g = engine(x.e.w, S.data.by.SPY.w);
+        let units;
+        if (!px) units = "–";
+        else if (SIM.frac) units = (a/px).toFixed(3);
+        else if (a >= px) units = Math.floor(a/px) + (a - Math.floor(a/px)*px > 1 ? `<div class="slotlab">$${(a - Math.floor(a/px)*px).toFixed(0)} left for next time</div>` : "");
+        else units = `1 <div class="slotlab">every ${Math.ceil(px/a)} purchases</div>`;
+        return `<tr data-t="${esc(x.e.t)}"><td><div class="etf"><span class="slotlab">${esc(SLOTS[x.k].label)}</span><span class="tk">${esc(x.e.t)}</span><span class="nm">${esc(x.e.n)}</span></div></td><td><b>${x.w.toFixed(1)}%</b></td><td>$${a.toFixed(2)}</td><td>${px ? "$"+px.toFixed(2) : "–"}</td><td>${units}</td><td>${x.e.er != null ? x.e.er.toFixed(2)+"%" : "–"}</td><td class="c">${x.e.t === "SPY" ? '<span class="muted">Benchmark</span>' : badge(g && g.mode)}</td></tr>`;
+      }).join("")}</tbody></table></div>
+      <p class="muted" style="font-size:12.5px;margin:8px 0 0">Amounts per ${per} purchase of US$${amt.toLocaleString("en-US")}. Prices are the last audited close (${fmtDate(S.data.asOf)}); confirm the live price before ordering. Tap an ETF for its details.</p>
+      <div class="notes">${P.notes.map(([c,t]) => `<div class="${c}">${esc(t)}</div>`).join("")}${residenceNotes(annual).map(t => `<div>${esc(t)}</div>`).join("")}</div>
+      <div class="sect">Placing your orders</div>
+      <ol class="steps">
+        <li>Fund your account in US dollars before your investment day; check the currency-conversion rate and fee.</li>
+        <li>Buy during US market hours — 7:00 pm to 1:30 am IST (8:00 pm to 2:30 am in the northern winter), or 10:30 pm to 5:00 am JST (11:30 pm to 6:00 am in winter).</li>
+        <li>Use a <b>limit order</b> at or just above the current ask for each ETF; avoid the first and last 15 minutes of the session.</li>
+        <li>Buy every ETF in the plan in the same session so the mix stays on target; rebalance once a year with new money.</li>
+      </ol>`;
+  } else if (SIM.tab === "risk"){
+    const H = mixHistory(P.rows);
+    if (!H){ body.innerHTML = '<div class="empty"><h3>Not enough shared history yet</h3><p>At least 13 weeks of prices common to every ETF in the plan are needed.</p></div>'; return; }
+    const st = (l, v, s) => `<div><span>${l}</span><b>${v}</b>${s?`<span style="margin-top:2px">${s}</span>`:""}</div>`;
+    body.innerHTML = `
+      <p style="margin:0 0 12px;color:var(--ink-2);font-size:14px">How this exact mix moved over the last ${H.weeks} weeks of audited prices, rebalanced each week, compared with the S&amp;P 500. This is a replay of the past, not a forecast.</p>
+      <div class="stats">${st("Return", fmtPct(H.ret), "S&P 500 " + fmtPct(H.sret).replace(/<[^>]+>/g,""))}${st("Volatility (annualised)", H.vol.toFixed(1)+"%", "S&P 500 " + H.svol.toFixed(1)+"%")}${st("Largest fall", fmtPct(H.mdd), "S&P 500 " + H.smdd.toFixed(1)+"%")}${st("Best week", fmtPct(H.best))}${st("Worst week", fmtPct(H.worst))}${st("Weighted expense", er.toFixed(3)+"%")}</div>
+      <div class="sect">Growth of $100</div>
+      <svg id="simchart" viewBox="0 0 560 210" role="img" aria-label="Model mix compared with S&P 500"></svg>
+      <div class="legend" style="padding:0"><span><i style="background:var(--accent)"></i>Model mix</span><span><i style="background:var(--ink-3)"></i>S&amp;P 500</span></div>
+      <div class="notes"><div class="w">Expect red years. A mix with this much equity can fall 10–20% in an ordinary year and far more in a crisis; one short window says little about the next.</div></div>`;
+    drawSimChart(H);
+  } else {
+    body.innerHTML = `<p style="margin:0 0 12px;color:var(--ink-2);font-size:14px">Every ETF in a slot faces the same checks; the highlighted row is today’s choice. Ranking: cost 35% · liquidity 25% · size 20% · track record 10% · consistency with peers 10%.</p>` +
+      P.rows.map(x => { const r = x.r, heads = r.rows[0] ? r.rows[0].ck.map(c => c[0]) : [];
+        return `<div class="slotcard"><h4>${esc(SLOTS[x.k].label)} <span class="tag">${x.w.toFixed(1)}%</span>${r.pick ? `<span class="badge m-acc">${esc(r.pick.e.t)} chosen</span>` : '<span class="badge m-dec">Best available</span>'}</h4>
+          <div class="tablewrap" style="max-height:none"><table class="ck"><thead><tr><th style="cursor:default">ETF</th>${heads.map(h => `<th style="cursor:default;white-space:normal;min-width:92px;font-weight:600">${esc(h)}</th>`).join("")}<th style="cursor:default">Score</th></tr></thead><tbody>
+          ${r.rows.map(row => `<tr class="${r.pick && row === r.pick ? "pick" : ""}"><td><b>${esc(row.e.t)}</b></td>${row.ck.map(c => `<td title="${esc(c[2])}"><span class="${c[1]?"y":"n"}">${c[1]?"✓":"✕"}</span><div class="slotlab">${esc(c[2])}</div></td>`).join("")}<td>${row.pass ? row.score : '<span class="muted">–</span>'}</td></tr>`).join("")}
+          </tbody></table></div></div>`; }).join("");
+  }
+}
+function drawSimChart(H){
+  const W = 560, Ht = 210, P = {l:40,r:10,t:10,b:22}, all = [...H.mix, ...H.ref];
+  let lo = Math.min(...all), hi = Math.max(...all); const pad = (hi-lo)*0.08 || 1; lo -= pad; hi += pad;
+  const X = i => P.l + i/(H.mix.length-1)*(W-P.l-P.r), Y = v => P.t + (hi-v)/(hi-lo)*(Ht-P.t-P.b);
+  const line = a => a.map((v,i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+  let s = ""; for (let k = 0; k <= 3; k++){ const v = lo + (hi-lo)*k/3; s += `<line class="gl" x1="${P.l}" x2="${W-P.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${P.l-5}" y="${Y(v)+4}" text-anchor="end">$${v.toFixed(0)}</text>`; }
+  const wk = S.data.weeks; s += `<text x="${P.l}" y="${Ht-5}">${fmtDate(wk[H.i0])}</text><text x="${W-P.r}" y="${Ht-5}" text-anchor="end">${fmtDate(wk[wk.length-1])}</text>`;
+  s += `<polyline points="${line(H.ref)}" fill="none" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="4 3"/><polyline points="${line(H.mix)}" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/>`;
+  $("#simchart").innerHTML = s;
+}
+function openSim(){ $("#simGate").hidden = true; $("#simApp").hidden = false; renderSim(); }
+try { if (localStorage.getItem("vf-gsim-ok") === "1"){ $("#simAccept").checked = true; $("#simOpen").disabled = false; } } catch(e){}
+$("#simAccept").onchange = ev => { $("#simOpen").disabled = !ev.target.checked; };
+$("#simOpen").onclick = () => { try { localStorage.setItem("vf-gsim-ok","1"); } catch(e){} openSim(); };
+$("#sH").onchange = ev => { SIM.h = ev.target.value; renderSim(); };
+$("#sR").addEventListener("click", ev => { const b = ev.target.closest("button"); if (!b) return; SIM.risk = b.dataset.v; $$("#sR button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); renderSim(); });
+let at; $("#sA").addEventListener("input", ev => { clearTimeout(at); at = setTimeout(() => { SIM.amt = Math.min(1e7, Math.max(0, +ev.target.value || 0)); renderSim(); }, 150); });
+$("#sF").onchange = ev => { SIM.freq = +ev.target.value; renderSim(); };
+$("#sRes").onchange = ev => { SIM.res = ev.target.value; renderSim(); };
+$("#sFrac").onchange = ev => { SIM.frac = ev.target.checked; renderSim(); };
+$$("#sim .tab").forEach(t => t.onclick = () => { SIM.tab = t.dataset.st; $$("#sim .tab").forEach(x => x.setAttribute("aria-selected", String(x === t))); renderSim(); });
+$("#simBody").addEventListener("click", ev => { const tr = ev.target.closest("tr[data-t]"); if (tr) openDrawer(tr.dataset.t); });
+
+load().then(() => { try { if (localStorage.getItem("vf-gsim-ok") === "1" && location.hash === "#sim") openSim(); } catch(e){} const t = params.get("etf"); if (t && S.data && S.data.by[t.toUpperCase()]) openDrawer(t.toUpperCase()); });
+})();
+</script>
+</body>
+</html>
