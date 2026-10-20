@@ -29,16 +29,18 @@ name: Decode Daily Market Report
 # Requires repository secrets (already present, same as upload_story_images.yml):
 #   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
 
+# RETIRED on 20 Oct 2026 (owner's request): the "Decoded: Daily Market Analysis & Sector Report"
+# stories are no longer published — the last one is the 19 Oct 2026 report. The schedule is removed
+# and the job refuses to publish; earlier reports stay in content.json and their share pages.
 on:
-  schedule:
-    - cron: '0 23 * * 0-5'  # 23:00 UTC Sun-Fri == 08:00 JST Mon-Sat (lands ~10:00 JST)
-  workflow_dispatch:          # manual trigger for testing / watchdog dispatch
+  workflow_dispatch:          # kept only so the workflow file stays valid; the job below is disabled
 
 permissions:
   contents: write             # required for git push via GITHUB_TOKEN
 
 jobs:
   decode-and-publish:
+    if: ${{ false }}          # retired — never publishes, even when dispatched by hand
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
