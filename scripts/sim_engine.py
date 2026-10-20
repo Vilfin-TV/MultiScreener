@@ -1298,7 +1298,8 @@ class Engine:
 
     def topup_due(self, aid: str):
         """(n, date, amount) of the refill an account is owed, or None: once dip buys leave less than the minimum in the
-        reserve, it is refilled to the full reserve on the first trading day of the following month (same fund / ETF)."""
+        reserve, a fresh ₹DIP["reserve"] (always the same amount) is added on the first trading day of the following month
+        (same fund / ETF)."""
         evs = self.store["events"]
         rs = sorted([e for e in evs if e["k"] == "reserve" and e["acct"] == aid], key=lambda e: e.get("n", 0))
         if not rs:
@@ -1309,7 +1310,7 @@ class Engine:
         if left >= DIP["min"] or last is None:
             return None
         t = D(last["T"])
-        return len(rs), next_trading(date(t.year + (t.month == 12), t.month % 12 + 1, 1)), r2(DIP["reserve"] - left)
+        return len(rs), next_trading(date(t.year + (t.month == 12), t.month % 12 + 1, 1)), float(DIP["reserve"])
 
     def place_topups(self, limit: date):
         placed = False
@@ -1326,7 +1327,7 @@ class Engine:
             ro = next(o for o in self.store["events"] if o["k"] == "order" and o.get("iid") == f"{a['id']}|reserve")
             append(self.store, "order", oid=f"{rid}|liquid", iid=rid, acct=a["id"], T=T.isoformat(), side="buy",
                    name=ro.get("name"), slot="reserve", label="Dip reserve refill (liquid)", asset="Debt", amount=float(amt),
-                   note=f"reserve used up — refilled to ₹{DIP['reserve']:,}", ref=plan.get("ref"), **fld)
+                   note=f"reserve used up — topped up with ₹{DIP['reserve']:,}", ref=plan.get("ref"), **fld)
             placed = True
         return placed
 
@@ -1372,7 +1373,7 @@ class Engine:
         sigs = self.dip_signals()
         rd = self.reserve_date().isoformat()
         for d in days:
-            if d <= prev or d < rd:                    # nothing to decide before the reserve exists
+            if d <= prev or d < rd or d <= CFG["start"]:   # nothing before the reserve exists — never on or before the start
                 continue
             T = next_trading(D(d) + timedelta(days=1))
             if T > self.today:
