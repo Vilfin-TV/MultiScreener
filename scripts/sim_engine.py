@@ -378,7 +378,7 @@ def plan_snapshot() -> tuple[str, dict]:
             for seg, x in segs.items():
                 c = blk["cands"][x["c"]]
                 dip[prod][pid][seg] = {key: c[key], "slot": c["slot"], "name": c.get("name"), "fundOk": bool(c["fundOk"]),
-                                       "fail": [k[0] for k in c["checks"][:18] if not k[1]]}
+                                       "fail": [k[0] for k in c["checks"][:-1] if not k[1]]}
         dip[prod + "Reserve"] = blk.get("reserve")
     if dip["mf"] or dip["etf"]:
         snap["dip"] = dip
@@ -1458,6 +1458,8 @@ class Engine:
         self.settle()                    # dip sells of the liquid reserve
         self.fund_review_buys()
         self.settle()                    # dip buys with the proceeds
+        if self.place_topups(self.today):  # a reserve used up by today's dip buys is topped up when due
+            self.settle()
         self.review()
         self.harvest()
         self.settle()                    # review / harvest sells

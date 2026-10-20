@@ -142,8 +142,9 @@ def charges(value, side, res, equity):
 
 def dip_walk(cl, second):
     """Independent re-implementation of the dip signal (sim_config dipRule): returns {day: state} for signal days."""
-    lb, ep, out = DIP["lookback"], 0, {}
+    lb, ep, out, prev = DIP["lookback"], 0, {}, 0
     tiers = sorted(DIP["tiers"], key=lambda t: -t[0])
+    amt_of = {t: max(DIP["min"], min(DIP["max"], a)) for t, a in tiers}
     for i in range(lb - 1, len(cl)):
         d, c = cl[i]
         win = cl[i - lb + 1:i + 1]
@@ -153,7 +154,10 @@ def dip_walk(cl, second):
         mv = (c / cl[i - 1][1] - 1) * 100
         w2 = [second[x] for x, _ in win if second.get(x)]
         f2 = (1 - second[d] / max(w2)) * 100 if second.get(d) and len(w2) >= 0.9 * lb else None
-        t, amt = next(((t, max(DIP["min"], min(DIP["max"], a))) for t, a in tiers if fall >= t), (0, 0))
+        raw = next((t for t, _ in tiers if fall >= t), 0)
+        t = min(raw, prev)                                   # the level must hold for two closes
+        prev = raw
+        amt = amt_of.get(t, 0)
         if fall < DIP["resetPct"]:
             ep = 0
         if t > ep and f2 is not None and abs(f2 - fall) <= DIP["confirmPts"] and mv >= DIP["crashDayPct"] and fall <= DIP["maxFallPct"]:
