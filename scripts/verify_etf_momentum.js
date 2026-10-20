@@ -193,23 +193,24 @@ if (fs.existsSync(smFile)) {
   }
   const eqOf = pid => (SMJ.plans[pid] || {}).mix ? (SMJ.plans[pid].mix.Equity || 0) + (SMJ.plans[pid].mix.Global || 0) : 0;
   for (const hz of ['h3', 'h5', 'h7', 'h10']) if (!(eqOf(hz + 'c') <= eqOf(hz + 'b') && eqOf(hz + 'b') <= eqOf(hz + 'a') + 5)) fail(`smart: ${hz} equity not rising with risk`);
-  // market-dip lump sums: 7 trigger checks per segment, 19 ETF checks per candidate, 26 per plan entry, tier amounts
+  // market-dip lump sums: 8 trigger + 13 segment market checks, 29 checks per candidate, 37 per plan entry, tier amounts
   const dp = SMJ.dip || {}, rule = dp.rule || {}, tiers = (rule.tiers || []).slice().sort((a, b) => b[0] - a[0]);
   if (!dp.segments || !tiers.length) fail('smart: dip block missing');
   for (const [k, sg] of Object.entries(dp.segments || {})) {
     const raw = (tiers.find(x => sg.fall >= x[0]) || [0])[0], t = tiers.find(x => x[0] === sg.tier);
     const want = sg.tier && t ? [t[0], Math.max(rule.min, Math.min(rule.max, t[1]))] : [0, 0];
     if (sg.tier !== want[0] || sg.amount !== want[1] || sg.raw !== raw || sg.tier > raw) fail(`smart: dip ${k} level/amount ${sg.tier}/${sg.amount} (today ${raw})`);
-    if ((sg.checks || []).length !== 8 || (sg.mkt || []).length !== 9 || (sg.signal && sg.checks.some(c => !c[1]))) fail(`smart: dip ${k} trigger / market checks`);
+    if ((sg.checks || []).length !== 8 || (sg.mkt || []).length !== 13 || (sg.signal && sg.checks.some(c => !c[1]))) fail(`smart: dip ${k} trigger / market checks`);
   }
   const dc = dp.cands || [];
-  dc.forEach((c, i) => { if (c.checks.length !== 22 || c.fundOk !== c.checks.slice(0, -1).every(x => x[1]) || !etfBy[c.sym]) fail(`smart: dip candidate ${i} ${c.sym}`); });
+  dc.forEach((c, i) => { if (c.checks.length !== 29 || c.fundOk !== c.checks.slice(0, -1).every(x => x[1]) || !etfBy[c.sym]) fail(`smart: dip candidate ${i} ${c.sym}`); });
+  Object.entries(dp.alts || {}).forEach(([k, a]) => { if (a.checks.length !== 29 || a.fundOk !== false || !a.info || a.checks[14][1] || !etfBy[a.sym] || a.seg !== k) fail(`smart: dip info-only ${k}`); });
   if (!dp.reserve || !etfBy[dp.reserve.sym]) fail('smart: dip reserve ETF unknown');
   for (const [pid, ents] of Object.entries(dp.plans || {})) {
     const ids = new Set(((SMJ.plans[pid] || {}).slots || []).map(s => s.id));
     for (const [seg, x] of Object.entries(ents)) {
       const c = dc[x.c], all = ((dp.segments[seg] || {}).checks || []).concat(c ? c.checks : []);
-      if (!c || c.seg !== seg || !ids.has(c.slot) || (SMJ.slots[c.slot] || {}).sym !== c.sym || x.n !== 30 || all.length !== 30 ||
+      if (!c || c.seg !== seg || !ids.has(c.slot) || (SMJ.slots[c.slot] || {}).sym !== c.sym || x.n !== 37 || all.length !== 37 ||
           x.passed !== all.filter(y => y[1]).length || x.ok !== all.every(y => y[1])) fail(`smart: dip ${pid} ${seg} entry`);
     }
   }

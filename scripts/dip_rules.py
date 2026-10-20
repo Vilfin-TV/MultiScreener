@@ -89,7 +89,13 @@ def trend(closes: list[tuple[str, float]]) -> dict:
         return {}
     c = [x[1] for x in closes]
     hi = max(c[-250:])
-    return {"d5": round((c[-1] / c[-6] - 1) * 100, 2), "dd52": round((1 - c[-1] / hi) * 100, 2), "n52": min(250, len(c))}
+    out = {"d5": round((c[-1] / c[-6] - 1) * 100, 2), "dd52": round((1 - c[-1] / hi) * 100, 2), "n52": min(250, len(c))}
+    if len(c) >= 11:
+        out["down10"] = sum(1 for i in range(len(c) - 10, len(c)) if c[i] < c[i - 1])
+    if len(c) >= 220:
+        sma = lambda k: sum(c[len(c) - k - 200:len(c) - k]) / 200        # noqa: E731
+        out["sma200"], out["sma200Prev"] = round(sma(0), 4), round(sma(20), 4)
+    return out
 
 
 def segment_states(syms_from: str | None = None) -> dict:
@@ -113,6 +119,19 @@ def segment_states(syms_from: str | None = None) -> dict:
 
 def _chk(label, ok, detail):
     return [label, bool(ok), detail]
+
+
+N_TRIG, N_MKT, N_FUND = 8, 14, 15       # checks 1–8 trigger · 9–22 market & valuation · 23–37 fund / ETF
+N_ALL = N_TRIG + N_MKT + N_FUND
+
+
+def _trend_checks(st: dict) -> list:
+    """Market checks 20–21 for every segment: no falling streak, 200-day average still rising."""
+    dn, a, b = st.get("down10"), st.get("sma200"), st.get("sma200Prev")
+    return [_chk("No falling streak (last 10 closes)", dn is not None and dn <= V["down10Max"],
+                 f"{dn} of the last 10 closes were lower than the day before (limit {V['down10Max']})" if dn is not None else "not enough closes"),
+            _chk("200-day average still rising", a is not None and b is not None and a >= b,
+                 f"200-day average {a:,.2f} vs {b:,.2f} twenty sessions ago ({(a / b - 1) * 100:+.2f}%)" if a and b else "not enough closes (needs 220)")]
 
 
 def trigger_checks(st: dict, data_date: str) -> list:
@@ -143,6 +162,10 @@ def valuation_checks(seg: str, macro: dict, gate: dict | None, metal_choice: str
     s = RULE["segments"][seg]
     st = st or {}
     val, n50 = (macro.get("valuation") or {}), (macro.get("valuation") or {}).get("n50") or {}
+    gr = macro.get("growth") or {}
+    gs, gthr = gr.get("score"), gr.get("thr") or 4
+    glob = macro.get("global") or {}
+    vix = (glob.get("vix") or {}).get("last")
     g9 = _chk("Model not pausing this segment", (gate or {}).get("now") not in ("pause", "zero", "0"),
               f"valuation gate: {(gate or {}).get('now', 'not gated')}")
     n50pct = n50.get("pePct")
@@ -165,16 +188,27 @@ def valuation_checks(seg: str, macro: dict, gate: dict | None, metal_choice: str
                 _chk("Earnings yield vs 10-year G-Sec", ey is not None and g10 is not None and ey - g10 >= s["eyGapMin"],
                      f"{ey:.2f}% vs {g10:.2f}% (gap {ey - g10:+.2f} pt, limit {s['eyGapMin']:+.1f})" if ey and g10 else "not on file"),
                 _chk("Earnings not collapsing", eg.get("g1") is not None and eg["g1"] >= -15, f"12-month earnings growth {eg['g1']:+.1f}% (limit −15%)" if eg.get("g1") is not None else "no earnings history"),
-                _chk(*extra), c16, c17, c18]
+                _chk(*extra), c16, c17, c18,
+                _chk("Economy & earnings checks not negative", gs is not None and gs > -gthr,
+                     f"score {gs:+d} of {len(gr.get('checks') or [])} checks (headwind at −{gthr})" if gs is not None else "not on file"),
+                *_trend_checks(st),
+                _chk(f"Market fear not extreme (VIX ≤ {V['vixMax']:g})", vix is not None and vix <= V["vixMax"], f"global volatility index {vix:.1f}" if vix is not None else "not on file")]
     gl = ((macro.get("global") or {}).get(s["metal"]) or {})
     dx = ((macro.get("global") or {}).get("dxy") or {}).get("c3m")
+    inr = (glob.get("usdinr") or {}).get("c3m")
+    u10 = (glob.get("us10y") or {}).get("c3m")
     return [g9,
             _chk("Price not at a 2-year extreme", gl.get("pct2y") is not None and gl["pct2y"] < V["metalPctMax"], f"{round((gl.get('pct2y') or 0) * 100)}th percentile of 2 years (limit {round(V['metalPctMax'] * 100)}th)" if gl.get("pct2y") is not None else "not on file"),
             _chk("Not stretched above its 200-day average", gl.get("vs200") is not None and gl["vs200"] <= V["metalVs200Max"], f"{gl['vs200']:+.1f}% vs 200-day average (limit +{V['metalVs200Max']:g}%)" if gl.get("vs200") is not None else "not on file"),
             _chk("Model's metal choice", metal_choice == s["metal"], f"model holds {metal_choice or 'no metal'}"),
             _chk("12-month trend not broken", gl.get("c12m") is not None and gl["c12m"] > -25, f"12-month change {gl['c12m']:+.1f}% (limit −25%)" if gl.get("c12m") is not None else "not on file"),
             _chk("US dollar not surging", dx is not None and dx <= V["dxy3mMax"], f"dollar index {dx:+.1f}% over 3 months (limit +{V['dxy3mMax']:g}%)" if dx is not None else "not on file"),
-            _chk(*extra), c16, c17, c18]
+            _chk(*extra), c16, c17, c18,
+            _chk(f"Rupee not surging (USD/INR 3 months ≥ {V['inr3mMin']:+g}%)", inr is not None and inr >= V["inr3mMin"],
+                 f"USD/INR {inr:+.1f}% over 3 months — a fast-rising rupee lowers the rupee price of {s['metal']}" if inr is not None else "not on file"),
+            *_trend_checks(st),
+            _chk(f"US 10-year yield not jumping (≤ +{V['us10y3mMax']:g} pt in 3 months)", u10 is not None and u10 <= V["us10y3mMax"],
+                 f"US 10-year yield {u10:+.2f} pt over 3 months" if u10 is not None else "not on file")]
 
 
 def _med(xs):
@@ -183,8 +217,11 @@ def _med(xs):
 
 
 def mf_fund_checks(slot: dict, f: dict, peers: list[dict], exit_rule, tier_amt: int) -> list:
-    """Checks 19–30 for a mutual fund (screener row `f`, same-category `peers`)."""
+    """Checks 23–37 for a mutual fund (screener row `f`, same-category `peers`)."""
     ter_m, r3_m, mdd_m = _med([p.get("ter") for p in peers]), _med([p.get("r3y") for p in peers]), _med([p.get("mdd") for p in peers])
+    r1_m, sh_m = _med([p.get("r1y") for p in peers]), _med([p.get("sharpe") for p in peers])
+    nav_last = max((p.get("navDate") or "" for p in peers), default="") or f.get("navDate") or ""
+    nav_age = (date.fromisoformat(nav_last) - date.fromisoformat(f["navDate"])).days if f.get("navDate") and nav_last else None
     sc = slot.get("checks") or []
     er = exit_rule
     long_load = er.get("days", 0) > 365 or any(p > 1 for _, p in er.get("tiers", []))
@@ -200,14 +237,22 @@ def mf_fund_checks(slot: dict, f: dict, peers: list[dict], exit_rule, tier_amt: 
         _chk("3-year return near or above category median", f.get("r3y") is not None and r3_m is not None and f["r3y"] >= r3_m - 1, f"{f.get('r3y')}% a year vs median {r3_m}%"),
         _chk("Worst fall no deeper than category median − 5 pt", f.get("mdd") is not None and mdd_m is not None and f["mdd"] >= mdd_m - 5, f"{f.get('mdd')}% vs median {mdd_m}%"),
         _chk("Status not lagging", f.get("status") not in ("Underperforming", "Out of track"), f.get("status") or "not rated"),
+        _chk("1-year return near or above category median", f.get("r1y") is not None and r1_m is not None and f["r1y"] >= r1_m - 2,
+             f"{f.get('r1y')}% vs median {r1_m}% (within 2 pt)"),
+        _chk("Risk-adjusted return (Sharpe) near category median", f.get("sharpe") is not None and sh_m is not None and f["sharpe"] >= sh_m - 0.1,
+             f"Sharpe {f.get('sharpe')} vs median {sh_m} (within 0.1)"),
+        _chk("NAV up to date", nav_age is not None and nav_age <= 5, f"NAV of {f.get('navDate')}" + (f" ({nav_age} days behind its category)" if nav_age else "")),
         _chk("Dip amount within ₹5,000–₹20,000", tier_amt > 0 and RULE["min"] <= tier_amt <= RULE["max"], f"₹{tier_amt:,} at the current fall" if tier_amt else "no dip tier reached"),
     ]
 
 
-def etf_fund_checks(slot: dict, e: dict, ex: dict, bars_v: list, cap: float, tier_amt: int) -> list:
-    """Checks 19–30 for an ETF (`e` = momentum row, `ex` = analytics row, `bars_v` = last daily volumes)."""
+def etf_fund_checks(slot: dict, e: dict, ex: dict, bars_v: list, cap: float, tier_amt: int, te_med: dict | None = None) -> list:
+    """Checks 23–37 for an ETF (`e` = momentum row, `ex` = analytics row, `bars_v` = last daily volumes)."""
     sc = slot.get("checks") or []
     x = e.get("x") or {}
+    te = (ex or {}).get("te") or {}
+    tm = (te_med or {}).get(te.get("idx")) or te.get("te") or 0
+    nav_age = (date.fromisoformat(e["d"]) - date.fromisoformat(x["navDate"])).days if x.get("navDate") and e.get("d") else None
     rt = (ex or {}).get("rt") or {}
     first = e.get("first")
     yrs = (date.fromisoformat(e["d"]) - date.fromisoformat(first)).days / 365.25 if first and e.get("d") else 0
@@ -224,12 +269,18 @@ def etf_fund_checks(slot: dict, e: dict, ex: dict, bars_v: list, cap: float, tie
         _chk("Track record ≥ 1 year", yrs >= 1, f"{yrs:.1f} years listed"),
         _chk("Rating ≥ 3★", (rt.get("st") or 0) >= 3, f"{rt.get('st') or '–'}★"),
         _chk("One unit costs ≤ ₹5,000", (e.get("p") or 0) <= RULE["min"], f"₹{e.get('p') or 0:,.2f} a unit"),
+        _chk("Tracking error ≤ 1.25× same-index ETFs", te.get("te") is None or te["te"] <= 1.25 * max(tm, 0.5),
+             f"{te['te']:.2f}% vs median {tm:.2f}% of {te.get('n', 0)} ETFs on the same index" if te.get("te") is not None
+             else "not measured against peers — the model's own tracking check applies (check 24)"),
+        _chk("1-year tracking difference within ±1%", te.get("td1") is None or abs(te["td1"]) <= 1,
+             f"{te['td1']:+.2f}% a year vs same-index ETFs" if te.get("td1") is not None else "not measured against peers — the model's own tracking check applies (check 24)"),
+        _chk("NAV up to date", nav_age is not None and nav_age <= 5, f"NAV of {x.get('navDate')} for the {e.get('d')} close" if x.get("navDate") else "NAV not on file"),
         _chk("Dip amount within ₹5,000–₹20,000", tier_amt > 0 and RULE["min"] <= tier_amt <= RULE["max"], f"₹{tier_amt:,} at the current fall" if tier_amt else "no dip tier reached"),
     ]
 
 
 def verdict(checks: list) -> dict:
-    """All 30 → buy today; checks 9–29 → the market and the fund are fit for a dip buy (what the agents read)."""
+    """All 37 → buy today; checks 9–36 → the market and the fund are fit for a dip buy (what the agents read)."""
     return {"n": len(checks), "passed": sum(1 for c in checks if c[1]), "ok": all(c[1] for c in checks),
             "fundOk": all(c[1] for c in checks[8:-1]), "fail": [c[0] for c in checks if not c[1]]}
 
@@ -253,7 +304,7 @@ def _segments(asof: str, macro: dict | None = None, gates: dict | None = None, m
     for k, st in segs.items():
         mk = valuation_checks(k, macro or {}, (gates or {}).get(gate_of(k)) if gate_of else None, metal_choice,
                               ("—", True, ""), st)
-        out[k] = {**st, "checks": trigger_checks(st, asof), "mkt": mk[:6] + mk[7:]}
+        out[k] = {**st, "checks": trigger_checks(st, asof), "mkt": mk[:6] + mk[7:]}     # 13: check 15 is the fund's
     return out
 
 
@@ -264,7 +315,25 @@ def _alt_first(chk_fund: list, seg: str, metal_choice: str, what: str, n: int, w
 
 
 def _alt_rank(chk: list) -> int:
-    return sum(1 for c in chk[12:-1] if c[1])
+    return sum(1 for c in chk[N_MKT + 2:-1] if c[1])
+
+
+def _info_alts(alts: dict, cands: list, pmap: dict) -> None:
+    """Every segment a plan may lack gets the model's most-used fund / ETF for it, shown for information only:
+    check 23 ("model's choice") fails and `fundOk` is false, so it can never be bought."""
+    for seg in {s for m in pmap.values() for s in m}:
+        if seg in alts:
+            continue
+        cnt = {}
+        for m in pmap.values():
+            if seg in m:
+                cnt[m[seg]["c"]] = cnt.get(m[seg]["c"], 0) + 1
+        ci = sorted(cnt, key=lambda i: (-cnt[i], i))[0]
+        c = cands[ci]
+        ch = [list(x) for x in c["checks"]]
+        ch[N_MKT] = _chk("Model's choice for this segment", False,
+                         f"not part of the selected model portfolio — the model's {c.get('name')} is shown for information only")
+        alts[seg] = {**c, "checks": ch, "fundOk": False, "info": True}
 
 
 def _add(cands: list, seen: dict, c: dict) -> int:
@@ -283,7 +352,7 @@ def _plan_entry(segs: dict, seg: str, ci: int, cand: dict) -> dict:
 
 def rule_public() -> dict:
     keep = ("lookback", "resetPct", "tiers", "min", "max", "confirmPts", "crashDayPct", "maxFallPct", "reserve")
-    return {k: RULE[k] for k in keep} | {"start": SIM_START, "persons": RULE["persons"], "segments": {k: {"label": s["label"], "index": s["index"]} for k, s in RULE["segments"].items()}}
+    return {k: RULE[k] for k in keep} | {"n": {"trig": N_TRIG, "mkt": N_MKT, "fund": N_FUND, "all": N_ALL}, "start": SIM_START, "persons": RULE["persons"], "segments": {k: {"label": s["label"], "index": s["index"]} for k, s in RULE["segments"].items()}}
 
 
 def mf_reserve(rows: list[dict]) -> dict | None:
@@ -348,6 +417,7 @@ def mf_block(plans: dict, fund, peers, exit_of, fpe_of, macro: dict, gates: dict
                 best = (key, {"seg": seg, "slot": "metal", "code": f["code"], "name": f.get("name"), "checks": chk, "fundOk": False, "info": True})
         if best:
             alts[seg] = best[1]
+    _info_alts(alts, cands, pmap)
     return {"asOf": asof, "rule": rule_public(), "segments": segs, "cands": cands, "plans": pmap, "alts": alts, "reserve": mf_reserve(rows)}
 
 
@@ -359,6 +429,12 @@ def etf_block(plans: dict, slots: dict, row, ex_of, vols_of, cap_of, names_of, m
     gate_key = {"large": "core", "mid": "mid", "small": "small"}
     segs = _segments(asof, macro, gates, metal_choice, gate_key.get)
     cands, seen, pmap = [], {}, {}
+    by_idx = {}
+    for e in universe or []:
+        t = (ex_of(e["s"]) or {}).get("te") or {}
+        if t.get("te") is not None:
+            by_idx.setdefault(t.get("idx"), []).append(t["te"])
+    te_med = {k: _med(v) for k, v in by_idx.items()}
     for pid, p in plans.items():
         m = {}
         for seg, cfg in RULE["segments"].items():
@@ -373,7 +449,7 @@ def etf_block(plans: dict, slots: dict, row, ex_of, vols_of, cap_of, names_of, m
             hit = re.search(INDEX_RX[seg], nm) is not None
             chk = valuation_checks(seg, macro, gates.get(gate_key.get(seg, "")), metal_choice,
                                    ("Tracks the segment's index", hit, (e.get("n") or sl["sym"]) + (" — " + segs[seg]["index"] if hit else " — index not matched")), segs[seg]) + \
-                etf_fund_checks(sl, e, ex_of(sl["sym"]), vols_of(sl["sym"]), cap_of(sid), segs[seg]["amount"])
+                etf_fund_checks(sl, e, ex_of(sl["sym"]), vols_of(sl["sym"]), cap_of(sid), segs[seg]["amount"], te_med)
             cand = {"seg": seg, "slot": sid, "sym": sl["sym"], "name": e.get("n"), "checks": chk, "fundOk": all(c[1] for c in chk[:-1])}
             m[seg] = _plan_entry(segs, seg, _add(cands, seen, cand), cand)
         pmap[pid] = m
@@ -388,13 +464,14 @@ def etf_block(plans: dict, slots: dict, row, ex_of, vols_of, cap_of, names_of, m
         for e in pool:
             slot = {"label": f"{mt.capitalize()} ETF", "checks": []}
             chk = valuation_checks(seg, macro, gates.get("metal"), metal_choice, ("Tracks the segment's index", True, (e.get("n") or e["s"]) + " — " + segs[seg]["index"]), segs[seg]) + \
-                _alt_first(etf_fund_checks(slot, e, ex_of(e["s"]), vols_of(e["s"]), cap_of(mt), segs[seg]["amount"]), mt, metal_choice, "ETF", len(pool),
+                _alt_first(etf_fund_checks(slot, e, ex_of(e["s"]), vols_of(e["s"]), cap_of(mt), segs[seg]["amount"], te_med), mt, metal_choice, "ETF", len(pool),
                            "most ETF checks passed, then most traded")
             key = (-_alt_rank(chk), -(e.get("tv") or 0), e["s"])
             if best is None or key < best[0]:
                 best = (key, {"seg": seg, "slot": mt, "sym": e["s"], "name": e.get("n"), "checks": chk, "fundOk": False, "info": True})
         if best:
             alts[seg] = best[1]
+    _info_alts(alts, cands, pmap)
     liq = next((slots[x["id"]]["sym"] for p in plans.values() for x in p["slots"] if x["id"] == "liquid" and slots.get("liquid")), None)
     return {"asOf": asof, "rule": rule_public(), "segments": segs, "cands": cands, "plans": pmap, "alts": alts,
             "reserve": {"sym": liq or "LIQUIDBEES", "why": "the model's liquid ETF" if liq else "default liquid ETF"}}
