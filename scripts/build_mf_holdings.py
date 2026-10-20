@@ -196,6 +196,13 @@ def pf_age_days(month: str, today: date | None = None) -> int:
     return ((today or date.today()) - end).days
 
 
+def month_done(ym, today: date | None = None) -> bool:
+    """True once a portfolio month ((y, m) or "YYYY-MM") has ended. Mid-month files (e.g. a fund house's fortnightly
+    debt disclosure dated the 15th) are never used: the page shows portfolios "as of <month> month-end"."""
+    y, m = map(int, ym.split("-")) if isinstance(ym, str) else ym
+    return pf_age_days(f"{y}-{m:02d}", today) >= 0
+
+
 def expected_month(today: date | None = None) -> str:
     """Latest portfolio month every fund house should have published (fund houses publish within 10 days)."""
     t = today or date.today()
@@ -448,7 +455,7 @@ def content_dated(ctx, cfg, links: list[str]) -> dict | None:
         except Exception as e:  # noqa: BLE001
             log.warning("content date failed %s (%s)", l[:100], str(e)[:100])
             continue
-        if ym:
+        if ym and month_done(ym):
             dated.append((ym, l))
     if not dated:
         return None
@@ -500,7 +507,7 @@ def discover(sources: dict) -> dict[str, list[str]]:
                         log.warning("    %s", l[:160])
                 continue
             dated = [(link_month(l), l) for l in links]
-            dated = [(d, l) for d, l in dated if d]
+            dated = [(d, l) for d, l in dated if d and month_done(d)]
             if not dated:
                 log.warning("%s: no dated portfolio files found (%d spreadsheet links)", amc, len(allx))
                 for l in allx[:15]:
@@ -804,6 +811,9 @@ def main():
         if pf_age_days(info["month"]) > MAX_AGE_DAYS:
             log.warning("%s: latest portfolio file is for %s — too old, skipped", amc, info["month"])
             continue
+        if not month_done(info["month"]):
+            log.warning("%s: portfolio file is for %s, which has not ended yet — skipped", amc, info["month"])
+            continue
         if (meta.get(amc, {}).get("month") == info["month"] and meta[amc].get("funds", 0) > 0
                 and not meta[amc].get("dlFail") and "--force" not in sys.argv
                 and (meta[amc].get("etfMonth") == info["month"] or not etf_by_amc.get(amc))):
@@ -921,7 +931,7 @@ def main():
                 got = {}
             ok_n, months = 0, []
             for code, (month, blk) in got.items():
-                if pf_age_days(month) > MAX_AGE_DAYS:
+                if pf_age_days(month) > MAX_AGE_DAYS or not month_done(month):
                     continue
                 sm = summarise(blk, large, mid)
                 listed = listed_pct(sm)
