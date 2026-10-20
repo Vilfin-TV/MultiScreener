@@ -933,14 +933,18 @@ footer a{color:var(--text2)}
 .amc-card{margin-bottom:14px;padding:16px 18px}
 .amc-h{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .amc-clr{border:1px solid var(--border2);background:var(--surface2);color:var(--text);font:inherit;font-size:12px;font-weight:700;border-radius:999px;padding:6px 12px;cursor:pointer;white-space:nowrap}
-.amc-strip{display:flex;gap:6px;overflow-x:auto;margin:12px -6px 0;padding:2px 6px 6px;scrollbar-width:none;scroll-snap-type:x proximity}
-.amc-strip::-webkit-scrollbar{display:none}
-.amc-i{flex:0 0 82px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 4px;border:1px solid transparent;border-radius:14px;background:none;color:var(--text2);font:inherit;cursor:pointer;scroll-snap-align:start;transition:background .15s,border-color .15s}
-.amc-i:hover{background:var(--surface2)}
+.amc-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin-top:12px}
+.amc-i{display:flex;align-items:center;gap:12px;min-width:0;padding:9px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);font:inherit;text-align:left;cursor:pointer;transition:background .15s,border-color .15s}
+.amc-i:hover{background:var(--surface2);border-color:var(--border2)}
+.amc-i:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .amc-i.on{border-color:var(--accent);background:var(--accent-soft)}
-.amc-i .amc-av{--avs:48px}
-.amc-i b{font-size:11.5px;font-weight:600;line-height:1.25;text-align:center;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.5em}
-.amc-i small{font-size:10.5px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.amc-i .amc-av{--avs:38px}
+.amc-t{display:flex;flex-direction:column;min-width:0;flex:1}
+.amc-t b{font-size:13.5px;font-weight:700;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.amc-t small{font-size:11.5px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.amc-go{font-style:normal;color:var(--text3);font-size:16px;flex:none}.amc-i.on .amc-go{color:var(--accent);font-weight:800}
+.amc-more{display:block;margin:10px auto 0;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font:inherit;font-size:12.5px;font-weight:700;border-radius:999px;padding:7px 16px;cursor:pointer}
+.amc-more:hover{border-color:var(--accent)}.amc-more:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* fund status cards */
 .stc{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
 .stc-i{--c:var(--accent);--b:var(--accent-soft);display:flex;align-items:center;gap:12px;text-align:left;border:1px solid var(--border);border-radius:14px;background:linear-gradient(135deg,var(--b),transparent 75%),var(--surface2);padding:12px 14px;cursor:pointer;color:var(--text);font:inherit;transition:border-color .15s,transform .15s}
@@ -987,7 +991,7 @@ footer a{color:var(--text2)}
   .tbl-card.f-open .ftog{border-color:var(--accent)}
   /* fund houses + status */
   .amc-card{padding:14px}
-  .amc-i{flex-basis:76px}.amc-i .amc-av{--avs:46px}
+  .amc-strip{grid-template-columns:1fr 1fr;gap:6px}.amc-i{padding:8px 9px;gap:9px}.amc-i .amc-av{--avs:32px}.amc-t b{font-size:12.5px}.amc-t small{font-size:11px}.amc-go{display:none}
   .stc{grid-template-columns:1fr;gap:8px}
   .stc-i{padding:12px}
 }
@@ -1204,7 +1208,7 @@ footer a{color:var(--text2)}
   <section class="view on" id="v-explore" aria-label="Explore funds">
     <div class="assets" id="assets"></div>
     <div class="hs" id="subsHs"><button class="hs-btn prev" type="button" aria-label="Scroll categories left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div class="subs" id="subs" role="tablist" aria-label="Sub-categories"></div><button class="hs-btn next" type="button" aria-label="Scroll categories right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button></div>
-    <div class="card amc-card" id="amcCard"><div class="amc-h"><div><div class="sec-title">Fund houses</div><div class="sec-sub" id="amcSub">Tap a fund house to see only its funds</div></div><button class="amc-clr" id="amcClr" type="button" hidden>Show all</button></div><div class="amc-strip" id="amcStrip" role="list"></div></div>
+    <div class="card amc-card" id="amcCard"><div class="amc-h"><div><div class="sec-title">Fund houses</div><div class="sec-sub" id="amcSub">Tap a fund house to see only its funds</div></div><button class="amc-clr" id="amcClr" type="button" hidden>Clear ✕</button></div><div class="amc-strip" id="amcStrip" role="list"></div><button class="amc-more" id="amcMore" type="button" aria-controls="amcStrip" hidden>Show all</button></div>
     <div class="spot" id="spot"></div>
     <div class="card tbl-card">
       <div class="tbl-head">
@@ -2280,20 +2284,27 @@ function amcAv(n, size){
   var m = amcMono(n);
   return '<span class="amc-av' + (m.length > 2 ? ' l3' : '') + '" style="--h:' + amcHue(n) + (size ? ';--avs:' + size + 'px' : '') + '" aria-hidden="true">' + esc(m) + '</span>';
 }
+var AMC_SHOW = 12, amcAll = false;
 function renderAmcStrip(){
   var list = scope(), by = {};
   list.forEach(function(f){ var a = by[f.amc] || (by[f.amc] = {i:f.amc, n:0, aum:0}); a.n++; if (isNum(f.aum)) a.aum += f.aum; });
   var arr = Object.keys(by).map(function(k){ return by[k]; }).sort(function(a, b){ return b.aum - a.aum || b.n - a.n; });
   var cur = S.f.amc === '' || S.f.amc == null ? null : String(S.f.amc);
-  $('amcStrip').innerHTML = arr.map(function(a){
+  var shown = amcAll ? arr : arr.slice(0, AMC_SHOW);
+  if (cur !== null && !shown.some(function(a){ return String(a.i) === cur; })) {     // the chosen fund house always stays visible
+    var sel = arr.filter(function(a){ return String(a.i) === cur; })[0]; if (sel) shown = shown.concat([sel]);
+  }
+  $('amcStrip').innerHTML = shown.map(function(a){
     var nm = D.amcs[a.i], on = cur === String(a.i);
-    return '<button class="amc-i' + (on ? ' on' : '') + '" type="button" role="listitem" data-amcf="' + a.i + '" aria-pressed="' + on + '" title="' + esc(nm) + ' · ' + a.n + ' fund' + (a.n === 1 ? '' : 's') + '">' +
-      amcAv(nm) + '<b>' + esc(nm) + '</b><small>' + a.n + '</small></button>';
+    return '<button class="amc-i' + (on ? ' on' : '') + '" type="button" role="listitem" data-amcf="' + a.i + '" aria-pressed="' + on + '">' +
+      amcAv(nm) + '<span class="amc-t"><b>' + esc(nm) + '</b><small>' + a.n + ' fund' + (a.n === 1 ? '' : 's') + (a.aum ? ' · ' + fmtAum(a.aum) : '') + '</small></span>' +
+      '<i class="amc-go" aria-hidden="true">' + (on ? '✓' : '›') + '</i></button>';
   }).join('');
-  $('amcSub').textContent = arr.length + ' fund houses in ' + (S.sub ? D.subs[S.sub][1] : S.asset) + ' · tap one to see only its funds';
+  $('amcMore').hidden = arr.length <= AMC_SHOW;
+  $('amcMore').textContent = amcAll ? 'Show fewer' : 'Show all ' + arr.length + ' fund houses';
+  $('amcMore').setAttribute('aria-expanded', amcAll ? 'true' : 'false');
+  $('amcSub').textContent = arr.length + ' fund houses in ' + (S.sub ? D.subs[S.sub][1] : S.asset) + ', largest first · tap one to see only its funds';
   $('amcClr').hidden = cur === null;
-  var on = $('amcStrip').querySelector('.amc-i.on');
-  if (on) { var sc = $('amcStrip'); if (on.offsetLeft < sc.scrollLeft || on.offsetLeft + on.offsetWidth > sc.scrollLeft + sc.clientWidth) sc.scrollLeft = Math.max(0, on.offsetLeft - 20); }
 }
 var STC = [
   ['In form', 'stc-in', 'Performing strongly in recent months', '<path d="M7 17l5-5 5 5M7 11l5-5 5 5"/>'],
@@ -3277,7 +3288,7 @@ function bindUI(){
   $('subs').addEventListener('click', function(e){ var b = e.target.closest('[data-sub]'); if (!b) return; S.sub = b.getAttribute('data-sub'); S.shown = PAGE; renderSubs(); renderSpot(); renderTable(); writeURL(); });
   $('amcStrip').addEventListener('click', function(e){ var b = e.target.closest('[data-amcf]'); if (!b) return; var v = b.getAttribute('data-amcf'); setFilter('amc', String(S.f.amc) === v ? '' : v, 'fAmc'); });
   $('amcClr').addEventListener('click', function(){ setFilter('amc', '', 'fAmc'); });
-  $('amcStrip').addEventListener('wheel', function(e){ if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && this.scrollWidth > this.clientWidth) { var m = this.scrollWidth - this.clientWidth; if ((e.deltaY > 0 && this.scrollLeft < m) || (e.deltaY < 0 && this.scrollLeft > 0)) { e.preventDefault(); this.scrollLeft += e.deltaY; } } }, {passive:false});
+  $('amcMore').addEventListener('click', function(){ amcAll = !amcAll; renderAmcStrip(); if (!amcAll) $('amcCard').scrollIntoView({block: 'nearest'}); });
   $('stCards').addEventListener('click', function(e){ var b = e.target.closest('[data-stf]'); if (!b) return; var v = b.getAttribute('data-stf'); setFilter('status', S.f.status === v ? '' : v, 'fStatus'); });
   $('fTog').addEventListener('click', function(){ var c = this.closest('.tbl-card'), o = !c.classList.contains('f-open'); c.classList.toggle('f-open', o); this.setAttribute('aria-expanded', o); });
   placeViews(); if (BNAV_MQ) (BNAV_MQ.addEventListener ? BNAV_MQ.addEventListener('change', placeViews) : BNAV_MQ.addListener(placeViews));

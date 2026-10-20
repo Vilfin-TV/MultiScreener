@@ -466,6 +466,29 @@
                  us: ['US AI training programme 2026–27', 'United States (NRI)'] };
     var WHEN = { 'Monthly': 'on the 3rd of every month', 'Weekly': 'every Monday', 'Quarterly': 'on 19 Jan, Apr, Jul and Oct',
                  'Yearly': 'every year on 19 Oct', 'One-time': 'once, on ' + dt(sb.start) };
+    /* The buying strategy each agent follows — exactly the engine's rules (sim_config.json), in plain words. */
+    function strategy(r, x, nri) {
+      var amt = r.amt ? inr(r.amt, 0) : 'the plan amount', once = r.freq === 'One-time';
+      var n = x && x.hold ? x.hold.length : null;
+      var when = once ? 'Once — the full ' + amt + ' on ' + esc(dt(sb.start)) + ', then the units are held for the long term'
+        : esc(r.freq) + ' — ' + amt + ' ' + esc(WHEN[r.freq] || '') + '. If the market is closed that day, on the next trading day';
+      var split = mf
+        ? amt + ' is split across the model\'s funds' + (n ? ' (' + n + ' now)' : '') + ' by their weights, each as a one-time purchase. A share below a fund\'s minimum is merged into the next fund, and a larger amount can move a slot to its upgrade fund'
+        : amt + ' is split across the model\'s ETFs' + (n ? ' (' + n + ' now)' : '') + ' by their weights. Only whole units are bought; cash left over waits for that ETF\'s next buy';
+      var price = mf
+        ? 'Placed before the 3 pm cut-off at that day\'s official NAV (liquid funds: the previous day\'s NAV). Stamp duty 0.005% is taken first; units are credited two business days later'
+        : 'A market-on-close order at the exchange\'s official closing price (3:30 pm IST)' + (nri ? ', with NRI brokerage' : ', zero brokerage') + ' and statutory charges; units are credited the next trading day';
+      return [
+        ['Model', '10+ year ' + esc(r.risk) + ' model portfolio of the Portfolio Simulator — the same ' + (mf ? 'funds' : 'ETFs') + ' and weights shown on this page, changed only at the monthly review'],
+        ['When', when],
+        ['Split', split],
+        ['Price', price],
+        ['Review', 'On the 19th of every month. A holding is switched only when the model has dropped it at two reviews in a row — never in the first 12 months, and only once exit load and short-term tax no longer apply (at most a 6-month wait). A ' + (mf ? 'fund' : 'ETF') + ' that is wound up or delisted is sold at once'],
+        ['Tax', nri ? 'TDS is deducted on every sale; no March gain harvesting. Losses can still be booked against gains already taxed that year'
+                    : 'Every March, long-term equity gains up to the ₹1.25 lakh yearly exemption are booked and bought back the same day to raise the cost base (tax harvesting)'],
+        ['Discipline', 'Never times the market, never sells because prices fell, never adds or withdraws money outside the plan']
+      ];
+    }
     function profile(r, a) {
       var x = (a && a.detail) || r.detail, nri = !!r.nri, tm = TEAM[r.team] || ['VilfinTV team', nri ? 'Outside India (NRI)' : 'India'];
       var acct = mf ? (nri ? 'Direct-plan mutual fund account with NRI KYC, funded from an NRE bank account (repatriable)' : 'Direct-plan mutual fund account (resident Indian, Indian savings account)')
@@ -488,6 +511,7 @@
         row('Account', esc(acct)) +
         (x ? row('Invested', inr(x.inv)) + row('Value', x.val != null ? inr(x.val) : 'After units are credited') : '') +
         row('Total return', r.ret != null ? '<span class="' + cl(r.ret) + '">' + spct(r.ret) + '</span>' + (r.metric === 'xirr' ? ' XIRR' : '') : (r.credit ? 'Units credited ' + esc(dt(r.credit)) : '–')) +
+        '<h4>How ' + esc(r.name) + ' buys</h4><ol class="vts-pm-steps">' + strategy(r, x, nri).map(function (t) { return '<li><b>' + t[0] + '</b><span>' + t[1] + '</span></li>'; }).join('') + '</ol>' +
         '<h4>Charges</h4><ul>' + costs.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' +
         '<h4>Tax rules for this account</h4><ul>' + tax.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' +
         '<p class="vts-pv-e">Simulated account of a VilfinTV team member for education — not real money and not advice. Every figure comes from the audited ledger.</p></div>';
@@ -815,9 +839,13 @@
     '.vts-pm-x{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--border2,var(--border));background:none;color:var(--text);font-size:14px;cursor:pointer}.vts-pm-x:focus-visible{outline:2px solid var(--accent,#4a90e2)}' +
     '.vts-pm-b{padding:4px 18px 18px;font-size:13px;line-height:1.55}.vts-pm-b h4{margin:16px 0 6px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text2)}' +
     '.vts-pm-r{display:grid;grid-template-columns:130px 1fr;gap:10px;padding:6px 0;border-top:1px solid var(--border)}.vts-pm-r span{color:var(--text2)}.vts-pm-r b{font-weight:600}' +
-    '.vts-pm-b ul{margin:0;padding-left:18px}.vts-pm-b li{margin:4px 0;color:var(--text2)}' +
+    '.vts-pm-b ul{margin:0;padding-left:18px}.vts-pm-b ul li{margin:4px 0;color:var(--text2)}' +
+    '.vts-pm-steps{list-style:none;margin:0;padding:0;counter-reset:st;border:1px solid var(--border);border-radius:12px;overflow:hidden}' +
+    '.vts-pm-steps li{counter-increment:st;display:grid;grid-template-columns:26px 92px 1fr;gap:10px;align-items:start;padding:9px 12px;margin:0;border-top:1px solid var(--border)}' +
+    '.vts-pm-steps li:first-child{border-top:none}.vts-pm-steps li::before{content:counter(st);width:22px;height:22px;border-radius:50%;background:var(--accent,#4a90e2);color:var(--accent-ink,#fff);font-size:11.5px;font-weight:800;display:grid;place-items:center}' +
+    '.vts-pm-steps b{font-size:12.5px;padding-top:2px}.vts-pm-steps span{color:var(--text2);font-size:12.5px;line-height:1.55}' +
     '.vts-pm .up{color:#16a34a}.vts-pm .dn{color:#dc2626}' +
-    '@media (max-width:560px){.vts-pf-bar{flex-wrap:wrap;row-gap:8px}.vts-pf-me{flex-basis:100%}.vts-pf-cur{flex:1;flex-direction:row!important;align-items:baseline!important;gap:6px;justify-content:flex-start}' +
+    '@media (max-width:560px){.vts-pm-steps li{grid-template-columns:24px 1fr;row-gap:2px}.vts-pm-steps span{grid-column:2}.vts-pf-bar{flex-wrap:wrap;row-gap:8px}.vts-pf-me{flex-basis:100%}.vts-pf-cur{flex:1;flex-direction:row!important;align-items:baseline!important;gap:6px;justify-content:flex-start}' +
     '.vts-pm-back{padding:0;align-items:flex-end}.vts-pm{max-height:88vh;border-radius:16px 16px 0 0}.vts-pm-r{grid-template-columns:1fr;gap:2px}.vts-pf-vp{display:none}}' +
     '.vts-pf-av{flex:none;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;color:#fff;font-weight:800;font-size:12.5px;letter-spacing:.02em}.vts-pf-av.lg{width:42px;height:42px;font-size:14px}' +
     '.vts-pf-who{display:flex;flex-direction:column;min-width:0;flex:1}.vts-pf-who b{font-size:14px;line-height:1.3}.vts-pf-who>span{color:var(--text2);font-size:12px;line-height:1.35}' +
