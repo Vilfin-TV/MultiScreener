@@ -462,7 +462,7 @@ def ev_key(kind: str, data: dict):
     if kind == "fund":
         return ("fund", data["oid"])
     if kind == "reserve":
-        return ("reserve", data["acct"])            # one dip reserve per account, ever
+        return ("reserve", data["acct"], data.get("n", 0))   # the first reserve (n 0) and each refill, once
     if kind == "dip":
         return ("dip", data["did"])                 # one decision per account, signal day and segment
     if kind == "dipscan":
@@ -510,7 +510,7 @@ def replay(events: list[dict]) -> dict:
         if k in ("instalment", "reserve"):            # the dip reserve is money paid in, like an instalment
             a = st.setdefault(ev["acct"], {"inst": [], "orders": [], "lots": {}, "cash": 0.0, "carry": {}, "sells": []})
             a["inst"].append(ev)
-            if k == "reserve":
+            if k == "reserve" and not ev.get("n"):
                 a["reserve"] = ev
             if ev["acct"].endswith("-ETF"):
                 a["cash"] += ev["amount"]
@@ -526,6 +526,7 @@ def replay(events: list[dict]) -> dict:
             key = str(o.get("code") or o.get("sym"))
             a["lots"].setdefault(key, []).append({"date": o["T"], "units": ev["units"], "cost": ev["amount"] if k == "allot" else ev["gross"] + ev["charges"]["total"],
                                                   "price": ev.get("nav", ev.get("price")), "oid": o["oid"], "credit": ev["credit"]})
+            a["lots"][key].sort(key=lambda l: (l["date"], l["oid"]))     # FIFO by purchase date, whatever order a run filled them in
             if k == "fill":
                 a["cash"] = r2(a["cash"] - ev["gross"] - ev["charges"]["total"])
                 a["carry"][carry_key(o)] = ev["carry"]
@@ -855,10 +856,10 @@ class Engine:
         st = replay(self.store["events"])
         a = st[o["acct"]]
         key = str(o.get("code") or o.get("sym"))
-        lots = [l for l in a["lots"].get(key, []) if l["units"] > 0]
+        lots = [l for l in a["lots"].get(key, []) if l["units"] > 0 and D(l["date"]) <= T]   # only units bought by the sale date
         have = round(sum(l["units"] for l in lots), 6)
         if o.get("level") == "dip":                   # a dip buy redeems only the reserve's own units
-            have = min(have, self.reserve_units(a, key))
+            have = min(have, self.reserve_units(a, key, T))
         units = have if o.get("units") in (None, "all") else min(float(o["units"]), have)
         if units <= 0:
             append(self.store, "note", oid=o["oid"], text="nothing to sell")
@@ -932,14 +933,25 @@ class Engine:
                 return out
             out.append(T)
 
+    def as_of(self, T: date) -> dict:
+        """State replayed from the events in effect on T (orders and their completions dated on or before T), so a
+        review or harvest decides the same way in a catch-up run as in a run on the day itself."""
+        evs = self.store["events"]
+        odate = {e["oid"]: e["T"] for e in evs if e["k"] == "order"}
+        t = T.isoformat()
+        keep = [e for e in evs if e["k"] not in ("instalment", "reserve", "order", "allot", "fill", "redeem", "fund")
+                or (e.get("T") if e["k"] in ("instalment", "reserve", "order") else odate.get(e.get("oid"), "9999")) <= t]
+        return replay(keep)
+
     @staticmethod
-    def reserve_units(acct_state: dict, key: str) -> float:
+    def reserve_units(acct_state: dict, key: str, upto: date | None = None) -> float:
         """Units of `key` that still belong to the dip reserve: the reserve purchase less what dip buys redeemed."""
-        ro = next((o for o in acct_state["orders"] if o.get("slot") == "reserve" and o["side"] == "buy"), None)
-        if not ro or not ro.get("done") or str(ro.get("code") or ro.get("sym")) != key:
+        ros = [o for o in acct_state["orders"] if o.get("slot") == "reserve" and o["side"] == "buy" and o.get("done")
+               and str(o.get("code") or o.get("sym")) == key and (upto is None or D(o["T"]) <= upto)]
+        if not ros:
             return 0.0
-        u = ro["done"]["units"] - sum(o["done"]["units"] for o in acct_state["orders"]
-                                      if o.get("level") == "dip" and o["side"] == "sell" and o.get("done"))
+        u = sum(o["done"]["units"] for o in ros) - sum(o["done"]["units"] for o in acct_state["orders"]
+                                                       if o.get("level") == "dip" and o["side"] == "sell" and o.get("done"))
         return round(max(0.0, u), 6)
 
     def slot_of(self, acct_state: dict, key: str):
@@ -1002,20 +1014,20 @@ class Engine:
                 if rid in done:
                     prev.append(next(e for e in self.store["events"] if e["k"] == "review" and e["rid"] == rid))
                     continue
-                st = replay(self.store["events"])
+                st = self.as_of(T)
                 acct = st.get(a["id"])
                 if not acct:
                     continue
                 plan = self.plan_on(T)
                 exempt_left = max(0.0, CFG["tax"]["ltcgExempt"] - person_gains(st, a["name"], T)["lt"])
                 items, sells = [], []
-                for key, lots in acct["lots"].items():
+                for key, lots in sorted(acct["lots"].items()):
                     lots = [l for l in lots if l["units"] > 1e-9 and D(l["date"]) <= T]
                     units = round(sum(l["units"] for l in lots), 6)
                     if units <= 0 or any(o.get("side") == "sell" and str(o.get("code") or o.get("sym")) == key and "done" not in o
                                          for o in acct["orders"]):
                         continue
-                    rsv = self.reserve_units(acct, key)          # the dip reserve is not part of the model portfolio
+                    rsv = self.reserve_units(acct, key, T)       # the dip reserve is not part of the model portfolio
                     units = round(units - rsv, 6)
                     if units <= 1e-9:
                         continue
@@ -1125,7 +1137,7 @@ class Engine:
                     rid = f"{a['id']}|harvest|{T.isoformat()}"
                     if rid in done:
                         continue
-                    st = replay(self.store["events"])
+                    st = self.as_of(T)
                     acct = st.get(a["id"])
                     if not acct:
                         continue
@@ -1136,7 +1148,7 @@ class Engine:
                     room = max(0.0, t["ltcgExempt"] - pg["lt"] - planned)  # unused exemption this year (both accounts)
                     taxable = max(0.0, pg["lt"] - t["ltcgExempt"]) + max(0.0, pg["st"])
                     items, sells = [], []
-                    for key, lots in acct["lots"].items():
+                    for key, lots in sorted(acct["lots"].items()):
                         lots = [l for l in lots if l["units"] > 1e-9 and D(l["date"]) <= T]
                         if not lots or any(o.get("side") == "sell" and str(o.get("code") or o.get("sym")) == key and "done" not in o
                                            for o in acct["orders"]):
@@ -1278,10 +1290,45 @@ class Engine:
             fld = {"code": int(rv["code"])} if a["product"] == "mf" else {"sym": rv["sym"]}
             if a["product"] == "mf":
                 self.mkt.remember(int(rv["code"]))
-            append(self.store, "reserve", acct=a["id"], iid=rid, T=T.isoformat(), amount=float(DIP["reserve"]), ref=plan["ref"], **fld)
+            append(self.store, "reserve", acct=a["id"], iid=rid, T=T.isoformat(), n=0, amount=float(DIP["reserve"]), ref=plan["ref"], **fld)
             append(self.store, "order", oid=f"{rid}|liquid", iid=rid, acct=a["id"], T=T.isoformat(), side="buy",
                    name=rv.get("name") or rv.get("sym"), slot="reserve", label="Dip reserve (liquid)", asset="Debt",
                    amount=float(DIP["reserve"]), note="cash reserve for market-dip lump sums", ref=plan["ref"], **fld)
+        self.place_topups(self.today)
+
+    def topup_due(self, aid: str):
+        """(n, date, amount) of the refill an account is owed, or None: once dip buys leave less than the minimum in the
+        reserve, it is refilled to the full reserve on the first trading day of the following month (same fund / ETF)."""
+        evs = self.store["events"]
+        rs = sorted([e for e in evs if e["k"] == "reserve" and e["acct"] == aid], key=lambda e: e.get("n", 0))
+        if not rs:
+            return None
+        buys = [e for e in evs if e["k"] == "dip" and e["acct"] == aid and e["action"] == "buy"]
+        left = sum(e["amount"] for e in rs) - sum(e["amt"] for e in buys)
+        last = max((e for e in buys if e["T"] >= rs[-1]["T"]), key=lambda e: (e["T"], e["seq"]), default=None)
+        if left >= DIP["min"] or last is None:
+            return None
+        t = D(last["T"])
+        return len(rs), next_trading(date(t.year + (t.month == 12), t.month % 12 + 1, 1)), r2(DIP["reserve"] - left)
+
+    def place_topups(self, limit: date):
+        placed = False
+        for a in self.dip_accts():
+            due = self.topup_due(a["id"])
+            if not due or due[1] > limit:
+                continue
+            n, T, amt = due
+            first = next(e for e in self.store["events"] if e["k"] == "reserve" and e["acct"] == a["id"] and not e.get("n"))
+            fld = {"code": first["code"]} if first.get("code") else {"sym": first["sym"]}
+            plan = self.dip_plan(T)
+            rid = f"{a['id']}|reserve{n}"
+            append(self.store, "reserve", acct=a["id"], iid=rid, T=T.isoformat(), n=n, amount=float(amt), ref=plan.get("ref"), **fld)
+            ro = next(o for o in self.store["events"] if o["k"] == "order" and o.get("iid") == f"{a['id']}|reserve")
+            append(self.store, "order", oid=f"{rid}|liquid", iid=rid, acct=a["id"], T=T.isoformat(), side="buy",
+                   name=ro.get("name"), slot="reserve", label="Dip reserve refill (liquid)", asset="Debt", amount=float(amt),
+                   note=f"reserve used up — refilled to ₹{DIP['reserve']:,}", ref=plan.get("ref"), **fld)
+            placed = True
+        return placed
 
     def update_series(self):
         """Append-only official closes of every segment's two index trackers (store["dipSeries"]): dates only ever
@@ -1335,6 +1382,8 @@ class Engine:
             if not all(l >= d for l in lasts) and sum(1 for x in days if x > d) < 5:
                 break
             if d >= first and d in sigs:
+                if self.place_topups(T):                 # a refill due by the action day is bought first
+                    self.settle()
                 st = replay(self.store["events"])
                 ready = all((st.get(a["id"]) or {}).get("reserve") and self.reserve_credited(st[a["id"]], T) for a in accts)
                 if not ready:
@@ -1351,13 +1400,19 @@ class Engine:
 
     @staticmethod
     def reserve_credited(s: dict, T: date) -> bool:
-        o = next((o for o in s["orders"] if o.get("slot") == "reserve" and o["side"] == "buy"), None)
-        return bool(o and o.get("done") and D(o["done"]["credit"]) <= T)
+        """The first reserve is credited by T and every refill dated on or before T has been allotted / filled (its price
+        is on record), so the reserve left on T is known; a refill counts once its units are credited."""
+        os_ = [o for o in s["orders"] if o.get("slot") == "reserve" and o["side"] == "buy" and D(o["T"]) <= T]
+        first = [o for o in os_ if o["iid"].endswith("|reserve")]
+        return bool(first) and all(o.get("done") for o in os_) and all(D(o["done"]["credit"]) <= T for o in first)
 
     def dip_decide(self, a, did, d, T, seg, x):
         evs = self.store["events"]
         used = sum(e["amt"] for e in evs if e["k"] == "dip" and e["acct"] == a["id"] and e["action"] == "buy")
-        left = DIP["reserve"] - used
+        cred = {e["oid"]: e["credit"] for e in evs if e["k"] in ("allot", "fill")}
+        paid = sum(e["amount"] for e in evs if e["k"] == "reserve" and e["acct"] == a["id"]
+                   and cred.get(e["iid"] + "|liquid", "9999") <= T.isoformat())      # credited reserve money only
+        left = paid - used
         plan = self.dip_plan(T)
         ent = ((plan.get("dip") or {}).get(a["product"]) or {}).get(a["plan"], {}).get(seg)
         amt = min(x["amount"], left)
@@ -1372,7 +1427,7 @@ class Engine:
             action, why = "buy", f"{sg['index']} {x['fall']:.2f}% below its 3-month high → {x['tier']}% tier · ₹{x['amount']:,}" + \
                 (f" (₹{amt:,.0f} left in the reserve)" if amt < x["amount"] else "")
         st = replay(evs)
-        rkey = next(o for o in st[a["id"]]["orders"] if o.get("slot") == "reserve" and o["side"] == "buy")
+        rkey = next(o for o in st[a["id"]]["orders"] if o.get("slot") == "reserve" and o["side"] == "buy" and o.get("iid") == f"{a['id']}|reserve")
         fld = "code" if a["product"] == "mf" else "sym"
         append(self.store, "dip", did=did, acct=a["id"], D=d, T=T.isoformat(), seg=seg, trk=sg["trk"], close=x["close"],
                high=x["high"], highDate=x["highDate"], fall=round(x["fall"], 4), fall2=round(x["fall2"], 4), day=round(x["day"], 4),
@@ -1828,10 +1883,12 @@ def dip_summary(store: dict, a: dict, s: dict) -> dict | None:
     rv = s.get("reserve")
     ds = [e for e in store["events"] if e["k"] == "dip" and e["acct"] == a["id"]]
     used = sum(e["amt"] for e in ds if e["action"] == "buy")
+    paid = sum(e["amount"] for e in store["events"] if e["k"] == "reserve" and e["acct"] == a["id"])
+    refills = [{"T": e["T"], "amount": e["amount"]} for e in store["events"] if e["k"] == "reserve" and e["acct"] == a["id"] and e.get("n")]
     ro = next((o for o in s["orders"] if o.get("slot") == "reserve" and o["side"] == "buy"), None)
     return {"reserve": DIP["reserve"], "date": (rv or {}).get("T"), "fund": (ro or {}).get("name"),
-            "key": str((ro or {}).get("code") or (ro or {}).get("sym") or "") or None,
-            "used": r2(used), "left": r2(DIP["reserve"] - used), "units": Engine.reserve_units(s, str((ro or {}).get("code") or (ro or {}).get("sym"))) if ro else 0,
+            "key": str((ro or {}).get("code") or (ro or {}).get("sym") or "") or None, "paid": r2(paid), "refills": refills,
+            "used": r2(used), "left": r2(paid - used), "units": Engine.reserve_units(s, str((ro or {}).get("code") or (ro or {}).get("sym"))) if ro else 0,
             "events": [{k: e.get(k) for k in ("D", "T", "seg", "fall", "tier", "amount", "amt", "left", "action", "why", "name", "code", "sym")}
                        for e in ds]}
 
@@ -1867,6 +1924,7 @@ def account_detail(a: dict, valued: bool, sub_names: dict, today: date) -> dict:
         empty = [e for e in dp["events"] if e["action"] == "skip" and e["why"].startswith("reserve left")]
         dp = dict(dp, events=[e for e in dp["events"] if not (e["action"] == "skip" and "not part of this model" in e["why"])])
         out["dip"] = {"left": dp["left"], "used": dp["used"], "reserve": dp["reserve"], "fund": dp["fund"], "date": dp["date"],
+                      "paid": dp["paid"], "refills": dp["refills"],
                       "ev": [{k: e.get(k) for k in ("D", "seg", "fall", "tier", "amt", "action", "why", "name")}
                              for e in dp["events"] if e not in empty][-8:], "empty": len(empty)}
     return out

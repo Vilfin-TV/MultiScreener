@@ -98,7 +98,8 @@
   },
   "dipRule": {
     "_comment": "Market-dip lump sums (shared by the Portfolio Simulator pages and the agents). Each segment's fall = how far its index tracker's official close is below its highest close of the last `lookback` sessions. A buy fires on the day the fall first reaches a deeper tier in the current fall (tiers reset once the index is back within `resetPct` of its high), after 26 checks. Amount by tier, never below `min` or above `max`. Agents in `persons` hold `reserve` per account in a liquid fund (MF) / liquid ETF (ETF) and buy only from it.",
-    "lookback": 63, "resetPct": 1.0, "tiers": [[10, 20000], [5, 10000], [3, 5000]], "min": 5000, "max": 20000,
+    "lookback": 63, "resetPct": 1.0, "tiers": [[15, 20000], [10, 10000], [5, 5000]], "min": 5000, "max": 20000,
+    "value": {"pePctMax": 0.8, "peMedMax": 1.15, "n50PctMax": 0.8, "metalPctMax": 0.9, "metalVs200Max": 15.0},
     "confirmPts": 1.5, "crashDayPct": -8.0, "maxFallPct": 40.0,
     "segments": {
       "large":  {"label": "Large cap", "index": "Nifty 50", "trk": "NIFTYBEES", "trk2": "SETFNIF50", "val": "n50", "eyGapMin": -4.5, "mf": ["core", "lmcore"], "etf": ["n50"]},
