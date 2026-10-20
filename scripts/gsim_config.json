@@ -1,0 +1,14 @@
+{
+  "_comment": "Global Simulator Buy: the 20 VilfinTV agents (persons in sim_config.json) each run one simulated US-listed ETF account that buys the Portfolio Simulator — Global ETF 10+ year model portfolio (plan h15<risk>) from the start date. Very aggressive agents follow the aggressive plan (the global simulator has three risk levels). Amounts are in US dollars after conversion; currency conversion and remittance costs are not modelled.",
+  "start": "2026-10-20",
+  "horizon": "h15",
+  "riskMap": {"c": "c", "b": "b", "a": "a", "v": "a"},
+  "monthlyUsd": {"c": 120, "b": 120, "a": 240, "v": 240},
+  "schedule": {"monthDay": 3, "weekday": 0, "quarterMonths": [1, 4, 7, 10], "anchorDay": 20, "anchorMonth": 10},
+  "fractional": {"step": 0.0001, "minOrder": 1.0, "_note": "fractional shares in steps of 0.0001; an order under $1 waits for the slot's next buy"},
+  "fees": {"perShare": 0.0035, "min": 0.35, "maxPct": 1.0, "_note": "commission per order: $0.0035 a share, at least $0.35, at most 1% of the trade value; exchange and clearing fees on buys (fractions of a cent) are not modelled"},
+  "withholding": {"resident": 25, "nri": 0, "_note": "US tax withheld on dividends: India residents 25% under the India–US treaty (Form W-8BEN); the four US-based team members are US tax residents (Form W-9), so nothing is withheld at source"},
+  "trade": {"rule": "close-us-v1", "priceTime": "16:00 ET", "settleDays": 1},
+  "bench": "SPY",
+  "keepPublicDays": 14
+}

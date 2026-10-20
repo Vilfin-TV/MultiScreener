@@ -428,24 +428,29 @@
      time (profile switcher), with the daily portfolio summary recorded in the ledger journal, a Portfolio-vs-Nifty-50
      chart, holdings and recent days. Data: data/sim_scoreboard.json + data/sim/<person>.json (audited). ── */
   function simBuy() {
-    var els = document.querySelectorAll('[data-vts-buy]');
+    var els = document.querySelectorAll('[data-vts-buy]'), bySrc = {};
     if (!els.length || !window.fetch) return;
-    fetch('data/sim_scoreboard.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (sb) {
-      if (!sb) return;
-      style();
-      els.forEach(function (el) { simBuyCard(el, sb); });
-    }).catch(function () {});
+    els.forEach(function (el) { var u = el.getAttribute('data-vts-src') || 'data/sim_scoreboard.json'; (bySrc[u] = bySrc[u] || []).push(el); });
+    Object.keys(bySrc).forEach(function (u) {
+      fetch(u, { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (sb) {
+        if (!sb) return;
+        style();
+        bySrc[u].forEach(function (el) { simBuyCard(el, sb); });
+      }).catch(function () {});
+    });
   }
 
   function simBuyCard(el, sb) {
-    var prod = el.getAttribute('data-vts-buy'), mf = prod !== 'etf', what = mf ? 'mutual fund' : 'ETF';
+    var prod = el.getAttribute('data-vts-buy'), mf = prod === 'mf', gl = prod === 'gl', what = mf ? 'mutual fund' : gl ? 'US-listed ETF' : 'ETF';
+    var CUR = sb.cur === 'USD' ? '$' : '₹', LOC = sb.cur === 'USD' ? 'en-US' : 'en-IN', BN = sb.bench || 'Nifty 50', BK = sb.benchKey || 'NIFTYBEES';
+    var UD = mf ? 3 : gl ? 4 : 0;
     var rows = (sb.rows || []).filter(function (r) { return r.product === prod; });
     if (!rows.length) { el.innerHTML = ''; return; }
     var dt = function (x, yr) { var s = new Date(String(x).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); return yr === false ? s.replace(/ \d{4}$/, '') : s; };
     var dtw = function (x) { return new Date(String(x).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }); };
-    var num = function (v, dp) { return v == null ? '–' : Number(v).toLocaleString('en-IN', { minimumFractionDigits: dp, maximumFractionDigits: dp }); };
-    var inr = function (v, dp) { return v == null ? '–' : (v < 0 ? '−' : '') + '₹' + num(Math.abs(v), dp == null ? 2 : dp); };
-    var sinr = function (v, dp) { return v == null ? '–' : (v > 0 ? '+' : v < 0 ? '−' : '') + '₹' + num(Math.abs(v), dp == null ? 2 : dp); };
+    var num = function (v, dp) { return v == null ? '–' : Number(v).toLocaleString(LOC, { minimumFractionDigits: dp, maximumFractionDigits: dp }); };
+    var inr = function (v, dp) { return v == null ? '–' : (v < 0 ? '−' : '') + CUR + num(Math.abs(v), dp == null ? 2 : dp); };
+    var sinr = function (v, dp) { return v == null ? '–' : (v > 0 ? '+' : v < 0 ? '−' : '') + CUR + num(Math.abs(v), dp == null ? 2 : dp); };
     var spct = function (v, dp) { return v == null ? '–' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(dp == null ? 2 : dp) + '%'; };
     var cl = function (v) { return v == null ? 'na' : v > 0 ? 'up' : v < 0 ? 'dn' : ''; };
     var started = new Date() >= new Date(sb.start + 'T00:00:00');
@@ -473,8 +478,15 @@
       '<span class="vts-buy-tg" aria-hidden="true"><span class="o">Show</span><span class="c">Hide</span><i>▾</i></span></div>' +
       '<span class="vts-buy-sub">Follow each of ' + rows.length + ' simulated ' + what + ' accounts of VilfinTV agents day by day as they buy this simulator\'s 10+ year model portfolios — value, daily change and why it moved.</span></summary>' +
       '<div class="vts-buy-b">' +
-      '<p class="vts-buy-warn"><b>Disclaimer:</b> This is a <b>simulation for education only — not a real purchase</b>. No real money is invested, no units are bought or held for anyone, and the agents are internal test accounts, not real investors. Figures are calculated from official end-of-day prices with stamp duty' + (mf ? '' : ', brokerage and exchange charges') + ', exit loads, taxes and settlement days, to show how the model portfolios would have behaved. Not investment advice; not a recommendation to buy any fund. Past or simulated results do not predict future returns.</p>' +
-      (mf
+      '<p class="vts-buy-warn"><b>Disclaimer:</b> This is a <b>simulation for education only — not a real purchase</b>. No real money is invested, no units are bought or held for anyone, and the agents are internal test accounts, not real investors. Figures are calculated from official end-of-day prices with ' + (gl ? 'commission, US tax withheld on dividends and settlement days; currency conversion and remittance costs are not modelled' : 'stamp duty' + (mf ? '' : ', brokerage and exchange charges') + ', exit loads, taxes and settlement days') + ', to show how the model portfolios would have behaved. Not investment advice; not a recommendation to buy any fund. Past or simulated results do not predict future returns.</p>' +
+      (gl
+        ? '<details class="vts-buy-rule"><summary>⏱ How each ETF trade is priced</summary><ul>' +
+          '<li><b>When:</b> every buy is placed on its plan date as a market-on-close order — it executes at the end of that day\'s US session, <b>4:00 pm New York time</b> (1:30 am IST in the northern summer, 2:30 am in winter).</li>' +
+          '<li><b>Share price:</b> the exchange\'s <b>official closing price</b> of that session. On a US market holiday or a day the ETF did not trade, it executes at the close of the next session it trades.</li>' +
+          '<li><b>Shares:</b> fractional shares in steps of 0.0001 — as many as the amount buys after commission ($0.0035 a share, at least $0.35, at most 1% of the trade). Cents left over, or an order under $1, wait for that slot\'s next buy. Shares are credited the next US business day (T+1).</li>' +
+          '<li><b>Dividends:</b> shares bought before the ex-date earn the dividend, less US tax withheld (25% for India residents under the tax treaty; nothing at source for the US-based team members). The cash joins that slot\'s next buy.</li>' +
+          '<li><b>Record:</b> each trade in the ledger stores this rule, its trade date and the closing price used, and the daily audit checks every trade, dividend and value again.</li></ul></details>'
+        : mf
         ? '<details class="vts-buy-rule"><summary>⏱ How each fund purchase is priced</summary><ul>' +
           '<li><b>When:</b> every purchase is placed on its plan date before the 3 pm IST cut-off.</li>' +
           '<li><b>Unit price:</b> the fund\'s <b>official NAV of that business day</b> (liquid and overnight funds: the NAV of the previous calendar day); if the fund house has no NAV that day, the next NAV day. Stamp duty of 0.005% is taken first; units are rounded down to 3 decimals and credited two business days later (market holidays skipped). Until then the purchase shows as "buy in progress" — no return, gain or stamp duty is shown before the units are credited.</li>' +
@@ -528,10 +540,24 @@
        tax rules that apply to it (resident vs NRI), and the account's figures. */
     var TEAM = { core: ['Core team', 'VilfinTV HQ, India'], recruit: ['Joined in 2026', 'VilfinTV HQ, India'],
                  us: ['US AI training programme 2026–27', 'United States (NRI)'] };
-    var WHEN = { 'Monthly': 'on the 3rd of every month', 'Weekly': 'every Monday', 'Quarterly': 'on 19 Jan, Apr, Jul and Oct',
-                 'Yearly': 'every year on 19 Oct', 'One-time': 'once, on ' + dt(sb.start) };
+    var ad = new Date(sb.start + 'T00:00:00').getDate();
+    var WHEN = { 'Monthly': 'on the 3rd of every month', 'Weekly': 'every Monday', 'Quarterly': 'on ' + ad + ' Jan, Apr, Jul and Oct',
+                 'Yearly': 'every year on ' + ad + ' Oct', 'One-time': 'once, on ' + dt(sb.start) };
     /* The buying strategy each agent follows — exactly the engine's rules (sim_config.json), in plain words. */
     function strategy(r, x, nri) {
+      if (gl) {
+        var ga = r.amt ? inr(r.amt, 0) : 'the plan amount', gn = x && x.hold ? x.hold.length : null;
+        return [
+          ['Model', '10+ year ' + esc(r.risk) + ' model portfolio of the Portfolio Simulator — Global ETF: the same ETFs and weights shown on this page (the latest model published before each buy)'],
+          ['When', r.freq === 'One-time' ? 'Once — the full ' + ga + ' on ' + esc(dt(sb.start)) + ', then held for the long term'
+            : esc(r.freq) + ' — ' + ga + ' ' + esc(WHEN[r.freq] || '') + '. On a US market holiday, at the next session'],
+          ['Split', ga + ' is split across the model\'s ETFs' + (gn ? ' (' + gn + ' now)' : '') + ' by their weights; each share is added to the cash that slot has left over'],
+          ['Price', 'A market-on-close order at the official closing price (4:00 pm New York time), fractional shares after commission; shares are credited the next US business day'],
+          ['Dividends', nri ? 'Paid in full (US tax resident — taxed through the US return) and added to that slot\'s next buy' : '25% US tax withheld under the India–US treaty (claimable as a foreign tax credit in the Indian return); the rest is added to that slot\'s next buy'],
+          ['Model changes', 'Never sells: when the model replaces an ETF, new money goes to the new choice and the earlier shares are kept'],
+          ['Discipline', 'Never times the market, never sells because prices fell, never adds or withdraws money outside the plan']
+        ];
+      }
       var amt = r.amt ? inr(r.amt, 0) : 'the plan amount', once = r.freq === 'One-time';
       var n = x && x.hold ? x.hold.length : null;
       var when = once ? 'Once — the full ' + amt + ' on ' + esc(dt(sb.start)) + ', then the units are held for the long term'
@@ -558,12 +584,20 @@
     }
     function profile(r, a) {
       var x = (a && a.detail) || r.detail, nri = !!r.nri, tm = TEAM[r.team] || ['VilfinTV team', nri ? 'Outside India (NRI)' : 'India'];
-      var acct = mf ? (nri ? 'Direct-plan mutual fund account with NRI KYC, funded from an NRE bank account (repatriable)' : 'Direct-plan mutual fund account (resident Indian, Indian savings account)')
+      var acct = gl ? (nri ? 'US brokerage account (US tax resident, Form W-9), funded in US dollars' : 'International brokerage account for US-listed ETFs (resident Indian, Form W-8BEN), funded in US dollars under the Liberalised Remittance Scheme')
+                    : mf ? (nri ? 'Direct-plan mutual fund account with NRI KYC, funded from an NRE bank account (repatriable)' : 'Direct-plan mutual fund account (resident Indian, Indian savings account)')
                     : (nri ? 'NRI demat & trading account with PIS, funded from an NRE bank account; delivery trades only' : 'Demat & trading account (resident Indian); delivery trades');
-      var costs = mf ? ['Stamp duty 0.005% on every purchase; exit load as per each fund when sold']
+      var costs = gl ? ['Commission $0.0035 a share per order, at least $0.35 and at most 1% of the trade value', 'Exchange and clearing fees on buys (fractions of a cent) and currency conversion / remittance costs are not modelled']
+                     : mf ? ['Stamp duty 0.005% on every purchase; exit load as per each fund when sold']
                      : [nri ? 'Brokerage 0.1% of each trade (min ₹20, max ₹100) — NRI desks charge more than resident accounts' : 'Zero brokerage on delivery trades',
                         'Stamp duty 0.015% on buys; exchange, SEBI and investor-protection charges + 18% GST; STT and depository charge on sales'];
-      var tax = nri ? ['Tax deducted at source (TDS) on every sale: equity held over a year 12.5%, under a year 20%; debt and other funds 30%; plus 4% cess (surcharge not modelled)',
+      var tax = gl ? (nri ? ['US tax resident: dividends paid in full and taxed through the US return; no US tax is withheld at source',
+                              'No sales in this simulation, so no capital-gains tax is due yet']
+                           : ['25% US tax withheld on dividends under the India–US treaty (Form W-8BEN), claimable as a foreign tax credit (Form 67)',
+                              'Gains on sale are taxed in India: held over 24 months 12.5%, otherwise at the income slab; no sales in this simulation so far',
+                              'Remittances under the Liberalised Remittance Scheme above ₹10 lakh a financial year attract 20% TCS, adjustable against tax — this plan stays well below it',
+                              'US-listed ETFs above US$60,000 in total can face US estate tax for non-US persons'])
+              : nri ? ['Tax deducted at source (TDS) on every sale: equity held over a year 12.5%, under a year 20%; debt and other funds 30%; plus 4% cess (surcharge not modelled)',
                        'No ₹1.25 lakh yearly exemption at source — any excess is reclaimed through the Indian tax return; tax paid in India can be credited in the country of residence under its tax treaty',
                        'No yearly gain harvesting: TDS is deducted on the sale itself, so the saving would only return months later as a refund',
                        'The simulation assumes the model\'s funds accept US-based investors; in practice several fund houses do not']
@@ -608,7 +642,7 @@
       if (!r.f || sb.auditOk === false) { render(r, r.detail ? { detail: r.detail } : null); return; }
       if (cache[r.f]) { render(r, cache[r.f]); return; }
       pv.innerHTML = '<div class="vts-pv-load">Loading ' + esc(r.name) + '\'s account…</div>';
-      fetch('data/sim/' + encodeURIComponent(r.f) + '.json', { cache: 'no-cache' }).then(function (x) { return x.ok ? x.json() : null; })
+      fetch('data/' + (sb.dir || 'sim') + '/' + encodeURIComponent(r.f) + '.json', { cache: 'no-cache' }).then(function (x) { return x.ok ? x.json() : null; })
         .then(function (a) { cache[r.f] = a || {}; if (cur === r) render(r, a); })
         .catch(function () { if (cur === r) render(r, null); });
     }
@@ -620,8 +654,8 @@
         '<div class="vts-pv-k"><div><span>Invested</span><b>' + (x ? inr(x.inv) : '–') + '</b></div>' +
         '<div><span>Total gain</span><b class="' + cl(x && x.gain) + '">' + (x && x.gain != null ? sinr(x.gain) + ' <small>' + spct(r.ret) + '</small>' : '–') + '</b></div>' +
         '<div><span>' + (last ? (last.first ? 'Since purchase' : 'Day change · ' + esc(dt(last.d, false))) : 'Day change') + '</span><b class="' + cl(last && last.chg) + '">' + (last ? sinr(last.chg) + ' <small>' + spct(last.pct) + '</small>' : '–') + '</b></div>' +
-        '<div><span>Same money in Nifty 50</span>' + (function () { var bv = last && last.inv ? (last.bval / last.inv - 1) * 100 : (x && x.bench); return '<b class="' + cl(bv) + '">' + (bv != null ? spct(bv) : '–') + '</b>'; })() + '</div></div></div>';
-      var tabs = [['today', 'Summary'], ['bench', 'vs Nifty 50'], ['brk', 'Breakdown'], ['hold', 'Holdings'], ['hist', 'History']];
+        '<div><span>Same money in ' + esc(BN) + '</span>' + (function () { var bv = last && last.inv ? (last.bval / last.inv - 1) * 100 : (x && x.bench); return '<b class="' + cl(bv) + '">' + (bv != null ? spct(bv) : '–') + '</b>'; })() + '</div></div></div>';
+      var tabs = [['today', 'Summary'], ['bench', 'vs ' + BN], ['brk', 'Breakdown'], ['hold', 'Holdings'], ['hist', 'History']];
       h += '<div class="vts-tabs vts-pv-tabs" role="tablist">' + tabs.map(function (t) { return '<button type="button" role="tab" data-t="' + t[0] + '" class="' + (tab === t[0] ? 'on' : '') + '" aria-selected="' + (tab === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div>';
       h += '<div class="vts-pv-pane">' + pane(r, a) + '</div>';
       pv.innerHTML = h;
@@ -658,10 +692,10 @@
       var h = '<div class="vts-sum"><p class="vts-sum-l">' + (e.first
         ? 'Since purchase, ' + esc(r.name) + '\'s portfolio is ' + (e.chg >= 0 ? 'up' : 'down') + ' <b class="' + cl(e.chg) + '">' + inr(Math.abs(e.chg)) + ' (' + spct(e.pct) + ')</b> as of ' + esc(dtw(e.d)) + '.'
         : esc(r.name) + '\'s portfolio ' + moved + ' on ' + esc(dtw(e.d)) + '.') +
-        ' The same money in the Nifty 50 ' + (e.first ? 'is ' : 'moved ') + '<b class="' + cl(e.bpct) + '">' + spct(e.bpct) + '</b>' +
+        ' The same money in the ' + esc(BN) + ' ' + (e.first ? 'is ' : 'moved ') + '<b class="' + cl(e.bpct) + '">' + spct(e.bpct) + '</b>' +
         (Math.abs(gap) >= 0.01 ? ' — ' + Math.abs(gap).toFixed(2) + ' pts ' + (gap > 0 ? 'ahead' : 'behind') + '.' : '.') + '</p>';
-      var m = e.mkt || [], nifty = m.filter(function (q) { return q[1] === 'NIFTYBEES'; })[0];
-      var others = m.filter(function (q) { return q[1] !== 'NIFTYBEES'; }).slice(0, 4);
+      var m = e.mkt || [], nifty = m.filter(function (q) { return q[1] === BK; })[0];
+      var others = m.filter(function (q) { return q[1] !== BK; }).slice(0, 4);
       if (m.length) {
         h += '<h4>Market moves that day</h4><ul class="vts-sum-m">' + (nifty ? [nifty] : []).concat(others).map(function (q) {
           return '<li><span>' + esc(q[0]) + '</span><b class="' + cl(q[2]) + '">' + spct(q[2]) + '</b></li>'; }).join('') + '</ul>';
@@ -686,6 +720,7 @@
       var pend = (e.hold || []).filter(function (q) { return q[9] > 0; });
       if (pend.length) li.push('Still being credited (counted at cost): ' + pend.map(function (q) { return esc(q[0]) + ' ' + inr(q[9]); }).join(' · ') + '.');
       if (li.length) h += '<h4>What this meant for the portfolio</h4><ul class="vts-sum-b">' + li.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>';
+      if (gl) return h + '<p class="vts-pv-e">Calculated from official US closing prices and recorded in the audited ledger. Market moves use the official closes of index-tracking ETFs.</p></div>';
       h += '<p class="vts-pv-e">Calculated from official ' + (mf ? 'NAVs' : 'closing prices') + ' and recorded in the audited ledger journal. Market moves use the official closes of index-tracking ETFs; look-through exposure comes from the funds\' ' + (x.pm ? esc(dt(x.pm + '-01').replace(/^\d+ /, '')) + ' ' : '') + 'monthly portfolios (top holdings only).</p></div>';
       return h;
     }
@@ -711,7 +746,7 @@
       var pts = window_(series), lastP = pts[pts.length - 1], q = lastP[3] || series[series.length - 1];
       var h = '<div class="vts-ch-per" role="group" aria-label="Period">' + ['1W', '1M', '6M', '1Y', 'ALL'].map(function (p) { return '<button type="button" data-p="' + p + '" class="' + (per === p ? 'on' : '') + '" aria-pressed="' + (per === p) + '">' + p + '</button>'; }).join('') + '</div>';
       h += '<div class="vts-ch-k"><div class="p"><span><i></i>Portfolio · time-weighted</span><b class="' + cl(lastP[1]) + '">' + spct(lastP[1]) + '</b><small>' + inr(q[1]) + '</small></div>' +
-        '<div class="b"><span><i></i>Nifty 50 · time-weighted</span><b class="' + cl(lastP[2]) + '">' + spct(lastP[2]) + '</b><small>' + inr(q[5]) + '</small></div></div>';
+        '<div class="b"><span><i></i>' + esc(BN) + ' · time-weighted</span><b class="' + cl(lastP[2]) + '">' + spct(lastP[2]) + '</b><small>' + inr(q[5]) + '</small></div></div>';
       h += chart(pts);
       h += '<p class="vts-pv-e">Time-weighted return over the period: daily changes chained, so new money and its timing do not count — the way fund returns are quoted. The total gain above is measured on the money actually invested, so the two differ for accounts that keep buying. Both lines start from the same cash on the same dates; units count at cost until credited.</p>';
       return h;
@@ -732,7 +767,7 @@
       var xl = [0, Math.floor((pts.length - 1) / 2), pts.length - 1].filter(function (v, i, s) { return s.indexOf(v) === i; });
       xl.forEach(function (i) { g += '<text x="' + X(i).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="' + (i === 0 ? 'start' : i === pts.length - 1 ? 'end' : 'middle') + '">' + esc(dt(pts[i][0], false)) + '</text>'; });
       return '<div class="vts-ch" data-pts="' + esc(JSON.stringify(pts.map(function (p) { return [p[0], +p[1].toFixed(3), +p[2].toFixed(3), X(pts.indexOf(p))]; }))) + '">' +
-        '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Portfolio versus Nifty 50, cumulative return over the period">' + g +
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Portfolio versus ' + esc(BN) + ', cumulative return over the period">' + g +
         '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(0).toFixed(1) + '" y2="' + Y(0).toFixed(1) + '" class="zl"/>' +
         '<path d="' + path(2) + '" class="lb"/><path d="' + path(1) + '" class="lp"/>' +
         '<line class="cx" x1="0" x2="0" y1="' + T + '" y2="' + (H - B) + '" visibility="hidden"/></svg><div class="vts-ch-tip" hidden></div></div>';
@@ -746,7 +781,7 @@
         pts.forEach(function (p, i) { if (Math.abs(p[3] - px) < Math.abs(pts[k][3] - px)) k = i; });
         var p = pts[k]; cx.setAttribute('x1', p[3]); cx.setAttribute('x2', p[3]); cx.setAttribute('visibility', 'visible');
         tip.hidden = false;
-        tip.innerHTML = '<b>' + esc(dt(p[0])) + '</b><span><i class="p"></i>Portfolio ' + spct(p[1]) + '</span><span><i class="b"></i>Nifty 50 ' + spct(p[2]) + '</span>';
+        tip.innerHTML = '<b>' + esc(dt(p[0])) + '</b><span><i class="p"></i>Portfolio ' + spct(p[1]) + '</span><span><i class="b"></i>' + esc(BN) + ' ' + spct(p[2]) + '</span>';
         var left = p[3] / 640 * r.width; tip.style.left = Math.min(Math.max(left - tip.offsetWidth / 2, 0), r.width - tip.offsetWidth) + 'px';
       };
       var out = function () { cx.setAttribute('visibility', 'hidden'); tip.hidden = true; };
@@ -760,10 +795,10 @@
       if (x.hold && x.hold.length) {
         h += '<div class="vts-acc-t" role="table" aria-label="Holdings"><div class="vts-acc-r vts-acc-hd" role="row"><span>' + (mf ? 'Fund' : 'ETF') + '</span><span>Units</span><span>Avg cost</span><span>' + (mf ? 'NAV' : 'Close') + '</span><span>Value</span><span>Gain</span><span>Share</span></div>' +
           x.hold.map(function (o) {
-            return '<div class="vts-acc-r" role="row"><span class="vts-acc-n"><b>' + esc(o.n) + '</b><small>' + esc(mf ? (o.cat || '') : o.k + (o.cat ? ' · ' + o.cat : '')) + (o.pu ? ' · <em>' + num(o.pu, mf ? 3 : 0) + ' units being credited' + (o.cr ? ' by ' + esc(dt(o.cr, false)) : '') + '</em>' : '') + '</small></span>' +
-              '<span data-l="Units">' + num(o.u, mf ? 3 : 0) + '</span><span data-l="Avg cost">₹' + num(o.avg, mf ? 4 : 2) + '</span>' +
-              '<span data-l="' + (mf ? 'NAV' : 'Close') + '">₹' + num(o.px, mf ? 4 : 2) + (o.pd ? '<small>' + dt(o.pd, false) + '</small>' : '') + '</span>' +
-              '<span data-l="Value">₹' + num(o.val, 0) + '</span><span data-l="Gain" class="' + cl(o.g) + '">' + spct(o.g) + '</span><span data-l="Share">' + (o.w == null ? '–' : o.w.toFixed(1) + '%') + '</span></div>';
+            return '<div class="vts-acc-r" role="row"><span class="vts-acc-n"><b>' + esc(o.n) + '</b><small>' + esc(mf ? (o.cat || '') : o.k + (o.cat ? ' · ' + o.cat : '')) + (o.pu ? ' · <em>' + num(o.pu, UD) + ' units being credited' + (o.cr ? ' by ' + esc(dt(o.cr, false)) : '') + '</em>' : '') + '</small></span>' +
+              '<span data-l="Units">' + num(o.u, UD) + '</span><span data-l="Avg cost">' + CUR + num(o.avg, mf ? 4 : 2) + '</span>' +
+              '<span data-l="' + (mf ? 'NAV' : 'Close') + '">' + CUR + num(o.px, mf ? 4 : 2) + (o.pd ? '<small>' + dt(o.pd, false) + '</small>' : '') + '</span>' +
+              '<span data-l="Value">' + CUR + num(o.val, gl ? 2 : 0) + '</span><span data-l="Gain" class="' + cl(o.g) + '">' + spct(o.g) + '</span><span data-l="Share">' + (o.w == null ? '–' : o.w.toFixed(1) + '%') + '</span></div>';
           }).join('') + '</div>';
       }
       if (x.pend && x.pend.length)
@@ -805,6 +840,7 @@
       var h1 = '<div class="vts-al-bar" role="img" aria-label="Asset allocation">' + al.map(function (q) { return '<i style="width:' + (q[1] / tot * 100).toFixed(2) + '%;background:' + (ACOL[q[0]] || '#64748b') + '" title="' + esc(q[0]) + ' ' + q[1].toFixed(1) + '%"></i>'; }).join('') + '</div>' +
         '<div class="vts-al-l">' + al.map(function (q) { return '<div><span><i style="background:' + (ACOL[q[0]] || '#64748b') + '"></i>' + esc(q[0]) + '</span><b>' + pfx(q[1]) + '</b><small>' + inr(b.val * q[1] / 100, 0) + '</small></div>'; }).join('') + '</div>' +
         '<p class="vts-pv-e">Look-through allocation of the credited holdings on ' + esc(dt(b.d)) + ' (value ' + inr(b.val, 0) + '), from each fund\'s ' + (b.pm ? esc(dt(b.pm + '-01').replace(/^\d+ /, '')) + ' ' : '') + 'monthly portfolio' + (b.pfCover < 99.5 ? '; ' + (100 - b.pfCover).toFixed(0) + '% of the value is in funds without a published portfolio, counted by their asset class' : '') + '.</p>';
+      if (b.global) return '<div class="vts-pbks">' + bd('alloc', IC.alloc, 'Allocation', 'US equity, international, bonds, gold and cash', h1.replace(/from each fund\'s [^.]*monthly portfolio[^.]*\./, 'by each ETF\'s asset class.')) + '</div>';
       var cap = b.cap || {}, eq = (al.filter(function (q) { return q[0] === 'Equity'; })[0] || [0, 0])[1];
       var capL = [['Large cap', cap.large || 0, '#3b82f6'], ['Mid cap', cap.mid || 0, '#60a5fa'], ['Small cap', cap.small || 0, '#93c5fd']];
       if (eq - (b.eqCapCover || 0) > 0.5) capL.push(['Not classified', eq - (b.eqCapCover || 0), '#64748b']);
@@ -846,10 +882,10 @@
 
     function history(rc) {
       if (!rc.length) return '<p class="vts-pv-e">Daily summaries start once the units are credited.</p>';
-      return '<div class="vts-hist" role="table" aria-label="Recent days"><div class="vts-hist-r hd" role="row"><span>Day</span><span>Value</span><span>Day change</span><span>Portfolio</span><span>Nifty 50</span></div>' +
+      return '<div class="vts-hist" role="table" aria-label="Recent days"><div class="vts-hist-r hd" role="row"><span>Day</span><span>Value</span><span>Day change</span><span>Portfolio</span><span>' + esc(BN) + '</span></div>' +
         rc.slice().reverse().map(function (e) {
-          return '<div class="vts-hist-r" role="row"><span>' + esc(dtw(e.d)) + (e.first ? '<small>since purchase</small>' : '') + '</span><span data-l="Value">' + inr(e.val, 0) + '</span>' +
-            '<span data-l="Day change" class="' + cl(e.chg) + '">' + sinr(e.chg) + '</span><span data-l="Portfolio" class="' + cl(e.pct) + '">' + spct(e.pct) + '</span><span data-l="Nifty 50" class="' + cl(e.bpct) + '">' + spct(e.bpct) + '</span></div>';
+          return '<div class="vts-hist-r" role="row"><span>' + esc(dtw(e.d)) + (e.first ? '<small>since purchase</small>' : '') + '</span><span data-l="Value">' + inr(e.val, gl ? 2 : 0) + '</span>' +
+            '<span data-l="Day change" class="' + cl(e.chg) + '">' + sinr(e.chg) + '</span><span data-l="Portfolio" class="' + cl(e.pct) + '">' + spct(e.pct) + '</span><span data-l="' + esc(BN) + '" class="' + cl(e.bpct) + '">' + spct(e.bpct) + '</span></div>';
         }).join('') + '</div><p class="vts-pv-e">The full daily history is kept in the ledger journal; the latest ' + rc.length + ' days are shown here.</p>';
     }
 
