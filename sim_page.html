@@ -237,6 +237,11 @@ function priceAt(prod, key, d) {
   for (const k in h) if (k <= d && (!bd || k > bd)) { bd = k; best = h[k]; }
   return [bd, best];
 }
+// money paid into the account: plan instalments and the one-time dip reserve; switches move money already inside it
+const paidIn = t => t.side === 'buy' && (t.src === 'plan' || t.src === 'reserve');
+const SWITCH = { review: 1, dip: 1, harvest: 1 };
+const TYPE = { plan: ['Purchase', 'Sale'], reserve: ['Dip reserve (liquid)', 'Sale'], dip: ['Dip buy', 'Reserve redemption'], review: ['Switch in', 'Switch out'],
+               harvest: ['Harvest buy-back', 'Harvest sale'], withdraw: ['Purchase', 'Redemption'] };
 function stateAt(a, d) {
   const units = {}, cost = {}, names = {};
   let cash = 0, pend = 0, contrib = 0, wd = 0;
@@ -245,13 +250,13 @@ function stateAt(a, d) {
     const k = String(t.code ?? t.sym); names[k] = t.name;
     const doneBy = t.navDate && t.navDate <= d && t.units != null;
     if (t.side === 'buy') {
-      if (t.src === 'plan') { contrib += t.amount || 0; if (a.product === 'etf') cash += t.amount || 0; }
+      if (paidIn(t)) { contrib += t.amount || 0; if (a.product === 'etf') cash += t.amount || 0; }
       if (doneBy) {
         units[k] = (units[k] || 0) + t.units;
         const c = a.product === 'mf' ? t.amount : t.gross + t.charges.total;
         cost[k] = (cost[k] || 0) + c;
         if (a.product === 'etf') cash -= t.gross + t.charges.total;
-      } else if (a.product === 'mf' || t.src !== 'plan') pend += t.amount || 0;
+      } else if (a.product === 'mf' || !paidIn(t)) pend += t.amount || 0;
       else { /* ETF plan buy awaiting the close: the cash is already in the account */ }
     } else if (doneBy) {
       const u0 = units[k] || 0;
@@ -268,12 +273,12 @@ function stateAt(a, d) {
     const v = units[k] * (p || 0); val += v;
     hold.push({ key: k, name: names[k], units: units[k], cost: cost[k], price: p, priceDate: pd, value: v });
   }
-  // MF review switch: the sell proceeds wait until the switch-in is allotted
-  if (a.product === 'mf') for (const t of a.txns) if (t.side === 'sell' && t.src === 'review' && t.navDate && t.navDate <= d) {
-    const inn = a.txns.find(x => x.side === 'buy' && x.src === 'review' && x.oid === t.oid.replace(/\|out$/, '|in'));
+  // MF switches (review, dip buy, tax harvesting): the sell proceeds wait until the switch-in is allotted
+  if (a.product === 'mf') for (const t of a.txns) if (t.side === 'sell' && SWITCH[t.src] && t.navDate && t.navDate <= d) {
+    const inn = a.txns.find(x => x.side === 'buy' && x.oid === t.oid.replace(/\|out$/, '|in'));
     if (!inn || !(inn.navDate && inn.navDate <= d)) pend += t.net;
   }
-  if (a.product === 'etf') for (const t of a.txns) if (t.side === 'buy' && t.src === 'review' && t.T <= d && !(t.navDate && t.navDate <= d)) pend -= t.amount || 0;
+  if (a.product === 'etf') for (const t of a.txns) if (t.side === 'buy' && SWITCH[t.src] && t.T <= d && !(t.navDate && t.navDate <= d)) pend -= t.amount || 0;
   hold.sort((x, y) => y.value - x.value);
   return { val: val + pend + (a.product === 'etf' ? cash : 0), hold, cash, pend, contrib, wd };
 }
@@ -323,7 +328,7 @@ $('#ovProd').onclick = e => { const b = e.target.closest('button'); if (!b) retu
 $('#ovRisk').onclick = e => { const b = e.target.closest('button'); if (!b) return; ovR = b.dataset.r; $$('#ovRisk button').forEach(x => x.classList.toggle('on', x === b)); renderOverview(); };
 function renderOverview() {
   // before the first valuation, orders placed count at cost (as in the statement: orders in progress at their amount)
-  const placed = a => a.txns.filter(t => t.side === 'buy' && t.src === 'plan').reduce((s, t) => s + (t.amount || 0), 0);
+  const placed = a => a.txns.filter(paidIn).reduce((s, t) => s + (t.amount || 0), 0);
   const rows = V.accounts.filter(a => (ovP === 'all' || a.product === ovP) && (ovR === 'all' || a.risk === ovR)).map(a => ({
     a, name: a.name, prod: a.product.toUpperCase(), risk: a.riskName, freq: a.freqName,
     inv: a.valuationDate ? a.invested : placed(a), val: a.valuationDate ? a.value : placed(a),
@@ -371,7 +376,7 @@ function stampOf(x) { return x.stamp != null && x.status !== 'Buy in progress' ?
 $('#csv').onclick = () => {
   const { a, f, t } = period(), rows = a.txns.filter(x => x.T >= f && x.T <= t);
   const H = ['Order date', 'Price date', 'Type', 'Fund / ETF', 'Code', 'Amount', 'Price', 'Units', 'Stamp duty', 'Charges', 'TDS', 'Net', 'Credit / payout', 'Status', 'Order id'];
-  const L = [H].concat(rows.map(x => [x.T, x.navDate || '', x.side === 'buy' ? (x.src === 'review' ? 'Switch in' : 'Purchase') : (x.src === 'withdraw' ? 'Redemption' : 'Switch out'),
+  const L = [H].concat(rows.map(x => [x.T, x.navDate || '', (TYPE[x.src] || TYPE.plan)[x.side === 'buy' ? 0 : 1],
     x.name, x.code ?? x.sym, x.amount ?? x.gross ?? '', x.price ?? '', x.units ?? '', stampOf(x) ?? '', x.charges ? x.charges.total : '', x.tds ?? '', x.net ?? '', x.credit || '', x.status, x.oid]));
   const s = L.map(r => r.map(v => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : v).join(',')).join('\n');
   const b = new Blob(['﻿' + s], { type: 'text/csv' }), u = URL.createObjectURL(b), el = document.createElement('a');
@@ -385,7 +390,7 @@ function renderStmt() {
   const open = f <= V.start ? { val: 0, contrib: 0, wd: 0 } : stateAt(a, addDays(f, -1)), close = stateAt(a, t);
   const inP = a.txns.filter(x => x.T >= f && x.T <= t);
   const contrib = close.contrib - open.contrib, wd = close.wd - open.wd, gain = close.val - open.val - contrib + wd;
-  const flowsAll = a.txns.filter(x => x.side === 'buy' && x.src === 'plan' && x.T <= t).reduce((m, x) => { m[x.T] = (m[x.T] || 0) + (x.amount || 0); return m; }, {});
+  const flowsAll = a.txns.filter(x => paidIn(x) && x.T <= t).reduce((m, x) => { m[x.T] = (m[x.T] || 0) + (x.amount || 0); return m; }, {});
   const fl = Object.entries(flowsAll).map(([d, v]) => [d, -v]).concat(a.txns.filter(x => x.src === 'withdraw' && x.navDate && x.navDate <= t).map(x => [x.credit, x.net]));
   const xr = close.val > 0 ? xirr(fl.concat([[t, close.val]])) : null, days = (Date.parse(t) - Date.parse(V.start)) / 864e5;
   const p = V.plans[Object.keys(V.plans).sort().pop()], planSlots = isMF ? p.mf[a.plan] : p.etf[a.plan];
@@ -398,7 +403,7 @@ function renderStmt() {
     <div class="r">Generated ${new Date().toLocaleString('en-IN')}<br>Ledger ${(V.events || 0).toLocaleString('en-IN')} entries<br><span class="mono">head ${esc(String(V.head || '').slice(0, 16))}</span><br>${AUD ? (AUD.nErrors ? '<b class="neg">Audit: errors</b>' : '<b class="pos">✓ Independently audited</b>') : ''}</div></div>`;
   if (!a.txns.length) h += `<div class="note" style="margin-bottom:14px">${iso(new Date()) < V.start ? 'Simulated buying starts on <b>' + dt(V.start) + '</b> — this statement fills in automatically after the first order.' : 'No orders yet — the first order appears after the next daily update.'}</div>`;
   h += `<div class="grid kpis">${[
-    ['Opening value', inr(open.val, 2), dt(addDays(f, -1))], ['Contributions', inr(contrib, 2), (n => n + (n === 1 ? ' instalment' : ' instalments'))(new Set(inP.filter(x => x.src === 'plan').map(x => x.T)).size)],
+    ['Opening value', inr(open.val, 2), dt(addDays(f, -1))], ['Contributions', inr(contrib, 2), (n => n + (n === 1 ? ' instalment' : ' instalments'))(new Set(inP.filter(x => x.src === 'plan').map(x => x.T)).size) + (inP.some(x => x.src === 'reserve') ? ' + dip reserve' : '')],
     ['Withdrawals', inr(wd, 2), ''], ['Closing value', inr(close.val, 2), dt(t)],
     ['Gain in period', `<span class="${cls(gain)}">${inr(gain, 2)}</span>`, ''],
     [days >= 365 ? 'XIRR since start' : 'Absolute return', (r => `<span class="${cls(r)}">${pct(r)}</span>`)(days >= 365 ? (xr == null ? null : xr * 100) : (close.contrib ? ((close.val + close.wd) / close.contrib - 1) * 100 : null)), 'Nifty 50 same cash: ' + pct(t === a.valuationDate ? benchOf(a) : null)]
@@ -421,7 +426,7 @@ function renderStmt() {
   if (!inP.length) h += `<tr><td colspan="11" class="muted">No transactions in this period.</td></tr>`;
   for (const x of inP) {
     const k = String(x.code ?? x.sym); if (x.units != null) run[k] = (run[k] || 0) + (x.side === 'buy' ? x.units : -x.units);
-    const type = x.side === 'buy' ? (x.src === 'review' ? 'Switch in' : 'Purchase') : (x.src === 'withdraw' ? 'Redemption' : 'Switch out');
+    const type = (TYPE[x.src] || TYPE.plan)[x.side === 'buy' ? 0 : 1];
     const ch = x.charges ? `<details class="x"><summary>${inr(x.charges.total, 2)}</summary><div style="font-size:11.5px;line-height:1.6">${Object.entries(x.charges).filter(([n, v]) => n !== 'total' && v).map(([n, v]) => `${({ brokerage: 'Brokerage', exchange: 'Exchange txn', sebi: 'SEBI fee', ipft: 'IPFT', gst: 'GST 18%', stamp: 'Stamp duty', stt: 'STT', dp: 'DP charge + GST', exitLoad: 'Exit load' })[n] || n}: ${inr(v, 2)}`).join('<br>')}${x.carry != null ? '<br>Carried to next buy: ' + inr(x.carry, 2) : ''}</div></details>` : stampOf(x) != null ? inr(x.stamp, 2) : (x.stamp != null ? '<span class="muted" style="font-size:11px">with the units</span>' : '–');
     const amt = x.side === 'buy' ? (x.gross != null ? inr(x.gross, 2) + `<br><span class="muted" style="font-size:11px">of ${inr(x.budget, 2)} budget</span>` : inr(x.amount, 2)) : (x.net != null ? inr(x.net, 2) + (x.tds ? `<br><span class="muted" style="font-size:11px">after TDS ${inr(x.tds, 2)}</span>` : '') : '–');
     h += `<tr><td>${dt(x.T)}</td><td>${type}</td><td class="wrap">${esc(x.name)}${x.note ? `<br><span class="muted" style="font-size:11px">${esc(x.note)}</span>` : ''}</td><td class="n">${amt}</td><td>${dt(x.navDate)}${isMF && x.verified ? ' <span class="tag" title="Matches the official NAV file">✓</span>' : ''}</td>
@@ -441,7 +446,7 @@ function renderStmt() {
   if (!isMF) {
     let c = open.cash || 0; const L = [];
     for (const x of inP) {
-      if (x.side === 'buy' && x.src === 'plan') { c += x.amount; L.push([x.T, 'Instalment credited — ' + x.label, x.amount, null, c]); }
+      if (paidIn(x)) { c += x.amount; L.push([x.T, (x.src === 'reserve' ? 'Dip reserve credited — ' : 'Instalment credited — ') + x.label, x.amount, null, c]); }
       if (x.side === 'buy' && x.units != null) { const v = x.gross + x.charges.total; c -= v; L.push([x.navDate, 'Bought ' + x.units + ' × ' + x.sym, null, v, c]); }
       if (x.side === 'sell' && x.net != null && x.src !== 'withdraw') { c += x.net; L.push([x.navDate, 'Sold ' + x.units + ' × ' + x.sym, x.net, null, c]); }
     }

@@ -272,6 +272,7 @@
       cards.map(function (c) { return '<div class="vts-k"><small>' + c[0] + '</small><b>' + c[1] + '</b><em>' + c[2] + '</em></div>'; }).join('') +
       '<div class="vts-k"><small>Nifty 50 earnings</small><b>' + pct(e50.g1) + '</b><em>last 12 months</em></div>' +
       '</div>' + (now && now.real != null ? '' : '<p class="vts-note" style="margin:0 0 8px">GDP, inflation and growth checks are being refreshed and will appear after the next data update; the earnings checks below are current.</p>') + '<ul class="vts-cl">' + checks.map(function (c) { return '<li>' + sig(c.s) + '<span class="k">' + esc(c.k) + '</span><span class="v">' + esc(c.v) + '</span><span class="w">' + esc(c.why) + '</span></li>'; }).join('') + '</ul></div>';
+    var p1 = h; h = '';
     var gd = g.gdp || [];
     h += '<div class="vts-pane">';
     if (gd.length) {
@@ -281,9 +282,52 @@
           return '<tr><td>' + esc(x.fy) + (x.y === g.fy ? ' <small style="color:var(--accent2);font-weight:700">now</small>' : '') + '</td><td' + fc + '>' + num(x.real) + '%</td><td' + fc + '>' + num(x.infl) + '%</td><td' + fc + '>' + num(nom) + '%</td><td' + fc + '>' + (x.usd ? '$' + num(x.usd / 1000, 2) + ' tn' : '–') + '</td><td' + fc + '>' + num(x.world) + '%</td></tr>';
         }).join('') + '</tbody></table></div></div>';
     }
-    h += '</div>' + earnBox(g);
+    h += '</div>';
+    var p2 = gd.length ? h : '';
+    h = earnBox(g);
     h += '<p class="vts-note">GDP and inflation figures are ' + (g.src === 'wb' ? 'the latest published official international figures for India' : 'the latest official international forecasts for India, updated a few times a year') + '; earnings are updated every trading day. Economic data is often revised. For education only.</p>';
-    return '<div class="vts-pane">' + h + '</div>';
+    return '<div class="vts-pane">' +
+      ecoSec('checks', 'India economy & earnings checks', 'Total score ' + (g.score > 0 ? '+' : '') + g.score + ' of ' + checks.length + ' — growth, inflation, earnings and profitability', p1, true) +
+      (p2 ? ecoSec('gdp', 'India GDP by fiscal year', 'Real growth, inflation, nominal growth and GDP size, with forecasts', p2, false) : '') +
+      ecoSec('earn', 'Company earnings & valuation', 'P/E, P/B, ROE, earnings growth and PEG for every Nifty index' + (g.gidx ? ' and key global indices' : ''), h, false) +
+      ecoSec('faq', 'Economy & earnings — FAQs', 'How these figures are calculated and how the model uses them', ecoFaq(thr, nck), false) + '</div>';
+  }
+  /* Economy & earnings sections: each one has an Expand / Minimise bar; the viewer's choice is remembered on this device */
+  function ecoSec(key, title, hint, body, def) {
+    var st = null;
+    try { st = localStorage.getItem('vt_eco_' + key); } catch (e) {}
+    var open = st == null ? def : st === '1';
+    return '<details class="vts-eco" data-eco="' + key + '"' + (open ? ' open' : '') + '><summary><span class="vts-eco-t"><b>' + esc(title) + '</b><small>' + esc(hint) + '</small></span>' +
+      '<span class="vts-eco-b"><span class="o">Expand</span><span class="c">Minimise</span><i aria-hidden="true">▾</i></span></summary><div class="vts-eco-in">' + body + '</div></details>';
+  }
+  document.addEventListener('toggle', function (e) {
+    var d = e.target;
+    if (d && d.classList && d.classList.contains('vts-eco')) { try { localStorage.setItem('vt_eco_' + d.getAttribute('data-eco'), d.open ? '1' : '0'); } catch (er) {} }
+  }, true);
+  function ecoFaq(thr, nck) {
+    var q = [
+      ['Why does the Portfolio Simulator look at the economy and company earnings?',
+       'Over long periods share prices follow company earnings, and earnings follow the economy. Growth, inflation and profitability tell the model whether the backdrop for shares is supportive or a headwind. They are one input alongside valuation, interest rates, market falls, sentiment and global markets — never the only reason for a change.'],
+      ['How does the total score change the model portfolios?',
+       'Each of the ' + (nck || 10) + ' checks scores +1 (supportive), 0 (neutral) or −1 (headwind). A total of +' + thr + ' or more adds 5 percentage points of equity to the model portfolios of 5 years and longer; −' + thr + ' or less removes 5 points. Anything in between leaves the mix unchanged. Strategic changes are applied only at the monthly review.'],
+      ['What is the difference between real and nominal GDP growth?',
+       'Real growth measures how much more the economy produces, after removing price rises. Nominal growth is real growth plus inflation — growth in rupee terms. Company sales and profits are earned in rupees, so over long periods earnings tend to grow roughly in line with nominal GDP.'],
+      ['How is the earnings growth of an index calculated?',
+       'Earnings per index unit = index level ÷ its P/E, compared with the same month one, three and five years earlier (three- and five-year growth is per year, compounded). These are trailing earnings — what companies have already reported — not forecasts.'],
+      ['Why do some growth figures look very large, negative or blank?',
+       'Very large growth usually comes from a low base — companies moving from losses or thin profits back to normal profits — and rarely repeats. Negative figures mean reported profits fell. A dash means the index, or VilfinTV\'s own monthly record for a global index, does not yet have enough history for that period; the figures fill in automatically as months pass.'],
+      ['What do P/E, P/B, ROE, earnings yield and PEG mean?',
+       '<b>P/E</b> = price ÷ earnings (what investors pay for ₹1 of profit). <b>P/B</b> = price ÷ book value. <b>ROE</b> = P/B ÷ P/E — the profit companies earn on shareholders\' money (15%+ is strong, below 12% weak). <b>Earnings yield</b> = 1 ÷ P/E, comparable with bond yields. <b>PEG</b> = P/E ÷ 3-year earnings growth — below about 1.5 suggests growth is reasonably priced.'],
+      ['How are the global indices valued?',
+       'Each global index is valued from the published P/E, P/B and dividend yield of the holdings of a large exchange-traded fund that tracks it (shown under its name), in that market\'s currency. Its earnings growth is measured from VilfinTV\'s own monthly records, so it fills in over time.'],
+      ['How often are these figures updated?',
+       'Index valuations and earnings are refreshed every trading day from the exchange\'s official index files. GDP and inflation come from official international figures for India, which are revised a few times a year.'],
+      ['Do strong economic numbers mean markets will rise?',
+       'No. Markets often price good news in advance, and shares can fall in a strong economy or rise in a weak one. These checks only nudge the model\'s equity share by a small amount; they are not a forecast. The Portfolio Simulator is an educational model — not investment advice.']
+    ];
+    return '<div class="vts-box vts-efaq">' + q.map(function (x) {
+      return '<details class="vts-efq"><summary>' + esc(x[0]) + '</summary><p>' + x[1] + '</p></details>';
+    }).join('') + '</div>';
   }
 
   /* Company earnings for every Nifty index: broad market and sector / theme views, sortable columns.
@@ -416,12 +460,14 @@
         ? '<details class="vts-buy-rule"><summary>⏱ How each fund purchase is priced</summary><ul>' +
           '<li><b>When:</b> every purchase is placed on its plan date before the 3 pm IST cut-off.</li>' +
           '<li><b>Unit price:</b> the fund\'s <b>official NAV of that business day</b> (liquid and overnight funds: the NAV of the previous calendar day); if the fund house has no NAV that day, the next NAV day. Stamp duty of 0.005% is taken first; units are rounded down to 3 decimals and credited two business days later (market holidays skipped). Until then the purchase shows as "buy in progress" — no return, gain or stamp duty is shown before the units are credited.</li>' +
-          '<li><b>Record:</b> each purchase in the ledger stores its NAV date and NAV, and the daily audit checks it against the official NAV file.</li></ul></details>'
+          '<li><b>Record:</b> each purchase in the ledger stores its NAV date and NAV, and the daily audit checks it against the official NAV file.</li>' +
+          '<li><b>Market-dip buys</b> (Govind, Nithin and Aishwarya only): a one-time ₹20,000 reserve sits in a liquid fund. After a confirmed dip close, the dip amount is redeemed the next trading day at the liquid fund\'s applicable NAV, paid out the following business day and invested in the segment\'s model fund at that day\'s NAV — the same cut-off, stamp duty and T+2 credit rules apply.</li></ul></details>'
         : '<details class="vts-buy-rule"><summary>⏱ How each ETF trade is priced</summary><ul>' +
           '<li><b>When:</b> every buy (and any sale) is placed on its plan date and treated as a market-on-close order — it executes at the end of that day\'s trading session, <b>3:30 pm IST</b>.</li>' +
           '<li><b>Unit price:</b> the exchange\'s <b>official closing price</b> of that session (the weighted average price of the last 30 minutes of trading, 3:00–3:30 pm IST). If the market is closed (weekend or exchange holiday) or the ETF did not trade that day, it executes at the close of the next session it trades.</li>' +
           '<li><b>Units:</b> whole units only, as many as the amount buys after charges; cash left over is added to the next buy of the same ETF. Units are credited the next trading day (T+1).</li>' +
-          '<li><b>Record:</b> each trade in the ledger stores this rule, its trade date and the closing price used, and the daily audit checks every trade against the exchange\'s published closing price for that session.</li></ul></details>') +
+          '<li><b>Record:</b> each trade in the ledger stores this rule, its trade date and the closing price used, and the daily audit checks every trade against the exchange\'s published closing price for that session.</li>' +
+          '<li><b>Market-dip buys</b> (Govind, Nithin and Aishwarya only): a one-time ₹20,000 reserve sits in a liquid ETF. After a confirmed dip close, whole liquid-ETF units worth the dip amount are sold at the next session\'s close and the segment\'s model ETF is bought at the following session\'s close, once the sale proceeds settle.</li></ul></details>') +
       '<div class="vts-pf"><div class="vts-pf-bar"><button type="button" class="vts-pf-me" aria-haspopup="dialog"></button><span class="vts-pf-st vts-pf-cur"></span>' +
       '<button type="button" class="vts-pf-sw" aria-haspopup="listbox" aria-expanded="false">Switch <i>▾</i></button></div>' +
       '<div class="vts-pf-list" role="listbox" aria-label="Switch account" hidden></div></div>' +
@@ -486,8 +532,11 @@
         ['Review', 'On the 19th of every month. A holding is switched only when the model has dropped it at two reviews in a row — never in the first 12 months, and only once exit load and short-term tax no longer apply (at most a 6-month wait). A ' + (mf ? 'fund' : 'ETF') + ' that is wound up or delisted is sold at once'],
         ['Tax', nri ? 'TDS is deducted on every sale; no March gain harvesting. Losses can still be booked against gains already taxed that year'
                     : 'Every March, long-term equity gains up to the ₹1.25 lakh yearly exemption are booked and bought back the same day to raise the cost base (tax harvesting)'],
-        ['Discipline', 'Never times the market, never sells because prices fell, never adds or withdraws money outside the plan']
-      ];
+        ['Discipline', r.dip ? 'Never sells because prices fell and never adds or withdraws money outside the plan — the only extra buys are the market-dip lump sums from the reserve'
+                             : 'Never times the market, never sells because prices fell, never adds or withdraws money outside the plan']
+      ].concat(r.dip ? [['Dips', 'Keeps a one-time ₹20,000 reserve in a ' + (mf ? 'liquid fund' : 'liquid ETF') + '. When the Nifty 50, Midcap 150, Smallcap 250, gold or silver closes 3% / 5% / 10% below its 3-month high, the next trading day ₹5,000 / ₹10,000 / ₹20,000 of the reserve is ' +
+        (mf ? 'redeemed and invested in that segment\'s model fund when the money arrives the next business day' : 'sold and invested in that segment\'s model ETF at the next session\'s close') +
+        ' — once per new tier in a fall, only after all 26 checks pass and only while reserve money is left']] : []);
     }
     function profile(r, a) {
       var x = (a && a.detail) || r.detail, nri = !!r.nri, tm = TEAM[r.team] || ['VilfinTV team', nri ? 'Outside India (NRI)' : 'India'];
@@ -512,6 +561,13 @@
         (x ? row('Invested', inr(x.inv)) + row('Value', x.val != null ? inr(x.val) : 'After units are credited') : '') +
         row('Total return', r.ret != null ? '<span class="' + cl(r.ret) + '">' + spct(r.ret) + '</span>' + (r.metric === 'xirr' ? ' XIRR' : '') : (r.credit ? 'Units credited ' + esc(dt(r.credit)) : '–')) +
         '<h4>How ' + esc(r.name) + ' buys</h4><ol class="vts-pm-steps">' + strategy(r, x, nri).map(function (t) { return '<li><b>' + t[0] + '</b><span>' + t[1] + '</span></li>'; }).join('') + '</ol>' +
+        (x && x.dip ? '<h4>Market-dip reserve</h4>' + row('Reserve', inr(x.dip.reserve, 0) + (x.dip.fund ? ' in ' + esc(x.dip.fund) : '') + (x.dip.date ? ' · since ' + esc(dt(x.dip.date)) : '')) +
+          row('Used for dip buys', inr(x.dip.used, 0)) + row('Left', inr(x.dip.left, 0)) +
+          ((x.dip.ev || []).length ? '<ul class="vts-pm-dip">' + x.dip.ev.slice().reverse().map(function (e) {
+            return '<li><b>' + esc(dt(e.D)) + ' · ' + esc(e.seg === 'large' ? 'Large cap' : e.seg === 'mid' ? 'Mid cap' : e.seg === 'small' ? 'Small cap' : e.seg === 'gold' ? 'Gold' : 'Silver') + ' −' + Number(e.fall).toFixed(2) + '%</b> ' +
+              (e.action === 'buy' ? 'bought ' + inr(e.amt, 0) + (e.name ? ' of ' + esc(e.name) : '') : 'no buy — ' + esc(e.why)) + '</li>';
+          }).join('') + '</ul>' : '<p class="vts-pv-e">No dip buys yet — the reserve waits for the first confirmed fall.</p>') +
+          (x.dip.empty ? '<p class="vts-pv-e">' + x.dip.empty + ' later dip signal' + (x.dip.empty > 1 ? 's' : '') + ' passed without a buy because the reserve was used up.</p>' : '') : '') +
         '<h4>Charges</h4><ul>' + costs.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' +
         '<h4>Tax rules for this account</h4><ul>' + tax.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' +
         '<p class="vts-pv-e">Simulated account of a VilfinTV team member for education — not real money and not advice. Every figure comes from the audited ledger.</p></div>';
@@ -845,6 +901,7 @@
     '.vts-pm-steps li:first-child{border-top:none}.vts-pm-steps li::before{content:counter(st);width:22px;height:22px;border-radius:50%;background:var(--accent,#4a90e2);color:var(--accent-ink,#fff);font-size:11.5px;font-weight:800;display:grid;place-items:center}' +
     '.vts-pm-steps b{font-size:12.5px;padding-top:2px}.vts-pm-steps span{color:var(--text2);font-size:12.5px;line-height:1.55}' +
     '.vts-pm .up{color:#16a34a}.vts-pm .dn{color:#dc2626}' +
+    '.vts-pm-dip{margin:6px 0 0;padding-left:18px;font-size:12.5px;line-height:1.5;color:var(--text2)}.vts-pm-dip b{color:var(--text)}' +
     '@media (max-width:560px){.vts-pm-steps li{grid-template-columns:24px 1fr;row-gap:2px}.vts-pm-steps span{grid-column:2}.vts-pf-bar{flex-wrap:wrap;row-gap:8px}.vts-pf-me{flex-basis:100%}.vts-pf-cur{flex:1;flex-direction:row!important;align-items:baseline!important;gap:6px;justify-content:flex-start}' +
     '.vts-pm-back{padding:0;align-items:flex-end}.vts-pm{max-height:88vh;border-radius:16px 16px 0 0}.vts-pm-r{grid-template-columns:1fr;gap:2px}.vts-pf-vp{display:none}}' +
     '.vts-pf-av{flex:none;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;color:#fff;font-weight:800;font-size:12.5px;letter-spacing:.02em}.vts-pf-av.lg{width:42px;height:42px;font-size:14px}' +
@@ -898,6 +955,99 @@
     '@media (max-width:760px){.vts-bl-r{grid-template-columns:minmax(0,1.9fr) minmax(36px,1fr) 46px;gap:8px}.vts-pv-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.vts-olap-p{grid-template-columns:1fr}.vts-pv-top{grid-template-columns:1fr}.vts-pv-k{grid-template-columns:repeat(2,minmax(0,1fr))}.vts-pf-me .vts-pf-av.lg{width:36px;height:36px}' +
     '.vts-hist-r.hd{display:none}.vts-hist-r{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:4px}.vts-hist-r>span:first-child{grid-column:1/-1;font-weight:700}.vts-hist-r>span:not(:first-child){text-align:left}' +
     '.vts-hist-r>span[data-l]::before{content:attr(data-l);display:block;font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}.vts-ch-k b{font-size:15px}}';
+  /* ── Market-dip lump sums (data: smartsip.json / etf_smart.json → dip). When a segment's index tracker closes 3% or
+     more below its 3-month high, the model adds a one-time amount (₹5,000 · ₹10,000 at 5% · ₹20,000 at 10%), once per
+     new tier in a fall, only when all 26 checks pass. Shown for the selected plan, just above Simulator Buy. ── */
+  function dipPanel(o) {
+    var b = o && o.blk;
+    if (!b || !b.segments) return '';
+    style();
+    var R = b.rule || {}, segs = b.segments, plan = (b.plans || {})[o.pid] || {}, etf = o.kind === 'etf';
+    var tiers = (R.tiers || []).slice().sort(function (x, y) { return x[0] - y[0]; });
+    var inr = function (v) { return '₹' + Number(v || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 }); };
+    var dt = function (x) { return x ? new Date(String(x).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''; };
+    var order = ['large', 'mid', 'small', 'gold', 'silver'];
+    var rows = order.filter(function (k) { return segs[k]; }).map(function (k) {
+      var s = segs[k], e = plan[k], c = e ? (b.cands || [])[e.c] : null;
+      var fall = s.fall || 0, w = Math.max(0, Math.min(100, fall / 12 * 100));
+      var next = tiers.filter(function (t) { return t[0] > Math.max(s.ep || 0, s.tier || 0); })[0];
+      var used = (s.recent || []).filter(function (x) { return x.tier === s.ep; }).slice(-1)[0];
+      var st, cls;
+      if (!s.tier) { st = 'No dip · within ' + (tiers[0] ? tiers[0][0] : 3) + '% of the high'; cls = 'q'; }
+      else if (s.signal) { st = 'Dip day · model amount ' + inr(s.amount); cls = 'go'; }
+      else if (s.ep && s.ep >= s.tier) { st = s.ep + '% tier used' + (used ? ' on ' + dt(used.d) : '') + (next ? ' · next ' + inr(next[1]) + ' at ' + next[0] + '%' : ''); cls = 'used'; }
+      else { st = s.tier + '% tier · awaiting confirmation'; cls = 'wait'; }
+      var all = c ? (s.checks || []).concat(c.checks || []) : (s.checks || []);
+      var ok = all.filter(function (x) { return x[1]; }).length, n = c ? all.length : 26;
+      var grp = function (t, from, xs) {
+        return '<div class="vts-dip-g"><h5>' + t + '</h5>' + xs.map(function (x, i) {
+          return '<div class="vts-dip-c ' + (x[1] ? 'ok' : 'no') + '"><i>' + (x[1] ? '✓' : '✕') + '</i><span><b>' + (from + i) + '. ' + esc(x[0]) + '</b>' + esc(x[2]) + '</span></div>';
+        }).join('') + '</div>';
+      };
+      var det = grp('Market trigger', 1, s.checks || []) +
+        (c ? grp('Valuation', 8, c.checks.slice(0, 7)) + grp(etf ? 'ETF checks' : 'Fund checks', 15, c.checks.slice(7)) :
+          '<p class="vts-dip-na">' + esc(s.label) + ' is not part of this model portfolio, so no dip lump sum applies to it.</p>');
+      return '<details class="vts-dip-r ' + cls + '"><summary>' +
+        '<span class="vts-dip-s"><b>' + esc(s.label) + '</b><small>' + esc(s.index) + '</small></span>' +
+        '<span class="vts-dip-f"><b>' + (fall > 0.005 ? '−' + fall.toFixed(2) + '%' : '0.00%') + '</b><span class="vts-dip-m" aria-hidden="true">' +
+          tiers.map(function (t) { return '<i style="left:' + (t[0] / 12 * 100) + '%"></i>'; }).join('') + '<em style="width:' + w + '%"></em></span><small>from the 3-month high</small></span>' +
+        '<span class="vts-dip-st">' + esc(st) + '</span>' +
+        '<span class="vts-dip-fd">' + (c ? esc(etf ? c.sym + ' · ' + (c.name || '') : c.name || '') + '<small>' + esc(c.slot === 'lmcore' ? 'Large & mid cap core' : 'Model ' + (etf ? 'ETF' : 'fund') + ' for this segment') + '</small>' : '<span class="vts-dip-na">Not in this plan</span>') + '</span>' +
+        '<span class="vts-dip-k ' + (c && ok === n ? 'ok' : '') + '">' + (c ? ok + '/' + n : '–') + '<small>checks</small></span><span class="vts-dip-ch" aria-hidden="true">›</span></summary>' +
+        '<div class="vts-dip-d">' + det + '</div></details>';
+    }).join('');
+    var rv = b.reserve || {}, who = (R.persons || []).join(', ').replace(/, ([^,]*)$/, ' and $1');
+    return '<section class="vts-dip" aria-labelledby="vtsDipT">' +
+      '<div class="vts-dip-h"><div><h3 id="vtsDipT">📉 Market-dip lump sums</h3><span class="vts-dip-b">Model rule · simulation</span></div>' +
+      '<p>When an index falls <b>' + tiers.map(function (t) { return t[0] + '%'; }).join(' / ') + '</b> below its highest close of the last 3 months, the model adds a one-time ' +
+      tiers.map(function (t) { return '<b>' + inr(t[1]) + '</b>'; }).join(' / ') + ' to that segment — once per new tier in a fall, and only after all 26 checks pass ' +
+      '(7 market-trigger, 7 valuation and 12 ' + (etf ? 'ETF' : 'fund') + ' checks). Closes of ' + esc(dt(b.asOf)) + '.</p></div>' +
+      '<div class="vts-dip-l"><div class="vts-dip-hd" aria-hidden="true"><span>Segment</span><span>Fall</span><span>Status</span><span>' + (etf ? 'Model ETF' : 'Model fund') + '</span><span>Checks</span><span></span></div>' + rows + '</div>' +
+      '<p class="vts-dip-n">' + (who ? 'In Simulator Buy, ' + esc(who) + ' follow this rule. Each of their accounts holds a one-time <b>' + inr(R.reserve) + ' reserve</b> in ' +
+        (etf ? 'a liquid ETF (' + esc(rv.sym || 'liquid ETF') + ')' : 'a liquid fund (' + esc(rv.name || 'liquid fund') + ')') +
+        '. On the next trading day after a dip close, the simulation redeems the dip amount from the reserve and buys the segment\'s model ' + (etf ? 'ETF' : 'fund') +
+        ' with the proceeds when they arrive the next business day. When less than the tier amount is left, the remainder is used (never below ' + inr(R.min) + '). ' : '') +
+        'A fall is confirmed by a second ' + (etf ? 'ETF' : 'index fund') + ' on the same index; a fall ends when the index is back within ' + (R.resetPct || 1) + '% of its high. Educational model — not investment advice.</p></section>';
+  }
+  CSS += '.vts-eco{border:1px solid var(--border);border-radius:var(--radius,14px);background:var(--surface);margin:0 0 12px;overflow:hidden}' +
+    '.vts-eco>summary{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;list-style:none}.vts-eco>summary::-webkit-details-marker{display:none}' +
+    '.vts-eco>summary:hover{background:rgba(74,144,226,.05)}.vts-eco>summary:focus-visible{outline:2px solid var(--accent,#4a90e2);outline-offset:-2px}' +
+    '.vts-eco-t{flex:1;min-width:0}.vts-eco-t b{display:block;font-size:15px;color:var(--text)}.vts-eco-t small{display:block;color:var(--text2);font-size:12.5px;margin-top:2px}' +
+    '.vts-eco-b{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--text);border:1px solid var(--border2,var(--border));border-radius:999px;padding:5px 12px;white-space:nowrap}' +
+    '.vts-eco-b i{font-style:normal;transition:transform .2s}.vts-eco[open] .vts-eco-b i{transform:rotate(180deg)}.vts-eco-b .c,.vts-eco[open] .vts-eco-b .o{display:none}.vts-eco[open] .vts-eco-b .c{display:inline}' +
+    '.vts-eco-in{padding:0 16px 16px;min-width:0}.vts-eco-in>.vts-box,.vts-eco-in>.vts-pane>.vts-box{border:none;padding:0;background:none}.vts-eco-in>.vts-box>h3:first-child,.vts-eco-in>.vts-pane>.vts-box>h3:first-child{display:none}' +
+    '.vts-eco-in>.vts-pane{display:block;margin:0}' +
+    '.vts-efq{border-top:1px solid var(--border)}.vts-efq:first-child{border-top:none}.vts-efq>summary{cursor:pointer;padding:12px 26px 12px 0;font-weight:700;font-size:14px;color:var(--text);position:relative;list-style:none}' +
+    '.vts-efq>summary::-webkit-details-marker{display:none}.vts-efq>summary::after{content:"+";position:absolute;right:4px;top:10px;font-size:18px;color:var(--text2)}.vts-efq[open]>summary::after{content:"−"}' +
+    '.vts-efq p{margin:0 0 12px;color:var(--text2);font-size:13px;line-height:1.6}.vts-efq p b{color:var(--text)}' +
+    '@media (max-width:560px){.vts-eco>summary{padding:12px;align-items:flex-start}.vts-eco-in{padding:0 12px 12px}.vts-eco-t b{font-size:14px}}';
+  CSS += '.vts-dip{border:1px solid var(--border2,var(--border));border-left:4px solid #4a90e2;border-radius:var(--radius,12px);background:var(--surface);padding:14px 16px;margin:0 0 16px;min-width:0}' +
+    '.vts-dip-h>div{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}.vts-dip-h h3{margin:0;font-size:15px}' +
+    '.vts-dip-b{display:inline-block;background:rgba(74,144,226,.13);color:var(--accent2,#2f6fbf);border:1px solid rgba(74,144,226,.45);border-radius:999px;padding:2px 10px;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}' +
+    '.vts-dip-h p{margin:6px 0 10px;color:var(--text2);font-size:12.5px;line-height:1.55}.vts-dip-h p b{color:var(--text)}' +
+    '.vts-dip-l{border:1px solid var(--border);border-radius:10px;overflow:hidden}' +
+    '.vts-dip-hd,.vts-dip-r>summary{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1.1fr) minmax(0,1.5fr) minmax(0,1.7fr) 64px 16px;gap:12px;align-items:center;padding:10px 12px}' +
+    '.vts-dip-hd{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);background:var(--surface2,rgba(127,127,127,.06))}' +
+    '.vts-dip-r{border-top:1px solid var(--border)}.vts-dip-r>summary{cursor:pointer;list-style:none;font-size:13px}.vts-dip-r>summary::-webkit-details-marker{display:none}' +
+    '.vts-dip-r>summary:hover{background:rgba(74,144,226,.05)}.vts-dip-r>summary:focus-visible{outline:2px solid #4a90e2;outline-offset:-2px}' +
+    '.vts-dip-r small{display:block;color:var(--text2);font-size:11px;font-weight:500;margin-top:1px}' +
+    '.vts-dip-s b,.vts-dip-f b{font-size:13.5px}.vts-dip-f b{color:var(--text)}' +
+    '.vts-dip-m{position:relative;display:block;height:6px;border-radius:3px;background:var(--surface2,rgba(127,127,127,.14));margin:5px 0 2px;overflow:hidden}' +
+    '.vts-dip-m em{position:absolute;left:0;top:0;bottom:0;background:#4a90e2;border-radius:3px}.vts-dip-m i{position:absolute;top:0;bottom:0;width:2px;background:var(--surface);z-index:1}' +
+    '.vts-dip-st{font-weight:700;font-size:12.5px;line-height:1.4}.vts-dip-r.go .vts-dip-st{color:#16a34a}.vts-dip-r.used .vts-dip-st{color:var(--text)}.vts-dip-r.q .vts-dip-st,.vts-dip-r.wait .vts-dip-st{color:var(--text2)}' +
+    '.vts-dip-fd{font-weight:600;font-size:12.5px;line-height:1.35;min-width:0;overflow-wrap:anywhere}.vts-dip-na{color:var(--text2);font-weight:500}' +
+    '.vts-dip-k{text-align:center;font-weight:800;font-size:13px;border:1px solid rgba(245,165,36,.5);border-radius:8px;padding:3px 0;color:var(--text)}.vts-dip-k.ok{border-color:rgba(22,163,74,.55);color:#16a34a}.vts-dip-k small{font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;margin:0}' +
+    '.vts-dip-ch{color:var(--text2);transition:transform .2s;font-size:16px}.vts-dip-r[open] .vts-dip-ch{transform:rotate(90deg)}' +
+    '.vts-dip-d{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:4px 12px 14px}' +
+    '.vts-dip-g h5{margin:6px 0 6px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text2)}' +
+    '.vts-dip-c{display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-top:1px solid var(--border);font-size:12px;line-height:1.45;color:var(--text2)}.vts-dip-c:first-of-type{border-top:none}' +
+    '.vts-dip-c b{display:block;color:var(--text);font-weight:700}.vts-dip-c i{font-style:normal;flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;margin-top:1px}' +
+    '.vts-dip-c.ok i{background:rgba(22,163,74,.14);color:#16a34a}.vts-dip-c.no i{background:rgba(220,38,38,.12);color:#dc2626}' +
+    '.vts-dip-d>.vts-dip-na{grid-column:1/-1;margin:8px 0 0;font-size:12.5px}' +
+    '.vts-dip-n{margin:10px 0 0;color:var(--text2);font-size:12px;line-height:1.55}.vts-dip-n b{color:var(--text)}' +
+    '@media (max-width:900px){.vts-dip-d{grid-template-columns:1fr}}' +
+    '@media (max-width:760px){.vts-dip{padding:12px}.vts-dip-hd{display:none}.vts-dip-r>summary{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 56px 14px;row-gap:6px;gap:8px 10px}' +
+    '.vts-dip-s{grid-column:1}.vts-dip-f{grid-column:2}.vts-dip-k{grid-column:3;grid-row:1}.vts-dip-ch{grid-column:4;grid-row:1}.vts-dip-st{grid-column:1/-1;grid-row:2}.vts-dip-fd{grid-column:1/-1;grid-row:3}}';
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', simBuy); else simBuy();
 
   /* ── Collapsible sections: any element with data-col="key" gets a header bar (its own .sec-title / .mi-head moved
@@ -995,5 +1145,5 @@
     tabSettleNow(bar, content);
     setTimeout(function () { if (tabUser === mark) tabSettleNow(bar, content); }, 400);   // late content (charts, files) may shift it
   }
-  window.VTSim = { tabSettle: tabSettle, gate: gate, accepted: accepted, faqCols: faqCols, riskPanel: riskPanel, ecoPanel: ecoPanel, risk10: risk10, css: style, simBuy: simBuy, col: col, colOpen: colOpen };
+  window.VTSim = { tabSettle: tabSettle, gate: gate, accepted: accepted, faqCols: faqCols, riskPanel: riskPanel, ecoPanel: ecoPanel, risk10: risk10, css: style, simBuy: simBuy, dipPanel: dipPanel, col: col, colOpen: colOpen };
 })();

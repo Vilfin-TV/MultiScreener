@@ -38,6 +38,7 @@ from datetime import date, datetime, timezone
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
 import build_etf_extras as X  # noqa: E402
+import dip_rules  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger("etf_smart")
@@ -620,6 +621,9 @@ def main() -> int:
         v["hist"] = {"v": own.get("v"), "vol": own.get("vol")} if own else None
         v["risk10"] = risk10(own.get("vol"), own.get("v")) if own else risk10(e.get("vol"), e.get("mdd"))
         v["pts10"] = round(v["score"] / 10, 1) if v.get("score") is not None else None
+    dip = dip_rules.etf_block(plans, slots_out, by.get, lambda s: u.ex.get(s, {}), lambda s: (u.daily(s) or {}).get("v") or [],
+                              lambda sid: COST_CAP.get(role_for(sid, None), 0.75), lambda s: u.names.get(s) or [],
+                              macro, (ss.get("market") or {}).get("gates") or {}, metal, u.asof)
     payload = {
         "v": 1, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "asOf": u.asof,
         "reviewed": review, "nextReview": ss.get("nextReview"),
@@ -635,7 +639,7 @@ def main() -> int:
             "overlay": {"pts": ov_pts, "parts": ov_parts},
         },
         "horizons": ss.get("horizons"), "risks": ss.get("risks"), "assumptions": ss.get("assumptions"),
-        "slots": slots_out, "plans": plans,
+        "slots": slots_out, "plans": plans, "dip": dip,
     }
     with open(OUT + ".tmp", "w", encoding="utf-8") as fh:
         json.dump(payload, fh, separators=(",", ":"), ensure_ascii=False)
