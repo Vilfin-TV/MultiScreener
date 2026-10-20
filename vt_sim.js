@@ -1240,5 +1240,60 @@
     tabSettleNow(bar, content);
     setTimeout(function () { if (tabUser === mark) tabSettleNow(bar, content); }, 400);   // late content (charts, files) may shift it
   }
-  window.VTSim = { tabSettle: tabSettle, gate: gate, accepted: accepted, faqCols: faqCols, riskPanel: riskPanel, ecoPanel: ecoPanel, risk10: risk10, css: style, simBuy: simBuy, dipPanel: dipPanel, col: col, colOpen: colOpen };
+
+  /* ── Fund-house strip (same look as the India MF page's "Fund houses" card): monogram icon, name, ETF count and
+     size, largest first; the first 12 with "Show all", the chosen one always visible, tap = filter, tap again or
+     "Clear ✕" = clear. o = {title, sub, items:[{k, name, n, size}], cur, noun, onPick(k|'')}. ── */
+  function houseMono(n) {
+    n = String(n || '').replace(/\b(mutual fund|asset management|investment management|investments?|amc|ltd|limited|etfs?|funds?|trust)\b/ig, '').trim();
+    var w = n.split(/[\s\-.]+/).filter(Boolean);
+    if (!w.length) return '?';
+    if (/^\d/.test(w[0])) return w[0].slice(0, 3);
+    if (w[0].length <= 4 && w[0] === w[0].toUpperCase() && /[A-Z]/.test(w[0])) return w[0];
+    if (w.length >= 2) return (w[0][0] + w[1][0]).toUpperCase();
+    return w[0].slice(0, 2);
+  }
+  function houseHue(n) { var h = 0; String(n).split('').forEach(function (c) { h = (h * 31 + c.charCodeAt(0)) % 3600; }); return Math.round(h / 10); }
+  function houseAv(n) { var m = houseMono(n); return '<span class="vts-hav' + (m.length > 2 ? ' l3' : '') + '" style="--h:' + houseHue(n) + '" aria-hidden="true">' + esc(m) + '</span>'; }
+  function houseStrip(el, o) {
+    if (!el) return;
+    style();
+    var all = el.getAttribute('data-all') === '1', SHOW = 12, items = o.items.slice(), cur = o.cur || '';
+    var shown = all ? items : items.slice(0, SHOW);
+    if (cur && !shown.some(function (x) { return x.k === cur; })) shown = shown.concat(items.filter(function (x) { return x.k === cur; }));
+    el.innerHTML = '<div class="vts-hs-h"><div><div class="vts-hs-t">' + esc(o.title || 'Fund houses') + '</div><div class="vts-hs-s">' + esc(o.sub || '') + '</div></div>' +
+      (cur ? '<button type="button" class="vts-hs-clr" data-hs="">Clear ✕</button>' : '') + '</div>' +
+      '<div class="vts-hs-g" role="list">' + shown.map(function (x) {
+        var on = x.k === cur;
+        return '<button type="button" role="listitem" class="vts-hs-i' + (on ? ' on' : '') + '" data-hs="' + esc(x.k) + '" aria-pressed="' + on + '">' + houseAv(x.name) +
+          '<span class="vts-hs-n"><b>' + esc(x.name) + '</b><small>' + x.n + ' ' + esc(o.noun || 'ETF') + (x.n === 1 ? '' : 's') + (x.size ? ' · ' + esc(x.size) : '') + '</small></span>' +
+          '<i aria-hidden="true">' + (on ? '✓' : '›') + '</i></button>';
+      }).join('') + '</div>' +
+      (items.length > SHOW ? '<button type="button" class="vts-hs-more" data-hsmore aria-expanded="' + all + '">' + (all ? 'Show fewer' : 'Show all ' + items.length + ' ' + (o.plural || 'fund houses')) + '</button>' : '');
+    if (!el._hsBound) {
+      el._hsBound = true;
+      el.addEventListener('click', function (e) {
+        if (e.target.closest('[data-hsmore]')) { el.setAttribute('data-all', el.getAttribute('data-all') === '1' ? '0' : '1'); houseStrip(el, el._hsOpts); return; }
+        var b = e.target.closest('[data-hs]'); if (!b) return;
+        var k = b.getAttribute('data-hs'); el._hsOpts.onPick(k && k === el._hsOpts.cur ? '' : k);
+      });
+    }
+    el._hsOpts = o;
+  }
+  CSS += '.vts-hs{margin:0 0 14px;padding:16px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius,14px);box-shadow:var(--shadow-s,none)}' +
+    '.vts-hs-h{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.vts-hs-t{font-size:15px;font-weight:700;color:var(--text)}.vts-hs-s{font-size:12.5px;color:var(--text2);margin-top:2px}' +
+    '.vts-hs-clr{border:1px solid var(--border2,var(--border));background:var(--surface2,transparent);color:var(--text);font:inherit;font-size:12px;font-weight:700;border-radius:999px;padding:6px 12px;cursor:pointer;white-space:nowrap}' +
+    '.vts-hs-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin-top:12px}' +
+    '.vts-hs-i{display:flex;align-items:center;gap:12px;min-width:0;padding:9px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);font:inherit;text-align:left;cursor:pointer;transition:background .15s,border-color .15s}' +
+    '.vts-hs-i:hover{background:var(--surface2,transparent);border-color:var(--border2,var(--border))}.vts-hs-i:focus-visible{outline:2px solid var(--accent);outline-offset:1px}' +
+    '.vts-hs-i.on{border-color:var(--accent);background:var(--accent-soft,rgba(59,130,246,.12))}' +
+    '.vts-hs-i>i{font-style:normal;color:var(--text3,var(--text2));font-size:16px;flex:none}.vts-hs-i.on>i{color:var(--accent);font-weight:800}' +
+    '.vts-hs-n{display:flex;flex-direction:column;min-width:0;flex:1}.vts-hs-n b{font-size:13.5px;font-weight:700;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+    '.vts-hs-n small{font-size:11.5px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+    '.vts-hav{--h:210;flex:0 0 auto;width:38px;height:38px;border-radius:30%;display:inline-grid;place-items:center;font-weight:800;letter-spacing:-.3px;font-size:13px;color:#fff;' +
+    'background:linear-gradient(140deg,hsl(var(--h) 62% 52%),hsl(calc(var(--h) + 28) 58% 38%));box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 2px 6px rgba(0,0,0,.18);text-transform:uppercase;line-height:1}' +
+    '.vts-hav.l3{font-size:10.5px}' +
+    '.vts-hs-more{display:block;margin:10px auto 0;border:1px solid var(--border2,var(--border));background:var(--surface2,transparent);color:var(--text);font:inherit;font-size:12.5px;font-weight:700;border-radius:999px;padding:7px 16px;cursor:pointer}.vts-hs-more:hover{border-color:var(--accent)}' +
+    '@media (max-width:760px){.vts-hs{padding:14px}.vts-hs-g{grid-template-columns:1fr 1fr;gap:6px}.vts-hs-i{padding:8px 9px;gap:9px}.vts-hav{width:32px;height:32px;font-size:11.5px}.vts-hs-n b{font-size:12.5px}.vts-hs-n small{font-size:11px}.vts-hs-i>i{display:none}}';
+  window.VTSim = { tabSettle: tabSettle, gate: gate, accepted: accepted, faqCols: faqCols, riskPanel: riskPanel, ecoPanel: ecoPanel, risk10: risk10, css: style, simBuy: simBuy, dipPanel: dipPanel, col: col, colOpen: colOpen, houseStrip: houseStrip };
 })();
