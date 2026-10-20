@@ -23,6 +23,7 @@ import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from global_plans import all_plans, ALL_CANDS  # noqa: E402  (shared with the page's simulator and gsim_engine.py)
+from global_dip import dip_block  # noqa: E402  (optional market-dip buys)
 
 OUT = os.path.join(os.path.dirname(__file__), "..", "data", "global_etf.json")
 DAILY_OUT = os.path.join(os.path.dirname(__file__), "..", "data", "global_etf_daily.json")
@@ -450,13 +451,21 @@ def build(dry=False):
         if g:
             A.check(math.isfinite(g["ratio"]) and math.isfinite(g["mom"]), f"{e['t']}: engine non-finite")
 
-    plans = all_plans(out)
+    plans = all_plans(out, str(as_of.date()))
     for pid, p in plans.items():
         A.check(bool(p["rows"]) and abs(sum(x["w"] for x in p["rows"]) - 100) < 0.01, f"plan {pid}: weights do not add to 100")
     daily = daily_export(raw, as_of)
     for t in {x["t"] for p in plans.values() for x in p["rows"]} | set(MARKET):
         cl = daily["c"].get(t) or []
         A.check(bool(cl) and cl[-1] is not None, f"{t}: no official close on {as_of.date()} for the simulator", critical=False)
+
+    try:
+        with open(os.path.join(os.path.dirname(OUT), "mf", "macro.json")) as f:
+            macro = json.load(f)
+    except Exception:
+        macro = {}
+    dip = dip_block(daily, macro)
+    A.check(len(dip["segments"]) >= 4, f"market-dip block: only {len(dip['segments'])} segments", critical=False)
 
     doc = {
         "version": 1,
@@ -468,6 +477,7 @@ def build(dry=False):
         "audit": {"passed": A.passed, "critical": len(A.critical), "warnings": len(A.warnings)},
         "etfs": out,
         "plans": plans,
+        "dip": dip,
     }
     print(f"as-of {doc['asOf']}  ETFs {len(out)}  checks passed {A.passed}  "
           f"critical {len(A.critical)}  warnings {len(A.warnings)}")

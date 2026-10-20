@@ -1295,5 +1295,5 @@
     '.vts-hav.l3{font-size:10.5px}' +
     '.vts-hs-more{display:block;margin:10px auto 0;border:1px solid var(--border2,var(--border));background:var(--surface2,transparent);color:var(--text);font:inherit;font-size:12.5px;font-weight:700;border-radius:999px;padding:7px 16px;cursor:pointer}.vts-hs-more:hover{border-color:var(--accent)}' +
     '@media (max-width:760px){.vts-hs{padding:14px}.vts-hs-g{grid-template-columns:1fr 1fr;gap:6px}.vts-hs-i{padding:8px 9px;gap:9px}.vts-hav{width:32px;height:32px;font-size:11.5px}.vts-hs-n b{font-size:12.5px}.vts-hs-n small{font-size:11px}.vts-hs-i>i{display:none}}';
-  window.VTSim = { tabSettle: tabSettle, gate: gate, accepted: accepted, faqCols: faqCols, riskPanel: riskPanel, ecoPanel: ecoPanel, risk10: risk10, css: style, simBuy: simBuy, dipPanel: dipPanel, col: col, colOpen: colOpen, houseStrip: houseStrip };
+  window.VTSim = { tabSettle: tabSettle, gate: gate, accepted: accepted, faqCols: faqCols, riskPanel: riskPanel, ecoPanel: ecoPanel, risk10: risk10, css: style, simBuy: simBuy, dipPanel: dipPanel, col: col, colOpen: colOpen, houseStrip: houseStrip, houseAv: houseAv };
 })();

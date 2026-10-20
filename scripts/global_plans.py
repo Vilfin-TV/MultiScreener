@@ -5,7 +5,7 @@ publishes every plan (goal × risk) in global_etf.json → "plans"; the page rec
 they match ("checks passed" in the status card), and the Simulator Buy engine (gsim_engine.py) buys the 10+ year
 plans. Inputs are the rounded, published ETF records, so all three see exactly the same numbers.
 """
-import math
+import math, re
 
 NOISE = 1
 HORIZONS = ["h1", "h3", "h5", "h10", "h15"]
@@ -109,32 +109,152 @@ def _r(e, k):
     return (e.get("r") or {}).get(k)
 
 
-def eval_slot(key, by):
+# Group limits for the absolute checks (equity · bonds · gold · T-bills)
+GROUP = {
+    "eq": {"ac": "Equity", "roles": ("Core", "Factor"), "maxWk": 20, "volCap": 40, "mddFloor": -45, "beta": (0.15, 1.8), "te": 1.5, "corr": 0.85, "yld": 1.5},
+    "bond": {"ac": "Bond", "roles": ("Bond",), "maxWk": 6, "volCap": 12, "mddFloor": -25, "beta": (-0.5, 0.6), "te": 0.4, "corr": 0.85, "yld": 1.0},
+    "gold": {"ac": "Commodity", "roles": ("Commodity",), "maxWk": 15, "volCap": 40, "mddFloor": -35, "beta": (-0.5, 1.2), "te": 0.6, "corr": 0.9, "yld": 1.0},
+    "cash": {"ac": "Bond", "roles": ("Bond",), "maxWk": 1, "volCap": 2, "mddFloor": -1, "beta": (-0.2, 0.2), "te": 0.1, "corr": None, "yld": 1.0},
+}
+LEVERED = re.compile(r"(\b[23]x\b|ultra|leveraged|inverse|\bbear\b)", re.I)
+N_WEEKS = 52
+
+
+def weekly(e):
+    """Last 52 weekly returns (%) by position in the shared week grid (None where a price is missing)."""
+    w = e.get("w") or []
+    out = []
+    for i in range(max(1, len(w) - N_WEEKS), len(w)):
+        a, b = w[i - 1], w[i]
+        out.append((b / a - 1) * 100 if a and b else None)
+    return out
+
+
+def peer_median_series(lst):
+    rs = [weekly(e) for e in lst]
+    n = min(len(r) for r in rs) if rs else 0
+    return [median([r[len(r) - n + i] for r in rs]) for i in range(n)]
+
+
+def corr(x, y):
+    pts = [(a, b) for a, b in zip(x, y) if a is not None and b is not None]
+    if len(pts) < 20:
+        return None
+    mx = sum(a for a, _ in pts) / len(pts); my = sum(b for _, b in pts) / len(pts)
+    sxy = sum((a - mx) * (b - my) for a, b in pts); sx = sum((a - mx) ** 2 for a, _ in pts); sy = sum((b - my) ** 2 for _, b in pts)
+    return sxy / math.sqrt(sx * sy) if sx > 0 and sy > 0 else None
+
+
+def gap_std(x, y):
+    g = [a - b for a, b in zip(x, y) if a is not None and b is not None]
+    if len(g) < 20:
+        return None
+    m = sum(g) / len(g)
+    return math.sqrt(sum((v - m) ** 2 for v in g) / (len(g) - 1))
+
+
+def ge(v, ref, tol):
+    """v ≥ ref − tol; a missing reference (no peer has the figure) passes, a missing value fails."""
+    if ref is None:
+        return True
+    return v is not None and v >= ref - tol - 1e-9
+
+
+def eval_slot(key, by, as_of=None):
+    """Every candidate of a slot faces the same 45 checks (46 in the momentum slot). Survivors are ranked:
+    cost 35% · liquidity 25% · size 20% · track record 10% · consistency 10%."""
     sl, spy = SLOTS[key], by["SPY"]
+    G = GROUP[sl["grp"]]
     lst = [by[t] for t in sl["cands"] if t in by]
-    r1y_med = median([_r(e, "1y") for e in lst])
-    vol_med = median([e.get("vol") for e in lst])
+    issuers = {}
+    for e in by.values():
+        issuers[e.get("iss")] = issuers.get(e.get("iss"), 0) + 1
+    med = lambda f: median([f(e) for e in lst])
+    r1y_med, vol_med = med(lambda e: _r(e, "1y")), med(lambda e: e.get("vol"))
+    r3y_med, r5y_med, r6m_med, r3m_med, ytd_med = (med(lambda e, k=k: _r(e, k)) for k in ("3y", "5y", "6m", "3m", "ytd"))
+    mdd_med, er_med, yld_med = med(lambda e: e.get("mdd")), med(lambda e: e.get("er")), med(lambda e: e.get("yld"))
+    rr = lambda e: _r(e, "1y") / e["vol"] if _r(e, "1y") is not None and e.get("vol") else None
+    rr_med = med(rr)
+    up = lambda e: (lambda ws: 100 * sum(1 for v in ws if v > 0) / len(ws) if ws else None)([v for v in weekly(e) if v is not None])
+    up_med = med(up)
+    hi_d = lambda e: (e["px"] / e["hi"] - 1) * 100 if e.get("px") and e.get("hi") else None
+    hi_med = med(hi_d)
+    t1_med, t2_med = med(lambda e: (e.get("trend") or [None, None, None])[1]), med(lambda e: (e.get("trend") or [None, None, None])[2])
+    # the momentum (factor) slot holds different styles, so it is compared with the S&P 500 instead of its peers
+    pm = weekly(spy) if sl.get("momentum") else peer_median_series(lst)
+    corr_min, te_cap = (0.5, 3.0) if sl.get("momentum") else (G["corr"], G["te"])
+    wk_med = med(lambda e: min((v for v in weekly(e) if v is not None), default=None))
+    r1m_med = med(lambda e: _r(e, "1m"))
     rows = []
     for e in lst:
         g = engine(e["w"], spy["w"]) if sl.get("momentum") else None
         conf = conf_of(e, g) if sl.get("momentum") else None
-        weeks = sum(1 for v in (e.get("w") or []) if v is not None)
+        w = e.get("w") or []
+        weeks = sum(1 for v in w if v is not None)
+        wr = [v for v in weekly(e)]
+        all_r = [(w[i] / w[i - 1] - 1) * 100 for i in range(1, len(w)) if w[i] and w[i - 1]]
+        maxwk = max((abs(v) for v in all_r), default=None)
+        mine = wr[len(wr) - len(pm):] if pm else []
+        solo = len(lst) == 1 and not sl.get("momentum")
+        c = 1.0 if solo else corr(mine, pm)
+        te = 0.0 if solo else gap_std(mine, pm)
+        worst = min((v for v in wr if v is not None), default=None)
+        t = e.get("trend") or [None, None, None]
+        er, aum, adv = e.get("er"), e.get("aum") or 0, e.get("adv") or 0
         ck = [
             ["fresh", not e.get("stale")],
+            ["price", (e.get("px") or 0) > 0],
+            ["asof", as_of is None or e.get("asOf") == as_of],
+            ["weeks", weeks >= 52],
+            ["nogap", weeks == len(w) and len(w) > 0],
+            ["maxwk", maxwk is not None and maxwk <= G["maxWk"]],
+            ["range", e.get("lo") is not None and e.get("hi") is not None and e["lo"] - 1e-9 <= (e.get("px") or 0) <= e["hi"] + 1e-9],
+            ["ac", e.get("ac") == G["ac"]],
+            ["notlev", not LEVERED.search(e.get("n") or "")],
+            ["role", e.get("role") in G["roles"]],
+            ["issuer", issuers.get(e.get("iss"), 0) >= 3],
             ["3y", _r(e, "3y") is not None],
-            ["adv", (e.get("adv") or 0) >= 20e6],
-            ["aum", (e.get("aum") or 0) >= 1e9],
-            ["er", e.get("er") is not None and e["er"] <= sl["cap"] + 1e-9],
+            ["5y", _r(e, "5y") is not None],
+            ["px10", (e.get("px") or 0) >= 10],
+            ["aum1", aum >= 1e9],
+            ["aum10", aum >= 1e10],
+            ["adv", adv >= 20e6],
+            ["adv50", adv >= 50e6],
+            ["steady", (e.get("advMed") or 0) > 0 and adv >= 0.5 * e["advMed"]],
+            ["turn", aum > 0 and adv / aum >= 0.0001],
+            ["erk", er is not None],
+            ["er", er is not None and er <= sl["cap"] + 1e-9],
+            ["ermed", er is not None and er_med is not None and er <= er_med + 0.005 + 1e-9],
+            ["er50", er is not None and er <= 0.5 + 1e-9],
         ]
-        if sl["tol"] is not None and len(lst) > 1:
-            d = _r(e, "1y") - r1y_med if _r(e, "1y") is not None and r1y_med is not None else None
-            ck.append(["r1y", d is not None and abs(d) <= sl["tol"]])
-        if not sl.get("momentum") and len(lst) > 1:
-            ck.append(["vol", e.get("vol") is not None and vol_med is not None and e["vol"] <= 1.3 * vol_med + 1e-9])
-        ck.append(["weeks", weeks >= 52])
+        d1y = _r(e, "1y") - r1y_med if _r(e, "1y") is not None and r1y_med is not None else None
+        tol = sl["tol"] if sl["tol"] is not None else 5
+        ck += [
+            ["r1y", d1y is not None and abs(d1y) <= tol] if sl["tol"] is not None else ["r1y", ge(_r(e, "1y"), r1y_med, tol)],
+            ["r3y", ge(_r(e, "3y"), r3y_med, 1.5)],
+            ["r5y", ge(_r(e, "5y"), r5y_med, 1.5)],
+            ["r6m", ge(_r(e, "6m"), r6m_med, 3)],
+            ["r3m", ge(_r(e, "3m"), r3m_med, 3)],
+            ["r1m", ge(_r(e, "1m"), r1m_med, 2)],
+            ["ytd", ge(_r(e, "ytd"), ytd_med, 3)],
+            ["vol", e.get("vol") is not None and vol_med is not None and e["vol"] <= (1.6 if sl.get("momentum") else 1.3) * vol_med + 1e-9],
+            ["mdd", ge(e.get("mdd"), mdd_med, 5)],
+            ["rr", ge(rr(e), rr_med, 0.3)],
+            ["volcap", e.get("vol") is not None and e["vol"] <= G["volCap"]],
+            ["mddfl", e.get("mdd") is not None and e["mdd"] >= G["mddFloor"]],
+            ["beta", e.get("beta") is not None and G["beta"][0] <= e["beta"] <= G["beta"][1]],
+            ["up", ge(up(e), up_med, 10)],
+            ["worst", ge(worst, wk_med, G["maxWk"] / 4)],
+            ["hi", ge(hi_d(e), hi_med, 5)],
+            ["corr", corr_min is None or (c is not None and c >= corr_min)],
+            ["te", te is not None and te <= te_cap],
+            ["yld", (e.get("yld") is None or e["yld"] <= 5) if sl.get("momentum") else (e.get("yld") is None or yld_med is None or abs(e["yld"] - yld_med) <= G["yld"])],
+            ["t2", t[2] is not None and (t2_med is None or t[2] >= t2_med - 1e-9)],
+            ["t1", t[1] is not None and (t1_med is None or t[1] >= t1_med - 1 - 1e-9)],
+        ]
         if sl.get("momentum"):
             ck.append(["acc", bool(g) and g["mode"] == "ACC" and conf >= 3])
-        rows.append({"e": e, "g": g, "ck": ck, "pass": all(c[1] for c in ck), "passed": sum(1 for c in ck if c[1])})
+        rows.append({"e": e, "g": g, "ck": ck, "pass": all(x[1] for x in ck), "passed": sum(1 for x in ck if x[1])})
     surv = [r for r in rows if r["pass"]]
 
     def yrs(r):
@@ -155,7 +275,7 @@ def eval_slot(key, by):
     return {"key": key, "rows": rows, "pick": surv[0] if surv else None}
 
 
-def build_plan(by, h, risk):
+def build_plan(by, h, risk, as_of=None):
     base = dict(ALLOC[h][risk]); notes = []; long_goal = h in LONG_GOALS
     spy = by["SPY"]
     if long_goal and base.get("eq") and spy.get("trend") and spy["trend"][2] == -1:
@@ -171,7 +291,7 @@ def build_plan(by, h, risk):
     for k in ("bond", "short", "gold", "cash"):
         if base.get(k):
             w[k] = base[k]
-    res = {k: eval_slot(k, by) for k in w}
+    res = {k: eval_slot(k, by, as_of) for k in w}
     for k in list(w):
         if res[k]["pick"] or not w[k]:
             continue
@@ -179,7 +299,7 @@ def build_plan(by, h, risk):
         if k == to:
             continue
         if to not in res:
-            res[to] = eval_slot(to, by)
+            res[to] = eval_slot(to, by, as_of)
         w[to] = w.get(to, 0) + w[k]
         notes.append(["moved", k, to, w[k]])
         w[k] = 0
@@ -198,7 +318,7 @@ def build_plan(by, h, risk):
     return {"rows": rows, "notes": notes}
 
 
-def all_plans(etfs):
+def all_plans(etfs, as_of=None):
     """{pid: {"rows": [{k, w, t, ok}], "notes": [...]}} for every goal × risk, pid = h10b etc. Weights rounded to 4 dp."""
     by = {e["t"]: e for e in etfs}
     if "SPY" not in by:
@@ -206,7 +326,7 @@ def all_plans(etfs):
     out = {}
     for h in HORIZONS:
         for r in RISKS:
-            p = build_plan(by, h, r)
+            p = build_plan(by, h, r, as_of)
             for x in p["rows"]:
                 x["w"] = round(x["w"], 4)
             out[h + r] = p
