@@ -28,7 +28,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0        # history (without file contents) so the sitemap can date each page
+          filter: blob:none
 
       - name: Generate share pages
         run: python3 scripts/gen_share_pages.py
