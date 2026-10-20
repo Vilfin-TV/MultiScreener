@@ -24,7 +24,7 @@ STATIC_PAGES = [
     (f'{SITE}/story.html', '1.0', 'daily'),
     (f'{SITE}/education.html', '0.9', 'daily'),
     (f'{SITE}/blog_intelligence_hub.html', '0.9', 'daily'),
-    (f'{SITE}/market_sentiment_score.html', '0.8', 'monthly'),
+    (f'{SITE}/market_sentiment_score.html', '0.8', 'daily'),
     (f'{SITE}/screener_query_generator.html', '0.8', 'monthly'),
     (f'{SITE}/mutual_fund_analyser.html', '0.8', 'daily'),
     (f'{SITE}/etf_momentum.html', '0.8', 'daily'),
@@ -41,11 +41,22 @@ STATIC_PAGES = [
     (f'{SITE}/combined_calc.html', '0.7', 'monthly'),
     (f'{SITE}/compare_calc.html', '0.7', 'monthly'),
     (f'{SITE}/allocation_calc.html', '0.7', 'monthly'),
-    (f'{SITE}/manage_subscription.html', '0.6', 'monthly'),
     (f'{SITE}/legal.html', '0.3', 'yearly'),
     (f'{SITE}/privacy.html', '0.3', 'yearly'),
     (f'{SITE}/terms.html', '0.3', 'yearly'),
 ]
+
+def _last_changed(loc):
+    """Date of the last commit that changed the page (needs git history; None without it)."""
+    import subprocess
+    path = loc[len(SITE):].lstrip('/') or 'index.html'
+    try:
+        out = subprocess.run(['git', '-C', REPO_ROOT, 'log', '-1', '--format=%cs', '--', path],
+                             capture_output=True, text=True, timeout=30).stdout.strip()
+        return out or None
+    except Exception:  # noqa: BLE001
+        return None
+
 
 # Sections that get a higher priority in the sitemap
 HIGH_PRIORITY_SECTIONS = {'stock', 'business', 'global', 'india'}
@@ -99,7 +110,7 @@ def main():
         if changefreq == 'daily':
             lastmod = today_str
         else:
-            lastmod = '2026-01-01'
+            lastmod = _last_changed(loc) or today_str
         url_blocks.append(
             f'  <url>\n'
             f'    <loc>{_xml_escape(loc)}</loc>\n'
