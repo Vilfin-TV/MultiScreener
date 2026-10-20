@@ -571,13 +571,12 @@
       var row = function (k, v) { return '<div class="vts-pm-r"><span>' + k + '</span><b>' + v + '</b></div>'; };
       var h = '<div class="vts-pm-h">' + av(r, true).replace('vts-pf-av lg', 'vts-pf-av xl') + '<div><h3 id="vtsPmT">' + esc(r.name) + (nri ? ' <i class="vts-buy-nri">NRI</i>' : '') + '</h3>' +
         '<p>' + esc(r.role || 'VilfinTV team') + ' · VilfinTV</p></div><button type="button" class="vts-pm-x" aria-label="Close profile">✕</button></div>' +
-        '<div class="vts-pm-b"><h4>At VilfinTV</h4>' + row('Role', esc(r.role || '–')) + row('Works on', esc(r.desk || '–')) + row('Team', esc(tm[0])) + row('Based in', esc(tm[1])) +
+        '<div class="vts-pm-b"><div class="vts-pm-c"><h4>At VilfinTV</h4>' + row('Role', esc(r.role || '–')) + row('Works on', esc(r.desk || '–')) + row('Team', esc(tm[0])) + row('Based in', esc(tm[1])) +
         '<h4>Investor profile</h4>' + row('Residency', nri ? 'Non-resident Indian (NRI)' : 'Resident Indian') + row('Model portfolio', '10+ years · ' + esc(r.risk)) +
         row('Buys', esc(r.freq) + (r.amt ? ' · ' + inr(r.amt, 0) : '') + ' — ' + esc(WHEN[r.freq] || '')) + row('Started', esc(dt(sb.start))) +
         row('Account', esc(acct)) +
         (x ? row('Invested', inr(x.inv)) + row('Value', x.val != null ? inr(x.val) : 'After units are credited') : '') +
         row('Total return', r.ret != null ? '<span class="' + cl(r.ret) + '">' + spct(r.ret) + '</span>' + (r.metric === 'xirr' ? ' XIRR' : '') : (r.credit ? 'Units credited ' + esc(dt(r.credit)) : '–')) +
-        '<h4>How ' + esc(r.name) + ' buys</h4><ol class="vts-pm-steps">' + strategy(r, x, nri).map(function (t) { return '<li><b>' + t[0] + '</b><span>' + t[1] + '</span></li>'; }).join('') + '</ol>' +
         (x && x.dip ? '<h4>Market-dip reserve</h4>' + row('Reserve', inr(x.dip.reserve, 0) + (x.dip.fund ? ' in ' + esc(x.dip.fund) : '') + (x.dip.date ? ' · since ' + esc(dt(x.dip.date)) : '')) +
           (x.dip.refills && x.dip.refills.length ? row('Topped up', x.dip.refills.length + '× · ' + inr(x.dip.paid - x.dip.reserve, 0) + ' added (latest ' + esc(dt(x.dip.refills[x.dip.refills.length - 1].T)) + ')') : '') +
           row('Used for dip buys', inr(x.dip.used, 0)) + row('Left', inr(x.dip.left, 0)) +
@@ -588,7 +587,8 @@
           (x.dip.empty ? '<p class="vts-pv-e">' + x.dip.empty + ' dip signal' + (x.dip.empty > 1 ? 's' : '') + ' passed without a buy while the reserve was used up (it is topped up with ₹20,000 on the first trading day of the next month).</p>' : '') : '') +
         '<h4>Charges</h4><ul>' + costs.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' +
         '<h4>Tax rules for this account</h4><ul>' + tax.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' +
-        '<p class="vts-pv-e">Simulated account of a VilfinTV team member for education — not real money and not advice. Every figure comes from the audited ledger.</p></div>';
+        '</div><div class="vts-pm-c"><h4>How ' + esc(r.name) + ' buys</h4><ol class="vts-pm-steps">' + strategy(r, x, nri).map(function (t) { return '<li><b>' + t[0] + '</b><span>' + t[1] + '</span></li>'; }).join('') + '</ol>' +
+        '</div><p class="vts-pv-e vts-pm-foot">Simulated account of a VilfinTV team member for education — not real money and not advice. Every figure comes from the audited ledger.</p></div>';
       var back = document.createElement('div');
       back.className = 'vts-pm-back';
       back.innerHTML = '<div class="vts-pm" role="dialog" aria-modal="true" aria-labelledby="vtsPmT" tabindex="-1">' + h + '</div>';
@@ -906,7 +906,7 @@
     '.vts-pf-sw{flex:none;font:inherit;font-size:12px;font-weight:800;border:1px solid var(--border2,var(--border));border-radius:999px;padding:6px 12px;color:var(--text);background:var(--surface);cursor:pointer}.vts-pf-sw i{font-style:normal}' +
     '.vts-pf-sw:hover{border-color:var(--accent,#4a90e2)}.vts-pf-me:focus-visible,.vts-pf-sw:focus-visible,.vts-pf-o:focus-visible{outline:2px solid var(--accent,#4a90e2);outline-offset:1px}' +
     '.vts-pm-back{position:fixed;inset:0;z-index:10000;background:rgba(2,8,20,.62);display:flex;align-items:center;justify-content:center;padding:16px}' +
-    '.vts-pm{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface,#0f1b33);color:var(--text);border:1px solid var(--border2,var(--border));border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.45);outline:none}' +
+    '.vts-pm{width:min(980px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface,#0f1b33);color:var(--text);border:1px solid var(--border2,var(--border));border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.45);outline:none}' +
     '.vts-pm-h{position:sticky;top:0;display:flex;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--border);background:var(--surface,#0f1b33)}' +
     '.vts-pm-h h3{margin:0;font-size:18px}.vts-pm-h p{margin:2px 0 0;color:var(--text2);font-size:13px}.vts-pm-h>div{flex:1;min-width:0}' +
     '.vts-pf-av.xl{width:52px;height:52px;font-size:17px}' +
@@ -1065,6 +1065,9 @@
     '.vts-efq>summary::-webkit-details-marker{display:none}.vts-efq>summary::after{content:"+";position:absolute;right:4px;top:10px;font-size:18px;color:var(--text2)}.vts-efq[open]>summary::after{content:"−"}' +
     '.vts-efq p{margin:0 0 12px;color:var(--text2);font-size:13px;line-height:1.6}.vts-efq p b{color:var(--text)}' +
     '@media (max-width:560px){.vts-eco>summary{padding:12px;align-items:flex-start}.vts-eco-in{padding:0 12px 12px}.vts-eco-t b{font-size:14px}}';
+  CSS += '.vts-pm-b{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:4px 28px;padding:6px 24px 22px;align-items:start}' +
+    '.vts-pm-c{min-width:0}.vts-pm-foot{grid-column:1/-1}.vts-pm-h{padding-left:24px!important;padding-right:24px!important}' +
+    '@media (max-width:860px){.vts-pm-b{grid-template-columns:1fr;padding:4px 18px 18px}.vts-pm-h{padding-left:18px!important;padding-right:18px!important}}';
   CSS += '.vts-dip{border:1px solid var(--border2,var(--border));border-left:4px solid #4a90e2;border-radius:var(--radius,12px);background:var(--surface);padding:14px 16px;margin:0 0 16px;min-width:0}' +
     '.vts-dip-h>div{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}.vts-dip-h h3{margin:0;font-size:15px}' +
     '.vts-dip-b{display:inline-block;background:rgba(74,144,226,.13);color:var(--accent2,#2f6fbf);border:1px solid rgba(74,144,226,.45);border-radius:999px;padding:2px 10px;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}' +
