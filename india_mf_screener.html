@@ -1450,7 +1450,7 @@ footer a{color:var(--text2)}
         <li><b>VilfinTV Rating</b> ranks funds within their category on risk-adjusted return, downside protection, long-term return and cost. Funds need a 3-year record to be rated. Sectoral and thematic funds are grouped by theme (banking, pharma, technology, infrastructure and more) and rated against all sectoral / thematic funds. <b>Index funds</b> are rated only against funds tracking the same index — tracking error 35%, tracking difference 25%, expense ratio 25%, fund size 10%, track record 5% — and need 1+ year of history and at least 3 funds on that index.</li>
       </ul>
     </div>
-    <div class="card info faq-card" id="faq">
+    <div class="card info faq-card" id="faq" data-col="mf-faq" data-col-open="1" data-col-hint="How every figure is calculated, how the Portfolio Simulator and market-dip rule work, tax, NRI rules and common questions.">
       <div class="sec-title">Methodology &amp; FAQ</div>
       <details class="faq"><summary>Why did we build VilfinTV — and how can you help?</summary><p>VilfinTV is a <b>free, educational initiative</b> — a charitable learning project built so that anyone, from a first-time investor to an experienced one, can understand mutual funds and ETFs, compare them honestly and learn to invest with discipline. There is no subscription and no paywall, and every tool on this page is open to all.</p><ul>
         <li><b>Our motivation is your learning.</b> Most people start investing without guidance, chase recent returns or stop at the first fall. We want to change that with clear data, plain-language guides and honest answers.</li>
@@ -3342,7 +3342,7 @@ function bindUI(){
   document.addEventListener('click', function(e){             // links to a single FAQ open it and scroll to it
     var a = e.target.closest('a[href^="#faq"]'), d = a && document.getElementById(a.getAttribute('href').slice(1));
     if (!d || d.tagName !== 'DETAILS') return;
-    e.preventDefault(); d.open = true; d.scrollIntoView({behavior:'smooth', block:'start'});
+    e.preventDefault(); if (window.VTSim) VTSim.colOpen(d); d.open = true; d.scrollIntoView({behavior:'smooth', block:'start'});
   });
   document.querySelectorAll('[data-goview]').forEach(function(a){ a.addEventListener('click', function(e){ e.preventDefault(); setView(a.getAttribute('data-goview')); window.scrollTo({top:0, behavior:'smooth'}); }); });
   bindNfo(); bindSip();

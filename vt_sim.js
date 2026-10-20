@@ -214,6 +214,7 @@
 
   // o: {kind:'fund'|'ETF', risk10, points10, mdd:{v,vol,peak,trough,from,years,proxy}, rows:[{name, sub, w, risk, pts, vol, mdd, ok, n}]}
   function riskPanel(o) {
+    style();
     var b = band(o.risk10 == null ? 0 : o.risk10), m = o.mdd || {}, k = o.kind;
     var rows = o.rows.slice().sort(function (a, c) { return c.w - a.w; });
     var wsum = rows.reduce(function (a, r) { return a + r.w; }, 0) || 1;
@@ -231,6 +232,7 @@
       '<div class="vts-scale">' + BANDS.map(function (x, i) { return '<span style="--c:' + x[2] + '">' + (i ? BANDS[i - 1][0] : 0) + '–' + (x[0] > 10 ? 10 : x[0]) + ' ' + x[1] + '</span>'; }).join('') + '</div>' +
       '<p class="vts-note">The worst fall and volatility are measured on the ' + k + 's held together, rebalanced every week, since ' + fmtMonth(m.from) + (m.proxy ? ' — before ' + (k === 'ETF' ? 'an' : 'a') + ' ' + k + ' existed, the longest-running ' + k + ' of the same category stands in for it' : '') +
       '. Average ' + k + ' risk is ' + num(avgRisk) + '/10; the mix usually scores lower because different assets rarely fall at the same time. Past falls do not limit future falls.</p></div>';
+    var hTot = h; h = '';
     h += '<div class="vts-box"><h3>Risk and points of each ' + k + '</h3><p class="vts-sub">Volatility and worst fall are each ' + k + '\'s own figures over the same period as the mix (a similar ' + k + ' stands in before it was launched), so they compare directly with the whole-mix row.</p>' +
       '<div class="vts-tw vts-rkw"><table class="vts-t"><thead><tr><th>' + (k === 'ETF' ? 'ETF' : 'Fund') + '</th><th class="n">Weight</th><th class="n">Risk / 10</th><th class="n">Points / 10</th><th class="n">Volatility</th><th class="n">Worst fall</th><th class="n">Checks</th></tr></thead><tbody>' +
       rows.map(function (r) {
@@ -243,12 +245,15 @@
         return '<div class="vts-card"><div class="h">' + esc(r.name) + '<span>' + r.w + '%</span></div><div class="g"><div>Risk <b>' + num(r.risk) + '/10</b></div><div>Points <b>' + num(r.pts) + '/10</b></div>' +
           '<div>Volatility <b>' + (r.vol != null ? num(r.vol) + '%' : '–') + '</b></div><div>Worst fall <b>' + (r.mdd != null ? num(r.mdd) + '%' : '–') + '</b></div><div>Checks <b>' + (r.n ? r.ok + '/' + r.n : '–') + '</b></div><div>' + esc(r.sub) + '</div></div></div>';
       }).join('') + '</div></div>';
-    return '<div class="vts-pane">' + h + '</div>';
+    return '<div class="vts-pane">' +
+      ecoSec('risk', 'Total risk and points of this model portfolio', 'Risk ' + num(o.risk10) + ' / 10 (' + b[1] + ') · points ' + num(o.points10) + ' / 10 · worst fall and volatility of the mix', hTot, true) +
+      ecoSec('riskf', 'Risk and points of each ' + k, rows.length + ' ' + k + 's — risk / 10, points / 10, volatility, worst fall and checks passed', h, false) + '</div>';
   }
 
   // g: market.growth {fy, checks:[{k,v,s,why}], score, gdp:[{fy, real, infl, usd, world, f}], nominal, nominalNext, earnings:{n50, n500}}
   var lastEco = null;          // ecoPanel returns a string; the earnings box re-renders itself from this on tab / sort clicks
   function ecoPanel(g, comps) {
+    style();
     g = g || {};
     lastEco = g;
     var sig = function (s) { return s > 0 ? '<span class="sg pos">Supportive</span>' : s < 0 ? '<span class="sg neg">Headwind</span>' : '<span class="sg neu">Neutral</span>'; };
@@ -1047,6 +1052,19 @@
         ', topped up with the same ' + inr(R.reserve) + ' on the first trading day of the month after it is used up. ' : '') +
       'Educational model — not investment advice.</p></section>';
   }
+  CSS += '.vts-na{color:var(--text2);font-size:11px;font-weight:600;white-space:nowrap}';
+  CSS += '.vts-eco{border:1px solid var(--border);border-radius:var(--radius,14px);background:var(--surface);margin:0 0 12px;overflow:hidden}' +
+    '.vts-eco>summary{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;list-style:none}.vts-eco>summary::-webkit-details-marker{display:none}' +
+    '.vts-eco>summary:hover{background:rgba(74,144,226,.05)}.vts-eco>summary:focus-visible{outline:2px solid var(--accent,#4a90e2);outline-offset:-2px}' +
+    '.vts-eco-t{flex:1;min-width:0}.vts-eco-t b{display:block;font-size:15px;color:var(--text)}.vts-eco-t small{display:block;color:var(--text2);font-size:12.5px;margin-top:2px}' +
+    '.vts-eco-b{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--text);border:1px solid var(--border2,var(--border));border-radius:999px;padding:5px 12px;white-space:nowrap}' +
+    '.vts-eco-b i{font-style:normal;transition:transform .2s}.vts-eco[open] .vts-eco-b i{transform:rotate(180deg)}.vts-eco-b .c,.vts-eco[open] .vts-eco-b .o{display:none}.vts-eco[open] .vts-eco-b .c{display:inline}' +
+    '.vts-eco-in{padding:0 16px 16px;min-width:0}.vts-eco-in>.vts-box,.vts-eco-in>.vts-pane>.vts-box{border:none;padding:0;background:none}.vts-eco-in>.vts-box>h3:first-child,.vts-eco-in>.vts-pane>.vts-box>h3:first-child{display:none}' +
+    '.vts-eco-in>.vts-pane{display:block;margin:0}' +
+    '.vts-efq{border-top:1px solid var(--border)}.vts-efq:first-child{border-top:none}.vts-efq>summary{cursor:pointer;padding:12px 26px 12px 0;font-weight:700;font-size:14px;color:var(--text);position:relative;list-style:none}' +
+    '.vts-efq>summary::-webkit-details-marker{display:none}.vts-efq>summary::after{content:"+";position:absolute;right:4px;top:10px;font-size:18px;color:var(--text2)}.vts-efq[open]>summary::after{content:"−"}' +
+    '.vts-efq p{margin:0 0 12px;color:var(--text2);font-size:13px;line-height:1.6}.vts-efq p b{color:var(--text)}' +
+    '@media (max-width:560px){.vts-eco>summary{padding:12px;align-items:flex-start}.vts-eco-in{padding:0 12px 12px}.vts-eco-t b{font-size:14px}}';
   CSS += '.vts-dip{border:1px solid var(--border2,var(--border));border-left:4px solid #4a90e2;border-radius:var(--radius,12px);background:var(--surface);padding:14px 16px;margin:0 0 16px;min-width:0}' +
     '.vts-dip-h>div{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}.vts-dip-h h3{margin:0;font-size:15px}' +
     '.vts-dip-b{display:inline-block;background:rgba(74,144,226,.13);color:var(--accent2,#2f6fbf);border:1px solid rgba(74,144,226,.45);border-radius:999px;padding:2px 10px;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}' +
