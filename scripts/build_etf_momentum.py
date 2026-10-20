@@ -355,24 +355,24 @@ def refresh_latest(raw: dict, tk: str) -> None:
 
 
 def restore_published(raw: dict, tickers: list[str], as_of) -> int:
-    """A source that drops a session already published must not erase it (seen on a holiday morning, when the
-    previous session came back for only a fifth of the ETFs): the previously published daily bars after a
-    ticker's last downloaded session, up to the as-of session, are put back. Returns the tickers restored."""
+    """A source that drops sessions already published must not erase them (seen on a holiday morning, when the
+    previous session came back for only a fifth of the ETFs, and for thinly traded ETFs whose download returned
+    only a few recent sessions): every previously published daily bar up to the as-of session whose date is
+    missing from the download is put back. Sessions the download has always win. Returns the tickers restored."""
     import pandas as pd
     n = 0
     for tk in tickers:
         df = raw.get(tk)
         if df is None or not len(df) or not tk.endswith(".NS"):
             continue
-        last = df.index[-1].date()
-        if last >= as_of:
-            continue
         try:
             with open(os.path.join(DAILY_DIR, tk[:-3] + ".json"), encoding="utf-8") as fh:
                 b = json.load(fh)
         except Exception:  # noqa: BLE001
             continue
-        keep = [i for i, t in enumerate(b.get("t") or []) if last < datetime.strptime(str(t), "%Y%m%d").date() <= as_of]
+        have = {ts.date() for ts in df.index}
+        keep = [i for i, t in enumerate(b.get("t") or [])
+                if (dd := datetime.strptime(str(t), "%Y%m%d").date()) <= as_of and dd not in have]
         if not keep:
             continue
         idx = pd.DatetimeIndex([pd.Timestamp(datetime.strptime(str(b["t"][i]), "%Y%m%d")) for i in keep])
@@ -380,10 +380,10 @@ def restore_published(raw: dict, tickers: list[str], as_of) -> int:
             idx = idx.tz_localize(df.index.tz)
         cols = {"Open": "o", "High": "h", "Low": "l", "Close": "c", "Volume": "v"}
         add = pd.DataFrame({k: [b[f][i] for i in keep] for k, f in cols.items() if k in df.columns and f in b}, index=idx)
-        raw[tk] = pd.concat([df, add])
+        raw[tk] = pd.concat([df, add]).sort_index()
         n += 1
     if n:
-        log.warning(f"restored published sessions for {n} ETFs whose download stopped before {as_of}")
+        log.warning(f"restored published sessions missing from the download for {n} ETFs (up to {as_of})")
     return n
 
 
