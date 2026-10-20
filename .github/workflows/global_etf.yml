@@ -15,6 +15,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/build_global_etf.py'
+      - 'scripts/global_plans.py'
       - '.github/workflows/global_etf.yml'
 
 permissions:
@@ -39,4 +40,4 @@ jobs:
         run: python scripts/build_global_etf.py
       - name: Publish
         run: |
-          bash scripts/push_data.sh "chore(data): refresh global ETF momentum [skip ci]" data/global_etf.json
+          bash scripts/push_data.sh "chore(data): refresh global ETF momentum [skip ci]" data/global_etf.json data/global_etf_daily.json

@@ -38,6 +38,8 @@
   --und:#F06A70; --und-bg:#3A1A1F; --pos:#2FBF8A; --neg:#F06A70; --shadow:none; color-scheme:dark;}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+/* names used by the shared simulator script (vt_sim.js) */
+:root{--text:var(--ink);--text2:var(--ink-2);--text3:var(--ink-3);--border:var(--line);--border2:var(--line);--surface2:var(--surface-2);--radius:14px}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{scroll-behavior:smooth;scroll-padding-top:calc(72px + env(safe-area-inset-top,0px))}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
@@ -234,16 +236,38 @@ section.block{margin:28px 0}
 footer{padding:22px 0 40px;font-size:12.5px;color:var(--ink-3)}
 footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:underline}
 
-/* Drawer */
-.scrim{position:fixed;inset:0;background:rgba(6,16,36,.45);z-index:80;opacity:0;pointer-events:none;transition:opacity .2s}
-.scrim.on{opacity:1;pointer-events:auto}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--surface);z-index:90;transform:translateX(102%);transition:transform .25s ease;display:flex;flex-direction:column;box-shadow:-10px 0 40px rgba(6,16,36,.2);padding-top:env(safe-area-inset-top,0px)}
-.drawer.on{transform:none}
-.dh{padding:16px 18px 12px;border-bottom:1px solid var(--line-2);display:flex;gap:12px;align-items:flex-start}
+/* Views (Screener · Portfolio Simulator · Guide & FAQ) */
+.views{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin:0 0 16px;box-shadow:var(--shadow);overflow-x:auto;scrollbar-width:none}
+.views::-webkit-scrollbar{display:none}
+.views button{flex:1 1 0;min-width:max-content;border:0;background:none;height:42px;padding:0 16px;border-radius:9px;font-size:14px;font-weight:600;color:var(--ink-2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+.views button:hover{background:var(--surface-2);color:var(--ink)}
+.views button[aria-selected="true"]{background:var(--navy);color:#fff}
+.views button .ic{font-size:16px;line-height:1}
+.views button .s{display:none}
+@media (max-width:760px){
+  .views{position:fixed;left:0;right:0;bottom:0;margin:0;border-radius:0;border-width:1px 0 0;z-index:70;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgba(6,16,36,.12)}
+  .views button{flex-direction:column;gap:2px;height:52px;padding:0 4px;font-size:11.5px;min-width:0}
+  .views button .l{display:none}.views button .s{display:inline}
+  body{padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+}
+.view-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+.view-h h2{margin:0;font-size:19px}
+.view-h p{margin:0;color:var(--ink-3);font-size:13.5px}
+/* Inline ETF detail (top of the Screener, like the India ETF page) */
+.detail{margin:0 0 16px;border-left:4px solid var(--accent)}
+.detail .dh{padding:14px 16px 12px;border-bottom:1px solid var(--line-2);display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.detail .dh .ttl{min-width:0;flex:1 1 260px}
+.detail .dh .acts{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.detail .db{padding:14px 16px 18px}
+.dgrid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px}
+.dgrid > div{min-width:0}
+@media (max-width:900px){.dgrid{grid-template-columns:1fr}}
+.dstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:4px 18px}
+#dmap{width:100%;max-width:420px;height:auto;display:block;margin:0 auto}
+#dmap text{fill:var(--ink-3);font-size:10px}
+#dmap .ax{stroke:var(--line)}
 .dh .t{font-size:22px;font-weight:700;line-height:1.1}
 .dh .n{font-size:13px;color:var(--ink-3);margin-top:3px}
-.dh .x{margin-left:auto;width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:18px;color:var(--ink-2);flex:none}
-.db{overflow-y:auto;padding:14px 18px calc(24px + env(safe-area-inset-bottom,0px));flex:1}
 .pxrow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}
 .pxrow .p{font-size:26px;font-weight:700}
 .pxrow .c{font-weight:600}
@@ -273,7 +297,15 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
 /* Portfolio Simulator */
 .simlink{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-weight:600;font-size:14px;text-decoration:none;color:var(--accent);background:var(--accent-soft);padding:8px 14px;border-radius:9px}
 .simlink:hover{filter:brightness(.97)}
-#sim{margin:16px 0}
+#sim{margin:0 0 16px}
+.simbuy{padding:0 16px 4px}
+.faq-ex{width:100%;table-layout:fixed;border-collapse:collapse;font-size:12.5px;margin:8px 0;min-width:0}
+.faq-ex th,.faq-ex td{position:static!important;padding:7px 8px!important;border:1px solid var(--line-2);text-align:left;white-space:normal!important;vertical-align:top;background:var(--surface);overflow-wrap:anywhere}
+@media (max-width:520px){.faq-ex{font-size:11.5px}.faq-ex th,.faq-ex td{padding:5px!important}}
+.faq-ex th{background:var(--surface-2);font-weight:600;color:var(--ink);cursor:default}
+.faq-ex td:first-child::after{display:none}
+.simlock{padding:22px 16px;display:grid;gap:10px;justify-items:start}
+.simlock p{margin:0;color:var(--ink-2);font-size:14px;max-width:80ch}
 .gate{padding:18px 16px;display:grid;gap:12px;max-width:80ch}
 .gate p{margin:0;color:var(--ink-2);font-size:14px}
 .gate label{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer}
@@ -345,7 +377,7 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
     <div>
       <h1>US &amp; Global ETF Momentum</h1>
       <p>Track how 120+ US-listed ETFs — US sectors and factors, developed and emerging markets, bonds, commodities and digital assets — are rotating against the benchmark you choose, from weekly relative strength and its momentum.</p>
-      <a class="simlink" href="#sim">Portfolio Simulator — explore a diversified global ETF model portfolio</a>
+      <a class="simlink" href="?v=sim" data-view="sim">Portfolio Simulator — explore a diversified global ETF model portfolio</a>
     </div>
     <div class="status" id="status" aria-live="polite">
       <div class="row"><span>Data as of</span><span id="stAsOf"><span class="skel" style="display:inline-block;width:90px"></span></span></div>
@@ -353,6 +385,21 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
       <div class="row"><span>Accuracy audit</span><span id="stAudit">–</span></div>
     </div>
   </div>
+
+  <nav class="views" id="views" role="tablist" aria-label="Page sections">
+    <button type="button" role="tab" data-v="scr" aria-selected="true" aria-controls="v-scr"><span class="ic" aria-hidden="true">📊</span><span class="l">ETF Screener</span><span class="s">Screener</span></button>
+    <button type="button" role="tab" data-v="sim" aria-selected="false" aria-controls="v-sim"><span class="ic" aria-hidden="true">🧮</span><span class="l">Portfolio Simulator</span><span class="s">Simulator</span></button>
+    <button type="button" role="tab" data-v="guide" aria-selected="false" aria-controls="v-guide"><span class="ic" aria-hidden="true">📘</span><span class="l">How it works &amp; FAQ</span><span class="s">Guide</span></button>
+  </nav>
+
+  <div class="view" id="v-scr" role="tabpanel">
+  <section class="card detail" id="detail" hidden aria-labelledby="dTitle">
+    <div class="dh">
+      <div class="ttl"><div class="t" id="dTitle"></div><div class="n" id="dName"></div></div>
+      <div class="acts"><button class="btn" type="button" id="dCopy">Copy link</button><a class="btn" id="dChart" href="#" target="_blank" rel="noopener">Open full chart</a><button class="btn" type="button" id="dClose" aria-label="Close details">✕ Close</button></div>
+    </div>
+    <div class="db" id="dBody"></div>
+  </section>
 
   <div class="controls">
     <div class="inner">
@@ -443,12 +490,14 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
     <div class="more" id="more"></div>
   </div>
 
+  </div><!-- /v-scr -->
+
+  <div class="view" id="v-sim" role="tabpanel" hidden>
   <section class="card" id="sim" aria-labelledby="simTitle">
     <div class="card-h"><h2 id="simTitle">Portfolio Simulator — Global ETF</h2><span class="sub">A diversified, rules-based model portfolio built from today’s audited data</span></div>
-    <div class="gate" id="simGate">
+    <div class="simlock" id="simGate">
       <p><b>Educational simulation.</b> The simulator shows an illustrative mix of US-listed ETFs for a goal, built from fixed rules and published data. It does not know your income, existing investments or tax position, and markets can fall sharply. VilfinTV is not a SEBI-registered investment adviser.</p>
-      <label><input type="checkbox" id="simAccept"> I understand this is for learning only, is not investment advice, and that I am responsible for my own decisions.</label>
-      <button class="btn primary" id="simOpen" type="button" disabled style="justify-self:start">Open Portfolio Simulator</button>
+      <button class="btn primary" id="simOpen" type="button">Read the risk warning &amp; open the simulator</button>
     </div>
     <div id="simApp" hidden>
       <div class="simin">
@@ -469,9 +518,13 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
         <button class="tab" role="tab" data-st="why" aria-selected="false">Why these ETFs</button>
       </div></div>
       <div class="simbody" id="simBody"></div>
+      <div class="simbuy" id="simBuyWrap"><div data-vts-buy="gl" data-vts-src="data/gsim_scoreboard.json" id="simBuy"></div></div>
     </div>
   </section>
 
+  </div><!-- /v-sim -->
+
+  <div class="view" id="v-guide" role="tabpanel" hidden>
   <section class="block" id="method">
     <h2>How modes are assigned</h2>
     <p class="lead">Each ETF’s weekly total-return price is divided by the benchmark to get its relative strength. Two readings are derived from it, both centred on 100.</p>
@@ -576,8 +629,22 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
       <p>Every slot has a short list of ETFs doing the same job. Each must pass up to nine checks: in today’s audited data, at least 3 years of returns, traded at least $20 million a day, fund size of at least $1 billion, expense ratio under the slot’s cap, 1-year return close to similar ETFs, volatility no more than 1.3 times similar ETFs, a clean year of weekly prices and, for the factor slot, an Accelerating mode against the S&amp;P 500 with Medium or High confidence. Survivors are ranked on cost 35% · liquidity 25% · size 20% · track record 10% · consistency with peers 10%.</p>
       <p><b>Market-condition overlay:</b> for goals of 3 years or more, when the S&amp;P 500’s long-term trend turns negative (below a falling 52-week average with a negative 1-year return), 10 points move from equity into bonds, trimmed evenly across the equity slots. The money moves back when the trend recovers. The “Why these ETFs” tab shows every check with its figure.</p></div></details>
     <details><summary>Is the “Risk &amp; behaviour” view a forecast?</summary><div class="a"><p>No. It replays how the exact model mix moved over the last 60 weeks of audited weekly prices, rebalanced to its target weights each week, and compares it with the S&amp;P 500. Past behaviour over a short window is an illustration only and does not predict future returns.</p></div></details>
+    <details><summary>What is the Simulator Buy?</summary><div class="a">
+      <p>The <b>Simulator Buy</b> (inside the Portfolio Simulator, below the model portfolio) follows 20 <b>simulated</b> accounts of VilfinTV team members as they buy this simulator&rsquo;s 10+ year model portfolios from 20 Oct 2026 — the same idea as the Simulator Buy on the India ETF and mutual fund pages. It is a simulation for education only: no real money is invested and no shares are held for anyone.</p>
+      <table class="faq-ex"><thead><tr><th>Risk level</th><th>Monthly</th><th>Weekly</th><th>Quarterly</th><th>Yearly / one-time</th></tr></thead><tbody>
+      <tr><td>Conservative, Balanced</td><td>US$120 on the 3rd</td><td>US$28 every Monday</td><td>US$360 on 20 Jan / Apr / Jul / Oct</td><td>US$1,440</td></tr>
+      <tr><td>Aggressive</td><td>US$240 on the 3rd</td><td>US$55 every Monday</td><td>US$720 on 20 Jan / Apr / Jul / Oct</td><td>US$2,880</td></tr></tbody></table>
+      <p>Each account is compared with the same money put into the S&amp;P 500 (SPY) on the same days. Returns are absolute for the first year and annualised (XIRR) after.</p></div></details>
+    <details><summary>How are the Simulator Buy trades priced?</summary><div class="a">
+      <ul><li><b>Market-on-close:</b> every buy executes at the official closing price (4:00 pm New York time) of its plan date — or of the next session the ETF trades if the US market is closed.</li>
+      <li><b>Fractional shares</b> in steps of 0.0001, after a commission of $0.0035 a share (at least $0.35, at most 1% of the trade). Cents left over, or an order under $1, wait for that slot&rsquo;s next buy. Shares are credited the next US business day (T+1).</li>
+      <li><b>Dividends:</b> shares bought before the ex-date earn the dividend; 25% US tax is withheld for India residents (India–US treaty), nothing at source for the US-based team members. The cash joins the slot&rsquo;s next buy.</li>
+      <li><b>Never sells:</b> when the model replaces an ETF, new money goes to the new choice and earlier shares are kept.</li>
+      <li><b>Audited daily:</b> every order, price, commission, dividend and value is recomputed independently before anything is published; currency conversion and remittance costs are not modelled.</li></ul></div></details>
     <details><summary>Is this investment advice?</summary><div class="a"><p>No. VilfinTV is a free educational platform and is not a SEBI-registered investment adviser or research analyst. Modes and rankings describe past prices and do not predict future returns. Research every ETF and consult a qualified adviser for your situation.</p></div></details>
   </section>
+
+  </div><!-- /v-guide -->
 
   <section class="block" id="share">
     <h2>Share VilfinTV with friends &amp; family</h2>
@@ -608,12 +675,8 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
 </footer>
 
 <div class="tip" id="tip" role="tooltip"></div>
-<div class="scrim" id="scrim"></div>
-<aside class="drawer" id="drawer" aria-hidden="true" aria-labelledby="dTitle" role="dialog">
-  <div class="dh"><div><div class="t" id="dTitle"></div><div class="n" id="dName"></div></div><button class="x" id="dClose" type="button" aria-label="Close details">✕</button></div>
-  <div class="db" id="dBody"></div>
-</aside>
 
+<script src="vt_sim.js?v=20261022"></script>
 <script>
 (() => {
 "use strict";
@@ -902,9 +965,10 @@ function renderTable(){
   const mb = $("#moreBtn"); if (mb) mb.onclick = () => { S.limit += 40; renderTable(); };
 }
 
-/* ---------- Detail drawer ---------- */
-function openDrawer(t){
+/* ---------- ETF detail: inline card at the top of the Screener (URL ?etf=SYM) ---------- */
+function openDrawer(t, opts){
   const e = S.data.by[t]; if (!e) return;
+  opts = opts || {};
   S.sel = e;
   const g = e.g, b = S.data.by[S.bench], r = e.r || {};
   $("#dTitle").textContent = e.t;
@@ -912,37 +976,61 @@ function openDrawer(t){
   const trail = g ? `<div class="trail">${g.modes.map(m => `<span class="${MODES[m].cls}" title="${MODES[m].name}">${MODES[m].g}</span>`).join("")}</div><div class="trail-l"><span>${g.modes.length} weeks ago</span><span>This week</span></div>` : '<p class="muted">Needs at least 20 weeks of history to classify.</p>';
   const stat = (l, v) => `<div><span>${l}</span><b>${v}</b></div>`;
   const tchk = (i, lab) => { const v = e.trend && e.trend[i]; return `<li><b>${v===1?'<span class="pos">▲</span>':v===-1?'<span class="neg">▼</span>':'<span class="muted">●</span>'}</b><span>${lab}: ${v===1?"positive":v===-1?"negative":"neutral"}</span></li>`; };
-  $("#dBody").innerHTML = `
+  $("#dBody").innerHTML = `<div class="dgrid"><div>
     <div class="pxrow"><span class="p">${e.px!=null?"$"+e.px.toFixed(2):"–"}</span><span class="c">${fmtPct(r["1d"],2)} today</span><span class="muted" style="font-size:12.5px">Close ${fmtDate(e.asOf)}${e.stale?" · not traded recently":""}</span></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${badge(g&&g.mode)} ${confHtml(e.conf)} <span class="tag">${esc(e.role)}</span><span class="tag">${esc(e.cat)}</span></div>
     <div class="sect">Performance vs ${esc(BENCH_NAMES[S.bench])}, last ${S.data.weeks.length} weeks</div>
     <svg id="dchart" viewBox="0 0 520 200" role="img" aria-label="Price compared with benchmark"></svg>
     <div class="legend" style="padding:0"><span><i style="background:var(--accent)"></i>${esc(e.t)}</span><span><i style="background:var(--ink-3)"></i>${esc(S.bench)}</span></div>
+    </div><div>
+    <div class="sect">Rotation vs ${esc(BENCH_NAMES[S.bench])} — last ${g ? g.tail.length : 0} weeks</div>
+    ${g ? `<svg id="dmap" viewBox="0 0 300 240" role="img" aria-label="Rotation trail of ${esc(e.t)}"></svg>` : ""}
     <div class="sect">Mode over the last ${TAIL} weeks</div>${trail}
     ${g?`<div class="stats" style="margin-top:12px">${stat("RS-Ratio", g.ratio.toFixed(2))}${stat("RS-Momentum", g.mom.toFixed(2))}${stat("Relative 13W", fmtPct(g.rel13))}</div>`:""}
+    </div></div>
+    <div class="dstats"><div>
     <div class="sect">Returns</div>
     <div class="stats">${stat("1 month",fmtPct(r["1m"]))}${stat("3 months",fmtPct(r["3m"]))}${stat("6 months",fmtPct(r["6m"]))}${stat("YTD",fmtPct(r.ytd))}${stat("1 year",fmtPct(r["1y"]))}${stat("3Y CAGR",fmtPct(r["3y"]))}</div>
+    </div><div>
     <div class="sect">Risk, cost &amp; liquidity</div>
     <div class="stats">${stat("Expense ratio",e.er!=null?e.er.toFixed(2)+"%":"–")}${stat("Fund size",fmtUsd(e.aum))}${stat("Traded/day",fmtUsd(e.adv))}${stat("Volatility 1Y",e.vol!=null?e.vol.toFixed(1)+"%":"–")}${stat("Max fall 3Y",fmtPct(e.mdd))}${stat("Beta vs S&P 500",fmtNum(e.beta,2))}${stat("52W low",e.lo!=null?"$"+e.lo.toFixed(2):"–")}${stat("52W high",e.hi!=null?"$"+e.hi.toFixed(2):"–")}${stat("Yield",e.yld!=null?e.yld.toFixed(2)+"%":"–")}</div>
+    </div><div>
     <div class="sect">Trend</div>
     <ul class="chk">${tchk(0,"Short term (10-week average, 13-week return)")}${tchk(1,"Medium term (26-week average, 26-week return)")}${tchk(2,"Long term (52-week average rising, 1-year return)")}</ul>
+    </div><div>
     <div class="sect">Fund facts</div>
     <div class="stats">${stat("Region",esc(e.reg))}${stat("Asset class",esc(e.ac))}${stat("Listed since",e.inc?fmtDate(e.inc):"–")}</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
-      <a class="btn primary" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(e.t)}" target="_blank" rel="noopener">Open full chart</a>
-      <a class="btn" href="#invest" id="dInvest">Ways to invest</a>
-    </div>`;
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><a class="btn" href="?v=guide#invest" id="dInvest">Ways to invest</a></div>
+    </div></div>`;
+  $("#dChart").href = "https://www.tradingview.com/chart/?symbol=" + encodeURIComponent(e.t);
+  $("#dCopy").textContent = "Copy link";
   drawChart(e, b);
-  $("#dInvest").onclick = () => closeDrawer();
-  $("#drawer").classList.add("on"); $("#scrim").classList.add("on"); $("#drawer").setAttribute("aria-hidden","false");
-  document.body.style.overflow = "hidden";
-  $("#dClose").focus();
+  if (g) drawTrail(e);
+  $("#dInvest").onclick = ev => { ev.preventDefault(); setView("guide", { anchor: "invest" }); };
+  $("#detail").hidden = false;
+  if (VIEW !== "scr") setView("scr", { keep: true });
   history.replaceState(null, "", setParam("etf", e.t));
   if (S.showAll) renderMap(S.rows);
+  if (!opts.noScroll) requestAnimationFrame(() => { const top = $("#detail").getBoundingClientRect().top + scrollY - 76; scrollTo({ top: Math.max(0, top), behavior: "smooth" }); });
 }
 function closeDrawer(){
-  $("#drawer").classList.remove("on"); $("#scrim").classList.remove("on"); $("#drawer").setAttribute("aria-hidden","true");
-  document.body.style.overflow = ""; S.sel = null; history.replaceState(null, "", setParam("etf", null));
+  $("#detail").hidden = true; S.sel = null; history.replaceState(null, "", setParam("etf", null));
+  if (S.showAll) renderMap(S.rows);
+}
+function drawTrail(e){
+  const g = e.g, W = 300, H = 240, P = 26, pts = g.tail;
+  const xs = pts.map(p => p[0]).concat([100]), ys = pts.map(p => p[1]).concat([100]);
+  const span = Math.max(1.5, ...xs.map(v => Math.abs(v - 100)), ...ys.map(v => Math.abs(v - 100))) * 1.18;
+  const X = v => P + (v - (100 - span)) / (2 * span) * (W - 2 * P), Y = v => H - P - (v - (100 - span)) / (2 * span) * (H - 2 * P);
+  const q = (x, y, w, h, c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}" opacity=".12"/>`;
+  const cx = X(100), cy = Y(100);
+  let s = q(cx, P, W - P - cx, cy - P, "var(--acc)") + q(cx, cy, W - P - cx, H - P - cy, "var(--dec)") + q(P, P, cx - P, cy - P, "var(--rec)") + q(P, cy, cx - P, H - P - cy, "var(--und)");
+  s += `<line class="ax" x1="${P}" x2="${W - P}" y1="${cy}" y2="${cy}"/><line class="ax" x1="${cx}" x2="${cx}" y1="${P}" y2="${H - P}"/>`;
+  s += `<text x="${W - P - 2}" y="${P + 12}" text-anchor="end">Accelerating</text><text x="${W - P - 2}" y="${H - P - 5}" text-anchor="end">Decelerating</text><text x="${P + 2}" y="${P + 12}">Recovering</text><text x="${P + 2}" y="${H - P - 5}">Underperforming</text>`;
+  s += `<text x="${W / 2}" y="${H - 6}" text-anchor="middle">RS-Ratio →</text><text x="10" y="${H / 2}" text-anchor="middle" transform="rotate(-90 10 ${H / 2})">RS-Momentum →</text>`;
+  s += `<polyline points="${pts.map(p => X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1)).join(" ")}" fill="none" stroke="var(--ink-3)" stroke-width="1.6" stroke-dasharray="3 2"/>`;
+  pts.forEach((p, i) => { const last = i === pts.length - 1; s += `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="${last ? 6 : 3}" fill="${MODES[g.modes[i]].col}" stroke="var(--surface)" stroke-width="2"/>`; });
+  $("#dmap").innerHTML = s;
 }
 function drawChart(e, b){
   const W = 520, H = 200, P = {l:38,r:10,t:10,b:22}, weeks = S.data.weeks;
@@ -1017,7 +1105,7 @@ $("#q").addEventListener("input", ev => { clearTimeout(qt); qt = setTimeout(() =
 $("#qClear").onclick = () => { S.q = ""; $("#q").value = ""; $("#qClear").style.display = "none"; if (S.data) renderAll(); $("#q").focus(); };
 document.addEventListener("keydown", ev => {
   if (ev.key === "/" && document.activeElement.tagName !== "INPUT"){ ev.preventDefault(); $("#q").focus(); }
-  if (ev.key === "Escape" && $("#drawer").classList.contains("on")) closeDrawer();
+  if (ev.key === "Escape" && !$("#detail").hidden && !document.querySelector(".vts-ov,.vts-pm-back")) closeDrawer();
   if (ev.key === "Enter" && ev.target.matches && ev.target.matches("tbody tr, .dot")) openDrawer(ev.target.dataset.t);
   if (ev.key === "Enter" && ev.target.matches && ev.target.matches("th[data-s]")) ev.target.click();
 });
@@ -1042,7 +1130,37 @@ $("#tbl thead").addEventListener("click", ev => {
 $("#tbl tbody").addEventListener("click", ev => { const tr = ev.target.closest("tr[data-t]"); if (tr) openDrawer(tr.dataset.t); });
 $("#map").addEventListener("click", ev => { const d = ev.target.closest(".dot"); if (d) openDrawer(d.dataset.t); });
 $("#leaders").addEventListener("click", ev => { const r = ev.target.closest(".lrow"); if (r) openDrawer(r.dataset.t); });
-$("#scrim").onclick = closeDrawer; $("#dClose").onclick = closeDrawer;
+$("#dClose").onclick = closeDrawer;
+$("#dCopy").onclick = async () => { const u = location.origin + location.pathname + "?etf=" + encodeURIComponent(S.sel ? S.sel.t : ""); try { await navigator.clipboard.writeText(u); $("#dCopy").textContent = "Link copied"; } catch(e){ $("#dCopy").textContent = u; } };
+
+/* ---------- Views: Screener · Portfolio Simulator · How it works & FAQ ---------- */
+let VIEW = "scr";
+function setView(v, opts){
+  opts = opts || {};
+  if (v === "sim" && !opts.accepted && window.VTSim){
+    VTSim.gate(() => setView("sim", Object.assign({}, opts, { accepted: true })), faq => setView(faq ? "guide" : "scr", faq ? { anchor: "faq" } : {}));
+    return;
+  }
+  VIEW = v;
+  $$("#views button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.v === v)));
+  $("#v-scr").hidden = v !== "scr"; $("#v-sim").hidden = v !== "sim"; $("#v-guide").hidden = v !== "guide";
+  const p = new URLSearchParams(location.search);
+  v === "scr" ? p.delete("v") : p.set("v", v);
+  if (v !== "scr") p.delete("etf");
+  const qs = p.toString();
+  history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + (opts.anchor ? "#" + opts.anchor : ""));
+  if (v === "sim" && (opts.accepted || (window.VTSim && VTSim.accepted()))) openSim();
+  if (opts.anchor){ const el = document.getElementById(opts.anchor); if (el) requestAnimationFrame(() => el.scrollIntoView({ block: "start" })); }
+  else if (!opts.keep) { const vb = $("#views"); if (vb && vb.getBoundingClientRect().top < 0) scrollTo({ top: vb.getBoundingClientRect().top + scrollY - 70 }); }
+}
+$("#views").addEventListener("click", ev => { const b = ev.target.closest("button[data-v]"); if (b) setView(b.dataset.v); });
+document.addEventListener("click", ev => {
+  const a = ev.target.closest("[data-view]"); if (a){ ev.preventDefault(); setView(a.dataset.view); return; }
+  const h = ev.target.closest('a[href^="#"]'); if (!h) return;
+  const id = h.getAttribute("href").slice(1);
+  if (id === "sim"){ ev.preventDefault(); setView("sim"); }
+  else if (["method","invest","faq"].includes(id) || (document.getElementById(id) && $("#v-guide").contains(document.getElementById(id)))){ ev.preventDefault(); setView("guide", { anchor: id }); }
+});
 $$(".routes .tab").forEach(t => t.onclick = () => {
   $$(".routes .tab").forEach(x => x.setAttribute("aria-selected", String(x === t)));
   $$(".rpanel").forEach(p => p.classList.toggle("on", p.id === "r-" + t.dataset.route));
@@ -1127,8 +1245,9 @@ function evalSlot(key){
   return { key, sl, rows, pick: surv[0] || null };
 }
 
-function buildPlan(){
-  const base = { ...ALLOC[SIM.h][SIM.risk] }, notes = [], longGoal = ["h5","h10","h15"].includes(SIM.h);
+function buildPlan(H, R){
+  H = H || SIM.h; R = R || SIM.risk;
+  const base = { ...ALLOC[H][R] }, notes = [], longGoal = ["h5","h10","h15"].includes(H);
   const spy = S.data.by.SPY;
   if (longGoal && base.eq && spy && spy.trend && spy.trend[2] === -1){
     const s = Math.min(10, base.eq); base.eq -= s; base.bond = (base.bond||0) + s;
@@ -1136,7 +1255,7 @@ function buildPlan(){
   }
   const w = {};
   if (base.eq){
-    const split = SIM.h === "h3" ? {us_core:100} : EQSPLIT[SIM.risk];
+    const split = H === "h3" ? {us_core:100} : EQSPLIT[R];
     for (const k in split) w[k] = base.eq * split[k] / 100;
     if (!longGoal) delete w.factor;
   }
@@ -1200,6 +1319,7 @@ function residenceNotes(annual){
 }
 
 function renderSim(){
+  $("#simBuyWrap").hidden = SIM.tab !== "mix";
   if (!S.data || $("#simApp").hidden) return;
   const P = buildPlan(), amt = Math.max(0, +SIM.amt || 0), annual = SIM.freq ? amt * SIM.freq : 0;
   const body = $("#simBody");
@@ -1262,9 +1382,7 @@ function drawSimChart(H){
   $("#simchart").innerHTML = s;
 }
 function openSim(){ $("#simGate").hidden = true; $("#simApp").hidden = false; renderSim(); }
-try { if (localStorage.getItem("vf-gsim-ok") === "1"){ $("#simAccept").checked = true; $("#simOpen").disabled = false; } } catch(e){}
-$("#simAccept").onchange = ev => { $("#simOpen").disabled = !ev.target.checked; };
-$("#simOpen").onclick = () => { try { localStorage.setItem("vf-gsim-ok","1"); } catch(e){} openSim(); };
+$("#simOpen").onclick = () => setView("sim");
 $("#sH").onchange = ev => { SIM.h = ev.target.value; renderSim(); };
 $("#sR").addEventListener("click", ev => { const b = ev.target.closest("button"); if (!b) return; SIM.risk = b.dataset.v; $$("#sR button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); renderSim(); });
 let at; $("#sA").addEventListener("input", ev => { clearTimeout(at); at = setTimeout(() => { SIM.amt = Math.min(1e7, Math.max(0, +ev.target.value || 0)); renderSim(); }, 150); });
@@ -1274,7 +1392,27 @@ $("#sFrac").onchange = ev => { SIM.frac = ev.target.checked; renderSim(); };
 $$("#sim .tab").forEach(t => t.onclick = () => { SIM.tab = t.dataset.st; $$("#sim .tab").forEach(x => x.setAttribute("aria-selected", String(x === t))); renderSim(); });
 $("#simBody").addEventListener("click", ev => { const tr = ev.target.closest("tr[data-t]"); if (tr) openDrawer(tr.dataset.t); });
 
-load().then(() => { try { if (localStorage.getItem("vf-gsim-ok") === "1" && location.hash === "#sim") openSim(); } catch(e){} const t = params.get("etf"); if (t && S.data && S.data.by[t.toUpperCase()]) openDrawer(t.toUpperCase()); });
+/* The published model portfolios (built by the data job with the same rules, used by the Simulator Buy agents) must
+   match what this page computes; a mismatch shows in the status card. */
+function verifyPlans(){
+  const pub = S.data.plans; if (!pub) return 0;
+  let bad = 0;
+  for (const h of Object.keys(ALLOC)) for (const r of ["c","b","a"]){
+    const mine = buildPlan(h, r).rows, theirs = (pub[h + r] || {}).rows || [];
+    const same = mine.length === theirs.length && mine.every((x, i) => x.k === theirs[i].k && x.e.t === theirs[i].t && Math.abs(x.w - theirs[i].w) < 0.01);
+    if (!same) bad++;
+  }
+  if (bad) $("#stAudit").innerHTML = `<span class="warn">${bad} model portfolio mismatch${bad === 1 ? "" : "es"}</span>`;
+  return bad;
+}
+
+load().then(() => {
+  if (S.data) verifyPlans();
+  const v = params.get("v"), hash = location.hash.slice(1), t = params.get("etf");
+  if (v === "sim" || hash === "sim" || params.get("plan")) setView("sim", { keep: true });
+  else if (v === "guide" || ["method","invest","faq"].includes(hash)) setView("guide", { keep: true, anchor: ["method","invest","faq"].includes(hash) ? hash : null });
+  if (t && S.data && S.data.by[t.toUpperCase()]) openDrawer(t.toUpperCase(), { noScroll: false });
+});
 })();
 </script>
 </body>

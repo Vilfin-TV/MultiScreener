@@ -21,7 +21,13 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from global_plans import all_plans, ALL_CANDS  # noqa: E402  (shared with the page's simulator and gsim_engine.py)
+
 OUT = os.path.join(os.path.dirname(__file__), "..", "data", "global_etf.json")
+DAILY_OUT = os.path.join(os.path.dirname(__file__), "..", "data", "global_etf_daily.json")
+DAILY_SESSIONS = 320    # raw daily closes kept for the Simulator Buy (official closes, dividends, splits)
+MARKET = ["SPY", "QQQ", "IWM", "EFA", "EEM", "AGG", "GLD"]   # day's market moves in the Simulator Buy journal
 WEEKS_OUT = 60          # weekly closes exported per ETF
 MIN_WEEKS = 20          # minimum clean weeks to classify
 TAIL = 8                # tail length on the rotation map
@@ -205,9 +211,37 @@ def rrg(etf, bench):
 # --------------------------------------------------------------------------
 def fetch_prices(tickers):
     import yfinance as yf
-    df = yf.download(tickers, period="6y", interval="1d", auto_adjust=False,
+    df = yf.download(tickers, period="6y", interval="1d", auto_adjust=False, actions=True,
                      group_by="ticker", progress=False, threads=True)
+    return drop_open_session(df)
+
+def drop_open_session(df):
+    """During US trading hours the download ends with today's unfinished bar — never publish it as a close."""
+    if df is None or getattr(df, "empty", True):
+        return df
+    from zoneinfo import ZoneInfo
+    ny = datetime.now(ZoneInfo("America/New_York"))
+    last = df.index[-1]
+    if last.date() == ny.date() and (ny.hour, ny.minute) < (16, 30):
+        df = df.iloc[:-1]
     return df
+
+def daily_export(raw, as_of):
+    """Official daily closes (not dividend-adjusted), cash dividends by ex-date and splits of every ETF the Portfolio
+    Simulator can choose plus the market trackers — read by scripts/gsim_engine.py to price every simulated trade."""
+    tick = sorted(set(ALL_CANDS) | set(MARKET))
+    dates = [d for d in raw.index if d <= as_of][-DAILY_SESSIONS:]
+    out = {"v": 1, "asOf": str(as_of.date()), "dates": [str(d.date()) for d in dates], "c": {}, "div": {}, "split": {}}
+    for t in tick:
+        if t not in raw.columns.get_level_values(0):
+            continue
+        d = raw[t].reindex(dates)
+        out["c"][t] = [r4(v, 4) if pd.notna(v) and v > 0 else None for v in d["Close"].values]
+        if "Dividends" in d:
+            out["div"][t] = [[str(i.date()), r4(v, 6)] for i, v in d["Dividends"].items() if pd.notna(v) and v > 0]
+        if "Stock Splits" in d:
+            out["split"][t] = [[str(i.date()), float(v)] for i, v in d["Stock Splits"].items() if pd.notna(v) and v > 0 and v != 1]
+    return out
 
 def fetch_facts(t):
     import yfinance as yf
@@ -416,6 +450,14 @@ def build(dry=False):
         if g:
             A.check(math.isfinite(g["ratio"]) and math.isfinite(g["mom"]), f"{e['t']}: engine non-finite")
 
+    plans = all_plans(out)
+    for pid, p in plans.items():
+        A.check(bool(p["rows"]) and abs(sum(x["w"] for x in p["rows"]) - 100) < 0.01, f"plan {pid}: weights do not add to 100")
+    daily = daily_export(raw, as_of)
+    for t in {x["t"] for p in plans.values() for x in p["rows"]} | set(MARKET):
+        cl = daily["c"].get(t) or []
+        A.check(bool(cl) and cl[-1] is not None, f"{t}: no official close on {as_of.date()} for the simulator", critical=False)
+
     doc = {
         "version": 1,
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -425,6 +467,7 @@ def build(dry=False):
         "engineRef": "SPY",
         "audit": {"passed": A.passed, "critical": len(A.critical), "warnings": len(A.warnings)},
         "etfs": out,
+        "plans": plans,
     }
     print(f"as-of {doc['asOf']}  ETFs {len(out)}  checks passed {A.passed}  "
           f"critical {len(A.critical)}  warnings {len(A.warnings)}")
@@ -440,7 +483,10 @@ def build(dry=False):
     with open(tmp, "w") as f:
         json.dump(doc, f, separators=(",", ":"), allow_nan=False)
     os.replace(tmp, OUT)
-    print("Published", os.path.relpath(OUT)); return 0
+    with open(DAILY_OUT + ".tmp", "w") as f:
+        json.dump(daily, f, separators=(",", ":"), allow_nan=False)
+    os.replace(DAILY_OUT + ".tmp", DAILY_OUT)
+    print("Published", os.path.relpath(OUT), "and", os.path.relpath(DAILY_OUT)); return 0
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("--dry-run", action="store_true")

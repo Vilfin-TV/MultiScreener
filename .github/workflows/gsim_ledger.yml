@@ -1,0 +1,118 @@
+name: Global Simulator Buy Ledger
+
+# Global Simulator Buy: simulated US-listed ETF accounts of the 20 VilfinTV agents buying the Portfolio Simulator —
+# Global ETF 10+ year model portfolios (scripts/gsim_engine.py, rules in scripts/gsim_config.json).
+# The ledger lives ONLY in the private R2 bucket "vilfintv-sim" (key prefix gsim/) — never in this public repository.
+#   1. download the ledger (main copy, else the backup bucket); it must continue the published head (data/gsim_meta.json)
+#   2. engine: new plan snapshot, instalments, market-on-close executions at official closes, dividends, valuation
+#   3. scripts/audit_gsim.py: independent audit — any error stops here and nothing is published
+#   4. upload ledger / view / audit + a dated copy to R2 and a copy to the backup bucket
+#   5. commit only the public marker, the scoreboard and the per-account summaries
+# Runs after every "Global ETF Momentum Data" build plus a daily fallback; every run catches up missed dates.
+on:
+  workflow_run:
+    workflows: ["Global ETF Momentum Data"]
+    types: [completed]
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/gsim_engine.py'
+      - 'scripts/gsim_config.json'
+      - 'scripts/audit_gsim.py'
+      - 'scripts/global_plans.py'
+      - '.github/workflows/gsim_ledger.yml'
+  schedule:
+    - cron: '50 5 * * *'         # 05:50 UTC daily fallback (after the late US-close data retry)
+    - cron: '20 */6 * * *'       # safety run every 6 hours (runs are idempotent)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gsim-ledger
+  cancel-in-progress: false
+
+jobs:
+  ledger:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install tools
+        run: npm install -g wrangler@3
+
+      - name: Download the ledger (main copy → backup bucket)
+        run: |
+          mkdir -p "$RUNNER_TEMP/gsim"
+          out="$RUNNER_TEMP/gsim/ledger.json"
+          get() { wrangler r2 object get "$1" --file "$out" --remote 2>/dev/null || wrangler r2 object get "$1" --file "$out" 2>/dev/null; }
+          if get vilfintv-sim/gsim/ledger.json && python -c "import json,sys; json.load(open(sys.argv[1]))['events']" "$out"; then
+            echo "main copy downloaded"
+          elif get vilfintv-sim-backup/gsim/ledger.json && python -c "import json,sys; json.load(open(sys.argv[1]))['events']" "$out"; then
+            echo "::warning::main copy unavailable — using the backup bucket copy"
+          else
+            n=$(python -c "import json,os; p='data/gsim_meta.json'; print(json.load(open(p)).get('events',0) if os.path.exists(p) else 0)")
+            if [ "$n" != "0" ]; then echo "::error::no ledger copy could be downloaded but $n entries are published — not starting over"; exit 1; fi
+            echo "first run — starting a new ledger"; echo '{}' > "$out"
+          fi
+
+      - name: Run the engine
+        run: python scripts/gsim_engine.py --store "$RUNNER_TEMP/gsim/ledger.json" --view "$RUNNER_TEMP/gsim/view.json"
+
+      - name: Independent audit
+        id: audit
+        run: python scripts/audit_gsim.py --store "$RUNNER_TEMP/gsim/ledger.json" --view "$RUNNER_TEMP/gsim/view.json" --out "$RUNNER_TEMP/gsim/audit.json"
+
+      - name: Upload the audit result even when it fails
+        if: failure() && steps.audit.outcome == 'failure'
+        run: wrangler r2 object put vilfintv-sim/gsim/audit.json --file "$RUNNER_TEMP/gsim/audit.json" --content-type application/json || true
+
+      - name: Store ledger, view and audit (private) + dated copy + backup bucket
+        run: |
+          d=$(TZ=America/New_York date +%F)
+          for f in ledger view audit; do
+            wrangler r2 object put "vilfintv-sim/gsim/snapshots/$d/$f.json" --file "$RUNNER_TEMP/gsim/$f.json" --content-type application/json
+          done
+          wrangler r2 object put "vilfintv-sim-backup/gsim/ledger.json" --file "$RUNNER_TEMP/gsim/ledger.json" --content-type application/json \
+            || echo "::warning::backup bucket copy failed (the dated copy and the main copy still hold the ledger)"
+          for f in ledger view audit; do
+            wrangler r2 object put "vilfintv-sim/gsim/$f.json" --file "$RUNNER_TEMP/gsim/$f.json" --content-type application/json
+          done
+
+      - name: Public marker + scoreboard + account summaries
+        run: |
+          python - <<'EOF'
+          import json, os, sys
+          sys.path.insert(0, "scripts")
+          from gsim_engine import public
+          t = os.path.join(os.environ["RUNNER_TEMP"], "gsim")
+          store, view, audit = (json.load(open(os.path.join(t, f + ".json"))) for f in ("ledger", "view", "audit"))
+          evs = store.get("events", [])
+          json.dump({"v": 1, "events": len(evs), "head": evs[-1]["h"] if evs else None, "start": view["start"]},
+                    open("data/gsim_meta.json", "w"), indent=1)
+          ok = audit["nErrors"] == 0
+          sb, files = public(view, ok)
+          os.makedirs("data/gsim", exist_ok=True)
+          if ok:
+              for f in os.listdir("data/gsim"):
+                  if f.endswith(".json") and f[:-5] not in files:
+                      os.remove(os.path.join("data/gsim", f))
+              for f, body in files.items():
+                  json.dump(body, open(f"data/gsim/{f}.json", "w"), separators=(",", ":"), ensure_ascii=False)
+          json.dump(sb, open("data/gsim_scoreboard.json", "w"), separators=(",", ":"), ensure_ascii=False)
+          print(f"scoreboard: {len(sb['rows'])} rows · ledger {len(evs)} entries · audit {'ok' if ok else 'FAILED'}")
+          EOF
+          bash scripts/push_data.sh "chore(data): Global Simulator Buy scoreboard [skip ci]" data/gsim_meta.json data/gsim_scoreboard.json data/gsim
