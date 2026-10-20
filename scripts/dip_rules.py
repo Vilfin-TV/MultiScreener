@@ -192,7 +192,7 @@ def mf_fund_checks(slot: dict, f: dict, peers: list[dict], exit_rule, tier_amt: 
         _chk("Model's choice for this segment", True, f"{slot.get('label')} — {f.get('name')}"),
         _chk("Passes every check of its model slot", sc and all(c[1] for c in sc), f"{sum(1 for c in sc if c[1])} of {len(sc)} slot checks"),
         _chk("Open for lump-sum purchases", "L" in (f.get("buy") or ""), "accepts one-time purchases" if "L" in (f.get("buy") or "") else "lump sums paused"),
-        _chk("Lump-sum minimum ≤ ₹5,000", (f.get("lumpMin") or 0) <= RULE["min"], f"₹{f.get('lumpMin') or 0:,} minimum"),
+        _chk("Lump-sum minimum ≤ ₹5,000", (f.get("lumpMin") or 0) <= RULE["min"], f"₹{int(f.get('lumpMin') or 0):,} minimum"),
         _chk("Exit load ≤ 1% and within 12 months", not long_load, "nil" if not er.get("tiers") else ", ".join(f"{p}% within {d} days" for d, p in er["tiers"])),
         _chk("Expense ratio ≤ category median", f.get("ter") is not None and ter_m is not None and f["ter"] <= ter_m + 1e-9, f"{f.get('ter')}% vs median {ter_m}%"),
         _chk("Fund size ≥ ₹500 cr", (f.get("aum") or 0) >= 500, f"₹{round(f.get('aum') or 0):,} cr"),
@@ -255,6 +255,16 @@ def _segments(asof: str, macro: dict | None = None, gates: dict | None = None, m
                               ("—", True, ""), st)
         out[k] = {**st, "checks": trigger_checks(st, asof), "mkt": mk[:6] + mk[7:]}
     return out
+
+
+def _alt_first(chk_fund: list, seg: str, metal_choice: str, what: str, n: int, why: str) -> list:
+    """Fund / ETF checks 19–20 for a segment outside the plan: never the model's choice, so never bought."""
+    return [_chk("Model's choice for this segment", False, f"the model holds {metal_choice} this month — {seg} is shown for information only"),
+            _chk(f"Top-ranked {seg} {what}", True, f"{why} ({n} {seg} {what}s compared)")] + chk_fund[2:]
+
+
+def _alt_rank(chk: list) -> int:
+    return sum(1 for c in chk[12:-1] if c[1])
 
 
 def _add(cands: list, seen: dict, c: dict) -> int:
@@ -321,11 +331,28 @@ def mf_block(plans: dict, fund, peers, exit_of, fpe_of, macro: dict, gates: dict
                     "fundOk": all(c[1] for c in chk[:-1])}
             m[seg] = _plan_entry(segs, seg, _add(cands, seen, cand), cand)
         pmap[pid] = m
-    return {"asOf": asof, "rule": rule_public(), "segments": segs, "cands": cands, "plans": pmap, "reserve": mf_reserve(rows)}
+    alts = {}
+    for seg, cfg in RULE["segments"].items():
+        mt = cfg.get("metal")
+        if not mt or mt == metal_choice or seg not in segs:
+            continue
+        pool = [f for f in rows if f.get("sub") == mt and metal_of(f.get("name")) == mt]
+        best = None
+        for f in pool:
+            slot = {"key": "metal", "label": f"Precious metals — {mt}", "checks": []}
+            chk = valuation_checks(seg, macro, gates.get("metal"), metal_choice, ("Fund holds the metal", True, f.get("name")), segs[seg]) + \
+                _alt_first(mf_fund_checks(slot, f, pool, exit_of(f["code"]), segs[seg]["amount"]), mt, metal_choice, "fund", len(pool),
+                           "most fund checks passed, then lowest expense ratio and largest size")
+            key = (-_alt_rank(chk), f.get("ter") if f.get("ter") is not None else 9, -(f.get("aum") or 0), f["code"])
+            if best is None or key < best[0]:
+                best = (key, {"seg": seg, "slot": "metal", "code": f["code"], "name": f.get("name"), "checks": chk, "fundOk": False, "info": True})
+        if best:
+            alts[seg] = best[1]
+    return {"asOf": asof, "rule": rule_public(), "segments": segs, "cands": cands, "plans": pmap, "alts": alts, "reserve": mf_reserve(rows)}
 
 
 def etf_block(plans: dict, slots: dict, row, ex_of, vols_of, cap_of, names_of, macro: dict, gates: dict, metal_choice: str,
-              asof: str) -> dict:
+              asof: str, universe: list | None = None) -> dict:
     """`row(sym)` → momentum row, `ex_of(sym)` → analytics row, `vols_of(sym)` → daily volumes, `cap_of(slot id)` →
     expense-ratio cap, `names_of(sym)` → names / benchmark / underlying of the ETF."""
     import re
@@ -350,6 +377,24 @@ def etf_block(plans: dict, slots: dict, row, ex_of, vols_of, cap_of, names_of, m
             cand = {"seg": seg, "slot": sid, "sym": sl["sym"], "name": e.get("n"), "checks": chk, "fundOk": all(c[1] for c in chk[:-1])}
             m[seg] = _plan_entry(segs, seg, _add(cands, seen, cand), cand)
         pmap[pid] = m
+    alts = {}
+    for seg, cfg in RULE["segments"].items():
+        mt = cfg.get("metal")
+        if not mt or mt == metal_choice or seg not in segs:
+            continue
+        pool = [e for e in (universe or []) if re.search(INDEX_RX[seg], " ".join(names_of(e["s"]) or [e.get("n") or ""]).lower())
+                and not re.search(INDEX_RX["gold" if mt == "silver" else "silver"], (e.get("n") or "").lower())]
+        best = None
+        for e in pool:
+            slot = {"label": f"{mt.capitalize()} ETF", "checks": []}
+            chk = valuation_checks(seg, macro, gates.get("metal"), metal_choice, ("Tracks the segment's index", True, (e.get("n") or e["s"]) + " — " + segs[seg]["index"]), segs[seg]) + \
+                _alt_first(etf_fund_checks(slot, e, ex_of(e["s"]), vols_of(e["s"]), cap_of(mt), segs[seg]["amount"]), mt, metal_choice, "ETF", len(pool),
+                           "most ETF checks passed, then most traded")
+            key = (-_alt_rank(chk), -(e.get("tv") or 0), e["s"])
+            if best is None or key < best[0]:
+                best = (key, {"seg": seg, "slot": mt, "sym": e["s"], "name": e.get("n"), "checks": chk, "fundOk": False, "info": True})
+        if best:
+            alts[seg] = best[1]
     liq = next((slots[x["id"]]["sym"] for p in plans.values() for x in p["slots"] if x["id"] == "liquid" and slots.get("liquid")), None)
-    return {"asOf": asof, "rule": rule_public(), "segments": segs, "cands": cands, "plans": pmap,
+    return {"asOf": asof, "rule": rule_public(), "segments": segs, "cands": cands, "plans": pmap, "alts": alts,
             "reserve": {"sym": liq or "LIQUIDBEES", "why": "the model's liquid ETF" if liq else "default liquid ETF"}}

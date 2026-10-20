@@ -623,7 +623,7 @@ def main() -> int:
         v["pts10"] = round(v["score"] / 10, 1) if v.get("score") is not None else None
     dip = dip_rules.etf_block(plans, slots_out, by.get, lambda s: u.ex.get(s, {}), lambda s: (u.daily(s) or {}).get("v") or [],
                               lambda sid: COST_CAP.get(role_for(sid, None), 0.75), lambda s: u.names.get(s) or [],
-                              macro, (ss.get("market") or {}).get("gates") or {}, metal, u.asof)
+                              macro, (ss.get("market") or {}).get("gates") or {}, metal, u.asof, u.etfs)
     payload = {
         "v": 1, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "asOf": u.asof,
         "reviewed": review, "nextReview": ss.get("nextReview"),

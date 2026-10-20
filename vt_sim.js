@@ -989,12 +989,13 @@
     var order = ['large', 'mid', 'small', 'gold', 'silver'];
     var buys = [];
     var rows = order.filter(function (k) { return segs[k]; }).map(function (k) {
-      var s = segs[k], e = plan[k], c = e ? (b.cands || [])[e.c] : null;
+      var s = segs[k], e = plan[k], c = e ? (b.cands || [])[e.c] : null, alt = !c && b.alts ? b.alts[k] : null;
+      var mc = alt ? alt : c;
       var fall = s.fall || 0, w = Math.max(0, Math.min(100, fall / 18 * 100));
       var lvl = function (t) { return tiers.filter(function (x) { return x[0] === t; })[0]; };
       var next = tiers.filter(function (t) { return t[0] > Math.max(s.ep || 0, s.tier || 0); })[0];
       var today = s.d === last;
-      var all = c ? (s.checks || []).concat(c.checks || []) : null;
+      var all = mc ? (s.checks || []).concat(mc.checks || []) : null;
       var ok = all ? all.filter(function (x) { return x[1]; }).length : null;
       var firstFail = all ? (all.filter(function (x) { return !x[1]; })[0] || [])[0] : null;
       var dip = s.signal && today;                                     // a new, held, confirmed level on the latest close
@@ -1012,7 +1013,7 @@
                          (next ? ' Next model amount only if it reaches ' + next[0] + '% (' + inr(next[1]) + ').' : ' No deeper level is left in this fall.');
       else st = 'Down ' + fall.toFixed(1) + '% — no new level today.';
       if (tone === 'go') buys.push({ seg: s.label, amt: s.amount, name: etf ? c.sym : c.name });
-      var tag = !c ? '<span class="vts-dip-tag q">Not in this plan</span>'
+      var tag = !c ? '<span class="vts-dip-tag q">' + (alt ? 'Info only · model holds ' + (k === 'silver' ? 'gold' : 'silver') + ' now' : 'Not in this plan') + '</span>'
         : tone === 'go' ? '<span class="vts-dip-tag go">✓ Can buy today · ' + inr(s.amount) + ' (optional)</span>'
         : tone === 'no' ? '<span class="vts-dip-tag no">✕ Not today — ' + esc(firstFail || 'a check failed') + '</span>'
         : '<span class="vts-dip-tag q">No dip buy today</span>';
@@ -1022,16 +1023,17 @@
         }).join('') + '</div>';
       };
       var det = grp('Market trigger', 1, s.checks || []) +
-        (c ? grp('Market & valuation', 9, c.checks.slice(0, 10)) + grp(etf ? 'ETF checks' : 'Fund checks', 19, c.checks.slice(10))
+        (mc ? grp('Market & valuation', 9, mc.checks.slice(0, 10)) + grp(etf ? 'ETF checks' : 'Fund checks', 19, mc.checks.slice(10)) +
+             (alt ? '<p class="vts-dip-na">' + esc(s.label) + ' is not part of this model portfolio this month, so no dip amount applies. The top-ranked ' + what + ' is shown for information, with every check.</p>' : '')
            : grp('Market & valuation', 9, s.mkt || []) + '<p class="vts-dip-na">' + esc(s.label) + ' is not part of this model portfolio, so the ' + what + ' checks (19–30) do not apply and no dip amount is shown.</p>');
-      var n = c ? all.length : (s.checks || []).length + (s.mkt || []).length;
-      var nOk = c ? ok : (s.checks || []).concat(s.mkt || []).filter(function (x) { return x[1]; }).length;
+      var n = mc ? all.length : (s.checks || []).length + (s.mkt || []).length;
+      var nOk = mc ? ok : (s.checks || []).concat(s.mkt || []).filter(function (x) { return x[1]; }).length;
       return '<details class="vts-dip-r ' + tone + '"><summary>' +
         '<span class="vts-dip-s"><b>' + esc(s.label) + '</b><small>' + esc(s.index) + '</small></span>' +
         '<span class="vts-dip-f"><b>' + (fall > 0.005 ? '−' + fall.toFixed(2) + '%' : '0.00%') + '</b><span class="vts-dip-m" aria-hidden="true">' +
           tiers.map(function (t) { return '<i style="left:' + (t[0] / 18 * 100) + '%"></i>'; }).join('') + '<em style="width:' + w + '%"></em></span><small>below the 3-month high · ' + esc(dt(s.d)) + '</small></span>' +
         '<span class="vts-dip-st">' + esc(st) + '</span>' +
-        '<span class="vts-dip-fd">' + (c ? '<b>' + esc(etf ? c.sym + ' · ' + (c.name || '') : c.name || '') + '</b>' : '') + tag + '</span>' +
+        '<span class="vts-dip-fd">' + (mc ? '<b>' + esc(etf ? mc.sym + ' · ' + (mc.name || '') : mc.name || '') + '</b>' : '') + tag + '</span>' +
         '<span class="vts-dip-k ' + (c && e && e.ok ? 'ok' : '') + '">' + nOk + '/' + n + '<small>checks</small></span><span class="vts-dip-ch" aria-hidden="true">›</span></summary>' +
         '<div class="vts-dip-d">' + det + '</div></details>';
     }).join('');
