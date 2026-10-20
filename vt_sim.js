@@ -272,6 +272,7 @@
       cards.map(function (c) { return '<div class="vts-k"><small>' + c[0] + '</small><b>' + c[1] + '</b><em>' + c[2] + '</em></div>'; }).join('') +
       '<div class="vts-k"><small>Nifty 50 earnings</small><b>' + pct(e50.g1) + '</b><em>last 12 months</em></div>' +
       '</div>' + (now && now.real != null ? '' : '<p class="vts-note" style="margin:0 0 8px">GDP, inflation and growth checks are being refreshed and will appear after the next data update; the earnings checks below are current.</p>') + '<ul class="vts-cl">' + checks.map(function (c) { return '<li>' + sig(c.s) + '<span class="k">' + esc(c.k) + '</span><span class="v">' + esc(c.v) + '</span><span class="w">' + esc(c.why) + '</span></li>'; }).join('') + '</ul></div>';
+    var p1 = h; h = '';
     var gd = g.gdp || [];
     h += '<div class="vts-pane">';
     if (gd.length) {
@@ -281,9 +282,52 @@
           return '<tr><td>' + esc(x.fy) + (x.y === g.fy ? ' <small style="color:var(--accent2);font-weight:700">now</small>' : '') + '</td><td' + fc + '>' + num(x.real) + '%</td><td' + fc + '>' + num(x.infl) + '%</td><td' + fc + '>' + num(nom) + '%</td><td' + fc + '>' + (x.usd ? '$' + num(x.usd / 1000, 2) + ' tn' : '–') + '</td><td' + fc + '>' + num(x.world) + '%</td></tr>';
         }).join('') + '</tbody></table></div></div>';
     }
-    h += '</div>' + earnBox(g);
+    h += '</div>';
+    var p2 = gd.length ? h : '';
+    h = earnBox(g);
     h += '<p class="vts-note">GDP and inflation figures are ' + (g.src === 'wb' ? 'the latest published official international figures for India' : 'the latest official international forecasts for India, updated a few times a year') + '; earnings are updated every trading day. Economic data is often revised. For education only.</p>';
-    return '<div class="vts-pane">' + h + '</div>';
+    return '<div class="vts-pane">' +
+      ecoSec('checks', 'India economy & earnings checks', 'Total score ' + (g.score > 0 ? '+' : '') + g.score + ' of ' + checks.length + ' — growth, inflation, earnings and profitability', p1, true) +
+      (p2 ? ecoSec('gdp', 'India GDP by fiscal year', 'Real growth, inflation, nominal growth and GDP size, with forecasts', p2, false) : '') +
+      ecoSec('earn', 'Company earnings & valuation', 'P/E, P/B, ROE, earnings growth and PEG for every Nifty index' + (g.gidx ? ' and key global indices' : ''), h, false) +
+      ecoSec('faq', 'Economy & earnings — FAQs', 'How these figures are calculated and how the model uses them', ecoFaq(thr, nck), false) + '</div>';
+  }
+  /* Economy & earnings sections: each one has an Expand / Minimise bar; the viewer's choice is remembered on this device */
+  function ecoSec(key, title, hint, body, def) {
+    var st = null;
+    try { st = localStorage.getItem('vt_eco_' + key); } catch (e) {}
+    var open = st == null ? def : st === '1';
+    return '<details class="vts-eco" data-eco="' + key + '"' + (open ? ' open' : '') + '><summary><span class="vts-eco-t"><b>' + esc(title) + '</b><small>' + esc(hint) + '</small></span>' +
+      '<span class="vts-eco-b"><span class="o">Expand</span><span class="c">Minimise</span><i aria-hidden="true">▾</i></span></summary><div class="vts-eco-in">' + body + '</div></details>';
+  }
+  document.addEventListener('toggle', function (e) {
+    var d = e.target;
+    if (d && d.classList && d.classList.contains('vts-eco')) { try { localStorage.setItem('vt_eco_' + d.getAttribute('data-eco'), d.open ? '1' : '0'); } catch (er) {} }
+  }, true);
+  function ecoFaq(thr, nck) {
+    var q = [
+      ['Why does the Portfolio Simulator look at the economy and company earnings?',
+       'Over long periods share prices follow company earnings, and earnings follow the economy. Growth, inflation and profitability tell the model whether the backdrop for shares is supportive or a headwind. They are one input alongside valuation, interest rates, market falls, sentiment and global markets — never the only reason for a change.'],
+      ['How does the total score change the model portfolios?',
+       'Each of the ' + (nck || 10) + ' checks scores +1 (supportive), 0 (neutral) or −1 (headwind). A total of +' + thr + ' or more adds 5 percentage points of equity to the model portfolios of 5 years and longer; −' + thr + ' or less removes 5 points. Anything in between leaves the mix unchanged. Strategic changes are applied only at the monthly review.'],
+      ['What is the difference between real and nominal GDP growth?',
+       'Real growth measures how much more the economy produces, after removing price rises. Nominal growth is real growth plus inflation — growth in rupee terms. Company sales and profits are earned in rupees, so over long periods earnings tend to grow roughly in line with nominal GDP.'],
+      ['How is the earnings growth of an index calculated?',
+       'Earnings per index unit = index level ÷ its P/E, compared with the same month one, three and five years earlier (three- and five-year growth is per year, compounded). These are trailing earnings — what companies have already reported — not forecasts.'],
+      ['Why do some growth figures look very large, negative or blank?',
+       'Very large growth usually comes from a low base — companies moving from losses or thin profits back to normal profits — and rarely repeats. Negative figures mean reported profits fell. A dash means the index, or VilfinTV\'s own monthly record for a global index, does not yet have enough history for that period; the figures fill in automatically as months pass.'],
+      ['What do P/E, P/B, ROE, earnings yield and PEG mean?',
+       '<b>P/E</b> = price ÷ earnings (what investors pay for ₹1 of profit). <b>P/B</b> = price ÷ book value. <b>ROE</b> = P/B ÷ P/E — the profit companies earn on shareholders\' money (15%+ is strong, below 12% weak). <b>Earnings yield</b> = 1 ÷ P/E, comparable with bond yields. <b>PEG</b> = P/E ÷ 3-year earnings growth — below about 1.5 suggests growth is reasonably priced.'],
+      ['How are the global indices valued?',
+       'Each global index is valued from the published P/E, P/B and dividend yield of the holdings of a large exchange-traded fund that tracks it (shown under its name), in that market\'s currency. Its earnings growth is measured from VilfinTV\'s own monthly records, so it fills in over time.'],
+      ['How often are these figures updated?',
+       'Index valuations and earnings are refreshed every trading day from the exchange\'s official index files. GDP and inflation come from official international figures for India, which are revised a few times a year.'],
+      ['Do strong economic numbers mean markets will rise?',
+       'No. Markets often price good news in advance, and shares can fall in a strong economy or rise in a weak one. These checks only nudge the model\'s equity share by a small amount; they are not a forecast. The Portfolio Simulator is an educational model — not investment advice.']
+    ];
+    return '<div class="vts-box vts-efaq">' + q.map(function (x) {
+      return '<details class="vts-efq"><summary>' + esc(x[0]) + '</summary><p>' + x[1] + '</p></details>';
+    }).join('') + '</div>';
   }
 
   /* Company earnings for every Nifty index: broad market and sector / theme views, sortable columns.
@@ -963,6 +1007,18 @@
         ' with the proceeds when they arrive the next business day. When less than the tier amount is left, the remainder is used (never below ' + inr(R.min) + '). ' : '') +
         'A fall is confirmed by a second ' + (etf ? 'ETF' : 'index fund') + ' on the same index; a fall ends when the index is back within ' + (R.resetPct || 1) + '% of its high. Educational model — not investment advice.</p></section>';
   }
+  CSS += '.vts-eco{border:1px solid var(--border);border-radius:var(--radius,14px);background:var(--surface);margin:0 0 12px;overflow:hidden}' +
+    '.vts-eco>summary{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;list-style:none}.vts-eco>summary::-webkit-details-marker{display:none}' +
+    '.vts-eco>summary:hover{background:rgba(74,144,226,.05)}.vts-eco>summary:focus-visible{outline:2px solid var(--accent,#4a90e2);outline-offset:-2px}' +
+    '.vts-eco-t{flex:1;min-width:0}.vts-eco-t b{display:block;font-size:15px;color:var(--text)}.vts-eco-t small{display:block;color:var(--text2);font-size:12.5px;margin-top:2px}' +
+    '.vts-eco-b{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--text);border:1px solid var(--border2,var(--border));border-radius:999px;padding:5px 12px;white-space:nowrap}' +
+    '.vts-eco-b i{font-style:normal;transition:transform .2s}.vts-eco[open] .vts-eco-b i{transform:rotate(180deg)}.vts-eco-b .c,.vts-eco[open] .vts-eco-b .o{display:none}.vts-eco[open] .vts-eco-b .c{display:inline}' +
+    '.vts-eco-in{padding:0 16px 16px;min-width:0}.vts-eco-in>.vts-box,.vts-eco-in>.vts-pane>.vts-box{border:none;padding:0;background:none}.vts-eco-in>.vts-box>h3:first-child,.vts-eco-in>.vts-pane>.vts-box>h3:first-child{display:none}' +
+    '.vts-eco-in>.vts-pane{display:block;margin:0}' +
+    '.vts-efq{border-top:1px solid var(--border)}.vts-efq:first-child{border-top:none}.vts-efq>summary{cursor:pointer;padding:12px 26px 12px 0;font-weight:700;font-size:14px;color:var(--text);position:relative;list-style:none}' +
+    '.vts-efq>summary::-webkit-details-marker{display:none}.vts-efq>summary::after{content:"+";position:absolute;right:4px;top:10px;font-size:18px;color:var(--text2)}.vts-efq[open]>summary::after{content:"−"}' +
+    '.vts-efq p{margin:0 0 12px;color:var(--text2);font-size:13px;line-height:1.6}.vts-efq p b{color:var(--text)}' +
+    '@media (max-width:560px){.vts-eco>summary{padding:12px;align-items:flex-start}.vts-eco-in{padding:0 12px 12px}.vts-eco-t b{font-size:14px}}';
   CSS += '.vts-dip{border:1px solid var(--border2,var(--border));border-left:4px solid #4a90e2;border-radius:var(--radius,12px);background:var(--surface);padding:14px 16px;margin:0 0 16px;min-width:0}' +
     '.vts-dip-h>div{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}.vts-dip-h h3{margin:0;font-size:15px}' +
     '.vts-dip-b{display:inline-block;background:rgba(74,144,226,.13);color:var(--accent2,#2f6fbf);border:1px solid rgba(74,144,226,.45);border-radius:999px;padding:2px 10px;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}' +
