@@ -354,6 +354,39 @@ def refresh_latest(raw: dict, tk: str) -> None:
         log.warning(f"refresh {tk} failed: {exc}")
 
 
+def restore_published(raw: dict, tickers: list[str], as_of) -> int:
+    """A source that drops a session already published must not erase it (seen on a holiday morning, when the
+    previous session came back for only a fifth of the ETFs): the previously published daily bars after a
+    ticker's last downloaded session, up to the as-of session, are put back. Returns the tickers restored."""
+    import pandas as pd
+    n = 0
+    for tk in tickers:
+        df = raw.get(tk)
+        if df is None or not len(df) or not tk.endswith(".NS"):
+            continue
+        last = df.index[-1].date()
+        if last >= as_of:
+            continue
+        try:
+            with open(os.path.join(DAILY_DIR, tk[:-3] + ".json"), encoding="utf-8") as fh:
+                b = json.load(fh)
+        except Exception:  # noqa: BLE001
+            continue
+        keep = [i for i, t in enumerate(b.get("t") or []) if last < datetime.strptime(str(t), "%Y%m%d").date() <= as_of]
+        if not keep:
+            continue
+        idx = pd.DatetimeIndex([pd.Timestamp(datetime.strptime(str(b["t"][i]), "%Y%m%d")) for i in keep])
+        if df.index.tz is not None:
+            idx = idx.tz_localize(df.index.tz)
+        cols = {"Open": "o", "High": "h", "Low": "l", "Close": "c", "Volume": "v"}
+        add = pd.DataFrame({k: [b[f][i] for i in keep] for k, f in cols.items() if k in df.columns and f in b}, index=idx)
+        raw[tk] = pd.concat([df, add])
+        n += 1
+    if n:
+        log.warning(f"restored published sessions for {n} ETFs whose download stopped before {as_of}")
+    return n
+
+
 # ── Cleaning ──────────────────────────────────────────────────────────────────
 SPLIT_FACTORS = (2, 3, 4, 5, 10, 20, 25, 50, 100)
 
@@ -697,6 +730,8 @@ def main() -> int:
     if prev_asof and str(as_of) < prev_asof:
         log.warning(f"source data ({as_of}) is older than published data ({prev_asof}) — keeping previous file")
         return 0
+
+    restore_published(raw, etf_syms, as_of)
 
     # ── benchmarks (Nifty 50 defines the trading calendar) ──
     series: dict[str, tuple[list, list, list]] = {}
