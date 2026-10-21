@@ -123,6 +123,21 @@ def audit(store, view, daily):
                 orders[e["id"]] = e
     if au.err:
         return au
+    # ---- ledger epoch / restatement: carried-over plan rows unchanged, added rows exactly the configured seed
+    meta = store.get("meta", {})
+    au.ok("chain", meta.get("epoch", 1) == CFG.get("ledgerEpoch", 1), f"ledger epoch {meta.get('epoch', 1)} ≠ configured {CFG.get('ledgerEpoch', 1)}")
+    rs = meta.get("restated")
+    if rs:
+        R = CFG.get("restatement") or {}
+        pe = [e for e in evs if e["k"] == "plan"][:len(rs["plans"])]
+        au.ok("plan", len(pe) == len(rs["plans"]), "restatement: carried-over plan snapshots missing")
+        for e, r in zip(pe, rs["plans"]):
+            kept = {k: e["plans"].get(k) for k in r["kept"]}
+            au.ok("plan", e["asOf"] == r["asOf"] and hashlib.sha256(json.dumps(kept, sort_keys=True).encode()).hexdigest() == r["oldHash"],
+                  f"restatement: plan rows of {r['asOf']} differ from the archived ledger")
+            for k in set(e["plans"]) - set(r["kept"]):
+                au.ok("plan", e["plans"][k] == ((R.get("seedPlans") or {}).get(e["asOf"]) or {}).get(k),
+                      f"restatement: {k} rows of {e['asOf']} are not the configured seed")
     # ---- accounts & schedule
     today = iso(view["today"])
     accts = {}
