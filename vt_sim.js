@@ -508,12 +508,12 @@
 
     function drawSwitch() {
       me.setAttribute('aria-label', cur.name + ' — view profile');
-      me.innerHTML = av(cur, true) + '<span class="vts-pf-who"><b>' + esc(cur.name) + (cur.nri ? '<i class="vts-buy-nri">NRI</i>' : '') + '<em class="vts-pf-vp">Profile ›</em></b>' +
+      me.innerHTML = av(cur, true) + '<span class="vts-pf-who"><b>' + esc(cur.name) + (cur.nri ? '<i class="vts-buy-nri">NRI</i>' : '') + stepTag(cur) + '<em class="vts-pf-vp">Profile ›</em></b>' +
         (cur.role ? '<span class="vts-pf-role">' + esc(cur.role) + ' · VilfinTV</span>' : '') + '<span>' + plan(cur) + '</span></span>';
       stEl.innerHTML = status(cur);
       list.innerHTML = rows.map(function (r, i) {
         return '<button type="button" role="option" class="vts-pf-o" aria-selected="' + (r === cur) + '" data-i="' + i + '">' + av(r) +
-          '<span class="vts-pf-who"><b>' + esc(r.name) + (r.nri ? '<i class="vts-buy-nri">NRI</i>' : '') + '</b>' + (r.role ? '<span class="vts-pf-role">' + esc(r.role) + '</span>' : '') + '<span>' + plan(r) + '</span></span>' +
+          '<span class="vts-pf-who"><b>' + esc(r.name) + (r.nri ? '<i class="vts-buy-nri">NRI</i>' : '') + stepTag(r) + '</b>' + (r.role ? '<span class="vts-pf-role">' + esc(r.role) + '</span>' : '') + '<span>' + plan(r) + '</span></span>' +
           '<span class="vts-pf-st">' + status(r) + (r.day && r.ret != null && !r.day.first ? '<small class="' + cl(r.day.chg) + '">' + spct(r.day.pct) + ' on ' + esc(dt(r.day.d, false)) + '</small>' : '') + '</span></button>';
       }).join('');
     }
@@ -543,8 +543,33 @@
     var ad = new Date(sb.start + 'T00:00:00').getDate();
     var WHEN = { 'Monthly': 'on the 3rd of every month', 'Weekly': 'every Monday', 'Quarterly': 'on ' + ad + ' Jan, Apr, Jul and Oct',
                  'Yearly': 'every year on ' + ad + ' Oct', 'One-time': 'once, on ' + dt(sb.start) };
+    /* Yearly step-up rules (sim_config / gsim_config stepUps): one agent per page gets a year-end bonus added to the
+       first buy of January, another raises the regular buy by a fixed % every January after a salary hike. */
+    function stepTag(r) {
+      if (!r.step) return '';
+      return r.step.k === 'bonus' ? '<i class="vts-buy-nri vts-step" title="Year-end bonus added to the first buy of January">🎁 Bonus</i>'
+                                  : '<i class="vts-buy-nri vts-step" title="Regular buy rises every January after a salary hike">📈 +' + r.step.pct + '%/yr</i>';
+    }
+    function stepAmt(r, yrs) {
+      var h = r.step, f = Math.pow(1 + h.pct / 100, yrs);
+      return Math.round(r.amt * f / h.round) * h.round;
+    }
+    function stepNote(r) {
+      if (!r.step || !r.amt) return null;
+      var y0 = new Date(sb.start + 'T00:00:00').getFullYear(), per = r.freq === 'Weekly' ? 'weekly' : 'monthly';
+      if (r.step.k === 'bonus') {
+        return ['Bonus', 'Receives a year-end bonus of ' + inr(r.step.amount, 0) + ' every 31 December and adds all of it to the first ' + per + ' buy dated in January (first: January ' + (y0 + 1) +
+          ' — ' + inr(r.amt, 0) + ' + ' + inr(r.step.amount, 0) + ' = ' + inr(r.amt + r.step.amount, 0) + '). The bonus is split by the model like any buy; the other buys of the year stay at ' + inr(r.amt, 0) + '. No dip reserve'];
+      }
+      return ['Salary hike', 'Gets a salary hike at the end of every year and raises the ' + per + ' buy by ' + r.step.pct + '% from the first buy of January, compounding (rounded to ' + inr(r.step.round, 0) + '): ' +
+        inr(r.amt, 0) + ' in ' + y0 + ' → ' + inr(stepAmt(r, 1), 0) + ' in ' + (y0 + 1) + ' → ' + inr(stepAmt(r, 2), 0) + ' in ' + (y0 + 2) + ' → ' + inr(stepAmt(r, 3), 0) + ' in ' + (y0 + 3) + '. No bonus and no dip reserve'];
+    }
     /* The buying strategy each agent follows — exactly the engine's rules (sim_config.json), in plain words. */
     function strategy(r, x, nri) {
+      var st = stepNote(r);
+      return strategy_(r, x, nri).concat(st ? [st] : []);
+    }
+    function strategy_(r, x, nri) {
       if (gl) {
         var ga = r.amt ? inr(r.amt, 0) : 'the plan amount', gn = x && x.hold ? x.hold.length : null;
         return [
@@ -604,11 +629,13 @@
                     : ['No TDS: capital-gains tax is paid through the yearly return — equity held over a year 12.5% on gains above ₹1.25 lakh a year, under a year 20%; debt at the income slab',
                        'Yearly tax harvesting in March: long-term equity gains booked within the ₹1.25 lakh exemption and bought back'];
       var row = function (k, v) { return '<div class="vts-pm-r"><span>' + k + '</span><b>' + v + '</b></div>'; };
-      var h = '<div class="vts-pm-h">' + av(r, true).replace('vts-pf-av lg', 'vts-pf-av xl') + '<div><h3 id="vtsPmT">' + esc(r.name) + (nri ? ' <i class="vts-buy-nri">NRI</i>' : '') + '</h3>' +
+      var h = '<div class="vts-pm-h">' + av(r, true).replace('vts-pf-av lg', 'vts-pf-av xl') + '<div><h3 id="vtsPmT">' + esc(r.name) + (nri ? ' <i class="vts-buy-nri">NRI</i>' : '') + stepTag(r) + '</h3>' +
         '<p>' + esc(r.role || 'VilfinTV team') + ' · VilfinTV</p></div><button type="button" class="vts-pm-x" aria-label="Close profile">✕</button></div>' +
         '<div class="vts-pm-b"><div class="vts-pm-c"><h4>At VilfinTV</h4>' + row('Role', esc(r.role || '–')) + row('Works on', esc(r.desk || '–')) + row('Team', esc(tm[0])) + row('Based in', esc(tm[1])) +
         '<h4>Investor profile</h4>' + row('Residency', nri ? 'Non-resident Indian (NRI)' : 'Resident Indian') + row('Model portfolio', '10+ years · ' + esc(r.risk)) +
         row('Buys', esc(r.freq) + (r.amt ? ' · ' + inr(r.amt, 0) : '') + ' — ' + esc(WHEN[r.freq] || '')) + row('Started', esc(dt(sb.start))) +
+        (r.step ? row(r.step.k === 'bonus' ? 'Year-end bonus' : 'Salary hike', r.step.k === 'bonus' ? inr(r.step.amount, 0) + ' every 31 Dec → added to the first buy of January'
+          : '+' + r.step.pct + '% a year from January (' + (new Date(sb.start + 'T00:00:00').getFullYear() + 1) + ': ' + inr(stepAmt(r, 1), 0) + ')') : '') +
         row('Account', esc(acct)) +
         (x ? row('Invested', inr(x.inv)) + row('Value', x.val != null ? inr(x.val) : 'After units are credited') : '') +
         row('Total return', r.ret != null ? '<span class="' + cl(r.ret) + '">' + spct(r.ret) + '</span>' + (r.metric === 'xirr' ? ' XIRR' : '') : (r.credit ? 'Units credited ' + esc(dt(r.credit)) : '–')) +
@@ -906,12 +933,16 @@
     '.vts-buy[open] .vts-buy-h{margin-bottom:0}.vts-buy-b{padding-top:14px}' +
     '.vts-buy-badge{display:inline-block;background:rgba(245,165,36,.16);color:#c77800;border:1px solid rgba(245,165,36,.55);border-radius:999px;padding:2px 10px;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}' +
     '[data-theme="dark"] .vts-buy-badge,.dark .vts-buy-badge{color:#f5b54a}' +
+    '[data-theme="app"] .vts-dip-c.ok>i,[data-theme="app"] .vts-buy .up,[data-theme="app"] .vts-pm .up,[data-theme="app"] .vts-earn .up{color:#137333}' +
+    '[data-theme="app"] .vts-dip-c.no>i,[data-theme="app"] .vts-buy .dn,[data-theme="app"] .vts-pm .dn,[data-theme="app"] .vts-earn .dn{color:#b91c1c}' +
+    '[data-theme="app"] .vts-buy-badge,[data-theme="silver"] .vts-buy-badge,[data-theme="news-reader"] .vts-buy-badge{color:#8a4b00}' +
     '@media (prefers-color-scheme:dark){.vts-buy-badge{color:#f5b54a}}' +
     '.vts-buy-sub{color:var(--text2);font-size:12.5px}' +
     '.vts-buy-warn{margin:10px 0 0;background:rgba(245,165,36,.09);border:1px solid rgba(245,165,36,.35);border-radius:8px;padding:9px 12px;font-size:12px;line-height:1.55;color:var(--text2)}.vts-buy-warn b{color:var(--text)}' +
     '.vts-buy-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;margin-top:12px}' +
     '.vts-buy-c{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--border);border-radius:10px;padding:8px 12px;background:var(--surface2,transparent);min-width:0}' +
     '.vts-buy-who{display:flex;flex-direction:column;min-width:0}.vts-buy-who b{font-size:13px}.vts-buy-who span{color:var(--text2);font-size:11.5px;line-height:1.35}' +
+    '.vts-step{white-space:nowrap}' +
     '.vts-buy-nri{font-style:normal;font-size:10px;font-weight:800;color:var(--text2);border:1px solid var(--border2,var(--border));border-radius:4px;padding:0 4px;margin-left:6px;vertical-align:1px}' +
     '.vts-buy-c strong{font-variant-numeric:tabular-nums;font-size:13px;text-align:right;white-space:nowrap}.vts-buy-c strong small{display:block;font-size:10px;color:var(--text2);font-weight:600}' +
     '.vts-buy .up{color:#16a34a}.vts-buy .dn{color:#dc2626}.vts-buy .na{color:var(--text2);font-weight:600;font-size:12px}' +

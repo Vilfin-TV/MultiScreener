@@ -105,6 +105,28 @@ def instalment_amount(risk: str, freq: str) -> int:
     return m * 12                                   # yearly and one-time: one year of investing
 
 
+def step_kind(aid: str):
+    """'bonus' / 'hike' when the account follows one of the yearly step-up rules (sim_config stepUps), else None."""
+    su = CFG.get("stepUps") or {}
+    return next((k for k in ("bonus", "hike") if aid in (su.get(k) or {}).get("accounts", [])), None)
+
+
+def contribution(a: dict, nominal: date, first_of_year: bool) -> tuple[int, dict]:
+    """Regular instalment of an account on a nominal date with the yearly step-up rules applied.
+    bonus: the year-end bonus is added in full to the first instalment dated in each new year.
+    hike:  from January of every later year the instalment grows by pct %, compounding, rounded to `round`."""
+    su, base = CFG.get("stepUps") or {}, a["amount"]
+    k = nominal.year - D(CFG["start"]).year
+    if a.get("step") == "hike" and k >= 1:
+        h = su["hike"]
+        amt = int(round(base * (1 + h["pct"] / 100) ** k / h["round"]) * h["round"])
+        return amt, {"base": base, "hike": amt - base, "hikeYears": k}
+    if a.get("step") == "bonus" and k >= 1 and first_of_year:
+        b = su["bonus"]["amount"]
+        return base + b, {"base": base, "bonus": b}
+    return base, {}
+
+
 def accounts() -> list[dict]:
     out = []
     for p in CFG["persons"]:
@@ -112,7 +134,8 @@ def accounts() -> list[dict]:
             out.append({"id": f"{p['name']}-{prod.upper()}", "name": p["name"], "product": prod, "risk": p["risk"],
                         "freq": p["freq"], "res": p["res"], "plan": CFG["horizon"] + p["risk"],
                         "role": p.get("role"), "desk": p.get("desk"), "team": p.get("team"),
-                        "amount": instalment_amount(p["risk"], p["freq"])})
+                        "amount": instalment_amount(p["risk"], p["freq"]),
+                        "step": step_kind(f"{p['name']}-{prod.upper()}")})
     return out
 
 
@@ -706,9 +729,12 @@ class Engine:
         start = D(CFG["start"])
         for a in self.accts:
             have = {e["T"] for e in st.get(a["id"], {}).get("inst", []) if e["k"] == "instalment"}
+            prev_year = None
             for nominal, T in schedule(a["freq"], self.today):
+                first_of_year, prev_year = nominal.year != prev_year, nominal.year
                 if T < start or T.isoformat() in have:
                     continue
+                amount, step = contribution(a, nominal, first_of_year)
                 iid = f"{a['id']}|{T.isoformat()}"
                 plan = self.plan_on(T)
                 extra = {}
@@ -717,15 +743,15 @@ class Engine:
                     extra["entry"] = ("invested at once (Nifty 50 valuation at the %dth percentile of 10 years — below the 60th)" % round((pct or 0) * 100)
                                       if pct is None or pct < 0.6 else "valuation above the 60th percentile — staged entry")
                 append(self.store, "instalment", acct=a["id"], iid=iid, T=T.isoformat(), nominal=nominal.isoformat(),
-                       amount=a["amount"], ref=plan["ref"], **extra)
+                       amount=amount, ref=plan["ref"], **extra, **step)
                 if a["product"] == "mf":
-                    self.place_mf(a, T, iid, plan)
+                    self.place_mf(a, T, iid, plan, amount)
                 else:
-                    self.place_etf(a, T, iid, plan)
+                    self.place_etf(a, T, iid, plan, amount)
 
-    def place_mf(self, a, T, iid, plan):
+    def place_mf(self, a, T, iid, plan, amount):
         funds = self.mkt.funds
-        legs = size_mf(plan["mf"][a["plan"]], a["amount"], "l" if a["freq"] == "l" else a["freq"], funds)
+        legs = size_mf(plan["mf"][a["plan"]], amount, "l" if a["freq"] == "l" else a["freq"], funds)
         for s in legs:
             code, note = s["code"], []
             f = funds.get(code) or {}
@@ -750,11 +776,11 @@ class Engine:
                    code=code, name=(funds.get(code) or {}).get("name"), slot=s["key"], label=s["label"], asset=s["asset"],
                    weight=s["w"], amount=float(s["amt"]), note="; ".join(note), ref=plan["ref"])
 
-    def place_etf(self, a, T, iid, plan):
+    def place_etf(self, a, T, iid, plan, amount):
         for x in plan["etf"][a["plan"]]:
             append(self.store, "order", oid=f"{iid}|{x['id']}", iid=iid, acct=a["id"], T=T.isoformat(), side="buy",
                    sym=x["sym"], name=x.get("name"), slot=x["id"], label=x.get("label"), weight=x["w"],
-                   amount=r2(a["amount"] * x["w"] / 100), ref=plan["ref"])
+                   amount=r2(amount * x["w"] / 100), ref=plan["ref"])
 
     # settlement
     def settle(self):
@@ -1813,7 +1839,7 @@ def build_view(store: dict, eng: Engine) -> dict:
     harvests = [e for e in store["events"] if e["k"] == "harvest"]
     out = {"v": 1, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "start": CFG["start"],
            "today": eng.today.isoformat(),
-           "config": {k: CFG[k] for k in ("riskNames", "freqNames", "benchmark", "etfFees", "mfRules", "tax", "schedule", "monthly", "sellRules", "taxHarvest")},
+           "config": {k: CFG[k] for k in ("riskNames", "freqNames", "benchmark", "etfFees", "mfRules", "tax", "schedule", "monthly", "stepUps", "sellRules", "taxHarvest")},
            "mfAsOf": eng.mkt.mf_asof, "etfAsOf": eng.mkt.etf_asof, "accounts": [], "plans": store["plans"],
            "events": len(store["events"]), "head": store["events"][-1]["h"] if store["events"] else None}
     for a in eng.accts:
@@ -1821,12 +1847,16 @@ def build_view(store: dict, eng: Engine) -> dict:
         V = eng.valuation_date(a)
         today = eng.today
         txns, holdings = [], []
+        steps = {i["iid"]: (f"instalment of ₹{i['amount']:,} includes the ₹{i['bonus']:,} year-end bonus" if i.get("bonus") else
+                            f"instalment raised to ₹{i['amount']:,} (+₹{i['hike']:,}, yearly salary-hike step-up)")
+                 for i in s["inst"] if i.get("bonus") or i.get("hike")}
         for o in sorted(s["orders"], key=lambda o: (o["T"], o["oid"])):
             done = o.get("done")
             amount = o["amount"] if o.get("amount") is not None else funded.get(o["oid"])
             row = {"oid": o["oid"], "T": o["T"], "side": o["side"], "code": o.get("code"), "sym": o.get("sym"),
                    "name": o.get("name") or (eng.mkt.funds.get(int(o["code"])) or {}).get("name") if o.get("code") else o.get("name") or o.get("sym"),
-                   "slot": o.get("slot"), "label": o.get("label"), "amount": amount, "note": o.get("note") or o.get("reason"), "ref": o.get("ref"),
+                   "slot": o.get("slot"), "label": o.get("label"), "amount": amount,
+                   "note": "; ".join(x for x in (o.get("note") or o.get("reason"), steps.get(o.get("iid"))) if x) or None, "ref": o.get("ref"),
                    "src": "withdraw" if o.get("withdraw") else "review" if o.get("iid", "").count("|review|") else
                    "dip" if "|dip|" in o.get("iid", "") else "reserve" if o.get("slot") == "reserve" else
                    "harvest" if "|harvest|" in o.get("iid", "") else "plan"}
@@ -1962,6 +1992,7 @@ def scoreboard(view: dict, audit_ok: bool) -> dict:
         row = {"name": a["name"], "product": a["product"], "risk": a["riskName"], "freq": a["freqName"],
                "amt": a["amount"], "nri": a["res"] == "nri", "role": a.get("role"), "desk": a.get("desk"), "team": a.get("team"),
                "dip": a["name"] in DIP["persons"],
+               **({"step": {"k": a["step"], **{k: v for k, v in (CFG["stepUps"][a["step"]]).items() if k != "accounts"}}} if a.get("step") else {}),
                "since": view["start"], "days": a["days"] if valued else 0,
                "metric": "xirr" if valued and a["days"] >= 365 else "abs",
                "ret": (round((a["xirr"] or 0) * 100, 2) if a["days"] >= 365 else round(absr, 2)) if valued and audit_ok else None}

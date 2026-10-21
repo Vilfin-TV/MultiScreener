@@ -121,6 +121,36 @@ def expected_dates(freq, start, today):
     return sorted({roll(n) for n in noms if roll(n) <= today})
 
 
+def expected_amounts(aid, risk, freq, start, today):
+    """{trade date: amount} with the yearly step-up rules (stepUps) — re-derived here, independently of the engine:
+    bonus = the year-end bonus added to the first instalment dated in each new year; hike = +pct % a year from
+    January, compounding, rounded."""
+    su = CFG.get("stepUps") or {}
+    base = amount_for(risk, freq)
+    kind = next((k for k in ("bonus", "hike") if aid in (su.get(k) or {}).get("accounts", [])), None)
+    sc, noms = CFG["schedule"], {start}
+    if freq == "m":
+        for k in range(1, 600):
+            y, m = divmod(start.month - 1 + k, 12)
+            noms.add(date(start.year + y, m + 1, sc["monthDay"]))
+    elif freq == "w":
+        noms |= {start + timedelta(days=7 * k) for k in range(1, 3000)}
+    out, first = {}, {}
+    for n in sorted(noms):
+        first.setdefault(n.year, n)
+    for n in sorted(noms):
+        T = roll(n)
+        if T > today or T in out:
+            continue
+        yrs, amt = n.year - start.year, base
+        if kind == "hike" and yrs >= 1:
+            amt = int(round(base * (1 + su["hike"]["pct"] / 100) ** yrs / su["hike"]["round"]) * su["hike"]["round"])
+        elif kind == "bonus" and yrs >= 1 and first[n.year] == n:
+            amt = base + su["bonus"]["amount"]
+        out[T] = amt
+    return out, kind
+
+
 def amount_for(risk, freq):
     m = CFG["monthly"][risk]
     return {"m": m, "w": int(round(m * 12 / 52 / 10) * 10), "q": m * 3}.get(freq, m * 12)
@@ -424,9 +454,15 @@ def main() -> int:
             aid = f"{p['name']}-{prod}"
             got = sorted(e["T"] for e in inst if e["acct"] == aid)
             A.check("schedule", got == exp, f"{aid}: trade dates {got[:3]}… differ from the expected {exp[:3]}…")
+            want, kind = expected_amounts(aid, p["risk"], p["freq"], start, today)
+            if kind:
+                A.check("schedule", p["name"] not in DIP["persons"], f"{aid}: a step-up account must not hold a dip reserve")
             for e in inst:
                 if e["acct"] == aid:
-                    A.check("schedule", e["amount"] == amount_for(p["risk"], p["freq"]), f"{aid} {e['T']}: amount {e['amount']}")
+                    exp_amt = want.get(day(e["T"]), amount_for(p["risk"], p["freq"]))
+                    A.check("schedule", e["amount"] == exp_amt, f"{aid} {e['T']}: amount {e['amount']} vs {exp_amt} by the schedule rules")
+                    A.check("schedule", (e.get("bonus") or 0) + (e.get("hike") or 0) == e["amount"] - amount_for(p["risk"], p["freq"]),
+                            f"{aid} {e['T']}: bonus / step-up parts do not add up")
                     A.check("schedule", open_day(day(e["T"])), f"{aid}: instalment on a closed day {e['T']}")
 
     # plan & legs

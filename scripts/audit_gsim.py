@@ -140,9 +140,20 @@ def audit(store, view, daily):
         if missing:
             au.ok("schedule", True, "")
             au.warn.append(f"[schedule] {aid}: {len(missing)} instalment(s) from {missing[0]} not yet placed (waiting for closes)")
+        su = CFG.get("stepUps") or {}
+        kind = next((k for k in ("bonus", "hike") if aid in (su.get(k) or {}).get("accounts", [])), None)
+        firsts = {}
+        for x in want:
+            firsts.setdefault(x.year, x)
         for e in insts:
             if e["a"] == aid:
-                au.ok("schedule", e["amt"] == a["amt"], f"{e['id']}: amount {e['amt']} ≠ {a['amt']}")
+                d, yrs, exp = iso(e["d"]), iso(e["d"]).year - start.year, a["amt"]
+                if kind == "hike" and yrs >= 1:            # +pct % a year from January, compounding, rounded
+                    exp = round(a["amt"] * (1 + su["hike"]["pct"] / 100) ** yrs / su["hike"]["round"]) * su["hike"]["round"]
+                elif kind == "bonus" and yrs >= 1 and firsts.get(d.year) == d:   # bonus with the first buy of the year
+                    exp = a["amt"] + su["bonus"]["amount"]
+                au.ok("schedule", e["amt"] == exp, f"{e['id']}: amount {e['amt']} ≠ {exp} by the schedule rules")
+                au.ok("schedule", (e.get("bonus") or 0) + (e.get("hike") or 0) == e["amt"] - a["amt"], f"{e['id']}: bonus / step-up parts do not add up")
     for e in insts:
         au.ok("schedule", e["a"] in accts, f"{e['id']}: unknown account")
     # ---- plan, orders, cash, trades, dividends (ledger order)
