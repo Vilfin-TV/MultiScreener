@@ -133,11 +133,11 @@ def step_kind(aid):
 
 def contribution(a, d, start):
     """Regular buy on order date d with the yearly step-up rules (gsim_config stepUps): bonus = the year-end bonus
-    added in full to the first buy dated in each new year; hike = +pct % a year from January, compounding, rounded."""
+    added in full to the first buy dated in each new year; hike = + pct % of the original buy every January (fixed step, not compounding), rounded."""
     su, base, k = CFG.get("stepUps") or {}, a["amt"], d.year - start.year
     if a.get("step") == "hike" and k >= 1:
         h = su["hike"]
-        amt = round(base * (1 + h["pct"] / 100) ** k / h["round"]) * h["round"]
+        amt = round(base * (1 + h["pct"] / 100 * k) / h["round"]) * h["round"]
         return amt, {"base": base, "hike": amt - base}
     if a.get("step") == "bonus" and k >= 1:
         first = next(x for x in due_dates(a["freq"], start, d) if x.year == d.year)

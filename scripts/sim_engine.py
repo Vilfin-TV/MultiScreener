@@ -114,12 +114,13 @@ def step_kind(aid: str):
 def contribution(a: dict, nominal: date, first_of_year: bool) -> tuple[int, dict]:
     """Regular instalment of an account on a nominal date with the yearly step-up rules applied.
     bonus: the year-end bonus is added in full to the first instalment dated in each new year.
-    hike:  from January of every later year the instalment grows by pct %, compounding, rounded to `round`."""
+    hike:  from January of every later year the instalment rises by pct % of the original amount (a fixed step each year, not
+           compounding), rounded to `round`."""
     su, base = CFG.get("stepUps") or {}, a["amount"]
     k = nominal.year - D(CFG["start"]).year
     if a.get("step") == "hike" and k >= 1:
         h = su["hike"]
-        amt = int(round(base * (1 + h["pct"] / 100) ** k / h["round"]) * h["round"])
+        amt = int(round(base * (1 + h["pct"] / 100 * k) / h["round"]) * h["round"])
         return amt, {"base": base, "hike": amt - base, "hikeYears": k}
     if a.get("step") == "bonus" and k >= 1 and first_of_year:
         b = su["bonus"]["amount"]

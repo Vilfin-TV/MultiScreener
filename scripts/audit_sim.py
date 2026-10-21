@@ -123,8 +123,8 @@ def expected_dates(freq, start, today):
 
 def expected_amounts(aid, risk, freq, start, today):
     """{trade date: amount} with the yearly step-up rules (stepUps) — re-derived here, independently of the engine:
-    bonus = the year-end bonus added to the first instalment dated in each new year; hike = +pct % a year from
-    January, compounding, rounded."""
+    bonus = the year-end bonus added to the first instalment dated in each new year; hike = + pct % of the original
+    amount every January (a fixed yearly step, not compounding), rounded."""
     su = CFG.get("stepUps") or {}
     base = amount_for(risk, freq)
     kind = next((k for k in ("bonus", "hike") if aid in (su.get(k) or {}).get("accounts", [])), None)
@@ -144,7 +144,7 @@ def expected_amounts(aid, risk, freq, start, today):
             continue
         yrs, amt = n.year - start.year, base
         if kind == "hike" and yrs >= 1:
-            amt = int(round(base * (1 + su["hike"]["pct"] / 100) ** yrs / su["hike"]["round"]) * su["hike"]["round"])
+            amt = int(round(base * (1 + su["hike"]["pct"] / 100 * yrs) / su["hike"]["round"]) * su["hike"]["round"])
         elif kind == "bonus" and yrs >= 1 and first[n.year] == n:
             amt = base + su["bonus"]["amount"]
         out[T] = amt

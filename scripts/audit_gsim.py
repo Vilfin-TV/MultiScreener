@@ -148,8 +148,8 @@ def audit(store, view, daily):
         for e in insts:
             if e["a"] == aid:
                 d, yrs, exp = iso(e["d"]), iso(e["d"]).year - start.year, a["amt"]
-                if kind == "hike" and yrs >= 1:            # +pct % a year from January, compounding, rounded
-                    exp = round(a["amt"] * (1 + su["hike"]["pct"] / 100) ** yrs / su["hike"]["round"]) * su["hike"]["round"]
+                if kind == "hike" and yrs >= 1:            # + pct % of the original buy every January (fixed step), rounded
+                    exp = round(a["amt"] * (1 + su["hike"]["pct"] / 100 * yrs) / su["hike"]["round"]) * su["hike"]["round"]
                 elif kind == "bonus" and yrs >= 1 and firsts.get(d.year) == d:   # bonus with the first buy of the year
                     exp = a["amt"] + su["bonus"]["amount"]
                 au.ok("schedule", e["amt"] == exp, f"{e['id']}: amount {e['amt']} ≠ {exp} by the schedule rules")
