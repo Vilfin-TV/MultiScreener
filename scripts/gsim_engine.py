@@ -122,8 +122,28 @@ def accounts():
         amt = {"m": m, "w": round(m * 12 / 52), "q": m * 3, "y": m * 12, "l": m * 12}[f]
         out.append({"id": p["name"] + "-GL", "name": p["name"], "risk": risk, "personRisk": p["risk"], "freq": f, "amt": amt,
                     "res": p["res"], "role": p.get("role"), "desk": p.get("desk"), "team": p.get("team"),
-                    "pid": CFG["horizon"] + risk})
+                    "pid": CFG["horizon"] + risk, "step": step_kind(p["name"] + "-GL")})
     return out
+
+
+def step_kind(aid):
+    su = CFG.get("stepUps") or {}
+    return next((k for k in ("bonus", "hike") if aid in (su.get(k) or {}).get("accounts", [])), None)
+
+
+def contribution(a, d, start):
+    """Regular buy on order date d with the yearly step-up rules (gsim_config stepUps): bonus = the year-end bonus
+    added in full to the first buy dated in each new year; hike = +pct % a year from January, compounding, rounded."""
+    su, base, k = CFG.get("stepUps") or {}, a["amt"], d.year - start.year
+    if a.get("step") == "hike" and k >= 1:
+        h = su["hike"]
+        amt = round(base * (1 + h["pct"] / 100) ** k / h["round"]) * h["round"]
+        return amt, {"base": base, "hike": amt - base}
+    if a.get("step") == "bonus" and k >= 1:
+        first = next(x for x in due_dates(a["freq"], start, d) if x.year == d.year)
+        if first == d:
+            return base + su["bonus"]["amount"], {"base": base, "bonus": su["bonus"]["amount"]}
+    return base, {}
 
 
 def due_dates(freq, start, upto):
@@ -302,9 +322,10 @@ class Engine:
                     iid = f"{a['id']}|{ds}"
                     if iid in self.ids:
                         continue
-                    self.append({"k": "inst", "id": iid, "a": a["id"], "d": ds, "amt": a["amt"], "plan": p["id"]})
+                    amt, step = contribution(a, d, start)
+                    self.append({"k": "inst", "id": iid, "a": a["id"], "d": ds, "amt": amt, "plan": p["id"], **step})
                     for k, t, w in p["plans"][a["pid"]]:
-                        share = round(a["amt"] * w / 100, 2)
+                        share = round(amt * w / 100, 2)
                         cash = round(share + carry.get((a["id"], k), 0), 2)
                         carry[(a["id"], k)] = 0.0
                         o = self.append({"k": "order", "id": f"{iid}|{k}", "a": a["id"], "d": ds, "slot": k, "t": t,
@@ -582,6 +603,8 @@ def public(view, audit_ok):
         row = {"name": a["name"], "product": "gl", "risk": RISK_NAMES[a["risk"]], "freq": FREQ[a["freq"]], "amt": a["amt"],
                "nri": a["res"] == "nri", "role": a["role"], "desk": a["desk"], "team": a["team"], "dip": False,
                "since": CFG["start"], "days": days_ if valued else 0, "metric": metric, "ret": ret, "f": slug(a["name"]) + "-gl"}
+        if a.get("step"):
+            row["step"] = {"k": a["step"], **{k: v for k, v in CFG["stepUps"][a["step"]].items() if k != "accounts"}}
         if pend_cr:
             row["credit"] = pend_cr
         elif a["open"]:
