@@ -77,6 +77,7 @@ U = [
  ("XLF","Financial Select Sector SPDR Fund","Equity","US","Sector","Financials"),
  ("XLV","Health Care Select Sector SPDR Fund","Equity","US","Sector","Health Care"),
  ("XLE","Energy Select Sector SPDR Fund","Equity","US","Sector","Energy"),
+ ("VDE","Vanguard Energy ETF","Equity","US","Sector","Energy"),
  ("XLI","Industrial Select Sector SPDR Fund","Equity","US","Sector","Industrials"),
  ("XLY","Consumer Discretionary Select Sector SPDR Fund","Equity","US","Sector","Consumer Discretionary"),
  ("XLP","Consumer Staples Select Sector SPDR Fund","Equity","US","Sector","Consumer Staples"),
@@ -112,12 +113,14 @@ U = [
  ("IEFA","iShares Core MSCI EAFE ETF","Equity","Developed ex-US","Core","Developed Markets"),
  ("EFA","iShares MSCI EAFE ETF","Equity","Developed ex-US","Core","Developed Markets"),
  ("VGK","Vanguard FTSE Europe ETF","Equity","Europe","Country","Europe"),
+ ("IEUR","iShares Core MSCI Europe ETF","Equity","Europe","Country","Europe"),
  ("EZU","iShares MSCI Eurozone ETF","Equity","Europe","Country","Eurozone"),
  ("EWU","iShares MSCI United Kingdom ETF","Equity","Europe","Country","United Kingdom"),
  ("EWG","iShares MSCI Germany ETF","Equity","Europe","Country","Germany"),
  ("EWQ","iShares MSCI France ETF","Equity","Europe","Country","France"),
  ("EWL","iShares MSCI Switzerland ETF","Equity","Europe","Country","Switzerland"),
  ("EWJ","iShares MSCI Japan ETF","Equity","Asia-Pacific","Country","Japan"),
+ ("BBJP","JPMorgan BetaBuilders Japan ETF","Equity","Asia-Pacific","Country","Japan"),
  ("DXJ","WisdomTree Japan Hedged Equity Fund","Equity","Asia-Pacific","Country","Japan (Hedged)"),
  ("EWA","iShares MSCI Australia ETF","Equity","Asia-Pacific","Country","Australia"),
  ("EWS","iShares MSCI Singapore ETF","Equity","Asia-Pacific","Country","Singapore"),
@@ -136,6 +139,8 @@ U = [
  ("EWT","iShares MSCI Taiwan ETF","Equity","Emerging","Country","Taiwan"),
  ("EWY","iShares MSCI South Korea ETF","Equity","Emerging","Country","South Korea"),
  ("EWZ","iShares MSCI Brazil ETF","Equity","Emerging","Country","Brazil"),
+ ("ILF","iShares Latin America 40 ETF","Equity","Emerging","Country","Latin America"),
+ ("FLLA","Franklin FTSE Latin America ETF","Equity","Emerging","Country","Latin America"),
  ("EWW","iShares MSCI Mexico ETF","Equity","Emerging","Country","Mexico"),
  ("EIDO","iShares MSCI Indonesia ETF","Equity","Emerging","Country","Indonesia"),
  ("EZA","iShares MSCI South Africa ETF","Equity","Emerging","Country","South Africa"),
@@ -497,6 +502,7 @@ def build(dry=False):
             prev = None
 
     spy_adj = raw["SPY"]["Adj Close"].dropna()
+    adj_last = {}
     rf_adj = raw["BIL"]["Adj Close"].dropna() if "BIL" in raw.columns.get_level_values(0) else None
     out = []
     for (t, nm, ac, reg, role, cat) in U:
@@ -577,6 +583,7 @@ def build(dry=False):
         trend = [chip(10, 13), chip(26, 26), chip(52, 52, rising=True)]
 
         f = fetch_facts(t)
+        adj_last[t] = float(adj.iloc[-1])
         deep = deep_stats(adj, spy_adj, rf_adj)
         for k in ("mo",):
             A.check(all(v is None or v > 0 for v in deep[k]), f"{t}: non-positive monthly close")
@@ -649,6 +656,39 @@ def build(dry=False):
         macro = {}
     dip = dip_block(daily, macro)
     A.check(len(dip["segments"]) >= 4, f"market-dip block: only {len(dip['segments'])} segments", critical=False)
+    # ---- extended accuracy checks: plans, dip readings and the long-history figures of every ETF
+    by_t = {e["t"]: e for e in out}
+    for pid, p in plans.items():
+        for x in p["rows"]:
+            A.check(x["t"] in by_t, f"plan {pid}: {x['t']} is not in the published list")
+            A.check(0 < x["w"] <= 100, f"plan {pid}: weight {x['w']} out of range")
+        A.check(len({x["k"] for x in p["rows"]}) == len(p["rows"]), f"plan {pid}: a slot appears twice")
+    for k, sg in dip["segments"].items():
+        A.check(len(sg["checks"]) == 12, f"dip {k}: {len(sg['checks'])} market checks instead of 12")
+        A.check(sg["held"] <= max(sg["raw"], sg["held"]) and sg["held"] in [0] + dip["tiers"], f"dip {k}: held level {sg['held']} invalid")
+        A.check(0 <= sg["fall"] <= 100 and sg["close"] > 0 and sg["high"] >= sg["close"] - 1e-9, f"dip {k}: fall / close / high inconsistent")
+        A.check(not sg["signal"] or sg["mktOk"], f"dip {k}: signal without every market check")
+    for e in out:
+        t = e["t"]
+        mo = [v for v in (e.get("mo") or []) if v]
+        if mo:
+            A.check(abs(mo[-1] / adj_last[t] - 1) < 1e-4, f"{t}: last month-end close differs from the latest adjusted close")
+        for y, v in (e.get("sip") or {}).items():
+            months = int(v[1] / 100)
+            A.check(v[1] % 100 == 0 and 12 * int(y[0]) - 1 <= months <= 12 * int(y[0]) + 1, f"{t}: SIP {y} has {months} instalments")
+            A.check(v[2] > 0 and (abs(v[0]) < 0.5 or (v[0] >= 0) == (v[2] >= v[1])), f"{t}: SIP {y} XIRR sign does not match its value", critical=False)
+        for k in ("roll1", "roll3"):
+            v = e.get(k)
+            if v:
+                A.check(0 <= v[3] <= 100 and v[4] >= 26, f"{t}: {k} share positive / periods out of range")
+        cal = e.get("cal") or {}
+        ytd = next((v for kk, v in cal.items() if kk.endswith("YTD")), None)
+        if ytd is not None and e["r"].get("ytd") is not None:
+            A.check(abs(ytd - e["r"]["ytd"]) < 0.6, f"{t}: calendar YTD {ytd} vs YTD return {e['r']['ytd']}", critical=False)
+        if e.get("hold"):
+            A.check(e["hold"] == sorted(e["hold"], key=lambda h: -h[2]), f"{t}: holdings not sorted by weight", critical=False)
+        if e.get("shp") is not None and e.get("vol"):
+            A.check(-10 < e["shp"] < 10, f"{t}: Sharpe {e['shp']} out of range", critical=False)
 
     doc = {
         "version": 1,

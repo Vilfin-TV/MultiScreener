@@ -37,6 +37,14 @@ SLOTS = {
     "short": {"label": "Short Treasuries", "grp": "bond", "cands": ["SHY"], "cap": 0.20, "tol": None},
     "gold": {"label": "Gold", "grp": "gold", "cands": ["GLDM", "IAU", "GLD"], "cap": 0.45, "tol": 1.5},
     "cash": {"label": "Treasury bills", "grp": "cash", "cands": ["SGOV", "BIL"], "cap": 0.20, "tol": 0.5},
+    # satellite slots: not part of any model mix — they give the optional dip-buy segments their 45 ETF checks
+    "latam": {"label": "Latin America", "grp": "sat", "cands": ["ILF", "FLLA"], "cap": 0.75, "tol": None},
+    "europe": {"label": "Europe", "grp": "sat", "cands": ["VGK", "IEUR"], "cap": 0.20, "tol": None},
+    "japan": {"label": "Japan", "grp": "sat", "cands": ["EWJ", "BBJP"], "cap": 0.55, "tol": None},
+    "india": {"label": "India", "grp": "sat", "cands": ["INDA", "EPI"], "cap": 0.90, "tol": None},
+    "reit": {"label": "US real estate (REITs)", "grp": "reit", "cands": ["VNQ", "SCHH", "USRT", "IYR"], "cap": 0.45, "tol": None},
+    "longbond": {"label": "Long-term Treasuries", "grp": "bond", "cands": ["TLT", "VGLT"], "cap": 0.20, "tol": None},
+    "energy": {"label": "Energy", "grp": "sat", "cands": ["XLE", "VDE"], "cap": 0.15, "tol": None},
 }
 SLOT_ORDER = list(SLOTS)
 ALL_CANDS = sorted({t for s in SLOTS.values() for t in s["cands"]})
@@ -116,6 +124,8 @@ GROUP = {
     "eq": {"ac": "Equity", "roles": ("Core", "Factor"), "maxWk": 20, "volCap": 40, "mddFloor": -45, "beta": (0.15, 1.8), "te": 1.5, "corr": 0.85, "yld": 1.5},
     "bond": {"ac": "Bond", "roles": ("Bond",), "maxWk": 6, "volCap": 12, "mddFloor": -25, "beta": (-0.5, 0.6), "te": 0.4, "corr": 0.85, "yld": 1.0},
     "gold": {"ac": "Commodity", "roles": ("Commodity",), "maxWk": 15, "volCap": 40, "mddFloor": -35, "beta": (-0.5, 1.2), "te": 0.6, "corr": 0.9, "yld": 1.0},
+    "sat": {"ac": "Equity", "roles": ("Country", "Sector", "Regional"), "maxWk": 25, "volCap": 45, "mddFloor": -55, "beta": (0.2, 2.0), "te": 2.0, "corr": 0.85, "yld": 2.0},
+    "reit": {"ac": "Real Estate", "roles": ("Sector",), "maxWk": 20, "volCap": 40, "mddFloor": -50, "beta": (0.2, 1.8), "te": 1.5, "corr": 0.85, "yld": 1.5},
     "cash": {"ac": "Bond", "roles": ("Bond",), "maxWk": 1, "volCap": 2, "mddFloor": -1, "beta": (-0.2, 0.2), "te": 0.1, "corr": None, "yld": 1.0},
 }
 LEVERED = re.compile(r"(\b[23]x\b|ultra|leveraged|inverse|\bbear\b)", re.I)

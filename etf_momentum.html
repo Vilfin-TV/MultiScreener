@@ -156,6 +156,9 @@ thead th:first-child,tbody td:first-child{padding-left:14px}
 .crumbs a{color:var(--text2)}
 .crumbs a:hover{color:var(--accent2)}
 .hero{padding:14px 0 18px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+@media(min-width:761px){.hero:has(>.vts-st:not([hidden])){display:grid;grid-template-columns:minmax(0,1fr) 360px;column-gap:24px;row-gap:12px;align-items:start}.hero>.vts-st{grid-column:2;grid-row:1/span 2}.hero:has(>.vts-st:not([hidden]))>#metaChips{grid-column:1}}
+@media(max-width:760px){.hero>.vts-st{flex:1 1 100%}}
+.hero .vts-st .vts-st-n{font-size:11.5px;margin:6px 0 0;max-width:none;color:var(--text3)}
 .hero h1{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:clamp(32px,4.4vw,46px);letter-spacing:1.5px;line-height:1.02}
 .hero h1 em{font-style:normal;color:var(--accent2)}
 html[data-theme="gemini"] .hero h1 em{background:linear-gradient(90deg,#4285f4,#9b72cb,#d96570);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -908,6 +911,7 @@ details.faq ul+p{margin-top:8px}
     <div class="chips" id="metaChips">
       <span class="chip"><span class="skel" style="width:120px;height:12px"></span></span>
     </div>
+    <div class="vts-st" id="dataStatus" hidden aria-live="polite"></div>
   </section>
 
   <!-- controls -->
@@ -1374,7 +1378,7 @@ details.faq ul+p{margin-top:8px}
 </footer>
 <div class="toast" id="toast"></div>
 
-<script src="vt_sim.js?v=20261029"></script>
+<script src="vt_sim.js?v=20261030"></script>
 <script>
 /*RRG-ENGINE-START*/
 // Relative-rotation engine. Mirrors rrg() in scripts/build_etf_momentum.py exactly;
@@ -1597,7 +1601,13 @@ function renderChips(v){
   if (v) h += '<span class="chip' + (v.bad ? ' warn' : '') + '" title="Mode calculations cross-checked against the reference dataset"><span class="dot"></span>' + (v.bad ? 'Verified ' + (v.n - v.bad) + '/' + v.n : 'Data verified') + '</span>';
   h += '<span class="chip" id="auditChip" style="display:none"></span>';
   $('metaChips').innerHTML = h;
+  var T = []; for (var hh = 9; hh <= 15; hh++) [[hh, 20], [hh, 50]].forEach(function(t){ if (t[0] * 60 + t[1] >= 590 && t[0] * 60 + t[1] <= 950) T.push(t); });
+  T.push([16, 50]);
+  var stOpt = { asOf: fmtDate(D.asOf) + ' close', updated: D.generated, covered: ['ETFs covered', (D.etfs || []).length.toLocaleString('en-IN')], audit: null, times: T,
+    note: 'Near-live prices about every 30 minutes in market hours (delayed); the official close and every figure are rebuilt after 4:47 pm IST.' };
+  if (window.VTSim && VTSim.statusCard) VTSim.statusCard($('dataStatus'), stOpt);
   getJSON('data/etf_audit.json?v=' + encodeURIComponent(D.generated)).then(function(A){
+    if (A && A.checks && window.VTSim && VTSim.statusCard) { stOpt.audit = { passed: A.checks - (A.errors || 0), errors: A.errors || 0, title: 'Independent daily audit for ' + fmtDate(A.asOf) + ': prices, returns, risk, liquidity, premium, scores, ratings, holdings and the Portfolio Simulator recomputed from raw daily prices' }; VTSim.statusCard($('dataStatus'), stOpt); }
     var el = $('auditChip'); if (!el || !A || !A.checks) return;
     el.className = 'chip' + (A.errors ? ' warn' : '');
     el.innerHTML = '<span class="dot"></span>' + Number(A.checks - A.errors).toLocaleString('en-IN') + ' accuracy checks passed';

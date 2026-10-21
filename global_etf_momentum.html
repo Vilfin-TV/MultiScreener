@@ -429,6 +429,7 @@ section.block{margin:28px 0}
 .simtbl .alt:hover{border-color:var(--accent)}
 /* four risk levels: wrap to two rows on phones */
 @media(max-width:600px){#sR{display:grid;grid-template-columns:1fr 1fr}#sR button{white-space:normal;line-height:1.15}}
+.satb{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:#7c3aed;border:1px solid color-mix(in srgb,#7c3aed 45%,transparent);border-radius:999px;padding:0 6px;margin-left:4px}
 /* simulator return cards */
 .rkp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 14px}
 @media(max-width:1000px){.rkp{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -1066,7 +1067,7 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
 
 <div class="tip" id="tip" role="tooltip"></div>
 
-<script src="vt_sim.js?v=20261029"></script>
+<script src="vt_sim.js?v=20261030"></script>
 <script>
 (() => {
 "use strict";
@@ -1784,7 +1785,15 @@ const SLOTS = {
   bond:    {label:"US investment-grade bonds", grp:"bond", cands:["AGG","BND"], cap:0.10, tol:1},
   short:   {label:"Short Treasuries", grp:"bond", cands:["SHY"], cap:0.20, tol:null},
   gold:    {label:"Gold", grp:"gold", cands:["GLDM","IAU","GLD"], cap:0.45, tol:1.5},
-  cash:    {label:"Treasury bills", grp:"cash", cands:["SGOV","BIL"], cap:0.20, tol:0.5}
+  cash:    {label:"Treasury bills", grp:"cash", cands:["SGOV","BIL"], cap:0.20, tol:0.5},
+  /* satellite slots: not part of any model mix — they give the optional dip-buy segments their 45 ETF checks */
+  latam:   {label:"Latin America", grp:"sat", cands:["ILF","FLLA"], cap:0.75, tol:null},
+  europe:  {label:"Europe", grp:"sat", cands:["VGK","IEUR"], cap:0.20, tol:null},
+  japan:   {label:"Japan", grp:"sat", cands:["EWJ","BBJP"], cap:0.55, tol:null},
+  india:   {label:"India", grp:"sat", cands:["INDA","EPI"], cap:0.90, tol:null},
+  reit:    {label:"US real estate (REITs)", grp:"reit", cands:["VNQ","SCHH","USRT","IYR"], cap:0.45, tol:null},
+  longbond:{label:"Long-term Treasuries", grp:"bond", cands:["TLT","VGLT"], cap:0.20, tol:null},
+  energy:  {label:"Energy", grp:"sat", cands:["XLE","VDE"], cap:0.15, tol:null}
 };
 const GRP = { eq:{n:"Equity",c:"linear-gradient(90deg,#3b82f6,#8b5cf6)"}, bond:{n:"Bonds",c:"#14b8a6"}, gold:{n:"Gold",c:"#eab308"}, cash:{n:"Treasury bills",c:"#8A94A8"} };
 const SLOT_SHADE = { us_core:"#3b82f6", us_small:"#60a5fa", intl:"#8b5cf6", em:"#a78bfa", factor:"#22d3ee", growth:"#6366f1", bond:"#14b8a6", short:"#5eead4", gold:"#eab308", cash:"#94a3b8" };
@@ -1803,6 +1812,8 @@ const GROUPLIM = {
   eq:   { ac:"Equity",    roles:["Core","Factor"], maxWk:20, volCap:40, mddFloor:-45, beta:[0.15,1.8], te:1.5, corr:0.85, yld:1.5 },
   bond: { ac:"Bond",      roles:["Bond"],          maxWk:6,  volCap:12, mddFloor:-25, beta:[-0.5,0.6], te:0.4, corr:0.85, yld:1.0 },
   gold: { ac:"Commodity", roles:["Commodity"],     maxWk:15, volCap:40, mddFloor:-35, beta:[-0.5,1.2], te:0.6, corr:0.9,  yld:1.0 },
+  sat:  { ac:"Equity",    roles:["Country","Sector","Regional"], maxWk:25, volCap:45, mddFloor:-55, beta:[0.2,2.0], te:2.0, corr:0.85, yld:2.0 },
+  reit: { ac:"Real Estate", roles:["Sector"],      maxWk:20, volCap:40, mddFloor:-50, beta:[0.2,1.8], te:1.5, corr:0.85, yld:1.5 },
   cash: { ac:"Bond",      roles:["Bond"],          maxWk:1,  volCap:2,  mddFloor:-1,  beta:[-0.2,0.2], te:0.1, corr:null, yld:1.0 }
 };
 const LEVERED = /(\b[23]x\b|ultra|leveraged|inverse|\bbear\b)/i;
@@ -2124,16 +2135,25 @@ function renderSim(){
 function dipHtml(P, amt){
   const D = S.data.dip;
   if (!D || !D.segments) return '<p class="taxnote">The market-dip readings appear after the next data update.</p>';
-  const mult = t => D.mult[D.tiers.indexOf(t)] || 0, ord = ["large","small","intl","em","gold"];
-  const segs = ord.filter(k => D.segments[k]).map(k => {
-    const sg = D.segments[k], x = P.rows.find(r => r.k === sg.slot), e = x ? x.e : null;
-    const ok = !!(x && x.r.pick && x.r.pick.e === x.e), row = x ? x.r.rows.find(r => r.e === x.e) : null, n = row ? row.ck.length : 0;
-    const extra = [["Segment is part of your model portfolio", !!x, x ? SLOTS[x.k].label + " · " + x.w.toFixed(1) + "%" : "Not in this plan"],
-                   [`Model ETF passes all ${n || ""} ETF checks`.replace("  ", " "), ok, row ? `${e.t} · ${row.passed}/${n}` : "–"]];
+  const ord = ["large","small","intl","em","gold","latam","europe","japan","india","reit","longbond","energy"];
+  /* satellites (regions, real estate, long bonds, energy) are not in any model mix: optional dip buys only for
+     Aggressive / Very aggressive goals of 5+ years, at half the core model amount */
+  const satOk = ["a","v"].includes(SIM.risk) && ["h5","h10","h15"].includes(SIM.h);
+  const segs = ord.filter(k => D.segments[k] && SLOTS[D.segments[k].slot]).map(k => {
+    const sg = D.segments[k], sat = sg.kind === "sat";
+    const mult = t => (D.mult[D.tiers.indexOf(t)] || 0) * (sat ? 0.5 : 1);
+    let x = sat ? null : P.rows.find(r => r.k === sg.slot);
+    if (sat){ const r = evalSlot(sg.slot), pk = r.pick || r.rows.slice().sort((a, b) => b.passed - a.passed)[0]; if (pk && satOk) x = { k: sg.slot, w: 0, e: pk.e, r }; else if (pk) x = null; sg._best = pk; }
+    const e = x ? x.e : (sat && sg._best ? sg._best.e : null);
+    const rr = x ? x.r : (sat && sg._best ? evalSlot(sg.slot) : null);
+    const ok = !!(x && x.r.pick && x.r.pick.e === x.e), row = rr && e ? rr.rows.find(r => r.e === e) : null, n = row ? row.ck.length : 0;
+    const extra = [sat ? ["Satellite allowed for your plan (Aggressive or Very aggressive, goal 5+ years)", satOk, satOk ? "Allowed · half the core model amount" : "Not for this goal / risk level"]
+                       : ["Segment is part of your model portfolio", !!x, x ? SLOTS[x.k].label + " · " + x.w.toFixed(1) + "%" : "Not in this plan"],
+                   [`${sat ? "Top-ranked" : "Model"} ETF passes all ${n || ""} ETF checks`.replace("  ", " "), ok, row ? `${e.t} · ${row.passed}/${n}` : "–"]];
     const checks = sg.checks.concat(extra), total = checks.length + n, passed = checks.filter(c => c[1]).length + (row ? row.passed : 0);
     const nextT = D.tiers.find(t => t > sg.held);
     let cls = "na", tag, line;
-    if (!x){ tag = "Not in this plan"; line = `${sg.fall.toFixed(1)}% below its 3-month high.`; }
+    if (!x){ tag = sat ? "Satellite · Aggressive 5+ yrs only" : "Not in this plan"; line = `${sg.fall.toFixed(1)}% below its 3-month high.`; }
     else if (sg.signal && ok){ cls = "y"; tag = `✓ Optional dip buy today · US$${(mult(sg.held) * amt).toLocaleString("en-US", { maximumFractionDigits: 2 })}`; line = `${sg.held}% level held for two closes and confirmed — model amount ${mult(sg.held)}× your purchase in ${esc(e.t)}.`; }
     else if (sg.held && !sg.signal && sg.lastSignal){ tag = "No dip buy today"; line = `${sg.held}% level already reached on ${fmtDate(sg.lastSignal.d)}${nextT ? ` — next level ${nextT}%` : " — no deeper level"}.`; }
     else if (sg.held && !sg.mktOk){ cls = "n"; tag = "✕ Not today — " + esc((checks.find(c => !c[1]) || [""])[0]); line = `${sg.held}% level held, but a market check failed.`; }
@@ -2141,13 +2161,13 @@ function dipHtml(P, amt){
     else if (sg.signal && !ok){ cls = "n"; tag = "✕ Not today — model ETF did not pass every check"; line = ""; }
     else { tag = "No dip"; line = `${sg.fall.toFixed(1)}% below its 3-month high (first level ${D.tiers[0]}%).`; }
     const bar = `<div class="dipbar"><i style="width:${Math.min(100, sg.fall / 20 * 100).toFixed(1)}%"></i>${D.tiers.map(t => `<b style="left:${t / 20 * 100}%">${t}%</b>`).join("")}</div>`;
-    return { cls, tag, x, html: `<div class="dipseg ${cls}"><div class="diph"><div><b>${esc(sg.name)}</b><small>${esc(sg.trackers[0])} ${sg.fall.toFixed(2)}% below its 3-month high (${esc(fmtDate(sg.highDate))})${e ? " · model ETF " + esc(e.t) : ""}</small></div><span class="diptag ${cls}">${tag}</span></div>${bar}${line ? `<p>${line}</p>` : ""}
-      <details class="dipck"><summary>${passed} of ${total} checks pass — show the ${checks.length} market &amp; plan checks</summary><ul>${checks.map(c => `<li class="${c[1] ? "y" : "n"}"><span>${c[1] ? "✓" : "✕"}</span><em>${esc(c[0])}</em><small>${esc(c[2])}</small></li>`).join("")}</ul><p class="taxnote">Plus the ${n} ETF checks of ${e ? esc(e.t) : "the model ETF"} listed under "Why these ETFs".</p></details></div>` };
+    return { cls, tag, x, html: `<div class="dipseg ${cls}"><div class="diph"><div><b>${esc(sg.name)}</b><small>${esc(sg.trackers[0])} ${sg.fall.toFixed(2)}% below its 3-month high (${esc(fmtDate(sg.highDate))})${e ? (sat ? " · top-ranked ETF " : " · model ETF ") + esc(e.t) : ""}${sat ? ' <i class="satb">Satellite</i>' : ""}</small></div><span class="diptag ${cls}">${tag}</span></div>${bar}${line ? `<p>${line}</p>` : ""}
+      <details class="dipck"><summary>${passed} of ${total} checks pass — show the ${checks.length} market &amp; plan checks</summary><ul>${checks.map(c => `<li class="${c[1] ? "y" : "n"}"><span>${c[1] ? "✓" : "✕"}</span><em>${esc(c[0])}</em><small>${esc(c[2])}</small></li>`).join("")}</ul><p class="taxnote">Plus the ${n} ETF checks of ${e ? esc(e.t) : "the model ETF"}${sat ? ` — the top-ranked of ${esc(SLOTS[sg.slot].cands.join(" / "))}, checked the same way as the model's ETFs` : ' listed under "Why these ETFs"'}.</p></details></div>` };
   });
   const buys = segs.filter(z => z.cls === "y");
   const banner = buys.length ? `<div class="dipban y"><b>Optional dip buy today</b> — ${buys.map(z => esc(z.tag.replace("✓ Optional dip buy today · ", ""))).join(" · ")}. Extra money only; keep your regular plan.</div>`
                              : `<div class="dipban"><b>No dip buy today</b> — continue your regular plan above.</div>`;
-  return `<p class="taxnote" style="margin:0 0 10px">Extra purchases when a market has fallen 5%, 10% or 15% from its 3-month high (model amount ½×, 1× or 2× your regular purchase), only after the fall has held for two closes, been confirmed by a second ETF, and passed every market check — and only into the plan's model ETF when it passes all its own checks. One buy per level in a fall. Data as of ${esc(fmtDate(D.asOf))}.</p>${banner}<div class="dipgrid">${segs.map(z => z.html).join("")}</div>`;
+  return `<p class="taxnote" style="margin:0 0 10px">Extra purchases when a market has fallen 5%, 10% or 15% from its 3-month high (model amount ½×, 1× or 2× your regular purchase), only after the fall has held for two closes, been confirmed by a second ETF, and passed every market check — and only into the plan's model ETF when it passes all its own checks. One buy per level in a fall. <b>Satellites</b> — Latin America, Europe, Japan, India, US real estate, long-term Treasuries and energy — are not in the model mixes: they apply only to Aggressive and Very aggressive goals of 5+ years, at half the core amount, into their top-ranked ETF when it passes every check. Data as of ${esc(fmtDate(D.asOf))}.</p>${banner}<div class="dipgrid">${segs.map(z => z.html).join("")}</div>`;
 }
 /* Economy & markets: global market signals and index valuations, from the same daily market file the India
    Portfolio Simulators use (data/mf/macro.json). Descriptive only. */
