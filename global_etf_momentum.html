@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="US &amp; Global ETF Momentum — VilfinTV">
-<meta name="twitter:description" content="Accelerating, Decelerating, Recovering or Underperforming? Weekly rotation analysis for 120+ US-listed and global ETFs.">
+<meta name="twitter:description" content="Accelerating, Decelerating, Recovering or Underperforming? Weekly rotation analysis for 170+ US-listed and global ETFs.">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"VilfinTV","item":"https://vilfintv.com/"},{"@type":"ListItem","position":2,"name":"VilfinTV Screeners","item":"https://vilfintv.com/"},{"@type":"ListItem","position":3,"name":"US & Global ETF Momentum","item":"https://vilfintv.com/global_etf_momentum.html"}]}
 </script>
@@ -407,6 +407,93 @@ section.block{margin:28px 0}
 .brokers a:hover{border-color:var(--accent)}
 .brokers a span{font-size:12.5px;color:var(--ink-3)}
 .share{display:flex;flex-wrap:wrap;gap:8px}
+.simtbl td:first-child{min-width:230px}
+@media(max-width:640px){
+  .simtbl thead{display:none}
+  .simtbl,.simtbl tbody{display:block;min-width:0!important;width:100%}
+  .simtbl tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 10px;padding:12px 2px;border-bottom:1px solid var(--line)}
+  .simtbl td{display:block;padding:0!important;border:0!important;text-align:left!important;position:static!important;font-size:13px}
+  .simtbl td:first-child{grid-column:1/-1;min-width:0}
+  .simtbl td:nth-child(n+2)::before{display:block;font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-3);margin-bottom:2px}
+  .simtbl td:nth-child(2)::before{content:"Weight"}.simtbl td:nth-child(3)::before{content:"Amount"}.simtbl td:nth-child(4)::before{content:"Price"}
+  .simtbl td:nth-child(7) .badge{white-space:normal;font-size:11px;max-width:100%}
+  .simtbl td:nth-child(5)::before{content:"Shares"}.simtbl td:nth-child(6)::before{content:"Expense"}.simtbl td:nth-child(7)::before{content:"Mode"}
+}
+.simtbl .ckl{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--accent);font:700 11.5px var(--font);cursor:pointer;width:max-content;max-width:100%}
+.simtbl .ckl.y{border-color:color-mix(in srgb,var(--acc) 45%,transparent);color:var(--acc)}
+.simtbl .ckl.n{border-color:color-mix(in srgb,var(--dec) 45%,transparent);color:var(--dec)}
+.simtbl .ckl:hover{background:var(--accent-soft)}
+.simtbl .alts{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:6px;font-size:11.5px;color:var(--ink-3)}
+.simtbl .alt{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:7px;padding:2px 7px;font:700 11.5px var(--font);cursor:pointer}
+.simtbl .alt small{font-weight:600;color:var(--ink-3)}.simtbl .alt.n{opacity:.75}
+.simtbl .alt:hover{border-color:var(--accent)}
+/* long-term analysis card in the ETF detail */
+.dx{margin-top:18px;border:1px solid var(--line);border-radius:var(--r-lg);padding:14px;background:linear-gradient(180deg,var(--surface-2),var(--surface))}
+.dxtabs{display:flex;gap:4px;padding:4px;border-radius:999px;overflow-x:auto;scrollbar-width:none;margin-bottom:14px}
+.dxtabs::-webkit-scrollbar{display:none}
+.dxtabs button{flex:1 0 auto;border:0;background:transparent;color:var(--ink-2);font:700 13px var(--font);padding:8px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.dxtabs button[aria-selected=true]{background:var(--surface);color:var(--ink);box-shadow:0 2px 10px rgba(15,23,42,.12)}
+.glass{background:color-mix(in srgb,var(--surface) 55%,transparent);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.pxhead{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.pxhead b{font-size:24px;font-weight:800}.pxhead small{color:var(--ink-3);font-size:12.5px}
+.segs{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px}
+.segs .seg{border:0;background:transparent;color:var(--ink-2);font:700 12px var(--font);padding:5px 12px;border-radius:999px;cursor:pointer}
+.segs .seg[aria-pressed=true]{background:var(--accent);color:#fff}
+.lchart{position:relative}
+#dxChart{width:100%;height:240px;display:block;touch-action:pan-y}
+#dxChart .gl{stroke:var(--line);stroke-dasharray:3 4}
+#dxChart .xh{stroke:var(--ink-3);stroke-width:1;vector-effect:non-scaling-stroke}
+.ltip{position:absolute;top:0;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 9px;font-size:12px;box-shadow:var(--shadow-s);white-space:nowrap;pointer-events:none}
+.calbars{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:8px;align-items:end}
+.cb{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px}
+.cbw{height:90px;width:100%;display:flex;align-items:flex-end;justify-content:center}
+.cbw i{display:block;width:60%;border-radius:6px 6px 2px 2px;min-height:3px}
+.cbw i.up{background:linear-gradient(180deg,#22c55e,#15803d)}.cbw i.dn{background:linear-gradient(180deg,#f87171,#b91c1c)}
+.cb small{color:var(--ink-3)}
+.kgrid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,44%),1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 12px;display:flex;flex-direction:column;gap:3px}
+.kpi span{font-size:12px;color:var(--ink-3);font-weight:600}.kpi b{font-size:19px;font-weight:800}.kpi b small{font-size:11px;color:var(--ink-3);font-weight:600}.kpi>small{font-size:11.5px;color:var(--ink-3)}
+.rollr{display:grid;grid-template-columns:minmax(150px,1fr) 2fr;gap:4px 14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.rollr .rl small{display:block;color:var(--ink-3);font-size:11.5px}
+.rbar{position:relative;height:12px;background:var(--surface-2);border-radius:6px}
+.rbar .rng{position:absolute;top:2px;bottom:2px;border-radius:4px;background:linear-gradient(90deg,#f87171,#fbbf24,#22c55e)}
+.rbar .med{position:absolute;top:-3px;width:3px;height:18px;margin-left:-1px;background:var(--ink);border-radius:2px}
+.rbar .zero{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--ink-3)}
+.rv{grid-column:2;display:flex;justify-content:space-between;font-size:12px}
+@media(max-width:600px){.rollr{grid-template-columns:1fr}.rv{grid-column:1}}
+.rating{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.rs{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.rs .stars{color:#f5b301;font-size:20px;letter-spacing:1px}.rs .stars .off{color:var(--line)}
+.rs b{font-size:22px}.rs b small{font-size:12px;color:var(--ink-3)}.rs>small{color:var(--ink-3)}
+.rparts{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:7px}
+.rparts li{display:grid;grid-template-columns:130px 1fr 36px;gap:10px;align-items:center;font-size:13px}
+.rparts li small{color:var(--ink-3)}.rparts .meter{height:8px;background:var(--surface-2);border-radius:5px;overflow:hidden}.rparts .meter i{display:block;height:100%;border-radius:5px}
+.hgrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px}
+@media(max-width:800px){.hgrid{grid-template-columns:1fr}}
+.hbars{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.hbars li{display:grid;grid-template-columns:minmax(0,1.3fr) 1fr 52px;gap:8px;align-items:center;font-size:12.5px}
+.hn{min-width:0}.hn small{display:block;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hb{height:8px;background:var(--surface-2);border-radius:5px;overflow:hidden}.hb i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#7c3aed);border-radius:5px}
+.hv{text-align:right;font-weight:700}
+.donutw{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.donut{width:130px;height:130px;flex:none}.donut .dn1{font:800 20px var(--font);fill:var(--ink)}.donut .dn2{font:600 10px var(--font);fill:var(--ink-3)}
+.dleg{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:12px;flex:1;min-width:150px}
+.dleg li{display:flex;align-items:center;gap:6px}.dleg i{width:9px;height:9px;border-radius:3px;flex:none}.dleg b{margin-left:auto}
+.abar{display:flex;height:12px;border-radius:7px;overflow:hidden;background:var(--surface-2)}.abar i{display:block;height:100%}
+.btn.back{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+tr.flash td{background:var(--accent-soft)!important;transition:background .4s}
+/* share buttons in each network's official colour (white text) */
+.sh-b{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:9px 16px;border-radius:10px;border:0;color:#fff!important;font:700 13px var(--font);text-decoration:none;cursor:pointer;transition:transform .15s,filter .15s;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.sh-b:hover{transform:translateY(-1px);filter:brightness(1.08)}
+.sh-b:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sh-wa{background:#128C7E}.sh-tg{background:#229ED9}.sh-fb{background:#1877F2}.sh-x{background:#000;box-shadow:inset 0 0 0 1px #3a3a3a}
+.sh-li{background:#0A66C2}.sh-em{background:#D93025}.sh-cp{background:#475569}.sh-nt{background:#1d4ed8}
+@media(max-width:760px){.share{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* broker cards: each brand's official colour as a top accent and on the name */
+.brokers a{border-top:3px solid var(--bc,var(--accent))}
+.brokers a b{color:var(--bc,var(--ink))}
+.brokers a[data-b=dhan]{--bc:#6b46e0}.brokers a[data-b=ibkr]{--bc:#d81222}.brokers a[data-b=zerodha]{--bc:#387ed1}
+.brokers a[data-b=wise]{--bc:#2f7a0e}.brokers a[data-b=revolut]{--bc:#0666eb}.brokers a[data-b=instarem]{--bc:#c2185b}
+html:not([data-theme]) .brokers a b,html[data-theme=midnight] .brokers a b,html[data-theme=maroon] .brokers a b,html[data-theme=gold] .brokers a b,html[data-theme=gemini] .brokers a b{color:var(--ink)}
 .disc{font-size:12.5px;color:var(--ink-3);line-height:1.6;border-top:1px solid var(--line);padding-top:16px}
 footer{padding:22px 0 40px;font-size:12.5px;color:var(--ink-3)}
 footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:underline}
@@ -575,7 +662,7 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
     <div>
       <span class="eyebrow">🌎 US-listed &amp; global ETFs</span>
       <h1>US &amp; Global ETF <em>Momentum</em></h1>
-      <p>Track how 120+ US-listed ETFs — US sectors and factors, developed and emerging markets, bonds, commodities and digital assets — are rotating against the benchmark you choose, from weekly relative strength and its momentum.</p>
+      <p>Track how 170+ US-listed ETFs — US sectors and factors, developed and emerging markets, bonds, commodities and digital assets — are rotating against the benchmark you choose, from weekly relative strength and its momentum.</p>
       <div class="hero-cta">
         <a class="pri" href="?v=sim" data-view="sim">🧮 Portfolio Simulator</a>
         <a href="?v=guide#tax" data-view="guide" data-anchor="tax">🧾 Tax &amp; rules by country</a>
@@ -585,6 +672,8 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
     </div>
     <div class="status" id="status" aria-live="polite">
       <div class="row"><span>Data as of</span><span id="stAsOf"><span class="skel" style="display:inline-block;width:90px"></span></span></div>
+      <div class="row"><span>Updated (your time)</span><span id="stUpd">–</span></div>
+      <div class="row"><span>Next update</span><span id="stNext">–</span></div>
       <div class="row"><span>ETFs covered</span><span id="stCount">–</span></div>
       <div class="row"><span>Accuracy audit</span><span id="stAudit">–</span></div>
     </div>
@@ -600,7 +689,7 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
   <section class="card detail" id="detail" hidden aria-labelledby="dTitle">
     <div class="dh">
       <div class="ttl"><div class="t" id="dTitle"></div><div class="n" id="dName"></div></div>
-      <div class="acts"><button class="btn" type="button" id="dCopy">Copy link</button><a class="btn" id="dChart" href="#" target="_blank" rel="noopener">Open full chart</a><button class="btn" type="button" id="dClose" aria-label="Close details">✕ Close</button></div>
+      <div class="acts"><button class="btn back" type="button" id="dBack">← Back to all ETFs</button><button class="btn" type="button" id="dCopy">Copy link</button><a class="btn" id="dChart" href="#" target="_blank" rel="noopener">Open full chart</a><button class="btn" type="button" id="dClose" aria-label="Close details">✕ Close</button></div>
     </div>
     <div class="db" id="dBody"></div>
   </section>
@@ -928,12 +1017,12 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
     <h2>Best brokers &amp; apps for global investing</h2>
     <p class="lead">Accounts and money tools for investing outside India.</p>
     <div class="brokers">
-      <a href="https://join.dhan.co/?invite=VFZJN04428" target="_blank" rel="noopener sponsored"><b>Dhan</b><span>India and US markets in one account</span></a>
-      <a href="https://www.interactivebrokers.co.jp/en/accounts/what-you-need-jp.php" target="_blank" rel="noopener"><b>Interactive Brokers</b><span>Global markets, 170 exchanges</span></a>
-      <a href="https://zerodha.com/open-account?c=XKQ288" target="_blank" rel="noopener sponsored"><b>Zerodha</b><span>India’s largest broker — international coming soon</span></a>
-      <a href="https://wise.com/invite/ihpc/vilfinm" target="_blank" rel="noopener sponsored"><b>Wise</b><span>Best-rate international transfers</span></a>
-      <a href="https://revolut.com/referral/?referral-code=vilfingeorge!APR1-26-AR-JP-H1&amp;geo-redirect" target="_blank" rel="noopener sponsored"><b>Revolut</b><span>Multi-currency account and card</span></a>
-      <a href="https://referral-link.onelink.me/gbf1/a43c48ca?deep_link_sub1=referral&amp;deep_link_value=cWkMb3" target="_blank" rel="noopener sponsored"><b>Instarem</b><span>Asia remittance</span></a>
+      <a href="https://join.dhan.co/?invite=VFZJN04428" target="_blank" rel="noopener sponsored" data-b="dhan"><b>Dhan</b><span>India and US markets in one account</span></a>
+      <a href="https://www.interactivebrokers.co.jp/en/accounts/what-you-need-jp.php" target="_blank" rel="noopener" data-b="ibkr"><b>Interactive Brokers</b><span>Global markets, 170 exchanges</span></a>
+      <a href="https://zerodha.com/open-account?c=XKQ288" target="_blank" rel="noopener sponsored" data-b="zerodha"><b>Zerodha</b><span>India’s largest broker — international coming soon</span></a>
+      <a href="https://wise.com/invite/ihpc/vilfinm" target="_blank" rel="noopener sponsored" data-b="wise"><b>Wise</b><span>Best-rate international transfers</span></a>
+      <a href="https://revolut.com/referral/?referral-code=vilfingeorge!APR1-26-AR-JP-H1&amp;geo-redirect" target="_blank" rel="noopener sponsored" data-b="revolut"><b>Revolut</b><span>Multi-currency account and card</span></a>
+      <a href="https://referral-link.onelink.me/gbf1/a43c48ca?deep_link_sub1=referral&amp;deep_link_value=cWkMb3" target="_blank" rel="noopener sponsored" data-b="instarem"><b>Instarem</b><span>Asia remittance</span></a>
     </div>
     <p class="note">Some links are referral links — signing up through them may give you a welcome benefit at no extra cost and helps keep this platform free.</p>
   </section>
@@ -957,7 +1046,7 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
 
 <div class="tip" id="tip" role="tooltip"></div>
 
-<script src="vt_sim.js?v=20261026"></script>
+<script src="vt_sim.js?v=20261027"></script>
 <script>
 (() => {
 "use strict";
@@ -1063,13 +1152,40 @@ async function load(){
   } catch (e) { renderUnavailable(); }
 }
 
+/* Update timing in the reader's own time zone (most readers are in Asia, where the US close falls overnight):
+   the data job runs ~30 minutes after the 4:00 pm New York close on US trading days. */
+function nyOffsetMin(dt){
+  const p = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour12: false, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).formatToParts(dt);
+  const g = k => +p.find(x => x.type === k).value;
+  return (Date.UTC(g("year"), g("month") - 1, g("day"), g("hour") % 24, g("minute")) - dt.getTime()) / 60000;
+}
+function nextUpdate(now){
+  for (let k = 0; k < 8; k++){
+    const day = new Date(now.getTime() + k * 864e5);
+    const ny = new Date(day.getTime() + nyOffsetMin(day) * 60000);            // wall clock in New York
+    const wd = ny.getUTCDay(); if (wd === 0 || wd === 6) continue;
+    const t = Date.UTC(ny.getUTCFullYear(), ny.getUTCMonth(), ny.getUTCDate(), 16, 35) - nyOffsetMin(day) * 60000;
+    if (t > now.getTime()) return new Date(t);
+  }
+  return null;
+}
+function syncTimes(d){
+  const f = dt => dt.toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+  try {
+    if (d.generated) $("#stUpd").textContent = f(new Date(d.generated));
+    const n = nextUpdate(new Date());
+    $("#stNext").textContent = n ? "about " + f(n) : "–";
+    $("#stNext").title = "About 30 minutes after the 4:00 pm New York close on US trading days (US market holidays skip a day).";
+  } catch (e) {}
+}
 function verifyEngine(){
   const d = S.data, ref = d.by[d.engineRef || "SPY"];
   let n = 0, bad = 0;
   for (const e of d.etfs){ if (!("m" in e)) continue; const g = engine(e.w, ref.w); const m = g ? g.mode : null; n++; if (m !== e.m) bad++; }
   const a = d.audit || {}, total = (a.passed || 0) + n;
-  $("#stAsOf").textContent = fmtDate(d.asOf);
+  $("#stAsOf").textContent = fmtDate(d.asOf) + " US close";
   $("#stCount").textContent = d.etfs.length;
+  syncTimes(d);
   $("#stAudit").innerHTML = (a.critical || bad)
     ? `<span class="warn">${bad} engine mismatch${bad===1?"":"es"}</span>`
     : `<span class="ok">${total.toLocaleString("en-US")} checks passed</span>`;
@@ -1291,6 +1407,7 @@ function renderTable(){
 function openDrawer(t, opts){
   const e = S.data.by[t]; if (!e) return;
   opts = opts || {};
+  if ($("#detail").hidden) S.back = { view: VIEW, y: scrollY, t: e.t };   /* where the reader came from */
   S.sel = e;
   const g = e.g, b = S.data.by[S.bench], r = e.r || {};
   $("#dTitle").textContent = e.t;
@@ -1323,11 +1440,12 @@ function openDrawer(t, opts){
     <div class="sect">Fund facts</div>
     <div class="stats">${stat("Region",esc(e.reg))}${stat("Asset class",esc(e.ac))}${stat("Listed since",e.inc?fmtDate(e.inc):"–")}</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><a class="btn" href="?v=guide#invest" id="dInvest">Ways to invest</a></div>
-    </div></div>`;
+    </div></div>${deepHtml(e)}`;
   $("#dChart").href = "https://www.tradingview.com/chart/?symbol=" + encodeURIComponent(e.t);
   $("#dCopy").textContent = "Copy link";
   drawChart(e, b);
   if (g) drawTrail(e);
+  deepBind(e);
   $("#dInvest").onclick = ev => { ev.preventDefault(); setView("guide", { anchor: "invest" }); };
   $("#detail").hidden = false;
   if (VIEW !== "scr") setView("scr", { keep: true });
@@ -1335,6 +1453,104 @@ function openDrawer(t, opts){
   if (S.showAll) renderMap(S.rows);
   if (!opts.noScroll) requestAnimationFrame(() => { const top = $("#detail").getBoundingClientRect().top + scrollY - (document.querySelector(".vt-header").offsetHeight + 12); scrollTo({ top: Math.max(0, top), behavior: "smooth" }); });
 }
+/* ---------- ETF detail, long-term analysis: price history, SIP & rolling returns, risk & rating, holdings ---------- */
+function peerPct(v, arr, higher){ const a = arr.filter(x => x != null); if (v == null || a.length < 3) return null;
+  const below = a.filter(x => higher ? x < v : x > v).length, eq = a.filter(x => x === v).length; return (below + 0.5 * eq) / a.length * 100; }
+function etfRating(e){
+  let peers = S.data.etfs.filter(x => x.cat === e.cat), basis = e.cat;
+  if (peers.length < 4){ peers = S.data.etfs.filter(x => x.ac === e.ac); basis = e.ac; }
+  if (peers.length < 4 || !e.r || e.r["1y"] == null) return null;
+  const avg = xs => { const v = xs.filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  const parts = [
+    ["Cost", 20, peerPct(e.er, peers.map(x => x.er), false)],
+    ["Liquidity", 20, peerPct(e.adv, peers.map(x => x.adv), true)],
+    ["Returns", 25, avg(["1y","3y","5y"].map(k => peerPct(e.r[k], peers.map(x => x.r && x.r[k]), true)))],
+    ["Risk", 20, avg([peerPct(e.vol, peers.map(x => x.vol), false), peerPct(e.mdd, peers.map(x => x.mdd), true)])],
+    ["Size & record", 15, avg([peerPct(e.aum, peers.map(x => x.aum), true), peerPct(e.inc ? -Date.parse(e.inc) : null, peers.map(x => x.inc ? -Date.parse(x.inc) : null), true)])]
+  ].filter(p => p[2] != null);
+  const wt = parts.reduce((t, p) => t + p[1], 0); if (wt < 50) return null;
+  const score = parts.reduce((t, p) => t + p[1] * p[2], 0) / wt;
+  const scores = peers.map(x => x === e ? score : null);
+  return { score, stars: score >= 80 ? 5 : score >= 60 ? 4 : score >= 40 ? 3 : score >= 20 ? 2 : 1, parts, basis, n: peers.length };
+}
+function deepHtml(e){
+  const has = e.mo && e.mo.length > 6;
+  const R = etfRating(e);
+  const st = n => "★★★★★".slice(0, n) + '<span class="off">' + "★★★★★".slice(n) + "</span>";
+  const pctTxt = v => v == null ? "–" : (v > 0 ? "+" : "") + v.toFixed(1) + "%";
+  const rangeBtn = (k, l) => `<button type="button" class="seg" data-rng="${k}" aria-pressed="${k === "36"}">${l}</button>`;
+  const sip = e.sip || {}, sipC = ["1y","3y","5y"].filter(k => sip[k]).map(k => `<div class="kpi"><span>${k.toUpperCase()} monthly SIP</span><b class="${sip[k][0] >= 0 ? "pos" : "neg"}">${pctTxt(sip[k][0])}<small> XIRR</small></b><small>$${sip[k][1].toLocaleString("en-US")} invested → $${sip[k][2].toLocaleString("en-US")}</small></div>`).join("");
+  const roll = (k, l) => { const v = e[k]; if (!v) return ""; const lo = Math.min(v[0], 0), hi = Math.max(v[2], 0), sp = hi - lo || 1, X = x => ((x - lo) / sp * 100).toFixed(1);
+    return `<div class="rollr"><div class="rl"><b>${l}</b><small>${v[4]} periods · positive ${v[3].toFixed(0)}% of the time</small></div>
+      <div class="rbar"><i class="zero" style="left:${X(0)}%"></i><i class="rng" style="left:${X(v[0])}%;width:${(X(v[2]) - X(v[0])).toFixed(1)}%"></i><i class="med" style="left:${X(v[1])}%"></i></div>
+      <div class="rv"><span class="neg">${pctTxt(v[0])}</span><span>median <b>${pctTxt(v[1])}</b></span><span class="pos">${pctTxt(v[2])}</span></div></div>`; };
+  const cal = e.cal ? Object.entries(e.cal) : [];
+  const cmax = Math.max(1, ...cal.map(([, v]) => Math.abs(v || 0)));
+  const calH = cal.length ? `<div class="calbars">${cal.map(([y, v]) => `<div class="cb"><div class="cbw"><i class="${v >= 0 ? "up" : "dn"}" style="height:${(Math.abs(v) / cmax * 100).toFixed(1)}%"></i></div><b class="${v >= 0 ? "pos" : "neg"}">${pctTxt(v)}</b><small>${esc(y)}</small></div>`).join("")}</div>` : "";
+  const hold = e.hold || [], hmax = Math.max(1, ...hold.map(h => h[2]));
+  const holdH = hold.length ? `<ol class="hbars">${hold.map(h => `<li><span class="hn"><b>${esc(h[0])}</b><small>${esc(h[1])}</small></span><span class="hb"><i style="width:${(h[2] / hmax * 100).toFixed(1)}%"></i></span><span class="hv">${h[2].toFixed(2)}%</span></li>`).join("")}</ol><p class="taxnote">Top 10 = ${hold.reduce((t, h) => t + h[2], 0).toFixed(1)}% of the fund.</p>` : '<p class="muted">The fund has not published a holdings list in machine-readable form (common for commodity trusts and some bond funds).</p>';
+  const PAL = ["#2563eb","#7c3aed","#0891b2","#16a34a","#d97706","#dc2626","#db2777","#4f46e5","#0d9488","#ca8a04","#64748b"];
+  const sec = e.sec ? Object.entries(e.sec) : [];
+  let a0 = 0; const donut = sec.length ? `<svg viewBox="0 0 120 120" class="donut" role="img" aria-label="Sector weights">${sec.map(([k, v], i) => { const a1 = a0 + v / 100 * Math.PI * 2, r = 46, c = 60;
+      const p = `<path d="M${(c + r * Math.sin(a0)).toFixed(2)} ${(c - r * Math.cos(a0)).toFixed(2)} A${r} ${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${(c + r * Math.sin(a1)).toFixed(2)} ${(c - r * Math.cos(a1)).toFixed(2)}" stroke="${PAL[i % PAL.length]}" stroke-width="18" fill="none"><title>${esc(k)} ${v.toFixed(1)}%</title></path>`; a0 = a1; return p; }).join("")}
+      <text x="60" y="57" text-anchor="middle" class="dn1">${sec.length}</text><text x="60" y="72" text-anchor="middle" class="dn2">sectors</text></svg>
+      <ul class="dleg">${sec.map(([k, v], i) => `<li><i style="background:${PAL[i % PAL.length]}"></i>${esc(k)}<b>${v.toFixed(1)}%</b></li>`).join("")}</ul>` : "";
+  const acl = e.acl ? Object.entries(e.acl).filter(([, v]) => v > 0) : [];
+  const aclH = acl.length ? `<div class="abar">${acl.map(([k, v], i) => `<i style="width:${Math.min(100, v).toFixed(1)}%;background:${PAL[i % PAL.length]}" title="${esc(k)} ${v.toFixed(1)}%"></i>`).join("")}</div><div class="alegend">${acl.map(([k, v], i) => `<span><i style="background:${PAL[i % PAL.length]}"></i>${esc(k)} ${v.toFixed(1)}%</span>`).join("")}</div>` : "";
+  const ratH = R ? `<div class="rating"><div class="rs"><span class="stars">${st(R.stars)}</span><b>${R.score.toFixed(0)}<small>/100</small></b><small>vs ${R.n} ETFs in ${esc(R.basis)}</small></div>
+      <ul class="rparts">${R.parts.map(p => `<li><span>${p[0]} <small>${p[1]}%</small></span><span class="meter"><i style="width:${Math.max(3, p[2]).toFixed(0)}%;background:${p[2] >= 67 ? "var(--acc)" : p[2] >= 34 ? "var(--dec)" : "var(--und)"}"></i></span><b>${p[2].toFixed(0)}</b></li>`).join("")}</ul>
+      <p class="taxnote">VilfinTV rating: percentile against similar ETFs — cost 20 · liquidity 20 · returns 25 (1Y/3Y/5Y) · risk 20 (volatility, worst fall) · size &amp; record 15; missing parts are re-weighted. A description of the past, not a recommendation.</p></div>` : '<p class="muted">Not rated — fewer than four similar ETFs or less than one year of returns.</p>';
+  const riskH = `<div class="kgrid2">${[["Volatility 1Y", e.vol != null ? e.vol.toFixed(1) + "%" : "–"], ["Worst fall 3Y", e.mdd != null ? e.mdd.toFixed(1) + "%" : "–"], ["Beta vs S&P 500", e.beta != null ? e.beta.toFixed(2) : "–"],
+      ["Sharpe 1Y", e.shp != null ? e.shp.toFixed(2) : "–"], ["Sortino 1Y", e.sor != null ? e.sor.toFixed(2) : "–"], ["Up capture 3Y", e.cap && e.cap[0] != null ? e.cap[0] + "%" : "–"], ["Down capture 3Y", e.cap && e.cap[1] != null ? e.cap[1] + "%" : "–"],
+      ["Risk / 10", window.VTSim && VTSim.risk10 && e.vol != null && e.mdd != null ? VTSim.risk10(e.vol, e.mdd).toFixed(1) : "–"]].map(([l, v]) => `<div class="kpi"><span>${l}</span><b>${v}</b></div>`).join("")}</div>
+      <p class="taxnote">Sharpe and Sortino use the last year over Treasury bills. Up / down capture: how much of the S&amp;P 500's rising / falling months the ETF captured (monthly, 3 years) — below 100% on the way down cushions falls.</p>`;
+  return `<div class="dx" id="dx">
+    <div class="dxtabs glass" role="tablist">${[["px","📈 Price history"],["sip","🔁 SIP &amp; rolling"],["risk","🛡️ Risk &amp; rating"],["hold","🧩 Holdings"]].map(([k, l], i) => `<button type="button" role="tab" data-dx="${k}" aria-selected="${i === 0}">${l}</button>`).join("")}</div>
+    <div class="dxp" data-p="px">${has ? `<div class="pxhead"><div><b id="dxRet">–</b><small id="dxSub"></small></div><div class="segs">${rangeBtn("12","1Y")}${rangeBtn("36","3Y")}${rangeBtn("60","5Y")}${rangeBtn("all","All")}</div></div>
+      <div class="lchart"><svg id="dxChart" viewBox="0 0 640 240" preserveAspectRatio="none" role="img" aria-label="Long-term price history of ${esc(e.t)}"></svg><div class="ltip" id="dxTip" hidden></div></div>
+      <div class="sect">Calendar-year returns</div>${calH}` : '<p class="muted">Long-term history appears after the next data update.</p>'}</div>
+    <div class="dxp" data-p="sip" hidden>${sipC ? `<div class="kgrid2">${sipC}</div><p class="taxnote">$100 on the first US trading day of every month, total return with dividends reinvested, before taxes and commissions.</p>` : '<p class="muted">SIP returns appear after the next data update.</p>'}
+      <div class="sect">Rolling returns (last 5 years, checked every week)</div>${roll("roll1", "1-year rolling") + roll("roll3", "3-year rolling (per year)") || '<p class="muted">Needs more history.</p>'}</div>
+    <div class="dxp" data-p="risk" hidden>${ratH}<div class="sect">Risk figures</div>${riskH}</div>
+    <div class="dxp" data-p="hold" hidden><div class="hgrid"><div><div class="sect">Top holdings</div>${holdH}</div><div>${donut ? `<div class="sect">Sectors</div><div class="donutw">${donut}</div>` : ""}${aclH ? `<div class="sect">Asset classes</div>${aclH}` : ""}</div></div></div>
+  </div>`;
+}
+function deepBind(e){
+  const box = $("#dx"); if (!box) return;
+  box.querySelector(".dxtabs").onclick = ev => { const b = ev.target.closest("[data-dx]"); if (!b) return;
+    box.querySelectorAll("[data-dx]").forEach(x => x.setAttribute("aria-selected", String(x === b)));
+    box.querySelectorAll(".dxp").forEach(p => p.hidden = p.dataset.p !== b.dataset.dx); };
+  const segs = box.querySelector(".segs"); if (!segs) return;
+  const draw = k => {
+    segs.querySelectorAll("[data-rng]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.rng === k)));
+    const all = e.mo.map((v, i) => [i, v]).filter(x => x[1] != null);
+    const pts = k === "all" ? all : all.slice(-(+k + 1));
+    const svg = $("#dxChart"), W = 640, H = 240, P = { l: 6, r: 6, t: 14, b: 18 };
+    if (pts.length < 2){ svg.innerHTML = ""; return; }
+    const vs = pts.map(p => p[1]), mn = Math.min(...vs), mx = Math.max(...vs), sp = (mx - mn) || 1;
+    const X = i => P.l + i / (pts.length - 1) * (W - P.l - P.r), Y = v => P.t + (1 - (v - mn) / sp) * (H - P.t - P.b);
+    const up = vs[vs.length - 1] >= vs[0], col = up ? "var(--acc)" : "var(--und)";
+    const line = pts.map((p, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(p[1]).toFixed(1)).join("");
+    const end = new Date((e.moEnd || S.data.asOf) + "T00:00:00Z"), lab = j => { const d = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() - (all.length - 1 - j), 1)); return d.toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" }); };
+    svg.innerHTML = `<defs><linearGradient id="dxg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${up ? "#16a34a" : "#dc2626"}" stop-opacity=".28"/><stop offset="1" stop-color="${up ? "#16a34a" : "#dc2626"}" stop-opacity="0"/></linearGradient></defs>
+      ${[0.25, 0.5, 0.75].map(f => `<line x1="0" x2="${W}" y1="${(P.t + f * (H - P.t - P.b)).toFixed(1)}" y2="${(P.t + f * (H - P.t - P.b)).toFixed(1)}" class="gl"/>`).join("")}
+      <path d="${line}L${X(pts.length - 1).toFixed(1)} ${H - P.b}L${X(0).toFixed(1)} ${H - P.b}Z" fill="url(#dxg)"/>
+      <path d="${line}" fill="none" stroke="${col}" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
+      <line id="dxX" y1="${P.t}" y2="${H - P.b}" class="xh" style="display:none"/>`;
+    const ret = (vs[vs.length - 1] / vs[0] - 1) * 100, yrs = (pts.length - 1) / 12;
+    $("#dxRet").innerHTML = `<span class="${ret >= 0 ? "pos" : "neg"}">${pctTxt2(ret)}</span>`;
+    $("#dxSub").textContent = ` total return over ${yrs >= 1 ? yrs.toFixed(yrs % 1 ? 1 : 0) + " yr" : (pts.length - 1) + " months"}${yrs >= 2 ? " · " + pctTxt2((Math.pow(vs[vs.length - 1] / vs[0], 1 / yrs) - 1) * 100) + " a year" : ""} · month-end, dividends reinvested`;
+    const tip = $("#dxTip"), xl = $("#dxX");
+    svg.onpointermove = ev => { const r = svg.getBoundingClientRect(), fx = (ev.clientX - r.left) / r.width * W; const i = Math.max(0, Math.min(pts.length - 1, Math.round((fx - P.l) / (W - P.l - P.r) * (pts.length - 1))));
+      xl.style.display = ""; xl.setAttribute("x1", X(i)); xl.setAttribute("x2", X(i));
+      tip.hidden = false; tip.innerHTML = `<b>${lab(pts[i][0])}</b> $${pts[i][1].toFixed(2)} <span class="${pts[i][1] >= vs[0] ? "pos" : "neg"}">${pctTxt2((pts[i][1] / vs[0] - 1) * 100)}</span>`;
+      tip.style.left = Math.min(r.width - tip.offsetWidth - 4, Math.max(4, X(i) / W * r.width - tip.offsetWidth / 2)) + "px"; };
+    svg.onpointerleave = () => { tip.hidden = true; xl.style.display = "none"; };
+  };
+  segs.onclick = ev => { const b = ev.target.closest("[data-rng]"); if (b) draw(b.dataset.rng); };
+  draw(e.mo.length > 36 ? "36" : "all");
+}
+const pctTxt2 = v => v == null ? "–" : (v > 0 ? "+" : "") + v.toFixed(1) + "%";
 function closeDrawer(){
   $("#detail").hidden = true; S.sel = null; history.replaceState(null, "", setParam("etf", null));
   if (S.showAll) renderMap(S.rows);
@@ -1453,6 +1669,17 @@ $("#tbl tbody").addEventListener("click", ev => { const tr = ev.target.closest("
 $("#map").addEventListener("click", ev => { const d = ev.target.closest(".dot"); if (d) openDrawer(d.dataset.t); });
 $("#leaders").addEventListener("click", ev => { const r = ev.target.closest(".lrow"); if (r) openDrawer(r.dataset.t); });
 $("#dClose").onclick = closeDrawer;
+/* Back: close the detail and return to the list (or the simulator) exactly where the reader was */
+$("#dBack").onclick = () => {
+  const b = S.back || { view: "scr", y: 0 }, t = S.sel && S.sel.t;
+  closeDrawer();
+  if (b.view !== VIEW) setView(b.view, { accepted: true, keep: true });
+  requestAnimationFrame(() => {
+    const row = b.view === "scr" && t ? document.querySelector(`#tbl tr[data-t="${CSS.escape(t)}"], tr[data-t="${CSS.escape(t)}"]`) : null;
+    if (row && b.y < 40) { row.scrollIntoView({ block: "center" }); } else scrollTo({ top: b.y });
+    if (row) { row.classList.add("flash"); setTimeout(() => row.classList.remove("flash"), 1600); }
+  });
+};
 $("#dCopy").onclick = async () => { const u = location.origin + location.pathname + "?etf=" + encodeURIComponent(S.sel ? S.sel.t : ""); try { await navigator.clipboard.writeText(u); $("#dCopy").textContent = "Link copied"; } catch(e){ $("#dCopy").textContent = u; } };
 
 /* FAQ: two balanced columns on wide screens and one-open-at-a-time accordion (shared vt_sim.js behaviour) */
@@ -1504,8 +1731,9 @@ $$(".routes .tab").forEach(t => t.onclick = () => {
     "LinkedIn": u => `https://www.linkedin.com/sharing/share-offsite/?url=${u}`, "Email": (u, t) => `mailto:?subject=${encodeURIComponent("US & Global ETF Momentum — VilfinTV")}&body=${t}%20${u}`
   };
   const here = () => "https://vilfintv.com/global_etf_momentum.html" + location.search + location.hash;
-  $("#shareBtns").innerHTML = Object.keys(mk).map(n => `<a class="btn" href="#" data-sh="${esc(n)}" target="_blank" rel="noopener">${esc(n)}</a>`).join("") +
-    `<button class="btn" type="button" id="copyLink">Copy link</button>` + (navigator.share ? `<button class="btn" type="button" id="nativeShare">Share…</button>` : "");
+  const CLS = { "WhatsApp": "wa", "Telegram": "tg", "Facebook": "fb", "X (Twitter)": "x", "LinkedIn": "li", "Email": "em" };
+  $("#shareBtns").innerHTML = Object.keys(mk).map(n => `<a class="sh-b sh-${CLS[n]}" href="#" data-sh="${esc(n)}" target="_blank" rel="noopener">${esc(n)}</a>`).join("") +
+    `<button class="sh-b sh-cp" type="button" id="copyLink">Copy link</button>` + (navigator.share ? `<button class="sh-b sh-nt" type="button" id="nativeShare">Share…</button>` : "");
   $("#shareBtns").addEventListener("click", ev => { const a = ev.target.closest("a[data-sh]"); if (a) a.href = mk[a.dataset.sh](encodeURIComponent(here()), encodeURIComponent(txt())); });
   $("#copyLink").onclick = async () => { try { await navigator.clipboard.writeText(here()); $("#copyLink").textContent = "Link copied"; } catch(e){ $("#copyLink").textContent = here(); } };
   if (navigator.share) $("#nativeShare").onclick = () => navigator.share({ title: document.title, text: txt(), url: here() }).catch(() => {});
@@ -1758,7 +1986,11 @@ function renderSim(){
         else if (SIM.frac) units = (a/px).toFixed(3);
         else if (a >= px) units = Math.floor(a/px) + (a - Math.floor(a/px)*px > 1 ? `<div class="slotlab">$${(a - Math.floor(a/px)*px).toFixed(0)} left for next time</div>` : "");
         else units = a > 0 ? `1 <div class="slotlab">every ${Math.ceil(px/a)} purchases</div>` : "–";
-        return `<tr data-t="${esc(x.e.t)}"><td><div class="etf"><span class="slotlab">${esc(SLOTS[x.k].label)}</span><span class="tk">${esc(x.e.t)}</span><span class="nm">${esc(x.e.n)}</span></div></td><td><b>${x.w.toFixed(1)}%</b></td><td>$${a.toFixed(2)}</td><td>${px ? "$"+px.toFixed(2) : "–"}</td><td>${units}</td><td>${x.e.er != null ? x.e.er.toFixed(2)+"%" : "–"}</td><td class="c">${x.e.t === "SPY" ? '<span class="muted">Benchmark</span>' : badge(g && g.mode)}</td></tr>`;
+        const me = x.r.rows.find(r => r.e === x.e), nck = me ? me.ck.length : 0;
+        const alts = x.r.rows.filter(r => r.e !== x.e).sort((p, q) => (q.pass - p.pass) || ((q.score || 0) - (p.score || 0)) || (q.passed - p.passed)).slice(0, 3);
+        const why = me ? `<button type="button" class="ckl ${me.pass ? "y" : "n"}" data-why="${x.k}" title="See every check for ${esc(x.e.t)}">${me.pass ? "✓" : "!"} ${me.passed}/${nck} checks · Why this ETF ›</button>` : "";
+        const altH = alts.length ? `<div class="alts"><span>Alternates:</span>${alts.map(r => `<button type="button" class="alt ${r.pass ? "y" : "n"}" data-alt="${esc(r.e.t)}" title="${esc(r.e.n)} — ${r.passed}/${r.ck.length} checks${r.pass ? ", score " + r.score : ""}">${esc(r.e.t)} <small>${r.passed}/${r.ck.length}</small></button>`).join("")}</div>` : "";
+        return `<tr data-t="${esc(x.e.t)}"><td><div class="etf"><span class="slotlab">${esc(SLOTS[x.k].label)}</span><span class="tk">${esc(x.e.t)}</span><span class="nm">${esc(x.e.n)}</span>${why}${altH}</div></td><td><b>${x.w.toFixed(1)}%</b></td><td>$${a.toFixed(2)}</td><td>${px ? "$"+px.toFixed(2) : "–"}</td><td>${units}</td><td>${x.e.er != null ? x.e.er.toFixed(2)+"%" : "–"}</td><td class="c">${x.e.t === "SPY" ? '<span class="muted">Benchmark</span>' : badge(g && g.mode)}</td></tr>`;
       }).join("")}</tbody></table></div>
       <p class="muted" style="font-size:12.5px;margin:8px 0 0">Amounts per ${per} purchase of US$${amt.toLocaleString("en-US")}. Prices are the last audited close (${fmtDate(S.data.asOf)}); confirm the live price before ordering. Tap an ETF for its details.</p>
       <div class="notes">${P.notes.map(([c,t]) => `<div class="${c}">${esc(t)}</div>`).join("")}${residenceNotes(annual).map(t => `<div>${esc(t)}</div>`).join("")}</div>
@@ -1800,7 +2032,7 @@ function renderSim(){
     const N = r0 => r0.rows[0] ? r0.rows[0].ck.length : 0;
     body.innerHTML = `<p style="margin:0 0 12px;color:var(--ink-2);font-size:14px">Every ETF in a slot faces the same <b>${N(P.rows[0].r)} checks</b> in five groups — data &amp; product, size, liquidity &amp; cost, returns vs similar ETFs, risk, and tracking &amp; trend. Only ETFs that pass all of them are ranked: cost 35% · liquidity 25% · size 20% · track record 10% · consistency with peers 10%. Tap an ETF to see every check.</p>` +
       P.rows.map(x => { const r = x.r, n = N(r);
-        return `<div class="slotcard"><h4>${esc(SLOTS[x.k].label)} <span class="tag">${x.w.toFixed(1)}%</span>${r.pick ? `<span class="badge m-acc">${esc(r.pick.e.t)} chosen</span>` : '<span class="badge m-dec">Top-ranked available</span>'}</h4>
+        return `<div class="slotcard" id="why-${x.k}"><h4>${esc(SLOTS[x.k].label)} <span class="tag">${x.w.toFixed(1)}%</span>${r.pick ? `<span class="badge m-acc">${esc(r.pick.e.t)} chosen</span>` : '<span class="badge m-dec">Top-ranked available</span>'}</h4>
           ${r.rows.slice().sort((a, b) => (b.pass - a.pass) || ((b.score || 0) - (a.score || 0)) || (b.passed - a.passed)).map(row => {
             const fails = row.ck.filter(c => !c[1]);
             return `<details class="ckrow${r.pick && row === r.pick ? " pick" : ""}"><summary><b>${esc(row.e.t)}</b><span class="ckn ${row.pass ? "y" : "n"}">${row.passed}/${n}</span><span class="ckbar"><i style="width:${(row.passed / n * 100).toFixed(1)}%"></i></span><span class="cks">${row.pass ? (r.pick && row === r.pick ? "Chosen · score " + row.score : "Passed · score " + row.score) : "✕ " + esc(fails[0][0]) + (fails.length > 1 ? " +" + (fails.length - 1) + " more" : "")}</span></summary>
@@ -1884,6 +2116,20 @@ $("#sF").onchange = ev => { SIM.freq = +ev.target.value; renderSim(); };
 $("#sRes").onchange = ev => { SIM.res = ev.target.value; renderSim(); };
 $("#sFrac").onchange = ev => { SIM.frac = ev.target.checked; renderSim(); };
 $$("#sim .tab").forEach(t => t.onclick = () => { SIM.tab = t.dataset.st; $$("#sim .tab").forEach(x => x.setAttribute("aria-selected", String(x === t))); renderSim(); });
+/* "Why this ETF" opens the checklist of that slot; an alternate opens its own detail card */
+document.addEventListener("click", ev => {
+  const w = ev.target.closest("[data-why]");
+  if (w){
+    ev.preventDefault(); ev.stopPropagation();
+    const k = w.dataset.why, tab = $(`#sim .tab[data-st="why"]`);
+    if (tab) tab.click();
+    requestAnimationFrame(() => { const c = $("#why-" + k); if (!c) return; const d = c.querySelector("details.ckrow.pick") || c.querySelector("details.ckrow"); if (d) d.open = true;
+      scrollTo({ top: c.getBoundingClientRect().top + scrollY - (document.querySelector(".vt-header").offsetHeight + 16), behavior: "smooth" }); });
+    return;
+  }
+  const a = ev.target.closest("[data-alt]");
+  if (a){ ev.preventDefault(); ev.stopPropagation(); openDrawer(a.dataset.alt); }
+}, true);
 $("#simBody").addEventListener("click", ev => { const tr = ev.target.closest("tr[data-t]"); if (tr) openDrawer(tr.dataset.t); });
 
 /* The published model portfolios (built by the data job with the same rules, used by the Simulator Buy agents) must
