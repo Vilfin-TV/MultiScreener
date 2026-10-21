@@ -257,7 +257,8 @@ class Engine:
 
     def record_plan(self, doc):
         plans = doc.get("plans") or all_plans(doc.get("etfs", []))
-        want = {CFG["horizon"] + r: [[x["k"], x["t"], x["w"]] for x in plans[CFG["horizon"] + r]["rows"]] for r in ("c", "b", "a")}
+        want = {CFG["horizon"] + r: [[x["k"], x["t"], x["w"]] for x in plans[CFG["horizon"] + r]["rows"]]
+                for r in ("c", "b", "a", "v") if CFG["horizon"] + r in plans}
         last = next((e for e in reversed(self.events) if e["k"] == "plan"), None)
         if last and (last["plans"] == want or last["asOf"] >= doc["asOf"]):
             return
@@ -653,6 +654,33 @@ def public(view, audit_ok):
     return sb, files
 
 
+def restate(old, meta_out=None):
+    """Ledger epoch change (gsim_config "ledgerEpoch" / "restatement"): start a new hash chain from the start date with
+    the old ledger's plan snapshots — every existing plan row copied exactly, plus the seeded rows of plans added since
+    (e.g. h15v) — so the replay re-buys every account at the same official closes. Returns the new store; the old one
+    is archived by the caller. Refuses when a plan date has no seed."""
+    R = CFG["restatement"]
+    old_ev = old.get("events", [])
+    new = {"meta": {"v": 1, "start": CFG["start"], "created": old.get("meta", {}).get("created"), "epoch": CFG["ledgerEpoch"],
+                    "restated": {"date": R["date"], "fromEpoch": old.get("meta", {}).get("epoch", 1), "fromEvents": len(old_ev),
+                                 "fromHead": old_ev[-1]["h"] if old_ev else None, "plans": []}},
+           "events": []}
+    eng = Engine(new, D(R["date"]))
+    for e in old_ev:
+        if e["k"] != "plan":
+            continue
+        seed = R["seedPlans"].get(e["asOf"]) or {}
+        need = {CFG["horizon"] + r for r in set(CFG["riskMap"].values())}
+        missing = need - set(e["plans"]) - set(seed)
+        if missing:
+            raise SystemExit(f"restatement: no seed for {sorted(missing)} in the snapshot of {e['asOf']} — refusing")
+        plans = {**e["plans"], **{k: v for k, v in seed.items() if k not in e["plans"]}}
+        new["meta"]["restated"]["plans"].append({"asOf": e["asOf"], "oldHash": e["hash"], "kept": sorted(e["plans"])})
+        eng.append({"k": "plan", "id": e["id"], "asOf": e["asOf"], "plans": plans,
+                    "hash": hashlib.sha256(json.dumps(plans, sort_keys=True).encode()).hexdigest()})
+    return new
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--store", required=True)
@@ -669,10 +697,24 @@ def main():
         today = datetime.now(ZoneInfo("America/New_York")).date()
     p = Path(args.store)
     store = json.loads(p.read_text()) if p.exists() and p.stat().st_size > 2 else {}
-    store.setdefault("meta", {"v": 1, "start": CFG["start"], "created": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")})
+    store.setdefault("meta", {"v": 1, "start": CFG["start"], "created": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                              "epoch": CFG.get("ledgerEpoch", 1)})
     meta = json.loads(Path(args.meta).read_text()) if Path(args.meta).exists() else {}
     evs = store.get("events", [])
-    if meta.get("events"):
+    epoch = CFG.get("ledgerEpoch", 1)
+    if evs and store["meta"].get("epoch", 1) < epoch:
+        # the downloaded ledger must still be the published one before it is restated
+        if meta.get("events") and (len(evs) < meta["events"] or evs[meta["events"] - 1]["h"] != meta["head"]):
+            print("ledger does not continue the published head — refusing to restate"); return 1
+        arch = p.with_name(p.stem + f".epoch{store['meta'].get('epoch', 1)}.json")
+        arch.write_text(json.dumps(store, separators=(",", ":")))
+        store = restate(store)
+        evs = store["events"]
+        meta = {}
+        print(f"ledger restated to epoch {epoch}: {len(evs)} plan snapshots carried over, old ledger archived as {arch.name}")
+    elif meta.get("epoch", 1) > store["meta"].get("epoch", 1):
+        print("the published ledger is a newer epoch than the downloaded copy — refusing to run"); return 1
+    if meta.get("events") and meta.get("epoch", 1) == store["meta"].get("epoch", 1):
         n = meta["events"]
         if len(evs) < n or evs[n - 1]["h"] != meta["head"]:
             print(f"ledger ({len(evs)} entries) does not continue the published head at entry {n} — refusing to run")

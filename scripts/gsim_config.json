@@ -1,8 +1,11 @@
 {
-  "_comment": "Global Simulator Buy: the 20 VilfinTV agents (persons in sim_config.json) each run one simulated US-listed ETF account that buys the Portfolio Simulator — Global ETF 10+ year model portfolio (plan h15<risk>) from the start date. Very aggressive agents follow the aggressive plan (the global simulator has three risk levels). Amounts are in US dollars after conversion; currency conversion and remittance costs are not modelled.",
+  "_comment": "Global Simulator Buy: the 20 VilfinTV agents (persons in sim_config.json) each run one simulated US-listed ETF account that buys the Portfolio Simulator — Global ETF 10+ year model portfolio (plan h15<risk>) from the start date. Very aggressive agents follow the Very aggressive plan (h15v) from the start (ledger epoch 2, see restatement). Amounts are in US dollars after conversion; currency conversion and remittance costs are not modelled.",
   "start": "2026-10-20",
   "horizon": "h15",
-  "riskMap": {"c": "c", "b": "b", "a": "a", "v": "a"},
+  "riskMap": {"c": "c", "b": "b", "a": "a", "v": "v"},
+  "ledgerEpoch": 2,
+  "restatement": {"_comment": "Owner's request, 21 Oct 2026: the five very aggressive agents follow the new Very aggressive plan (h15v) from their first purchase on 20 Oct instead of the Aggressive plan. The epoch-1 ledger (20–21 Oct) is archived unchanged in R2 (gsim/archive/); epoch 2 starts again from 20 Oct with the same plan snapshots — the conservative / balanced / aggressive rows copied exactly (the audit checks their hashes against epoch 1) plus the h15v rows below, computed by scripts/global_plans.py from the published data of each date — and replays every order at the same official closes, so every other account is unchanged.",
+    "date": "2026-10-21", "seedPlans": {"2026-10-19":{"h15v":[["us_core","VTI",39.9],["growth","VUG",23.75],["us_small","VO",11.4],["intl","IEFA",7.6],["em","IEMG",12.35],["gold","GLDM",5.0]]},"2026-10-20":{"h15v":[["us_core","VOO",28.5],["growth","VUG",23.75],["us_small","VO",11.4],["intl","IEFA",7.6],["em","IEMG",12.35],["factor","DGRO",11.4],["gold","IAU",5.0]]}}},
   "monthlyUsd": {"c": 120, "b": 120, "a": 240, "v": 240},
   "stepUps": {"_comment": "Yearly changes to the regular buy (owner's rules, 20 Oct 2026), one account each. bonus: a year-end bonus (31 December) of US$240 (the ₹20,000 bonus at the simulator's ₹10,000 = US$120 rate) is added in full to the first buy dated in January. hike: from January every year the regular buy rises by `pct` % of the original amount (a fixed step, not compounding), rounded to US$`round`.",
     "bonus": {"amount": 240, "accounts": ["Govind-GL"]}, "hike": {"pct": 10, "round": 1, "accounts": ["Nithin-GL"]}},

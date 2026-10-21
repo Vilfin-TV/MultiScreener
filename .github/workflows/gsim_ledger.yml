@@ -82,6 +82,13 @@ jobs:
 
       - name: Store ledger, view and audit (private) + dated copy + backup bucket
         run: |
+          # a ledger epoch change (gsim_config ledgerEpoch) archives the previous ledger, unchanged, before anything else
+          for f in "$RUNNER_TEMP"/gsim/ledger.epoch*.json; do
+            [ -e "$f" ] || continue
+            for b in vilfintv-sim vilfintv-sim-backup; do
+              wrangler r2 object put "$b/gsim/archive/$(basename "$f")" --file "$f" --content-type application/json
+            done
+          done
           d=$(TZ=America/New_York date +%F)
           for f in ledger view audit; do
             wrangler r2 object put "vilfintv-sim/gsim/snapshots/$d/$f.json" --file "$RUNNER_TEMP/gsim/$f.json" --content-type application/json
@@ -101,7 +108,8 @@ jobs:
           t = os.path.join(os.environ["RUNNER_TEMP"], "gsim")
           store, view, audit = (json.load(open(os.path.join(t, f + ".json"))) for f in ("ledger", "view", "audit"))
           evs = store.get("events", [])
-          json.dump({"v": 1, "events": len(evs), "head": evs[-1]["h"] if evs else None, "start": view["start"]},
+          json.dump({"v": 1, "events": len(evs), "head": evs[-1]["h"] if evs else None, "start": view["start"],
+                     "epoch": store.get("meta", {}).get("epoch", 1)},
                     open("data/gsim_meta.json", "w"), indent=1)
           ok = audit["nErrors"] == 0
           sb, files = public(view, ok)
