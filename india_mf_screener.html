@@ -157,6 +157,9 @@ html[data-theme="silver"] .vt-brand-name span,html[data-theme="app"] .vt-brand-n
 .crumbs a{color:var(--text2)}
 .crumbs a:hover{color:var(--accent2)}
 .hero{padding:14px 0 18px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+@media(min-width:761px){.hero:has(>.vts-st:not([hidden])){display:grid;grid-template-columns:minmax(0,1fr) 360px;column-gap:24px;row-gap:12px;align-items:start}.hero>.vts-st{grid-column:2;grid-row:1/span 2}.hero:has(>.vts-st:not([hidden]))>#metaChips{grid-column:1}}
+@media(max-width:760px){.hero>.vts-st{flex:1 1 100%}}
+.hero .vts-st .vts-st-n{font-size:11.5px;margin:6px 0 0;max-width:none;color:var(--text3)}
 .hero h1{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:clamp(32px,4.4vw,46px);letter-spacing:1.5px;line-height:1.02}
 .hero h1 em{font-style:normal;color:var(--accent2)}
 html[data-theme="gemini"] .hero h1 em{background:linear-gradient(90deg,#4285f4,#9b72cb,#d96570);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -1200,6 +1203,7 @@ footer a{color:var(--text2)}
     <div class="chips" id="metaChips">
       <span class="chip"><span class="skel" style="width:140px;height:12px"></span></span>
     </div>
+    <div class="vts-st" id="dataStatus" hidden aria-live="polite"></div>
   </section>
 
   <!-- search + views -->
@@ -1762,7 +1766,7 @@ footer a{color:var(--text2)}
 </footer>
 <div class="toast" id="toast" role="status"></div>
 
-<script src="vt_sim.js?v=20261029"></script>
+<script src="vt_sim.js?v=20261030"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════════════════
    India Mutual Fund Screener — VilfinTV
@@ -2026,7 +2030,11 @@ function renderMeta(){
     '<span class="chip"><span class="dot"></span>NAV as of ' + fmtDate(D.asOf) + '</span>' +
     '<span class="chip">' + D.count.toLocaleString('en-IN') + ' Direct-Growth funds</span>' +
     '<span class="chip" title="Data refreshed ' + fmtDate(ist.toISOString().slice(0, 10)) + ' ' + hh + ' IST">Updated ' + fmtDate(ist.toISOString().slice(0, 10), false) + ', ' + hh + ' IST</span>';
+  var stOpt = { asOf: 'NAV ' + fmtDate(D.asOf), updated: D.generated, covered: ['Funds covered', D.count.toLocaleString('en-IN')], audit: null, times: [[23, 30]],
+    note: 'Fund houses publish NAVs every business evening; the screener refreshes within about 30 minutes, with morning catch-up runs.' };
+  if (window.VTSim && VTSim.statusCard) VTSim.statusCard($('dataStatus'), stOpt);
   fetch(BASE + 'audit.json?v=' + bust(), {cache:'no-cache'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(a){
+    if (a && a.checks && window.VTSim && VTSim.statusCard) { stOpt.audit = { passed: a.checks - (a.failures || 0), errors: a.failures || 0, title: a.checks.toLocaleString('en-IN') + ' automated checks for ' + fmtDate(a.asOf) + (a.recomputedFunds ? ' · ' + a.recomputedFunds + ' funds independently recomputed' : '') + ' · returns re-checked against official NAV history' }; VTSim.statusCard($('dataStatus'), stOpt); }
     if (!a || a.failures !== 0) return;
     var t = a.checks.toLocaleString('en-IN') + ' automated accuracy checks passed for ' + fmtDate(a.asOf) + (a.recomputedFunds ? ' · ' + a.recomputedFunds + ' funds independently recomputed' : '') + ' · NAVs re-checked against official AMFI data through the day';
     $('metaChips').insertAdjacentHTML('beforeend', '<span class="chip" title="' + esc(t) + '"><span class="dot"></span>Verified data</span>');

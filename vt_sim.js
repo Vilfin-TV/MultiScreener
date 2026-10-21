@@ -952,6 +952,10 @@
     '.vts-buy-c{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--border);border-radius:10px;padding:8px 12px;background:var(--surface2,transparent);min-width:0}' +
     '.vts-buy-who{display:flex;flex-direction:column;min-width:0}.vts-buy-who b{font-size:13px}.vts-buy-who span{color:var(--text2);font-size:11.5px;line-height:1.35}' +
     '.vts-step{white-space:nowrap}' +
+    '.vts-st{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow-s,0 2px 10px rgba(0,0,0,.12));min-width:280px;align-self:start}' +
+    '.vts-st-r{display:flex;justify-content:space-between;gap:16px;font-size:13px;padding:3px 0}.vts-st-r>span{color:var(--text3)}.vts-st-r>b{font-weight:600;text-align:right}' +
+    '.vts-st .ok{color:var(--pos)}.vts-st .warn{color:var(--warn,#b45309)}.vts-st-n{margin:6px 0 0;font-size:11.5px;color:var(--text3);line-height:1.4}' +
+    '@media (max-width:760px){.vts-st{min-width:0;width:100%;padding:10px 12px}.vts-st-r{font-size:12.5px}}' +
     '.vts-buy-nri{font-style:normal;font-size:10px;font-weight:800;color:var(--text2);border:1px solid var(--border2,var(--border));border-radius:4px;padding:0 4px;margin-left:6px;vertical-align:1px}' +
     '.vts-buy-c strong{font-variant-numeric:tabular-nums;font-size:13px;text-align:right;white-space:nowrap}.vts-buy-c strong small{display:block;font-size:10px;color:var(--text2);font-weight:600}' +
     '.vts-buy .up{color:#16a34a}.vts-buy .dn{color:#dc2626}.vts-buy .na{color:var(--text2);font-weight:600;font-size:12px}' +
@@ -1370,5 +1374,41 @@
     (document.head || document.documentElement).appendChild(st);
   })();
 
-  window.VTSim = { tabSettle: tabSettle, gate: gate, accepted: accepted, faqCols: faqCols, riskPanel: riskPanel, ecoPanel: ecoPanel, risk10: risk10, css: style, simBuy: simBuy, dipPanel: dipPanel, col: col, colOpen: colOpen, houseStrip: houseStrip, houseAv: houseAv };
+  /* ── Data status card (same as the Global ETF page): data date, last update and next update in the reader's own
+        time zone, coverage and the accuracy audit. o = { asOf, updated (ISO), covered: [label, value],
+        audit: { passed, errors, title }, times: [[hh, mm] IST …], note } — the next update is the next listed IST
+        time on an Indian trading day (weekends and data/nse_holidays.json skipped). ── */
+  var HOL = null;
+  function holidays() { return HOL || (HOL = fetch('data/nse_holidays.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; })); }
+  function nextIST(times, hol, now) {
+    now = now || new Date();
+    for (var k = 0; k < 14; k++) {
+      var ist = new Date(now.getTime() + 330 * 60000 + k * 864e5), y = ist.getUTCFullYear(), m = ist.getUTCMonth(), d = ist.getUTCDate(), wd = ist.getUTCDay();
+      var key = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+      if (wd === 0 || wd === 6 || (hol && hol[key])) continue;
+      for (var i = 0; i < times.length; i++) {
+        var t = Date.UTC(y, m, d, times[i][0], times[i][1]) - 330 * 60000;
+        if (t > now.getTime()) return new Date(t);
+      }
+    }
+    return null;
+  }
+  function statusCard(el, o) {
+    if (!el) return;
+    style();
+    var f = function (dt) { try { return dt.toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }); } catch (e) { return dt.toISOString(); } };
+    var draw = function (hol) {
+      var n = o.times ? nextIST(o.times, hol) : null, a = o.audit;
+      var rows = [['Data as of', esc(o.asOf || '–')], ['Updated (your time)', o.updated ? esc(f(new Date(o.updated))) : '–'],
+                  ['Next update', n ? 'about ' + esc(f(n)) : '–'], [esc(o.covered[0]), esc(o.covered[1])],
+                  ['Accuracy audit', a ? (a.errors ? '<span class="warn">' + esc(String(a.errors)) + ' issue' + (a.errors > 1 ? 's' : '') + ' under review</span>' : '<span class="ok">' + Number(a.passed).toLocaleString('en-IN') + ' checks passed</span>') : '–']];
+      el.innerHTML = rows.map(function (r, i) { return '<div class="vts-st-r"' + (i === 4 && a && a.title ? ' title="' + esc(a.title) + '"' : i === 2 && o.note ? ' title="' + esc(o.note) + '"' : '') + '><span>' + r[0] + '</span><b>' + r[1] + '</b></div>'; }).join('') +
+        (o.note ? '<p class="vts-st-n">' + esc(o.note) + '</p>' : '');
+      el.hidden = false;
+    };
+    draw(null);
+    holidays().then(draw);
+  }
+
+  window.VTSim = { tabSettle: tabSettle, gate: gate, accepted: accepted, faqCols: faqCols, riskPanel: riskPanel, ecoPanel: ecoPanel, risk10: risk10, css: style, simBuy: simBuy, dipPanel: dipPanel, col: col, colOpen: colOpen, houseStrip: houseStrip, houseAv: houseAv, statusCard: statusCard, nextIST: nextIST };
 })();

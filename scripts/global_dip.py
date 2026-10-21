@@ -21,9 +21,19 @@ SEGMENTS = [
     ("intl", "Developed markets ex-US", "intl", ("EFA", "IEFA"), "g_eur"),
     ("em", "Emerging markets", "em", ("EEM", "IEMG"), "g_em"),
     ("gold", "Gold", "gold", ("GLD", "IAU"), None),
+    # satellites — not in the model mixes; optional dip buys for Aggressive / Very aggressive goals of 5+ years only,
+    # at half the core model amount (the page applies both rules)
+    ("latam", "Latin America", "latam", ("ILF", "FLLA"), None),
+    ("europe", "Europe", "europe", ("VGK", "IEUR"), "g_eur"),
+    ("japan", "Japan", "japan", ("EWJ", "BBJP"), "g_n225"),
+    ("india", "India", "india", ("INDA", "EPI"), None),
+    ("reit", "US real estate (REITs)", "reit", ("VNQ", "SCHH"), None),
+    ("longbond", "Long-term Treasuries", "longbond", ("TLT", "VGLT"), None),
+    ("energy", "Energy", "energy", ("XLE", "VDE"), None),
 ]
+SATELLITES = ("latam", "europe", "japan", "india", "reit", "longbond", "energy")
 LIM = {"confirmPts": 1.5, "crash": -8, "maxFall": 40, "d5Min": -12, "dd52Max": 30, "down10Max": 7, "vixMax": 35,
-       "eyGapMin": -2.5, "goldPctMax": 0.9, "goldVs200Max": 15}
+       "eyGapMin": -2.5, "goldPctMax": 0.9, "goldVs200Max": 15, "vs200Max": 15}
 
 
 def _series(dates, c):
@@ -104,13 +114,16 @@ def segment(dates, closes, key, name, slot, trackers, vkey, macro):
         gap = ey - us10 if ey is not None and us10 is not None else None
         checks.append([f"Valuation: earnings yield ≥ US 10Y {LIM['eyGapMin']} pts", gap is not None and gap >= LIM["eyGapMin"],
                        f"{ey:.2f}% vs {us10:.2f}% ({gap:+.2f} pts)" if gap is not None else "–"])
+    elif key != "gold":
+        v200 = (p[n][1] / ma(n) - 1) * 100
+        checks.append([f"Not stretched: no more than +{LIM['vs200Max']}% above its 200-day average", v200 <= LIM["vs200Max"], f"{v200:+.1f}% vs 200-day"])
     else:
         gd = g.get("gold") or {}
         checks.append([f"Gold not stretched (2-year percentile < {int(LIM['goldPctMax'] * 100)}, ≤ +{LIM['goldVs200Max']}% vs 200-day)",
                        gd.get("pct2y") is not None and gd["pct2y"] < LIM["goldPctMax"] and (gd.get("vs200") or 0) <= LIM["goldVs200Max"],
                        f"{round((gd.get('pct2y') or 0) * 100)}th · {gd.get('vs200', 0):+.1f}% vs 200-day" if gd else "–"])
     mkt_ok = all(c[1] for c in checks)
-    return {"name": name, "slot": slot, "trackers": list(trackers), "d": p[n][0], "close": round(p[n][1], 4),
+    return {"name": name, "slot": slot, "kind": "sat" if key in SATELLITES else "core", "trackers": list(trackers), "d": p[n][0], "close": round(p[n][1], 4),
             "high": round(hv, 4), "highDate": hd, "fall": round(fall, 2), "prevFall": round(prev, 2), "raw": raw, "held": held,
             "signal": bool(signal and mkt_ok), "lastSignal": last_sig, "checks": checks, "mktOk": mkt_ok}
 
