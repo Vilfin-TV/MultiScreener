@@ -1119,7 +1119,11 @@ footer a{color:var(--text2)}
 .brk-grp h3{margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text3)}
 .brk-grp ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .brk-grp a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;border:1px solid transparent;background:var(--surface);color:var(--text);text-decoration:none;transition:border-color .15s,transform .15s}
-.brk-grp a:hover{border-color:var(--accent);transform:translateY(-1px)}
+.brk-grp a:hover{border-color:var(--accent);border-left-color:var(--bc,var(--accent));transform:translateY(-1px)}
+/* each platform's official colour as a left accent */
+.brk-grp a{border-left:4px solid var(--bc,var(--border))}
+.brk-grp a[href*=kuvera]{--bc:#5b3cc4}.brk-grp a[href*=navi]{--bc:#1fb76a}.brk-grp a[href*=zerodha]{--bc:#387ed1}.brk-grp a[href*=dhan]{--bc:#6b46e0}.brk-grp a[href*=prostocks]{--bc:#f08a24}.brk-grp a[href*=interactivebrokers]{--bc:#d81222}.brk-grp a[href*=indiabonds]{--bc:#0f4c81}.brk-grp a[href*=goldenpi]{--bc:#c9a227}.brk-grp a[href*=wintwealth]{--bc:#0b7a5c}.brk-grp a[href*=revolut]{--bc:#0666eb}.brk-grp a[href*=wise]{--bc:#9fe870}.brk-grp a[href*=onelink]{--bc:#c2185b}.brk-grp a[href*=phon]{--bc:#5f259f}.brk-grp a[href*=axis]{--bc:#97144d}
+
 .brk-grp a .ic{font-size:17px;line-height:1;flex:none}
 .brk-grp a b{display:block;font-size:13.5px;font-weight:600}
 .brk-grp a small{display:block;font-size:11.5px;color:var(--text3);margin-top:1px}
@@ -1758,7 +1762,7 @@ footer a{color:var(--text2)}
 </footer>
 <div class="toast" id="toast" role="status"></div>
 
-<script src="vt_sim.js?v=20261026"></script>
+<script src="vt_sim.js?v=20261027"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════════════════
    India Mutual Fund Screener — VilfinTV

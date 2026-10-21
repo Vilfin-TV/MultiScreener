@@ -217,6 +217,15 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 #result.show{display:block;animation:fadeIn .25s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .res-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:18px}
+.back-bar{display:flex;align-items:center;gap:10px;margin:0 0 12px;flex-wrap:wrap}
+.back-bar .bk-b{background:var(--accent);color:var(--accent-ink,#fff);border:0;border-radius:999px;padding:8px 16px;font-weight:700;font-size:13px;box-shadow:0 2px 10px rgba(29,78,216,.25)}
+.back-bar .bk-b:hover{filter:brightness(1.08)}
+.back-bar .bk-t{font-size:12.5px;color:var(--text3);font-weight:600}
+.back-bar .bk-l{margin-left:auto;background:var(--surface);border:1px solid var(--border);color:var(--text2);border-radius:999px;padding:7px 14px;font-weight:600;font-size:12.5px}
+.back-fab{position:fixed;right:16px;bottom:20px;z-index:150;background:var(--accent);color:#fff;border:0;border-radius:999px;padding:10px 16px;font-weight:700;font-size:13px;box-shadow:0 8px 24px rgba(15,23,42,.28);opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .2s,transform .2s}
+.back-fab.on{opacity:1;transform:none;pointer-events:auto}
+body.has-bnav .back-fab,body:has(#ebnav) .back-fab{bottom:84px}
+tr.flash td,.mc.flash{background:var(--accent-soft)!important;transition:background .4s}
 .res-card{padding:20px}
 .etf-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
 .etf-sym{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--accent2);letter-spacing:.4px}
@@ -815,7 +824,11 @@ details.faq ul+p{margin-top:8px}
 .brk-grp h3{margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--text3)}
 .brk-grp ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .brk-grp a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;border:1px solid transparent;background:var(--surface);color:var(--text);text-decoration:none;transition:border-color .15s,transform .15s}
-.brk-grp a:hover{border-color:var(--accent);transform:translateY(-1px)}
+.brk-grp a:hover{border-color:var(--accent);border-left-color:var(--bc,var(--accent));transform:translateY(-1px)}
+/* each platform's official colour as a left accent */
+.brk-grp a{border-left:4px solid var(--bc,var(--border))}
+.brk-grp a[href*=kuvera]{--bc:#5b3cc4}.brk-grp a[href*=navi]{--bc:#1fb76a}.brk-grp a[href*=zerodha]{--bc:#387ed1}.brk-grp a[href*=dhan]{--bc:#6b46e0}.brk-grp a[href*=prostocks]{--bc:#f08a24}.brk-grp a[href*=interactivebrokers]{--bc:#d81222}.brk-grp a[href*=indiabonds]{--bc:#0f4c81}.brk-grp a[href*=goldenpi]{--bc:#c9a227}.brk-grp a[href*=wintwealth]{--bc:#0b7a5c}.brk-grp a[href*=revolut]{--bc:#0666eb}.brk-grp a[href*=wise]{--bc:#9fe870}.brk-grp a[href*=onelink]{--bc:#c2185b}.brk-grp a[href*=phon]{--bc:#5f259f}.brk-grp a[href*=axis]{--bc:#97144d}
+
 .brk-grp a .ic{font-size:17px;line-height:1;flex:none}
 .brk-grp a b{display:block;font-size:13.5px;font-weight:600}
 .brk-grp a small{display:block;font-size:11.5px;color:var(--text3);margin-top:1px}
@@ -924,6 +937,7 @@ details.faq ul+p{margin-top:8px}
 
   <!-- result -->
   <section id="result" aria-live="polite">
+    <div class="back-bar" id="backBar"><button type="button" class="bk-b" data-back="list">← Back to all ETFs</button><span class="bk-t" id="backSel"></span><button type="button" class="bk-l" data-back="top">Explore home ↑</button></div>
     <div class="res-grid">
       <div class="card res-card" id="resCard"></div>
       <div class="card chart-card">
@@ -1358,7 +1372,7 @@ details.faq ul+p{margin-top:8px}
 </footer>
 <div class="toast" id="toast"></div>
 
-<script src="vt_sim.js?v=20261026"></script>
+<script src="vt_sim.js?v=20261027"></script>
 <script>
 /*RRG-ENGINE-START*/
 // Relative-rotation engine. Mirrors rrg() in scripts/build_etf_momentum.py exactly;
@@ -1839,6 +1853,32 @@ function renderAC(){
 }
 function closeAC(){ $('ac').classList.remove('open'); $('q').setAttribute('aria-expanded', 'false'); acIdx = -1; }
 
+/* ─────────── back to the list ─────────── */
+function backTo(where){
+  var row = null;
+  if (where === 'list' && state.sel) [].slice.call(document.querySelectorAll('tr[data-s="' + state.sel + '"], .mc[data-s="' + state.sel + '"]')).some(function(x){ if (x.offsetParent) { row = x; return true; } });
+  var hdr = document.querySelector('.vt-header').offsetHeight + 12;
+  if (where === 'top') { window.scrollTo({top:0, behavior:'smooth'}); return; }
+  var tgt = row || document.querySelector('.tbl-card');
+  window.scrollTo({top: Math.max(0, tgt.getBoundingClientRect().top + window.pageYOffset - hdr - (row ? 80 : 0)), behavior:'smooth'});
+  if (row) { row.classList.add('flash'); setTimeout(function(){ row.classList.remove('flash'); }, 1600); }
+}
+document.addEventListener('click', function(e){ var b = e.target.closest('[data-back]'); if (b) { e.preventDefault(); backTo(b.getAttribute('data-back')); } });
+/* floating "All ETFs" pill while the reader is inside the ETF analysis */
+(function(){
+  var pill = document.createElement('button');
+  pill.type = 'button'; pill.className = 'back-fab'; pill.setAttribute('data-back', 'list'); pill.textContent = '← All ETFs';
+  var go = function(){
+    document.body.appendChild(pill);
+    var inDeep = false, inTbl = false;
+    var upd = function(){ pill.classList.toggle('on', inDeep && !inTbl); };
+    if (!('IntersectionObserver' in window)) return;
+    new IntersectionObserver(function(es){ inDeep = es[es.length - 1].isIntersecting; upd(); }, {rootMargin:'-30% 0px -30% 0px'}).observe(document.getElementById('deep'));
+    new IntersectionObserver(function(es){ inTbl = es[es.length - 1].isIntersecting; upd(); }).observe(document.querySelector('.tbl-card'));
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+})();
+
 /* ─────────── result card ─────────── */
 function select(sym, opts){
   opts = opts || {};
@@ -1850,6 +1890,7 @@ function select(sym, opts){
   renderResult();
   renderTable();
   updateURL();
+  var bs = $('backSel'); if (bs) bs.textContent = 'Viewing ' + sym;
   if (opts.scroll !== false){
     var top = $('result').getBoundingClientRect().top + window.pageYOffset - (document.querySelector('.vt-header').offsetHeight + 12);
     window.scrollTo({top:top, behavior:'smooth'});
@@ -2711,7 +2752,7 @@ fetchData().then(boot).catch(fail);
     if (el) { e.preventDefault(); var y = el.getBoundingClientRect().top + scrollY - (document.querySelector('.vt-header') || {offsetHeight:0}).offsetHeight - 8; scrollTo({top: k === 'top' ? 0 : y, behavior:'smooth'}); }
   });
   function mark(){
-    var cur = 'top', y = (document.querySelector('.vt-header') || {offsetHeight:60}).offsetHeight + 80;
+    var cur = 'top', y = Math.max((document.querySelector('.vt-header') || {offsetHeight:60}).offsetHeight + 80, innerHeight * 0.45);
     ['deep', 'smart', 'faq'].forEach(function(k){ var el = secs[k]; if (el && el.offsetHeight && el.getBoundingClientRect().top < y) cur = k; });
     if (secs.deep && !secs.deep.textContent.trim() && cur === 'deep') cur = 'top';
     nav.querySelectorAll('a').forEach(function(a){ a.classList.toggle('on', a.getAttribute('data-sec') === cur); });

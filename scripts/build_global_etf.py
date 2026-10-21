@@ -155,6 +155,30 @@ U = [
  ("HYG","iShares iBoxx $ High Yield Corporate Bond ETF","Bond","US","Bond","High Yield"),
  ("EMB","iShares J.P. Morgan USD Emerging Markets Bond ETF","Bond","Emerging","Bond","EM Sovereign (USD)"),
  ("MUB","iShares National Muni Bond ETF","Bond","US","Bond","Municipal"),
+ ("GOVT","iShares U.S. Treasury Bond ETF","Bond","US","Bond","US Treasury (all maturities)"),
+ ("VGSH","Vanguard Short-Term Treasury ETF","Bond","US","Bond","Short Treasury"),
+ ("SHV","iShares Short Treasury Bond ETF","Bond","US","Bond","Treasury Bills"),
+ ("VGIT","Vanguard Intermediate-Term Treasury ETF","Bond","US","Bond","Intermediate Treasury"),
+ ("VGLT","Vanguard Long-Term Treasury ETF","Bond","US","Bond","Long Treasury"),
+ ("SCHZ","Schwab U.S. Aggregate Bond ETF","Bond","US","Bond","US Aggregate"),
+ ("BSV","Vanguard Short-Term Bond ETF","Bond","US","Bond","Short-Term Bond"),
+ ("BIV","Vanguard Intermediate-Term Bond ETF","Bond","US","Bond","Intermediate-Term Bond"),
+ ("VCSH","Vanguard Short-Term Corporate Bond ETF","Bond","US","Bond","Short-Term Corporate"),
+ ("VCIT","Vanguard Intermediate-Term Corporate Bond ETF","Bond","US","Bond","Investment Grade Corporate"),
+ ("IGSB","iShares 1-5 Year Investment Grade Corporate Bond ETF","Bond","US","Bond","Short-Term Corporate"),
+ ("MBB","iShares MBS ETF","Bond","US","Bond","Mortgage-Backed"),
+ ("VMBS","Vanguard Mortgage-Backed Securities ETF","Bond","US","Bond","Mortgage-Backed"),
+ ("SCHP","Schwab U.S. TIPS ETF","Bond","US","Bond","Inflation-Protected"),
+ ("VTIP","Vanguard Short-Term Inflation-Protected Securities ETF","Bond","US","Bond","Short TIPS"),
+ ("JPST","JPMorgan Ultra-Short Income ETF","Bond","US","Bond","Ultra-Short"),
+ ("FLOT","iShares Floating Rate Bond ETF","Bond","US","Bond","Floating Rate"),
+ ("USHY","iShares Broad USD High Yield Corporate Bond ETF","Bond","US","Bond","High Yield"),
+ ("JNK","SPDR Bloomberg High Yield Bond ETF","Bond","US","Bond","High Yield"),
+ ("BKLN","Invesco Senior Loan ETF","Bond","US","Bond","Senior Loans"),
+ ("IAGG","iShares Core International Aggregate Bond ETF","Bond","Developed ex-US","Bond","International Bonds (Hedged)"),
+ ("BWX","SPDR Bloomberg International Treasury Bond ETF","Bond","Developed ex-US","Bond","International Treasury"),
+ ("EMLC","VanEck J.P. Morgan EM Local Currency Bond ETF","Bond","Emerging","Bond","EM Local Currency"),
+ ("VWOB","Vanguard Emerging Markets Government Bond ETF","Bond","Emerging","Bond","EM Sovereign (USD)"),
  # Commodities
  ("GLD","SPDR Gold Shares","Commodity","Global","Commodity","Gold"),
  ("IAU","iShares Gold Trust","Commodity","Global","Commodity","Gold"),
@@ -166,9 +190,31 @@ U = [
  ("PDBC","Invesco Optimum Yield Diversified Commodity Strategy No K-1 ETF","Commodity","Global","Commodity","Broad Commodities"),
  ("USO","United States Oil Fund","Commodity","Global","Commodity","Crude Oil"),
  ("UNG","United States Natural Gas Fund","Commodity","Global","Commodity","Natural Gas"),
+ ("SGOL","abrdn Physical Gold Shares ETF","Commodity","Global","Commodity","Gold"),
+ ("BAR","GraniteShares Gold Trust","Commodity","Global","Commodity","Gold"),
+ ("AAAU","Goldman Sachs Physical Gold ETF","Commodity","Global","Commodity","Gold"),
+ ("SIVR","abrdn Physical Silver Shares ETF","Commodity","Global","Commodity","Silver"),
+ ("PALL","abrdn Physical Palladium Shares ETF","Commodity","Global","Commodity","Palladium"),
+ ("GSG","iShares S&P GSCI Commodity-Indexed Trust","Commodity","Global","Commodity","Broad Commodities"),
+ ("BCI","abrdn Bloomberg All Commodity Strategy K-1 Free ETF","Commodity","Global","Commodity","Broad Commodities"),
+ ("COMT","iShares GSCI Commodity Dynamic Roll Strategy ETF","Commodity","Global","Commodity","Broad Commodities"),
+ ("DBA","Invesco DB Agriculture Fund","Commodity","Global","Commodity","Agriculture"),
+ ("DBB","Invesco DB Base Metals Fund","Commodity","Global","Commodity","Industrial Metals"),
+ ("BNO","United States Brent Oil Fund","Commodity","Global","Commodity","Crude Oil"),
+ ("CORN","Teucrium Corn Fund","Commodity","Global","Commodity","Agriculture"),
+ ("WEAT","Teucrium Wheat Fund","Commodity","Global","Commodity","Agriculture"),
  # Real estate
  ("VNQ","Vanguard Real Estate ETF","Real Estate","US","Sector","US REITs"),
  ("VNQI","Vanguard Global ex-U.S. Real Estate ETF","Real Estate","Developed ex-US","Sector","International REITs"),
+ ("SCHH","Schwab U.S. REIT ETF","Real Estate","US","Sector","US REITs"),
+ ("IYR","iShares U.S. Real Estate ETF","Real Estate","US","Sector","US REITs"),
+ ("USRT","iShares Core U.S. REIT ETF","Real Estate","US","Sector","US REITs"),
+ ("RWR","SPDR Dow Jones REIT ETF","Real Estate","US","Sector","US REITs"),
+ ("REET","iShares Global REIT ETF","Real Estate","Global","Sector","Global REITs"),
+ ("RWX","SPDR Dow Jones International Real Estate ETF","Real Estate","Developed ex-US","Sector","International REITs"),
+ ("REM","iShares Mortgage Real Estate ETF","Real Estate","US","Sector","Mortgage REITs"),
+ ("INDS","Pacer Industrial Real Estate ETF","Real Estate","US","Sector","Industrial REITs"),
+ ("SRVR","Pacer Data & Infrastructure Real Estate ETF","Real Estate","US","Sector","Data & Infrastructure REITs"),
  # Digital assets
  ("IBIT","iShares Bitcoin Trust ETF","Digital Assets","Global","Digital","Bitcoin"),
  ("FBTC","Fidelity Wise Origin Bitcoin Fund","Digital Assets","Global","Digital","Bitcoin"),
@@ -222,8 +268,8 @@ def drop_open_session(df):
         return df
     from zoneinfo import ZoneInfo
     ny = datetime.now(ZoneInfo("America/New_York"))
-    last = df.index[-1]
-    if last.date() == ny.date() and (ny.hour, ny.minute) < (16, 30):
+    df = df[[d.date() <= ny.date() for d in df.index]]          # never a bar dated after today in New York
+    if len(df) and df.index[-1].date() == ny.date() and (ny.hour, ny.minute) < (16, 30):
         df = df.iloc[:-1]
     return df
 
@@ -265,6 +311,130 @@ def fetch_facts(t):
         except Exception:
             time.sleep(1.5 * (attempt + 1))
     return {}
+
+def fund_holdings(t):
+    """Top holdings, sector weights and asset-class split as the fund publishes them (best effort; {} when absent)."""
+    import yfinance as yf
+    out = {}
+    try:
+        fd = yf.Ticker(t).funds_data
+    except Exception:
+        return out
+    try:
+        th = fd.top_holdings
+        if th is not None and len(th):
+            rows = []
+            for sym, row in th.head(10).iterrows():
+                pct = row.get("Holding Percent")
+                if pct is None or not math.isfinite(float(pct)):
+                    continue
+                rows.append([str(sym), str(row.get("Name") or sym)[:60], round(float(pct) * 100, 2)])
+            if rows:
+                out["hold"] = rows
+    except Exception:
+        pass
+    try:
+        sw = fd.sector_weightings or {}
+        sec = {k.replace("_", " ").title(): round(float(v) * 100, 1) for k, v in sw.items() if v and float(v) > 0.0005}
+        if sec:
+            out["sec"] = dict(sorted(sec.items(), key=lambda x: -x[1]))
+    except Exception:
+        pass
+    try:
+        acl = fd.asset_classes or {}
+        a = {k.replace("Position", "").replace("_", " ").strip().title(): round(float(v) * 100, 1) for k, v in acl.items() if v and abs(float(v)) > 0.0005}
+        if a:
+            out["acl"] = a
+    except Exception:
+        pass
+    return out
+
+
+def xirr(flows):
+    """Annual internal rate of return of dated cash flows [(Timestamp, amount)] (bisection; None if undefined)."""
+    if not flows or all(a >= 0 for _, a in flows) or all(a <= 0 for _, a in flows):
+        return None
+    t0 = flows[0][0]
+    f = lambda r: sum(a / (1 + r) ** ((d - t0).days / 365.25) for d, a in flows)
+    lo, hi = -0.99, 10.0
+    if f(lo) * f(hi) > 0:
+        return None
+    for _ in range(200):
+        mid = (lo + hi) / 2
+        if f(lo) * f(mid) <= 0: hi = mid
+        else: lo = mid
+    return (lo + hi) / 2 * 100
+
+
+def deep_stats(adj, spy_adj, rf_adj):
+    """Long-history figures for the ETF detail card, all from the dividend-adjusted daily closes:
+    monthly closes (6 years), monthly-SIP XIRR over 1/3/5 years, rolling 1Y/3Y returns (min · median · max · share
+    positive, sampled every week over up to 5 years), calendar-year returns, Sharpe / Sortino (1Y over T-bills),
+    up / down capture vs the S&P 500 (3 years of monthly returns)."""
+    last = adj.index[-1]
+    mo = adj.resample("ME").last().dropna()
+    if len(mo) and mo.index[-1] > last:
+        mo.index = mo.index[:-1].append(pd.DatetimeIndex([last]))
+    res = {"mo": [r4(v, 4) for v in mo.tail(72).values], "moEnd": str(mo.index[-1].date()) if len(mo) else None}
+    sip = {}
+    for y in (1, 3, 5):
+        start = last - pd.DateOffset(years=y)
+        if adj.index[0] > start + pd.Timedelta(days=7):
+            continue
+        days = adj[adj.index > start]
+        firsts = days.groupby([days.index.year, days.index.month]).head(1)
+        if len(firsts) < 6 * y:
+            continue
+        units = sum(100.0 / v for v in firsts.values)
+        flows = [(d, -100.0) for d in firsts.index] + [(last, units * float(adj.iloc[-1]))]
+        v = xirr(flows)
+        if v is not None:
+            sip[f"{y}y"] = [r4(v, 2), int(len(firsts) * 100), r4(units * float(adj.iloc[-1]), 0)]
+    res["sip"] = sip
+    wk = adj.resample("W-FRI").last().dropna()
+    wk = wk[wk.index > last - pd.DateOffset(years=8)]
+    for y, key in ((1, "roll1"), (3, "roll3")):
+        n = 52 * y
+        if len(wk) <= n + 26:
+            continue
+        rr = ((wk / wk.shift(n)) ** (1.0 / y) - 1).dropna() * 100
+        rr = rr[rr.index > last - pd.DateOffset(years=5)]
+        if len(rr) < 26:
+            continue
+        res[key] = [r4(float(rr.min()), 2), r4(float(rr.median()), 2), r4(float(rr.max()), 2), r4(float((rr > 0).mean() * 100), 1), int(len(rr))]
+    cal = {}
+    ye = adj.resample("YE").last()
+    for i in range(1, len(ye)):
+        yr = ye.index[i].year
+        if yr == last.year:
+            continue
+        cal[str(yr)] = r4((ye.iloc[i] / ye.iloc[i - 1] - 1) * 100, 2)
+    if len(ye) and ye.index[0].year < last.year:
+        prev = ye[ye.index.year == last.year - 1]
+        if len(prev):
+            cal[str(last.year) + " YTD"] = r4((adj.iloc[-1] / prev.iloc[-1] - 1) * 100, 2)
+    res["cal"] = dict(list(cal.items())[-6:])
+    d1 = adj[adj.index > last - pd.DateOffset(years=1)].pct_change().dropna()
+    if len(d1) > 150:
+        rf = 0.0
+        if rf_adj is not None and len(rf_adj) > 200:
+            rb = rf_adj[rf_adj.index <= last - pd.DateOffset(years=1)]
+            if len(rb):
+                rf = float(rf_adj.iloc[-1] / rb.iloc[-1] - 1)
+        ann = float(adj.iloc[-1] / adj[adj.index <= last - pd.DateOffset(years=1)].iloc[-1] - 1)
+        sd = float(d1.std() * math.sqrt(252)); dn = d1[d1 < 0]
+        dsd = float(np.sqrt((dn ** 2).mean()) * math.sqrt(252)) if len(dn) > 10 else None
+        res["shp"] = r4((ann - rf) / sd, 2) if sd > 0 else None
+        res["sor"] = r4((ann - rf) / dsd, 2) if dsd else None
+    m = adj.resample("ME").last().pct_change().dropna().tail(36)
+    sm = spy_adj.resample("ME").last().pct_change().reindex(m.index).dropna()
+    m = m.reindex(sm.index)
+    if len(m) >= 24:
+        up, dn = sm > 0, sm < 0
+        cap = lambda a, b: (float((1 + a).prod() ** (12 / len(a)) - 1) / float((1 + b).prod() ** (12 / len(b)) - 1) * 100) if len(b) >= 4 and float((1 + b).prod()) != 1 else None
+        res["cap"] = [r4(cap(m[up], sm[up]), 0), r4(cap(m[dn], sm[dn]), 0)]
+    return res
+
 
 def ret_since(s: pd.Series, start_date):
     base = s[s.index <= start_date]
@@ -327,6 +497,7 @@ def build(dry=False):
             prev = None
 
     spy_adj = raw["SPY"]["Adj Close"].dropna()
+    rf_adj = raw["BIL"]["Adj Close"].dropna() if "BIL" in raw.columns.get_level_values(0) else None
     out = []
     for (t, nm, ac, reg, role, cat) in U:
         if t not in raw.columns.get_level_values(0):
@@ -406,6 +577,18 @@ def build(dry=False):
         trend = [chip(10, 13), chip(26, 26), chip(52, 52, rising=True)]
 
         f = fetch_facts(t)
+        deep = deep_stats(adj, spy_adj, rf_adj)
+        for k in ("mo",):
+            A.check(all(v is None or v > 0 for v in deep[k]), f"{t}: non-positive monthly close")
+        for y, v in deep.get("sip", {}).items():
+            A.check(-99 < v[0] < 500, f"{t}: SIP {y} XIRR {v[0]} out of range", critical=False)
+        for k in ("roll1", "roll3"):
+            if deep.get(k):
+                lo_, md_, hi_ = deep[k][:3]
+                A.check(lo_ <= md_ <= hi_, f"{t}: rolling {k} min/median/max out of order")
+        deep.update(fund_holdings(t))
+        if deep.get("hold"):
+            A.check(all(0 < h[2] <= 100 for h in deep["hold"]) and sum(h[2] for h in deep["hold"]) <= 100.5, f"{t}: holding weights out of range", critical=False)
         er = f.get("er")
         if er is not None:
             A.check(0 <= er <= 3.0, f"{t}: expense ratio {er} outside 0–3%")
@@ -431,7 +614,7 @@ def build(dry=False):
             "vol": r4(volat, 2), "mdd": r4(mdd, 2), "beta": r4(beta, 2),
             "hi": r4(hi, 2), "lo": r4(lo, 2), "adv": r4(adv, 0), "advMed": r4(adv_med, 0),
             "er": r4(er, 3), "aum": r4(aum, 0), "yld": r4(f.get("yld"), 2), "inc": f.get("inc"),
-            "trend": trend, "w": w,
+            "trend": trend, "w": w, **deep,
         })
 
     # missing vs previous publish
@@ -486,6 +669,14 @@ def build(dry=False):
 
     if A.critical:
         print("Audit failed — previous data left online."); return 1
+    # never go backwards: a later retry whose download lacks the newest session must not replace newer data
+    try:
+        with open(OUT) as f:
+            prev = json.load(f).get("asOf")
+        if prev and prev > doc["asOf"]:
+            print(f"Downloaded data ends {doc['asOf']}, older than the published {prev} — previous data left online."); return 0
+    except (OSError, ValueError):
+        pass
     if dry:
         print("Dry run — not written."); return 0
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
