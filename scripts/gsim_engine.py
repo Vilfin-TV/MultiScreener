@@ -578,6 +578,35 @@ def slug(s):
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
 
 
+_GCAT = None
+
+
+def vs_category(t):
+    """The ETF's own 1-year and 3-year return (3Y per year) against the simple average of the ETFs in its category on
+    the Global ETF page (its asset class when the category has fewer than three); see sim_engine.vs_category."""
+    global _GCAT
+    if _GCAT is None:
+        try:
+            etfs = json.loads((DATA / "global_etf.json").read_text())["etfs"]
+        except Exception:  # noqa: BLE001
+            etfs = []
+        _GCAT = {e["t"]: e for e in etfs}
+    e = _GCAT.get(t)
+    if not e:
+        return None
+    peers = [x for x in _GCAT.values() if x.get("cat") == e.get("cat")]
+    if len(peers) < 3:
+        peers = [x for x in _GCAT.values() if x.get("ac") == e.get("ac")]
+    avg = []
+    for k in ("1y", "3y"):
+        v = [(x.get("r") or {}).get(k) for x in peers]
+        v = [y for y in v if y is not None]
+        avg.append(round(sum(v) / len(v), 2) if len(v) >= 3 else None)
+    own = [(e.get("r") or {}).get("1y"), (e.get("r") or {}).get("3y")]
+    cmp = [o >= a for o, a in zip(own, avg) if o is not None and a is not None]
+    return {"n": len(peers), "own": own, "avg": avg, "v": ("beat" if all(cmp) else "lag" if not any(cmp) else "mixed") if cmp else None}
+
+
 def public(view, audit_ok):
     """Scoreboard (data/gsim_scoreboard.json) + per-account files (data/gsim/<slug>.json, only while the audit passes)."""
     today = D(view["today"])
@@ -620,7 +649,7 @@ def public(view, audit_ok):
         hold = [{"n": r["n"], "k": r["t"], "cat": view["cats"].get(r["t"], ""), "u": r["cu"] + r["pu"],
                  "avg": round(r["cost"] / (r["cu"] + r["pu"]), 4) if r["cu"] + r["pu"] else None, "px": r["px"], "pd": r["pd"],
                  "val": round(r["val"] + r["pc"], 2), "g": round(((r["val"] + r["pc"]) / r["cost"] - 1) * 100, 2) if r["cu"] and r["cost"] and not r["pu"] else None,
-                 "w": round((r["val"] + r["pc"]) / tot * 100, 1), "pu": r["pu"] or None, "cr": r["cr"]} for r in sorted(L["rows"], key=lambda r: -(r["val"] + r["pc"]))]
+                 "w": round((r["val"] + r["pc"]) / tot * 100, 1), "pu": r["pu"] or None, "cr": r["cr"], "vc": vs_category(r["t"])} for r in sorted(L["rows"], key=lambda r: -(r["val"] + r["pc"]))]
         pend = [{"n": view["names"].get(o["t"], o["t"]), "k": o["t"], "amt": o["cash"], "T": o["d"],
                  "st": "executes at the official close of the first session on or after the order day"} for o in a["open"]]
         paid = sum(e["amt"] for e in a["events"] if e["k"] == "inst" and D(e["d"]) <= today)

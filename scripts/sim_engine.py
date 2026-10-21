@@ -1933,6 +1933,45 @@ def dip_summary(store: dict, a: dict, s: dict) -> dict | None:
                        for e in ds]}
 
 
+_CATS = {}
+
+
+def vs_category(product: str, key) -> dict | None:
+    """The holding's own 1-year and 3-year return (3Y per year) against the simple average of every fund / ETF in
+    its category (mutual funds: the screener category; ETFs: the ETF page's category), from the published daily data.
+    v = "beat" when it is at or above the average on every period both have, "lag" when below on all, else "mixed"."""
+    if product not in _CATS:
+        rows = {}
+        try:
+            if product == "mf":
+                d = json.loads((DATA / "mf" / "screener.json").read_text())
+                c = {k: i for i, k in enumerate(d["cols"])}
+                for r in d["rows"]:
+                    rows[str(r[c["code"]])] = (r[c["sub"]], r[c["r1y"]], r[c["r3y"]])
+            else:
+                for e in json.loads((DATA / "etf_momentum.json").read_text())["etfs"]:
+                    rr = e.get("r") or {}
+                    rows[e["s"]] = (e.get("k"), rr.get("1y"), rr.get("3y"))
+        except Exception:  # noqa: BLE001
+            rows = {}
+        groups = {}
+        for k, (cat, a1, a3) in rows.items():
+            groups.setdefault(cat, []).append((a1, a3))
+        _CATS[product] = (rows, groups)
+    rows, groups = _CATS[product]
+    me = rows.get(str(key))
+    if not me or not me[0]:
+        return None
+    peers = groups.get(me[0], [])
+    avg = []
+    for i in (0, 1):
+        v = [p[i] for p in peers if p[i] is not None]
+        avg.append(round(sum(v) / len(v), 2) if len(v) >= 3 else None)
+    own = [me[1], me[2]]
+    cmp = [o >= a for o, a in zip(own, avg) if o is not None and a is not None]
+    return {"n": len(peers), "own": own, "avg": avg, "v": ("beat" if all(cmp) else "lag" if not any(cmp) else "mixed") if cmp else None}
+
+
 def account_detail(a: dict, valued: bool, sub_names: dict, today: date) -> dict:
     """Per-account summary for the public card (only when the audit passed): what is held, units, average cost, latest
     official price, value and gain, orders still waiting for their price, and the next scheduled buy. Full transaction
@@ -1946,7 +1985,8 @@ def account_detail(a: dict, valued: bool, sub_names: dict, today: date) -> dict:
                      "g": round((h["value"] / h["cost"] - 1) * 100, 2) if h["cost"] and h["credited"] > 0 else None,
                      "w": round(h["value"] / tot * 100, 1) if tot else None,
                      "pu": round(h["units"] - h["credited"], 6) if h["credited"] < h["units"] - 1e-9 else 0,
-                     "cr": max((l["credit"] for l in h.get("lots", []) if D(l["credit"]) > today), default=None)})
+                     "cr": max((l["credit"] for l in h.get("lots", []) if D(l["credit"]) > today), default=None),
+                     "vc": vs_category(a["product"], h["key"])})
     pend = [{"n": t["name"], "amt": t["amount"], "T": t["T"], "st": t["status"]} for t in a["txns"]
             if t["side"] == "buy" and t.get("units") is None and t.get("amount")]
     nxt = None
