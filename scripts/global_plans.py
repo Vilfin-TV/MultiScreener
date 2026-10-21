@@ -9,24 +9,26 @@ import math, re
 
 NOISE = 1
 HORIZONS = ["h1", "h3", "h5", "h10", "h15"]
-RISKS = ["c", "b", "a"]
-RISK_NAMES = {"c": "Conservative", "b": "Balanced", "a": "Aggressive"}
+RISKS = ["c", "b", "a", "v"]
+RISK_NAMES = {"c": "Conservative", "b": "Balanced", "a": "Aggressive", "v": "Very aggressive"}
 LONG_GOALS = ("h5", "h10", "h15")
 
 ALLOC = {  # equity, bond (aggregate), short (short Treasuries), gold, cash (T-bills)
-    "h1": {"c": {"cash": 100}, "b": {"cash": 100}, "a": {"cash": 100}},
-    "h3": {"c": {"cash": 60, "short": 40}, "b": {"cash": 40, "short": 40, "eq": 20}, "a": {"cash": 30, "short": 30, "eq": 40}},
-    "h5": {"c": {"eq": 35, "bond": 45, "gold": 10, "cash": 10}, "b": {"eq": 55, "bond": 30, "gold": 10, "cash": 5}, "a": {"eq": 70, "bond": 20, "gold": 10}},
-    "h10": {"c": {"eq": 50, "bond": 35, "gold": 10, "cash": 5}, "b": {"eq": 70, "bond": 20, "gold": 10}, "a": {"eq": 85, "bond": 5, "gold": 10}},
-    "h15": {"c": {"eq": 60, "bond": 30, "gold": 10}, "b": {"eq": 80, "bond": 10, "gold": 10}, "a": {"eq": 90, "gold": 10}},
+    "h1": {"c": {"cash": 100}, "b": {"cash": 100}, "a": {"cash": 100}, "v": {"cash": 100}},
+    "h3": {"c": {"cash": 60, "short": 40}, "b": {"cash": 40, "short": 40, "eq": 20}, "a": {"cash": 30, "short": 30, "eq": 40}, "v": {"cash": 20, "short": 20, "eq": 60}},
+    "h5": {"c": {"eq": 35, "bond": 45, "gold": 10, "cash": 10}, "b": {"eq": 55, "bond": 30, "gold": 10, "cash": 5}, "a": {"eq": 70, "bond": 20, "gold": 10}, "v": {"eq": 85, "bond": 5, "gold": 10}},
+    "h10": {"c": {"eq": 50, "bond": 35, "gold": 10, "cash": 5}, "b": {"eq": 70, "bond": 20, "gold": 10}, "a": {"eq": 85, "bond": 5, "gold": 10}, "v": {"eq": 95, "gold": 5}},
+    "h15": {"c": {"eq": 60, "bond": 30, "gold": 10}, "b": {"eq": 80, "bond": 10, "gold": 10}, "a": {"eq": 90, "gold": 10}, "v": {"eq": 95, "gold": 5}},
 }
 EQSPLIT = {
     "c": {"us_core": 65, "us_small": 5, "intl": 22, "em": 8},
     "b": {"us_core": 55, "us_small": 10, "intl": 20, "em": 10, "factor": 5},
     "a": {"us_core": 50, "us_small": 12, "intl": 18, "em": 12, "factor": 8},
+    "v": {"us_core": 30, "growth": 25, "us_small": 12, "intl": 8, "em": 13, "factor": 12},   # growth-tilted, highest equity
 }
 SLOTS = {
     "us_core": {"label": "US large & total market", "grp": "eq", "cands": ["VOO", "IVV", "VTI", "ITOT", "SCHB", "SPY"], "cap": 0.10, "tol": 2.5},
+    "growth": {"label": "US large growth (Nasdaq-100 / growth)", "grp": "eq", "cands": ["QQQM", "QQQ", "VUG", "SCHG", "IWF"], "cap": 0.25, "tol": None},
     "us_small": {"label": "US small & mid caps", "grp": "eq", "cands": ["IJR", "VB", "IJH", "VO", "IWM", "MDY"], "cap": 0.25, "tol": None},
     "intl": {"label": "Developed markets ex-US", "grp": "eq", "cands": ["IEFA", "VEA", "EFA"], "cap": 0.35, "tol": 3},
     "em": {"label": "Emerging markets", "grp": "eq", "cands": ["IEMG", "VWO", "EEM"], "cap": 0.75, "tol": 4},
@@ -288,6 +290,7 @@ def build_plan(by, h, risk, as_of=None):
             w[k] = base["eq"] * v / 100
         if not long_goal:
             w.pop("factor", None)
+            w.pop("growth", None)
     for k in ("bond", "short", "gold", "cash"):
         if base.get(k):
             w[k] = base[k]
