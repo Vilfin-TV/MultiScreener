@@ -342,6 +342,18 @@ section.block{margin:28px 0}
 .taxp .gx td{white-space:normal;text-align:left;vertical-align:top}
 .taxp .gx td:first-child{width:24%;font-weight:600;color:var(--ink)}
 .taxnote{font-size:12.5px;color:var(--ink-3);margin:6px 0 0}
+.pkg{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.pk{border:1px solid var(--line);border-radius:var(--r-md);padding:14px;background:var(--surface-2);min-width:0}
+.pk-h{display:flex;flex-direction:column;gap:2px}.pk-h b{font-size:15px}
+.pk-t{font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+.pk p{margin:6px 0 10px;font-size:13px;color:var(--ink-2);line-height:1.45}
+.pk ol{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.pk li{border-top:1px solid var(--line);padding-top:8px;min-width:0}
+.pk-e{all:unset;cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;max-width:100%}
+.pk-e .tk{font-weight:800}.pk-e small{flex-basis:100%;color:var(--ink-3);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-e:hover .tk,.pk-e:focus-visible .tk{color:var(--accent);text-decoration:underline}
+.pk-top{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+.pk-f{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px;font-size:12px;color:var(--ink-3)}.pk-f b{color:var(--ink)}
 .discs{margin:28px 0 8px;border:1px solid var(--line);border-left:4px solid var(--dec);border-radius:var(--r-md);background:var(--surface);padding:16px 18px}
 .discs h2{font-size:17px;margin:0 0 8px}
 .discs .dg{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:8px}
@@ -2090,6 +2102,7 @@ function renderSim(){
         <li>A <b>limit order</b> near the current ask is typical for ETFs; spreads are usually wider in the first and last 15 minutes of the session.</li>
         <li>The model mix stays on target when every ETF in the plan is bought in the same session; it assumes yearly rebalancing with new money.</li>
       </ol>
+      <div class="sect">💵 Where to keep spare US dollars</div>${parkHtml()}
       <div class="sect">📉 Optional market-dip buys</div>${dipHtml(P, amt)}`;
   } else if (SIM.tab === "risk"){
     const H = mixHistory(P.rows);
@@ -2127,6 +2140,28 @@ function renderSim(){
             return `<details class="ckrow${r.pick && row === r.pick ? " pick" : ""}"><summary><b>${esc(row.e.t)}</b><span class="ckn ${row.pass ? "y" : "n"}">${row.passed}/${n}</span><span class="ckbar"><i style="width:${(row.passed / n * 100).toFixed(1)}%"></i></span><span class="cks">${row.pass ? (r.pick && row === r.pick ? "Chosen · score " + row.score : "Passed · score " + row.score) : "✕ " + esc(fails[0][0]) + (fails.length > 1 ? " +" + (fails.length - 1) + " more" : "")}</span></summary>
               <div class="ckgrid">${CK_GROUPS.map(([gk, gl]) => { const cs = row.ck.filter(c => c[3] === gk); return `<div><h5>${gl} <small>${cs.filter(c => c[1]).length}/${cs.length}</small></h5><ul>${cs.map(c => `<li class="${c[1] ? "y" : "n"}"><span>${c[1] ? "✓" : "✕"}</span><em>${esc(c[0])}</em><small>${esc(c[2])}</small></li>`).join("")}</ul></div>`; }).join("")}</div></details>`; }).join("")}</div>`; }).join("");
   }
+}
+/* Spare US-dollar cash: the US-market equivalent of a liquid fund. ETFs of each kind ranked on what they pay after
+   cost (yield − expense ratio), then size, steadiness and trading — built from the same audited data as the screener. */
+const PARK = [
+  { k:"tb",  h:"Up to 3 months",  t:"Treasury-bill ETFs", cats:["Treasury Bills"], d:"Money for the next purchase, the dip reserve or an emergency buffer. Price barely moves; income tracks the short Treasury rate." },
+  { k:"us",  h:"3 to 12 months",  t:"Ultra-short bond ETFs", cats:["Ultra-Short","Floating Rate"], d:"A little more income than T-bills for money not needed for a few months; small price moves are possible." },
+  { k:"st",  h:"1 to 3 years",    t:"Short Treasury ETFs", cats:["Short Treasury"], d:"Money for a known goal one to three years away; prices move with interest rates, so hold for the full period." }
+];
+function parkHtml(){
+  const all = S.data.etfs;
+  const card = g => {
+    const c = all.filter(e => g.cats.includes(e.cat) && e.px > 0 && !e.stale);
+    if (!c.length) return "";
+    const net = e => (e.yld ?? 0) - (e.er ?? 0.2);
+    const rk = c.map(e => ({ e, sc: net(e) * 10 + Math.log10(Math.max(1, e.aum || 1)) * 0.6 + Math.log10(Math.max(1, e.adv || 1)) * 0.3 - (e.vol || 0) * 0.8 }))
+      .sort((a, b) => b.sc - a.sc).slice(0, 3);
+    return `<div class="pk"><div class="pk-h"><span class="pk-t">${g.h}</span><b>${g.t}</b></div><p>${g.d}</p>
+      <ol>${rk.map((r, i) => { const e = r.e; return `<li><button type="button" class="pk-e" data-alt="${esc(e.t)}" title="${esc(e.n)}"><span class="tk">${esc(e.t)}</span>${i === 0 ? '<span class="pk-top">Top-ranked</span>' : ""}<small>${esc(e.n)}</small></button>
+        <span class="pk-f"><span>Yield <b>${e.yld != null ? e.yld.toFixed(2) + "%" : "–"}</b></span><span>Cost <b>${e.er != null ? e.er.toFixed(2) + "%" : "–"}</b></span><span>Size <b>${e.aum ? "$" + (e.aum / 1e9).toFixed(1) + "B" : "–"}</b></span><span>Worst fall <b>${e.mdd != null ? (e.mdd > -0.05 ? "0.0" : e.mdd.toFixed(1)) + "%" : "–"}</b></span></span></li>`; }).join("")}</ol></div>`;
+  };
+  return `<div class="pkg">${PARK.map(card).join("")}</div>
+    <p class="taxnote">Ranked on yield after expense ratio, then fund size, trading and steadiness. Yields change with US interest rates and are shown before tax: for India residents interest-type income is taxed at the slab rate and US withholding applies to distributions (Treasury interest is often exempt for non-residents under US rules — check with your provider); NISA does not cover bond ETFs bought in a US account. In the Global Simulator Buy, money left over after whole-dollar steps stays as US-dollar cash in that slot and joins its next purchase.</p>`;
 }
 /* Optional market-dip buys: published per segment by the data job (scripts/global_dip.py) — falls of 5 / 10 / 15%
    from the 3-month high that held for two closes, confirmed by a second ETF and passing the market checks — plus,

@@ -262,7 +262,13 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .amt span{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--text3)}
 .amt .tin{padding-left:26px;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600}
 .sip-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:14px 0}
-.sip-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:14px;align-items:start}
+.sip-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
+/* plan at a glance: a full-width band above the fund table (no side column, so no empty space beside a long plan) */
+.sip-side .pcard{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.7fr);gap:8px 28px;align-items:center}
+.sip-side .snap-list{margin-top:0;border-top:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:28px}
+.sip-side .snap-row,.sip-side .snap-row:last-child{border-bottom:1px solid var(--border);padding:10px 0}
+@media (max-width:980px){.sip-side .pcard{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:560px){.sip-side .snap-list{grid-template-columns:minmax(0,1fr)}}
 .sip-tbl{width:100%;font-size:13px}
 .sip-tbl td{vertical-align:top}
 .sslot{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);display:flex;align-items:center;gap:7px}
@@ -291,7 +297,7 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .rules{margin:8px 0 0;padding-left:18px;font-size:12.5px;color:var(--text2);line-height:1.6}
 .alert{margin-top:12px;font-size:12.5px;display:block;border-radius:9px;padding:10px 12px;line-height:1.5;background:rgba(232,163,23,.12);border:1px solid rgba(232,163,23,.35);color:var(--text)}
 .sip-m{display:none}
-.sip-ctl2{padding:14px 18px;margin-top:14px;display:grid;grid-template-columns:150px 150px 190px minmax(0,1fr);gap:16px;align-items:end}
+.sip-ctl2{padding:14px 18px;margin-top:14px;display:grid;grid-template-columns:150px 150px 190px minmax(0,1fr);gap:16px;align-items:center}
 .sip-ctl2 .note{margin:0;align-self:center}
 .sip-ctl2.lump{grid-template-columns:150px 190px minmax(0,1fr)}
 .proj{padding:18px;margin-bottom:14px}
@@ -346,7 +352,7 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .sig:last-child{border-bottom:none}
 .sig span:first-child{color:var(--text3);font-weight:600}
 .sig b{font-family:'JetBrains Mono',monospace;font-weight:600;white-space:nowrap}
-.sip-side{position:sticky;top:96px;align-self:start}
+.sip-side{order:-1;min-width:0}
 .sip-side .pcard{margin-bottom:0}
 .snap-list{margin-top:14px;border-top:1px solid var(--border)}
 .snap-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
@@ -826,7 +832,8 @@ footer a{color:var(--text2)}
   .sip-ctl{grid-template-columns:repeat(2,minmax(0,1fr))}
   .sip-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
   .proj-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .assets{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .assets{display:flex;flex-wrap:wrap}
+  .assets>*{flex:1 1 calc(25% - 10px);min-width:0}
   .tools{grid-template-columns:repeat(3,minmax(0,1fr))}
   .tools .tin{grid-column:1/-1}
 }
@@ -865,7 +872,7 @@ footer a{color:var(--text2)}
   .wrap{padding:0 14px}
   .dtabs{top:90px}
   .searchbar,.tbl-card,.pcard,.snap,.info{padding:14px}
-  .assets{display:flex;overflow-x:auto;gap:8px;padding-bottom:4px;scrollbar-width:none}
+  .assets{display:flex;overflow-x:auto;gap:8px;padding-bottom:4px;scrollbar-width:none;flex-wrap:nowrap}
   .assets::-webkit-scrollbar{display:none}
   .asset{flex:0 0 132px}
   .tools{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -3794,7 +3801,7 @@ function renderSip(){
     }).join('') + '</div>' +
     '<div class="note">' + (lump ? 'The simulation assumes the Direct plan, Growth option of each fund, bought as a one-time purchase, following the entry plan above; each amount covers the fund\'s minimum.' : P.fq === 'q' || P.fq === 'y' ? 'The simulation assumes the Direct plan, Growth option of each fund, bought every ' + per + ' as a lump-sum purchase (a quarterly or yearly SIP where the fund house offers one); each amount covers the fund\'s minimum.' : 'The simulation assumes the Direct plan, Growth option of each fund, bought each ' + per + ' as a lump-sum purchase or through a SIP; every fund accepts both, and each amount covers the fund\'s minimum. Weekly SIP minimums and dates vary by fund house — confirm on the scheme page.') + '</div>' +
     '</div>';
-  // ── right column: allocation snapshot (sticky beside the plan) ──
+  // ── plan at a glance: allocation snapshot, shown as a band above the fund table ──
   var donut = donutCard('sipDonut', 'Allocation by fund', '', sized.slots.map(function(s){ return [shortName((BY[s.code] || {name:s.label}).name), s.w]; }), [sized.slots.length + ' funds', inr(P.amt) + (lump ? ' once' : '/' + F.ab)]);
   var rot = (m.rotation || {}), segName = function(k){ var x = (rot.segments || []).filter(function(z){ return z.key === k; })[0]; return x ? x.label.toLowerCase() : k; };
   var hs = plan.hist || {}, h3 = hs.r3y && hs.r3y.v, h5 = hs.r5y && hs.r5y.v;
