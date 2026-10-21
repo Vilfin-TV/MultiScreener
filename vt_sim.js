@@ -548,10 +548,10 @@
     function stepTag(r) {
       if (!r.step) return '';
       return r.step.k === 'bonus' ? '<i class="vts-buy-nri vts-step" title="Year-end bonus added to the first buy of January">🎁 Bonus</i>'
-                                  : '<i class="vts-buy-nri vts-step" title="Regular buy rises every January after a salary hike">📈 +' + r.step.pct + '%/yr</i>';
+                                  : '<i class="vts-buy-nri vts-step" title="Regular buy rises by ' + r.step.pct + '% of the original amount every January after a salary hike">📈 +' + r.step.pct + '%/yr</i>';
     }
     function stepAmt(r, yrs) {
-      var h = r.step, f = Math.pow(1 + h.pct / 100, yrs);
+      var h = r.step, f = 1 + h.pct / 100 * yrs;   /* + pct % of the original amount each year (not compounding) */
       return Math.round(r.amt * f / h.round) * h.round;
     }
     function stepNote(r) {
@@ -561,7 +561,7 @@
         return ['Bonus', 'Receives a year-end bonus of ' + inr(r.step.amount, 0) + ' every 31 December and adds all of it to the first ' + per + ' buy dated in January (first: January ' + (y0 + 1) +
           ' — ' + inr(r.amt, 0) + ' + ' + inr(r.step.amount, 0) + ' = ' + inr(r.amt + r.step.amount, 0) + '). The bonus is split by the model like any buy; the other buys of the year stay at ' + inr(r.amt, 0) + '. No dip reserve'];
       }
-      return ['Salary hike', 'Gets a salary hike at the end of every year and raises the ' + per + ' buy by ' + r.step.pct + '% from the first buy of January, compounding (rounded to ' + inr(r.step.round, 0) + '): ' +
+      return ['Salary hike', 'Gets a salary hike at the end of every year and raises the ' + per + ' buy by ' + r.step.pct + '% of the original amount (' + inr(Math.round(r.amt * r.step.pct / 100), 0) + ') from the first buy of January, every year (rounded to ' + inr(r.step.round, 0) + '): ' +
         inr(r.amt, 0) + ' in ' + y0 + ' → ' + inr(stepAmt(r, 1), 0) + ' in ' + (y0 + 1) + ' → ' + inr(stepAmt(r, 2), 0) + ' in ' + (y0 + 2) + ' → ' + inr(stepAmt(r, 3), 0) + ' in ' + (y0 + 3) + '. No bonus and no dip reserve'];
     }
     /* The buying strategy each agent follows — exactly the engine's rules (sim_config.json), in plain words. */
@@ -635,7 +635,7 @@
         '<h4>Investor profile</h4>' + row('Residency', nri ? 'Non-resident Indian (NRI)' : 'Resident Indian') + row('Model portfolio', '10+ years · ' + esc(r.risk)) +
         row('Buys', esc(r.freq) + (r.amt ? ' · ' + inr(r.amt, 0) : '') + ' — ' + esc(WHEN[r.freq] || '')) + row('Started', esc(dt(sb.start))) +
         (r.step ? row(r.step.k === 'bonus' ? 'Year-end bonus' : 'Salary hike', r.step.k === 'bonus' ? inr(r.step.amount, 0) + ' every 31 Dec → added to the first buy of January'
-          : '+' + r.step.pct + '% a year from January (' + (new Date(sb.start + 'T00:00:00').getFullYear() + 1) + ': ' + inr(stepAmt(r, 1), 0) + ')') : '') +
+          : '+' + r.step.pct + '% of ' + inr(r.amt, 0) + ' every January (' + (new Date(sb.start + 'T00:00:00').getFullYear() + 1) + ': ' + inr(stepAmt(r, 1), 0) + ')') : '') +
         row('Account', esc(acct)) +
         (x ? row('Invested', inr(x.inv)) + row('Value', x.val != null ? inr(x.val) : 'After units are credited') : '') +
         row('Total return', r.ret != null ? '<span class="' + cl(r.ret) + '">' + spct(r.ret) + '</span>' + (r.metric === 'xirr' ? ' XIRR' : '') : (r.credit ? 'Units credited ' + esc(dt(r.credit)) : '–')) +
