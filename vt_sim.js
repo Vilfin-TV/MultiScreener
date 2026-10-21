@@ -816,21 +816,30 @@
       svg.addEventListener('mouseleave', out); svg.addEventListener('touchend', out);
     }
 
+    /* The holding's own 1Y / 3Y return vs the simple average of its category (published with the account file). */
+    function vcCell(v) {
+      if (!v || !v.v) return '<span data-l="vs category avg" class="vts-vc"><small>–</small></span>';
+      var f = function (q) { return q == null ? '–' : (q > 0 ? '+' : '') + q.toFixed(1) + '%'; };
+      var lab = v.v === 'beat' ? '✓ Beats avg' : v.v === 'lag' ? '✕ Below avg' : '≈ Mixed';
+      return '<span data-l="vs category avg" class="vts-vc ' + v.v + '" title="Average of ' + v.n + ' in its category"><b>' + lab + '</b>' +
+        '<small>1Y ' + f(v.own[0]) + ' vs ' + f(v.avg[0]) + (v.own[1] != null || v.avg[1] != null ? ' · 3Y ' + f(v.own[1]) + ' vs ' + f(v.avg[1]) : '') + '</small></span>';
+    }
     function holdings(r, x) {
       if (!x) return '<p class="vts-pv-e">' + (sb.auditOk === false ? 'Figures are withheld while a data check is resolved.' : 'No purchases yet — the first buy is on ' + esc(dt(sb.start)) + '.') + '</p>';
       var h = '<div class="vts-acc-k">' + [['Next buy', x.next ? dt(x.next) : (r.freq === 'One-time' ? 'One-time (done)' : '–')]].concat(mf ? [] : [['Cash left (next buy)', inr(x.cash)]]).map(function (q) { return '<div><span>' + q[0] + '</span><b>' + q[1] + '</b></div>'; }).join('') + '</div>';
       if (x.hold && x.hold.length) {
-        h += '<div class="vts-acc-t" role="table" aria-label="Holdings"><div class="vts-acc-r vts-acc-hd" role="row"><span>' + (mf ? 'Fund' : 'ETF') + '</span><span>Units</span><span>Avg cost</span><span>' + (mf ? 'NAV' : 'Close') + '</span><span>Value</span><span>Gain</span><span>Share</span></div>' +
+        h += '<div class="vts-acc-t" role="table" aria-label="Holdings"><div class="vts-acc-r vts-acc-hd" role="row"><span>' + (mf ? 'Fund' : 'ETF') + '</span><span>Units</span><span>Avg cost</span><span>' + (mf ? 'NAV' : 'Close') + '</span><span>Value</span><span>Gain</span><span>Share</span><span>vs category avg</span></div>' +
           x.hold.map(function (o) {
             return '<div class="vts-acc-r" role="row"><span class="vts-acc-n"><b>' + esc(o.n) + '</b><small>' + esc(mf ? (o.cat || '') : o.k + (o.cat ? ' · ' + o.cat : '')) + (o.pu ? ' · <em>' + num(o.pu, UD) + ' units being credited' + (o.cr ? ' by ' + esc(dt(o.cr, false)) : '') + '</em>' : '') + '</small></span>' +
               '<span data-l="Units">' + num(o.u, UD) + '</span><span data-l="Avg cost">' + CUR + num(o.avg, mf ? 4 : 2) + '</span>' +
               '<span data-l="' + (mf ? 'NAV' : 'Close') + '">' + CUR + num(o.px, mf ? 4 : 2) + (o.pd ? '<small>' + dt(o.pd, false) + '</small>' : '') + '</span>' +
-              '<span data-l="Value">' + CUR + num(o.val, gl ? 2 : 0) + '</span><span data-l="Gain" class="' + cl(o.g) + '">' + spct(o.g) + '</span><span data-l="Share">' + (o.w == null ? '–' : o.w.toFixed(1) + '%') + '</span></div>';
+              '<span data-l="Value">' + CUR + num(o.val, gl ? 2 : 0) + '</span><span data-l="Gain" class="' + cl(o.g) + '">' + spct(o.g) + '</span><span data-l="Share">' + (o.w == null ? '–' : o.w.toFixed(1) + '%') + '</span>' + vcCell(o.vc) + '</div>';
           }).join('') + '</div>';
       }
       if (x.pend && x.pend.length)
         h += '<div class="vts-acc-p"><b>Waiting for price</b>' + x.pend.map(function (o) { return '<div>' + esc(o.n) + ' · ' + inr(Math.round(o.amt), 0) + ' · ordered ' + dt(o.T, false) + ' — ' + esc(o.st) + '</div>'; }).join('') + '</div>';
-      h += '<p class="vts-acc-e">Values as of ' + (x.asOf ? esc(dt(x.asOf)) : '–') + ' at official ' + (mf ? 'NAVs' : 'closing prices') + ' · simulation, not real money.</p>';
+      h += '<p class="vts-acc-e">Values as of ' + (x.asOf ? esc(dt(x.asOf)) : '–') + ' at official ' + (mf ? 'NAVs' : 'closing prices') + ' · simulation, not real money.' +
+        (x.hold && x.hold.some(function (o) { return o.vc; }) ? ' “vs category avg” compares each ' + (mf ? 'fund' : 'ETF') + '’s own 1-year and 3-year (per year) return with the simple average of its category; the monthly review, not this label, decides any sale.' : '') + '</p>';
       return h;
     }
 
@@ -954,13 +963,14 @@
     '.vts-acc-b{border:1px solid var(--accent,#4a90e2);border-top:none;border-radius:0 0 10px 10px;padding:10px 12px 8px;background:var(--surface,transparent)}' +
     '.vts-acc-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px}.vts-acc-k div{border:1px solid var(--border);border-radius:8px;padding:6px 9px;min-width:0}' +
     '.vts-acc-k span{display:block;font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}.vts-acc-k b{font-size:13px;font-variant-numeric:tabular-nums}' +
-    '.vts-acc-r{display:grid;grid-template-columns:minmax(0,2.6fr) repeat(6,minmax(0,1fr));gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--border);font-size:12.5px;font-variant-numeric:tabular-nums}' +
+    '.vts-acc-r{display:grid;grid-template-columns:minmax(0,2.2fr) repeat(6,minmax(0,.95fr)) minmax(0,2.1fr);gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--border);font-size:12.5px;font-variant-numeric:tabular-nums}' +
     '.vts-acc-r>span:not(.vts-acc-n){text-align:right}.vts-acc-r small{display:block;font-size:10.5px;color:var(--text2);font-weight:500}.vts-acc-r em{font-style:normal;color:#d97706}' +
     '.vts-acc-hd>span:first-child{text-align:left!important}.vts-acc-hd{border-top:none;font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em;font-weight:700}' +
     '.vts-acc-n{min-width:0}.vts-acc-n b{display:block;font-size:12.5px;line-height:1.3;overflow-wrap:anywhere}' +
     '.vts-acc-p{margin-top:8px;font-size:12px;color:var(--text2);line-height:1.6}.vts-acc-p b{display:block;color:var(--text);font-size:12px}' +
     '.vts-acc-e{margin:8px 0 0;font-size:11px;color:var(--text3,var(--text2))}' +
-    '@media (max-width:700px){.vts-acc-hd{display:none}.vts-acc-r{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:6px;padding:9px 0}.vts-acc-n{grid-column:1/-1}' +
+    '.vts-vc b{display:block;font-size:12px}.vts-vc small{display:block;font-size:10.5px;color:var(--text3);line-height:1.35}.vts-vc.beat b{color:var(--pos,#16a34a)}.vts-vc.lag b{color:var(--neg,#dc2626)}.vts-vc.mixed b{color:var(--warn,#b45309)}' +
+    '@media (max-width:700px){.vts-acc-hd{display:none}.vts-vc{grid-column:1/-1}.vts-acc-r{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:6px;padding:9px 0}.vts-acc-n{grid-column:1/-1}' +
     '.vts-acc-r>span:not(.vts-acc-n){text-align:left}.vts-acc-r>span[data-l]::before{content:attr(data-l);display:block;font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}' +
     '.vts-acc-k{grid-template-columns:repeat(2,minmax(0,1fr))}}' +
     '@media (max-width:520px){.vts-buy{padding:12px}.vts-buy-h{margin:-12px;padding:12px}.vts-buy-g{grid-template-columns:1fr}' +
