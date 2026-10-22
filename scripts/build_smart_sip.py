@@ -1735,6 +1735,11 @@ def main() -> int:
                 ctx["ctx_tag"] = f"{pool_key}|{ctx['metal']}|{ctx['sector']}"
                 inc = pst["slots"].get(slot)
                 code, alts, action, note = choose(u, slot, ctx, chosen, amc_count, inc, review, cache)
+                if code is None and slot == "metal":
+                    gold_cands = sorted([c for c in u.by_subs(["gold"]) if (u.g(c, "aum") or 0) >= 50 and c not in chosen], key=lambda c: -(u.g(c, "aum") or 0))
+                    if gold_cands:
+                        code = gold_cands[0]
+                        alts, action, note = gold_cands[1:3], "new", ""
                 if code is None:
                     log.warning("%s/%s: no eligible fund — weight moves to a related slot", pid, slot)
                     skipped.append(slot)

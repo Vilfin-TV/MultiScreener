@@ -1055,9 +1055,11 @@ def min_amount(txt, sip: bool = False):
     return min(out) if out else None
 
 
-def buy_flags(f):
+def buy_flags(f, sub=None):
     """Purchase status: "L" lump sum accepted, "S" SIP accepted, "W" weekly SIP offered; "" = closed to fresh
     money (e.g. overseas schemes paused at the industry overseas-investment limit); None = not known yet."""
+    if sub in ("gold", "silver", "multicomm", "idx_commod"):
+        return "LS"
     la, sa = f.get("lump_available"), f.get("sip_available")
     if la is None and sa is None:
         return None
@@ -1176,7 +1178,7 @@ def write_outputs(universe, work, results, facts, bench, asof, risk_asof, series
             (ro.get("3") or {}).get("avg"), (ro.get("3") or {}).get("beat"), (ro.get("1") or {}).get("pos"),
             m["sipMin"], m["lumpMin"], m["lock"], res["bench"], r["isin"],
             sc.get("cons"), sc.get("rec"), sc.get("vol"), sc.get("ltp"), sc.get("status"), m["tax"], m["exitNil"],
-            buy_flags(f),
+            buy_flags(f, r["sub"]),
         ])
     # round all floats to 2 dp in the screener (returns in %, ratios) — 4 dp for NAV / ratios
     for row in rows:
