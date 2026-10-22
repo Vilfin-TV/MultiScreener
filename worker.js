@@ -327,7 +327,7 @@ async function fetchPublicFeed(raw, options) {
   let target = raw;
   for (let redirects = 0; redirects <= 5; redirects++) {
     if (!isPublicFeedUrl(target)) throw new Error('Unsafe feed destination');
-    const res = await fetchPublicFeed(target, { ...options, redirect: 'manual' });
+    const res = await fetch(target, { ...options, redirect: 'manual' });
     if (![301, 302, 303, 307, 308].includes(res.status)) return res;
     const location = res.headers.get('location');
     if (!location || redirects === 5) throw new Error('Invalid feed redirect');
