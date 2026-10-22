@@ -1395,7 +1395,7 @@ def choose(u, slot, ctx, chosen, amc_count, incumbent, review, cache):
         return amc_count.get(u.g(c, "amc"), 0) < 2 and overlap_ok(c) and c not in chosen
     cand = [c for c in ranked if fits(c)] or [c for c in ranked if c not in chosen]
     if not cand and slot == "metal":
-        cand = [c for c in u.by_subs(subs) if (u.g(c, "aum") or 0) >= 50 and c not in chosen]
+        cand = sorted([c for c in u.by_subs(subs) if buy_ok(u, c) and (u.g(c, "lumpMin") or 0) <= 1000 and u.g(c, "status") != "Out of track" and (u.g(c, "aum") or 0) >= 50 and c not in chosen], key=lambda c: -(u.g(c, "aum") or 0))
     if incumbent:
         code = incumbent["code"]
         hard = (u.g(code, "sub") is not None and buy_ok(u, code) and u.g(code, "status") != "Out of track"
