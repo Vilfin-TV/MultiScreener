@@ -1311,7 +1311,7 @@ footer.story-footer{
     <h1 class="story-page-title">Stories That Inspire</h1>
     <p class="story-page-subtitle">Curated short-form stories spanning Triller, Travel, Health, Comedy, Kids, Education, Animation, &amp; AI.</p>
     <div class="story-page-meta">
-      <div class="story-page-meta-chip">Categories: <span id="category-count">8</span></div>
+      <div class="story-page-meta-chip">Categories: <span id="category-count">9</span></div>
       <div class="story-page-meta-chip">Stories: <span id="total-story-count">—</span></div>
     </div>
     
@@ -1373,14 +1373,15 @@ footer.story-footer{
     <div>
       <div class="footer-col-title">Genres</div>
       <ul class="footer-links">
-        <li><a href="#" onclick="switchTab('triller');return false;">&#x1F3AC; Triller Stories</a></li>
-        <li><a href="#" onclick="switchTab('travel');return false;">&#x2708; Travel Stories</a></li>
-        <li><a href="#" onclick="switchTab('health');return false;">&#x1F3E5; Health Stories</a></li>
-        <li><a href="#" onclick="switchTab('comedy');return false;">&#x1F602; Comedy Stories</a></li>
-        <li><a href="#" onclick="switchTab('kids');return false;">&#x1F476; Kids Stories</a></li>
-        <li><a href="#" onclick="switchTab('education');return false;">&#x1F4DA; Education Stories</a></li>
-        <li><a href="#" onclick="switchTab('animation');return false;">&#x2728; Animation Stories</a></li>
-        <li><a href="#" onclick="switchTab('ai');return false;">&#x1F916; AI &amp; Tech Stories</a></li>
+        <li><a href="story.html?genre=detective" onclick="switchTab('detective');return false;">&#x1F575; Detective Stories</a></li>
+        <li><a href="story.html?genre=triller" onclick="switchTab('triller');return false;">&#x1F3AC; Triller Stories</a></li>
+        <li><a href="story.html?genre=travel" onclick="switchTab('travel');return false;">&#x2708; Travel Stories</a></li>
+        <li><a href="story.html?genre=health" onclick="switchTab('health');return false;">&#x1F3E5; Health Stories</a></li>
+        <li><a href="story.html?genre=comedy" onclick="switchTab('comedy');return false;">&#x1F602; Comedy Stories</a></li>
+        <li><a href="story.html?genre=kids" onclick="switchTab('kids');return false;">&#x1F476; Kids Stories</a></li>
+        <li><a href="story.html?genre=education" onclick="switchTab('education');return false;">&#x1F4DA; Education Stories</a></li>
+        <li><a href="story.html?genre=animation" onclick="switchTab('animation');return false;">&#x2728; Animation Stories</a></li>
+        <li><a href="story.html?genre=ai" onclick="switchTab('ai');return false;">&#x1F916; AI &amp; Tech Stories</a></li>
       </ul>
     </div>
     <div>
@@ -1474,6 +1475,7 @@ var _activeLevel = localStorage.getItem('viltv_story_level') || 'general';
    CATEGORY METADATA
    ========================================================================== */
 var CATEGORIES = [
+  { id:'detective', label:'Detective', icon:'&#x1F575;', accent:'#d4a44c', cssClass:'story-section-triller', desc:'Original clue-driven mysteries and clever investigations.' },
   { id:'triller',   label:'Triller',   icon:'&#x1F3AC;', accent:'#ef4444', cssClass:'story-section-triller',  desc:'Short cinematic narratives and dramatic micro-stories.' },
   { id:'travel',    label:'Travel',    icon:'&#x2708;',  accent:'#06b6d4', cssClass:'story-section-travel',   desc:'Journeys, destinations, and tales from around the world.' },
   { id:'health',    label:'Health',    icon:'&#x1F3E5;', accent:'#10b981', cssClass:'story-section-health',   desc:'Wellness journeys, medical breakthroughs, and lifestyle stories.' },
@@ -1488,6 +1490,35 @@ var CATEGORIES = [
    STORY DATA — embedded curated stories with 3 separate comprehension levels
    ========================================================================== */
 var STORY_DATA = {};
+
+// Original detective fiction: all three reader levels and paginated chapters.
+STORY_DATA.detective = [
+  { headline:"The Clockmaker's Missing Minute", teaser:"A stopped clock, a forged alibi and a detective who notices one missing minute.", source:'VilfinTV Detective Originals', publishedAt:'2026-10-22T12:00:00Z', mediaUrl:'https://screener-proxy.vilfintv.workers.dev/r2/media/stories/_default.svg', levels:{
+    kids:{headline:"The Clockmaker's Missing Minute", teaser:"A stopped clock, a forged alibi and a detective who notices one missing minute.", source:'Detective Stories for Young Minds',body:[["<p class=\"story-lead\">Inspector Mira examined the clockmaker's workshop after a priceless watch vanished. Every clock read nine, except a pocket watch stopped at 8:59.</p>"],["<p>The apprentice said the power failed at nine. Mira noticed the workshop clocks were mechanical: a blackout could not stop them.</p>"],["<p>The culprit had stopped the clocks by hand to invent an alibi. Grease on the apprentice's sleeve matched the watch case. The watch was recovered beneath a loose floorboard.</p>","<p><strong>Clue to remember:</strong> A mystery is solved by checking whether an explanation fits the evidence.</p>"]]},
+    general:{headline:"The Clockmaker's Missing Minute",teaser:"A stopped clock, a forged alibi and a detective who notices one missing minute.",body:[["<p class=\"story-lead\">Inspector Mira examined the clockmaker's workshop after a priceless watch vanished. Every clock read nine, except a pocket watch stopped at 8:59.</p>"],["<p>The apprentice said the power failed at nine. Mira noticed the workshop clocks were mechanical: a blackout could not stop them.</p>"],["<p>The culprit had stopped the clocks by hand to invent an alibi. Grease on the apprentice's sleeve matched the watch case. The watch was recovered beneath a loose floorboard.</p>","<p><strong>Case closed:</strong> A mystery is solved by checking whether an explanation fits the evidence.</p>"]]},
+    expert:{headline:"The Clockmaker's Missing Minute — Evidence Analysis",teaser:"A stopped clock, a forged alibi and a detective who notices one missing minute.",body:[["<p class=\"story-lead\">Inspector Mira examined the clockmaker's workshop after a priceless watch vanished. Every clock read nine, except a pocket watch stopped at 8:59.</p>"],["<p>The apprentice said the power failed at nine. Mira noticed the workshop clocks were mechanical: a blackout could not stop them.</p>"],["<p>The culprit had stopped the clocks by hand to invent an alibi. Grease on the apprentice's sleeve matched the watch case. The watch was recovered beneath a loose floorboard.</p>","<p><strong>Deductive principle:</strong> A mystery is solved by checking whether an explanation fits the evidence.</p>"]]}
+  } },
+  { headline:"The Library of Vanishing Letters", teaser:"A rare manuscript disappears, leaving only a misplaced bookmark.", source:'VilfinTV Detective Originals', publishedAt:'2026-10-22T12:00:00Z', mediaUrl:'https://screener-proxy.vilfintv.workers.dev/r2/media/stories/_default.svg', levels:{
+    kids:{headline:"The Library of Vanishing Letters", teaser:"A rare manuscript disappears, leaving only a misplaced bookmark.", source:'Detective Stories for Young Minds',body:[["<p class=\"story-lead\">Detective Arun arrived at the library to find an empty display case. The curator insisted nobody had opened it.</p>"],["<p>A bookmark lay beneath the case, but its paper was warm and faintly smelled of fresh ink. The security log showed the case opened during the printer's maintenance window.</p>"],["<p>Arun checked the bookbinding room. The manuscript had been hidden inside a freshly printed catalogue. The curator's assistant admitted staging the theft to sell it.</p>","<p><strong>Clue to remember:</strong> Small details can reveal the difference between a true story and a rehearsed one.</p>"]]},
+    general:{headline:"The Library of Vanishing Letters",teaser:"A rare manuscript disappears, leaving only a misplaced bookmark.",body:[["<p class=\"story-lead\">Detective Arun arrived at the library to find an empty display case. The curator insisted nobody had opened it.</p>"],["<p>A bookmark lay beneath the case, but its paper was warm and faintly smelled of fresh ink. The security log showed the case opened during the printer's maintenance window.</p>"],["<p>Arun checked the bookbinding room. The manuscript had been hidden inside a freshly printed catalogue. The curator's assistant admitted staging the theft to sell it.</p>","<p><strong>Case closed:</strong> Small details can reveal the difference between a true story and a rehearsed one.</p>"]]},
+    expert:{headline:"The Library of Vanishing Letters — Evidence Analysis",teaser:"A rare manuscript disappears, leaving only a misplaced bookmark.",body:[["<p class=\"story-lead\">Detective Arun arrived at the library to find an empty display case. The curator insisted nobody had opened it.</p>"],["<p>A bookmark lay beneath the case, but its paper was warm and faintly smelled of fresh ink. The security log showed the case opened during the printer's maintenance window.</p>"],["<p>Arun checked the bookbinding room. The manuscript had been hidden inside a freshly printed catalogue. The curator's assistant admitted staging the theft to sell it.</p>","<p><strong>Deductive principle:</strong> Small details can reveal the difference between a true story and a rehearsed one.</p>"]]}
+  } },
+  { headline:"The Lighthouse Signal", teaser:"Three flashes across the bay point to a mystery nobody expected.", source:'VilfinTV Detective Originals', publishedAt:'2026-10-22T12:00:00Z', mediaUrl:'https://screener-proxy.vilfintv.workers.dev/r2/media/stories/_default.svg', levels:{
+    kids:{headline:"The Lighthouse Signal", teaser:"Three flashes across the bay point to a mystery nobody expected.", source:'Detective Stories for Young Minds',body:[["<p class=\"story-lead\">During a storm, detective Leena saw a lighthouse flash three times even though its lamp had been switched off for repairs.</p>"],["<p>She followed the light to a warehouse window. The flashes repeated whenever a boat approached the rocks.</p>"],["<p>The flashes were a warning sent by a stranded harbor worker using a hand torch. Leena alerted the rescue crew and guided the boat safely home.</p>","<p><strong>Clue to remember:</strong> Not every mysterious signal is a threat; sometimes it is a request for help.</p>"]]},
+    general:{headline:"The Lighthouse Signal",teaser:"Three flashes across the bay point to a mystery nobody expected.",body:[["<p class=\"story-lead\">During a storm, detective Leena saw a lighthouse flash three times even though its lamp had been switched off for repairs.</p>"],["<p>She followed the light to a warehouse window. The flashes repeated whenever a boat approached the rocks.</p>"],["<p>The flashes were a warning sent by a stranded harbor worker using a hand torch. Leena alerted the rescue crew and guided the boat safely home.</p>","<p><strong>Case closed:</strong> Not every mysterious signal is a threat; sometimes it is a request for help.</p>"]]},
+    expert:{headline:"The Lighthouse Signal — Evidence Analysis",teaser:"Three flashes across the bay point to a mystery nobody expected.",body:[["<p class=\"story-lead\">During a storm, detective Leena saw a lighthouse flash three times even though its lamp had been switched off for repairs.</p>"],["<p>She followed the light to a warehouse window. The flashes repeated whenever a boat approached the rocks.</p>"],["<p>The flashes were a warning sent by a stranded harbor worker using a hand torch. Leena alerted the rescue crew and guided the boat safely home.</p>","<p><strong>Deductive principle:</strong> Not every mysterious signal is a threat; sometimes it is a request for help.</p>"]]}
+  } },
+  { headline:"The Case of the Silent Violin", teaser:"A concert hall mystery hinges on a single note nobody heard.", source:'VilfinTV Detective Originals', publishedAt:'2026-10-22T12:00:00Z', mediaUrl:'https://screener-proxy.vilfintv.workers.dev/r2/media/stories/_default.svg', levels:{
+    kids:{headline:"The Case of the Silent Violin", teaser:"A concert hall mystery hinges on a single note nobody heard.", source:'Detective Stories for Young Minds',body:[["<p class=\"story-lead\">A famous violin disappeared during a rehearsal. Detective Dev questioned the orchestra while the stage crew searched the building.</p>"],["<p>The soloist claimed to have practiced through the break, yet the recording held no violin sound. A fresh line of rosin dust crossed the backstage floor.</p>"],["<p>Dev traced the dust to a storage cabinet where the instrument had been hidden. The soloist had concealed it to prevent a planned fraudulent sale by the manager.</p>","<p><strong>Clue to remember:</strong> Listen for what is missing, not only what is present.</p>"]]},
+    general:{headline:"The Case of the Silent Violin",teaser:"A concert hall mystery hinges on a single note nobody heard.",body:[["<p class=\"story-lead\">A famous violin disappeared during a rehearsal. Detective Dev questioned the orchestra while the stage crew searched the building.</p>"],["<p>The soloist claimed to have practiced through the break, yet the recording held no violin sound. A fresh line of rosin dust crossed the backstage floor.</p>"],["<p>Dev traced the dust to a storage cabinet where the instrument had been hidden. The soloist had concealed it to prevent a planned fraudulent sale by the manager.</p>","<p><strong>Case closed:</strong> Listen for what is missing, not only what is present.</p>"]]},
+    expert:{headline:"The Case of the Silent Violin — Evidence Analysis",teaser:"A concert hall mystery hinges on a single note nobody heard.",body:[["<p class=\"story-lead\">A famous violin disappeared during a rehearsal. Detective Dev questioned the orchestra while the stage crew searched the building.</p>"],["<p>The soloist claimed to have practiced through the break, yet the recording held no violin sound. A fresh line of rosin dust crossed the backstage floor.</p>"],["<p>Dev traced the dust to a storage cabinet where the instrument had been hidden. The soloist had concealed it to prevent a planned fraudulent sale by the manager.</p>","<p><strong>Deductive principle:</strong> Listen for what is missing, not only what is present.</p>"]]}
+  } },
+  { headline:"The Blue Umbrella Clue", teaser:"A rainy-night puzzle with two identical umbrellas and one telling difference.", source:'VilfinTV Detective Originals', publishedAt:'2026-10-22T12:00:00Z', mediaUrl:'https://screener-proxy.vilfintv.workers.dev/r2/media/stories/_default.svg', levels:{
+    kids:{headline:"The Blue Umbrella Clue", teaser:"A rainy-night puzzle with two identical umbrellas and one telling difference.", source:'Detective Stories for Young Minds',body:[["<p class=\"story-lead\">Detective Sana investigated a missing museum key. Everyone leaving the gallery carried a blue umbrella.</p>"],["<p>One umbrella had dry fabric but wet shoes beneath it. Its owner had never walked through the rain, despite claiming to have just arrived.</p>"],["<p>The dry umbrella belonged to the guard who had remained inside. He had hidden the key in its hollow handle. Sana recovered it before the museum opened.</p>","<p><strong>Clue to remember:</strong> Compare a claim with the physical traces it should leave.</p>"]]},
+    general:{headline:"The Blue Umbrella Clue",teaser:"A rainy-night puzzle with two identical umbrellas and one telling difference.",body:[["<p class=\"story-lead\">Detective Sana investigated a missing museum key. Everyone leaving the gallery carried a blue umbrella.</p>"],["<p>One umbrella had dry fabric but wet shoes beneath it. Its owner had never walked through the rain, despite claiming to have just arrived.</p>"],["<p>The dry umbrella belonged to the guard who had remained inside. He had hidden the key in its hollow handle. Sana recovered it before the museum opened.</p>","<p><strong>Case closed:</strong> Compare a claim with the physical traces it should leave.</p>"]]},
+    expert:{headline:"The Blue Umbrella Clue — Evidence Analysis",teaser:"A rainy-night puzzle with two identical umbrellas and one telling difference.",body:[["<p class=\"story-lead\">Detective Sana investigated a missing museum key. Everyone leaving the gallery carried a blue umbrella.</p>"],["<p>One umbrella had dry fabric but wet shoes beneath it. Its owner had never walked through the rain, despite claiming to have just arrived.</p>"],["<p>The dry umbrella belonged to the guard who had remained inside. He had hidden the key in its hollow handle. Sana recovered it before the museum opened.</p>","<p><strong>Deductive principle:</strong> Compare a claim with the physical traces it should leave.</p>"]]}
+  } }
+];
 
 // 1. TRILLER STORIES
 STORY_DATA.triller = [
@@ -3612,6 +3643,7 @@ function updateStoryCount() {
    TAB NAVIGATION
    ========================================================================== */
 var _activeTabId = 'ai'; // Default to our stunning new AI category
+try { var _genreParam = new URLSearchParams(location.search).get('genre'); if (CATEGORIES.some(function(c){return c.id===_genreParam;})) _activeTabId = _genreParam; } catch(e) {}
 
 function buildTabBar() {
   var inner = document.getElementById('story-tab-inner');
@@ -3629,6 +3661,7 @@ function buildTabBar() {
 
 function switchTab(tabId) {
   _activeTabId = tabId;
+  if (window.history && history.replaceState) { var u = new URL(window.location.href); u.searchParams.set('genre', tabId); history.replaceState(null, '', u.href); }
   var cat = null;
   for (var i = 0; i < CATEGORIES.length; i++) {
     if (CATEGORIES[i].id === tabId) { cat = CATEGORIES[i]; break; }
