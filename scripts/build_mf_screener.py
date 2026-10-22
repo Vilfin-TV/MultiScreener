@@ -127,7 +127,7 @@ def session():
 S = session()
 
 
-def get(url, tries=4, timeout=40, **kw):
+def get(url, tries=4, timeout=40, retry_404=False, **kw):
     last = None
     for k in range(tries):
         try:
@@ -135,7 +135,7 @@ def get(url, tries=4, timeout=40, **kw):
             if r.status_code == 200:
                 return r
             last = f"HTTP {r.status_code}"
-            if r.status_code == 404:
+            if r.status_code == 404 and not retry_404:
                 break
         except Exception as e:  # noqa: BLE001
             last = repr(e)
@@ -173,7 +173,7 @@ def write_json(path, obj):
 def fetch_navall():
     for u in NAVALL_URLS:
         try:
-            r = get(u)
+            r = get(u, retry_404=True)
             if len(r.text) > 200000 and "Scheme Code" in r.text[:500]:
                 log.info("NAVAll from %s (%d bytes)", u, len(r.text))
                 return r.text

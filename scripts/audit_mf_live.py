@@ -95,6 +95,9 @@ def main():
                 break
         except Exception as e:  # noqa: BLE001
             summary.append(f"- AMFI NAV file unavailable from {u}: {e}")
+    if not nav and pub:
+        run = False
+        why = ["AMFI unavailable, retry next cycle"]
     if pub and nav:
         latest = collections.Counter(d for _, d in nav.values()).most_common(1)[0][0]
         asof = dt.date.fromisoformat(pub["asOf"])
