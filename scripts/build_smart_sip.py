@@ -787,8 +787,8 @@ LUMP_MAX = 1000                              # every fund must accept a monthly 
 
 def buy_ok(u, code):
     """Open for both lump-sum purchases and SIPs (the plan can be invested either way each month)."""
-    b = u.g(code, "buy")
-    return True if b is None else ("S" in b and "L" in b)
+    b = u.g(code, "buy") or ""
+    return "S" in b and "L" in b
 
 
 def fund_checks(u, slot, code, ctx):
