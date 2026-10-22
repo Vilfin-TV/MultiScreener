@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vilfintv.com/stories/v1/story.schema.json",
+  "title": "VilfinTV Stories V2 published story",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "slug", "title", "genreIds", "levels", "revision", "chapters"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,100}$"},
+    "slug": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,100}$"},
+    "title": {"type": "string", "minLength": 1, "maxLength": 200},
+    "synopsis": {"type": "string", "maxLength": 2000},
+    "revision": {"type": "string", "minLength": 1, "maxLength": 100},
+    "genreIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z0-9-]+$"}},
+    "levels": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["kids", "general", "expert"]}},
+    "chapters": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "number", "title", "paragraphs"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "number": {"type": "integer", "minimum": 1},
+          "title": {"type": "string", "minLength": 1},
+          "paragraphs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    }
+  }
+}
