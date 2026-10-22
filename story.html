@@ -7,7 +7,7 @@
 </style></head><body>
 <header class="top"><div class="brand">Vilfin<span>TV</span> Stories <small class="muted"></small></div><div class="tools"><button id="back" class="hidden">← Library</button><button id="resume">Resume reading</button><button id="theme" aria-label="Change reading theme">◐ Theme</button></div></header>
 <div class="progress hidden" id="progress"><div id="progressFill"></div></div>
-<main id="library" class="shell"><section class="hero"><span class="eyebrow">Featured detective mystery · long-form preview</span><h1>The Clockmaker's Missing Minute</h1><p>A vanished chronometer. Twelve minutes of darkness. Four witnesses whose accounts cannot all be true. Follow Inspector Mira Sen through twelve chapters of a carefully staged mystery.</p><button id="start">Start reading →</button></section>
+<main id="library" class="shell"><section class="hero"><span class="eyebrow">Featured detective mystery</span><h1>The Clockmaker's Missing Minute</h1><p>A vanished chronometer. Twelve minutes of darkness. Four witnesses whose accounts cannot all be true. Follow Inspector Mira Sen through twelve chapters of a carefully staged mystery.</p><button id="start">Start reading →</button></section>
 <nav class="tabs" aria-label="Story genres" id="tabs"></nav><section><h2>Explore stories</h2><div class="cards" id="cards"></div></section></main>
 <main id="reader" class="reader"><div class="reading-wrap"><p class="eyebrow">VilfinTV Detective Originals</p><h1>The Clockmaker's Missing Minute</h1><p class="muted">12 chapters · Original detective fiction · Reader </p>
 <div class="reader-controls"><label>Reading mode <select id="mode"><option value="scroll">Continuous scroll</option><option value="page">Chapter pages</option></select></label><label>Text size <select id="size"><option value="18">Small</option><option value="20">Medium</option><option value="23">Large</option><option value="26">Extra large</option></select></label><label>Level <select id="level"><option value="general">General</option></select></label><label>Chapter <select id="jump"></select></label></div>
@@ -21,7 +21,7 @@ const KEY='vilfintv-reader-v2-progress';
 const $=id=>document.getElementById(id);
 let current=0,mode='scroll',theme='light',activeStory=null,activeLevel='general',activeGenre='discover';
 function getChapters(){if(!activeStory)return CHAPTERS;const lvl=activeStory.levels?.[activeLevel]||activeStory.levels?.general||activeStory;const raw=lvl.body||[];return raw.map((part,i)=>{const d=document.createElement('div');d.innerHTML=(Array.isArray(part)?part:[part]).join(' ');d.querySelectorAll('script,style,iframe,object,embed').forEach(n=>n.remove());return {title:'Chapter '+(i+1),body:d.textContent.trim()}}).filter(x=>x.body)}
-function readStory(item){activeStory=item;activeLevel='general';current=0;$('level').innerHTML=['kids','general','expert'].filter(k=>item.levels?.[k]).map(k=>'<option value="'+k+'">'+k+'</option>').join('');openReader(0)}
+function readStory(item){activeStory=item;activeLevel=item.levels?.general?'general':(Object.keys(item.levels||{})[0]||'general');current=0;$('level').innerHTML=['kids','general','expert'].filter(k=>item.levels?.[k]).map(k=>'<option value="'+k+'">'+k+'</option>').join('');openReader(0)}
 function saved(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify({chapter:current,mode,size:$('size').value,theme}))}catch(e){}}
 function safeText(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -45,8 +45,8 @@ function renderReader(){
  persist();
 }
 function openReader(i){
- const chapters=getChapters();$('reader').querySelector('h1').textContent=activeStory?activeStory.headline:"The Clockmaker's Missing Minute";$('jump').innerHTML=chapters.map((c,j)=>'<option value="'+j+'">'+(j+1)+'. '+safeText(c.title)+'</option>').join('');current=Math.max(0,Math.min(getChapters().length-1,i));$('library').style.display='none';$('reader').style.display='block';$('back').classList.remove('hidden');$('progress').classList.remove('hidden');renderReader();window.scrollTo(0,0);if(mode==='scroll'&&current>0)document.getElementById('chapter-'+current)?.scrollIntoView()}
-function navigate(delta){current=Math.max(0,Math.min(getChapters().length-1,current+delta));renderReader();window.scrollTo({top:0,behavior:'instant'})}
+ const chapters=getChapters();if(!chapters.length){alert('This story is not available yet.');return;}$('reader').querySelector('h1').textContent=activeStory?activeStory.headline:"The Clockmaker's Missing Minute";$('jump').innerHTML=chapters.map((c,j)=>'<option value="'+j+'">'+(j+1)+'. '+safeText(c.title)+'</option>').join('');current=Math.max(0,Math.min(getChapters().length-1,i));$('library').style.display='none';$('reader').style.display='block';$('back').classList.remove('hidden');$('progress').classList.remove('hidden');renderReader();window.scrollTo(0,0);if(mode==='scroll'&&current>0)document.getElementById('chapter-'+current)?.scrollIntoView()}
+function navigate(delta){current=Math.max(0,Math.min(getChapters().length-1,current+delta));renderReader();window.scrollTo(0,0)}
 $('jump').innerHTML=CHAPTERS.map((c,i)=>'<option value="'+i+'">'+(i+1)+'. '+safeText(c.title)+'</option>').join('');
 $('level').onchange=e=>{activeLevel=e.target.value;current=0;openReader(0)};
 $('jump').onchange=e=>{current=Number(e.target.value);renderReader();if(mode==='scroll')document.getElementById('chapter-'+current)?.scrollIntoView();else window.scrollTo(0,0)};
