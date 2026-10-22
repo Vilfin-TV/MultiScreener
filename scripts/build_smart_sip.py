@@ -1394,6 +1394,8 @@ def choose(u, slot, ctx, chosen, amc_count, incumbent, review, cache):
     def fits(c):
         return amc_count.get(u.g(c, "amc"), 0) < 2 and overlap_ok(c) and c not in chosen
     cand = [c for c in ranked if fits(c)] or [c for c in ranked if c not in chosen]
+    if not cand and slot == "metal":
+        cand = [c for c in u.by_subs(subs) if (u.g(c, "aum") or 0) >= 50 and c not in chosen]
     if incumbent:
         code = incumbent["code"]
         hard = (u.g(code, "sub") is not None and buy_ok(u, code) and u.g(code, "status") != "Out of track"
@@ -1828,8 +1830,8 @@ def main() -> int:
            "horizons": [{"id": h, "label": l, "years": y, "min": a, "max": b} for h, l, y, a, b in HORIZONS],
            "risks": [{"id": r, "label": l} for r, l in RISKS],
            "plans": plans, "dip": dip}
-    OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")))
-    STATE.write_text(json.dumps(state, ensure_ascii=False, separators=(",", ":")))
+    OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    STATE.write_text(json.dumps(state, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     log.info("Smart SIP v2: regime %s (score %s) · tilt %+d · sector %s · metal %s · review=%s",
              regime, rr["score"], tilt, sector, metal_choice, review)
     for pid, p in plans.items():

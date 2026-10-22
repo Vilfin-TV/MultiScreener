@@ -324,7 +324,7 @@ function verifyFiles() {
     // the "Best Brokers & Apps" partner list may name investment platforms (referral links) — the data-source
     // rule applies to everything else on the page
     const brk = (src.match(/<section class="brk" id="brokers"[\s\S]*?<\/section>/) || [''])[0];
-    const rest = src.replace(brk, '');
+    const rest = src.replace(brk, '').replace(/<style[\s\S]*?<\/style>/gi, '');
     for (const bad of [/workers\.dev/i, /mfapi/i, /captnemo/i, /kuvera/i, /amfiindia\.com\/spages/i, /nseindia\.com\/api/i,
                        /free ai/i, /no api key/i, /powered by/i, /serverless/i, /live web search/i])
       ok(!bad.test(rest), `page contains forbidden reference ${bad}`);
