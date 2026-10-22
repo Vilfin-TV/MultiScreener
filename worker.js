@@ -272,6 +272,42 @@ export default {
   }
 };
 
+/** Limit external RSS/Atom responses to 2 MiB to protect worker memory. */
+const MAX_FEED_BYTES = 2 * 1024 * 1024;
+async function readResponseTextLimited(response, maxBytes = MAX_FEED_BYTES) {
+  const length = Number(response.headers.get('content-length') || 0);
+  if (length > maxBytes) throw new Error('Feed response exceeds size limit');
+  if (!response.body) {
+    const text = await response.text();
+    if (new TextEncoder().encode(text).byteLength > maxBytes) throw new Error('Feed response exceeds size limit');
+    return text;
+  }
+  const reader = response.body.getReader();
+  const chunks = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > maxBytes) {
+        await reader.cancel().catch(() => {});
+        throw new Error('Feed response exceeds size limit');
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bytes);
+}
+
 async function fetchNewsFeedItems(url, fallbackUrl, limit = 6) {
   const tried = new Set();
   for (const candidate of [url, fallbackUrl]) {
@@ -287,7 +323,7 @@ async function fetchNewsFeedItems(url, fallbackUrl, limit = 6) {
         signal: AbortSignal.timeout(10000),
       });
       if (!res.ok) continue;
-      const xml = await res.text();
+      const xml = await readResponseTextLimited(res);
       const items = parseFeedXml(xml, limit);
       if (items.length) return items;
     } catch (_) {}
