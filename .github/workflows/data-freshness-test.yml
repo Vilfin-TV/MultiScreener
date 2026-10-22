@@ -1,0 +1,22 @@
+name: Market data freshness regression
+on:
+  pull_request:
+    paths:
+      - 'data_freshness.js'
+      - 'tests/data-freshness.test.cjs'
+      - 'india_mf_screener.html'
+      - 'etf_momentum.html'
+      - 'global_etf_momentum.html'
+      - '.github/workflows/data-freshness-test.yml'
+  push:
+    branches: ['phase2/market-data-freshness-warnings']
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check data_freshness.js
+      - run: node tests/data-freshness.test.cjs
