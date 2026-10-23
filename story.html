@@ -20,10 +20,11 @@ const genres=['Discover',...CATEGORIES.map(c=>c.id==='triller'?'Thriller':c.labe
 const KEY='vilfintv-reader-v2-progress';
 const $=id=>document.getElementById(id);
 let current=0,mode='scroll',theme='light',activeStory=null,activeLevel='general',activeGenre='discover';
-let publishedIndex=[];const publishedCache=new Map();
-function getChapters(){if(!activeStory)return CHAPTERS;const lvl=activeStory.levels?.[activeLevel]||activeStory.levels?.general||activeStory;const raw=lvl.body||[];return raw.map((part,i)=>{const d=document.createElement('div');d.innerHTML=(Array.isArray(part)?part:[part]).join(' ');d.querySelectorAll('script,style,iframe,object,embed').forEach(n=>n.remove());return {title:'Chapter '+(i+1),body:d.textContent.trim()}}).filter(x=>x.body).map((c,i)=>({...c,title:'Chapter '+(i+1)}))}
+let publishedIndex=[];let publishedChapters=null;
+function getChapters(){if(publishedChapters)return publishedChapters;if(!activeStory)return CHAPTERS;const lvl=activeStory.levels?.[activeLevel]||activeStory.levels?.general||activeStory;const raw=lvl.body||[];return raw.map((part,i)=>{const d=document.createElement('div');d.innerHTML=(Array.isArray(part)?part:[part]).join(' ');d.querySelectorAll('script,style,iframe,object,embed').forEach(n=>n.remove());return {title:'Chapter '+(i+1),body:d.textContent.trim()}}).filter(x=>x.body).map((c,i)=>({...c,title:'Chapter '+(i+1)}))}
 async function readStory(item){
- if(item.publishedSlug){try{const response=await fetch('stories/v1/'+encodeURIComponent(item.publishedSlug)+'.json',{cache:'no-cache'});if(!response.ok)throw Error('HTTP '+response.status);const doc=await response.json();if(doc.schemaVersion!==1||!Array.isArray(doc.chapters)||!doc.chapters.length)throw Error('Invalid story');const chapters=doc.chapters.map(c=>({title:c.title,body:c.paragraphs.join('\n\n')}));activeStory={headline:doc.title,levels:{general:{body:chapters.map(c=>[c.body])}}};activeLevel='general';current=0;$('level').innerHTML='<option value="general">general</option>';openReader(0);$('jump').innerHTML=chapters.map((c,i)=>'<option value="'+i+'">'+(i+1)+'. '+safeText(c.title)+'</option>').join('');return}catch(error){console.error('Published story unavailable',error);alert('Unable to load this story. Please try again.');return}}
+ publishedChapters=null;
+ if(item.publishedSlug){try{const response=await fetch('stories/v1/'+encodeURIComponent(item.publishedSlug)+'.json',{cache:'no-cache'});if(!response.ok)throw Error('HTTP '+response.status);const doc=await response.json();if(doc.schemaVersion!==1||!Array.isArray(doc.chapters)||!doc.chapters.length)throw Error('Invalid story');const chapters=doc.chapters.map(c=>({title:c.title,body:c.paragraphs.join('\n\n')}));publishedChapters=chapters;activeStory={headline:doc.title,levels:{general:{body:chapters.map(c=>[c.body])}}};activeLevel='general';current=0;$('level').innerHTML='<option value="general">general</option>';openReader(0);$('jump').innerHTML=chapters.map((c,i)=>'<option value="'+i+'">'+(i+1)+'. '+safeText(c.title)+'</option>').join('');return}catch(error){console.error('Published story unavailable',error);alert('Unable to load this story. Please try again.');return}}
 activeStory=item;activeLevel=item.levels?.general?'general':(Object.keys(item.levels||{})[0]||'general');current=0;$('level').innerHTML=['kids','general','expert'].filter(k=>item.levels?.[k]).map(k=>'<option value="'+k+'">'+k+'</option>').join('');openReader(0)}
 function saved(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify({chapter:current,mode,size:$('size').value,theme}))}catch(e){}}
@@ -39,7 +40,7 @@ function renderLibrary(){
 }
 function renderReader(){
  const chapters=getChapters();
- const content=(c,i)=>'<section class="chapter" id="chapter-'+i+'"><p class="eyebrow">Chapter '+(i+1)+' of '+getChapters().length+'</p><h2>'+safeText(c.title)+'</h2><div class="prose"><p>'+safeText(c.body)+'</p></div></section>';
+ const content=(c,i)=>'<section class="chapter" id="chapter-'+i+'"><p class="eyebrow">Chapter '+(i+1)+' of '+getChapters().length+'</p><h2>'+safeText(c.title)+'</h2><div class="prose"><p>'+safeText(c.body).replace(/\\n\\n/g,'</p><p>')+'</p></div></section>';
  $('chapters').innerHTML=mode==='scroll'?chapters.map(content).join(''):content(chapters[current],current);
  $('chapterNav').classList.toggle('hidden',mode==='scroll');
  $('prev').disabled=current===0;$('next').disabled=current===getChapters().length-1;
@@ -59,7 +60,7 @@ $('mode').onchange=e=>{mode=e.target.value;renderReader();window.scrollTo(0,0)};
 $('size').onchange=e=>{document.documentElement.style.setProperty('--font-size',e.target.value+'px');persist()};
 $('theme').onclick=()=>{theme=theme==='light'?'sepia':theme==='sepia'?'dark':'light';document.body.className=theme==='light'?'':theme;persist()};
 $('prev').onclick=()=>navigate(-1);$('next').onclick=()=>navigate(1);
-$('start').onclick=()=>{const featured=publishedIndex.find(p=>p.slug==='clockmakers-missing-minute');if(featured)readStory({publishedSlug:featured.slug});else{activeStory=null;openReader(0)}};$('resume').onclick=()=>openReader(Number(saved().chapter)||0);
+$('start').onclick=()=>{const featured=publishedIndex.find(p=>p.slug==='clockmakers-missing-minute');if(featured)readStory({publishedSlug:featured.slug});else{publishedChapters=null;activeStory=null;openReader(0)}};$('resume').onclick=()=>openReader(Number(saved().chapter)||0);
 $('back').onclick=()=>{$('reader').style.display='none';$('library').style.display='block';$('back').classList.add('hidden');$('progress').classList.add('hidden');window.scrollTo(0,0)};
 document.addEventListener('keydown',e=>{if(mode==='page'&&$('reader').style.display==='block'&&!['SELECT','INPUT','TEXTAREA'].includes(document.activeElement.tagName)){if(e.key==='ArrowRight')navigate(1);if(e.key==='ArrowLeft')navigate(-1)}});
 const old=saved();mode=old.mode==='page'?'page':'scroll';$('mode').value=mode;if(old.size&&['18','20','23','26'].includes(old.size)){$('size').value=old.size;document.documentElement.style.setProperty('--font-size',old.size+'px')}theme=['dark','sepia'].includes(old.theme)?old.theme:'light';document.body.className=theme==='light'?'':theme;
