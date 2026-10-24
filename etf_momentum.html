@@ -916,6 +916,57 @@ details.faq ul+p{margin-top:8px}
   .hero #dataStatus.vts-st::after{font-size:13px}
 }
 
+
+/* Desktop-only ETF hero compactness, matching the India MF page.
+   Keep silver chip/contactless artwork and all live NAV fields intact. */
+@media(min-width:761px){
+  section.hero:has(>#dataStatus:not([hidden])){
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(270px,320px)!important;
+    gap:12px 24px!important;
+    align-items:center!important;
+    padding:10px 0 12px!important;
+    min-height:0!important;
+  }
+  section.hero:has(>#dataStatus:not([hidden]))>div:first-child{
+    grid-column:1!important;grid-row:1!important;
+    align-self:center!important;
+    display:flex;flex-direction:column;align-items:flex-start;
+    justify-content:center;min-width:0;
+  }
+  section.hero:has(>#dataStatus:not([hidden]))>#dataStatus{
+    grid-column:2!important;grid-row:1!important;
+    align-self:center!important;
+    width:100%;max-width:320px;box-sizing:border-box;
+    margin:0!important;
+    padding:84px 13px 10px!important;
+    border-radius:15px!important;
+    box-shadow:0 4px 14px rgba(25,39,60,.13)!important;
+  }
+  section.hero #dataStatus.vts-st::before{
+    top:13px!important;left:14px!important;
+    width:94px!important;height:60px!important;
+  }
+  section.hero #dataStatus.vts-st::after{
+    top:23px!important;right:13px!important;
+    font-size:15px!important;letter-spacing:.07em!important;
+  }
+  section.hero #dataStatus.vts-st .vts-st-r{
+    grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr)!important;
+    gap:5px!important;padding:3px 0!important;
+  }
+  section.hero #dataStatus.vts-st .vts-st-r>span,
+  section.hero #dataStatus.vts-st .vts-st-r>b{
+    font-size:11px!important;line-height:1.2!important;
+  }
+  section.hero #dataStatus.vts-st .vts-st-n{
+    margin:5px 0 0!important;font-size:10px!important;
+    line-height:1.3!important;
+  }
+  section.hero:has(>#dataStatus:not([hidden]))+section.controls{
+    margin-top:0!important;
+  }
+}
 </style>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"VilfinTV","item":"https://vilfintv.com/"},{"@type":"ListItem","position":2,"name":"VilfinTV Screeners","item":"https://vilfintv.com/"},{"@type":"ListItem","position":3,"name":"ETF Momentum Mode","item":"https://vilfintv.com/etf_momentum.html"}]}
