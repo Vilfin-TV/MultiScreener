@@ -2206,6 +2206,9 @@ function renderMeta(){
   var big = FUNDS.filter(function(f){ return isNum(f.aum); }).sort(function(a, b){ return b.aum - a.aum; });
   var picks = [], seenSub = {};
   for (var i = 0; i < big.length && picks.length < 12; i++){ if (!seenSub[big[i].sub] && big[i].asset !== 'Debt') { seenSub[big[i].sub] = 1; picks.push(big[i]); } }
+  // Keep the requested medium-term fund alongside the category-diverse shortcuts.
+  var abslMedium = FUNDS.filter(function(f){ return String(f.code) === '119539'; })[0];
+  if (abslMedium && !picks.some(function(f){ return f.code === abslMedium.code; })) picks.push(abslMedium);
   $('quick').innerHTML = '<span>Popular:</span>' + picks.map(function(f){ return '<button class="qbtn" data-code="' + f.code + '" title="' + esc(f.name) + '">' + esc(shortName(f.name)) + '</button>'; }).join('');
 }
 function shortName(n){ return n.replace(/\s+(Fund|Scheme|Plan)(\s+of\s+Funds?)?\s*$/i, '').replace(/\(.*?\)/g, '').trim(); }
