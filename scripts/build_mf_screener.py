@@ -1063,6 +1063,10 @@ def buy_flags(f, sub=None):
     # existing registered SIP instalments are a different transaction type.
     # Keep the conservative block until scheme-level AMC confirmation reopens.
     if sub == "gold":
+        # Scheme-specific verified restriction: Nippon India Gold Savings Fund
+        # effective 2026-10-16 (new lump sums, new SIP/STP and switch-ins).
+        # Existing registered SIP/STP instalments and redemptions differ.
+        # Other gold FoFs are conservatively paused pending AMC-level checks.
         return ""
     # Other commodity categories must use actual per-scheme availability metadata.
 
