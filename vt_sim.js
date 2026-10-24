@@ -676,8 +676,19 @@
 
     function render(r, a) {
       var x = a && a.detail, rc = (a && a.recent) || [], last = rc[rc.length - 1];
-      var h = '<div class="vts-pv-top"><div class="vts-pv-v"><span>Current value</span><b>' + (x && x.val != null ? inr(x.val) : (x ? inr(x.inv) : '–')) + '</b>' +
-        (x && x.val == null && r.credit ? '<small>At cost until units are credited on ' + esc(dt(r.credit)) + '</small>' : '') + '</div>' +
+      /* Never stamp today's date on a previous market-close valuation.
+         Validate the ledger against its own last history row and the audited scoreboard. */
+      var valDate = x && x.asOf, lastDate = last && last.d;
+      var synced = !!(x && valDate && lastDate && sb.updated &&
+        /^\\d{4}-\\d{2}-\\d{2}$/.test(valDate) &&
+        valDate === lastDate && valDate === sb.updated &&
+        a.updated === sb.updated && sb.auditOk !== false && a.auditOk !== false &&
+        x.val != null && isFinite(x.val));
+      var valueText = synced ? inr(x.val) : '–';
+      var valueNote = synced ? 'Valued as of ' + esc(dt(valDate, false)) + ' · latest audited close' :
+        'Valuation unavailable — ledger date or audit is not in sync';
+      var h = '<div class="vts-pv-top"><div class="vts-pv-v"><span>Current value</span><b>' + valueText + '</b>' +
+        '<small>' + valueNote + '</small>' + '</div>' +
         '<div class="vts-pv-k"><div><span>Invested</span><b>' + (x ? inr(x.inv) : '–') + '</b></div>' +
         '<div><span>Total gain</span><b class="' + cl(x && x.gain) + '">' + (x && x.gain != null ? sinr(x.gain) + ' <small>' + spct(r.ret) + '</small>' : '–') + '</b></div>' +
         '<div><span>' + (last ? (last.first ? 'Since purchase' : 'Day change · ' + esc(dt(last.d, false))) : 'Day change') + '</span><b class="' + cl(last && last.chg) + '">' + (last ? sinr(last.chg) + ' <small>' + spct(last.pct) + '</small>' : '–') + '</b></div>' +
