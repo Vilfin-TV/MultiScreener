@@ -756,16 +756,33 @@ class Engine:
         for s in legs:
             code, note = s["code"], []
             f = funds.get(code) or {}
-            if code not in funds:                                          # no longer listed → the model's next listed alternate
-                alt = next((c for c in (s["src"].get("alts") or []) if funds.get(c)), None)
-                if alt:
-                    note.append("fund no longer listed — bought the model's alternate")
-                    code, f = alt, funds[alt]
-            if f.get("buy") is not None and "L" not in f["buy"]:          # fresh lump sums paused → next open alternate
-                alt = next((c for c in (s["src"].get("alts") or []) if funds.get(c) and "L" in (funds[c].get("buy") or "L")), None)
-                if alt:
-                    note.append(f"{f.get('name', code)} paused fresh purchases — bought the model's alternate")
-                    code = alt
+            # Fresh simulated subscriptions are allowed only when the scheme's
+            # published status explicitly permits this order type. Unknown is
+            # not equivalent to open; never silently allot a closed scheme.
+            # Existing historical ledger orders remain unchanged.
+            frequency = a["freq"]
+            required = "W" if frequency == "w" else "S" if frequency in ("d", "m") else "L"
+            def available(c):
+                info = funds.get(c)
+                if not info:
+                    return False
+                flags = info.get("buy")
+                return isinstance(flags, str) and required in flags
+            original = code
+            if not available(code):
+                alt = next((c for c in (s["src"].get("alts") or [])
+                            if c != code and available(c)), None)
+                if alt is None:
+                    # A weekly order can use a SIP-enabled fund only if the
+                    # weekly frequency is explicitly supported; never infer it.
+                    log.warning("MF BUY SKIPPED %s %s slot=%s code=%s reason=purchase unavailable or unverified",
+                                a["id"], T.isoformat(), s["key"], code)
+                    continue
+                code = alt
+                f = funds[code]
+                note.append("Fresh purchase unavailable or unverified for %s (%s); temporarily substituted %s (%s) after verifying %s purchase eligibility; recheck before next contribution" %
+                            ((funds.get(original) or {}).get("name", original), original,
+                             f.get("name", code), code, required))
             if s.get("upFrom"):
                 note.append("upgrade fund for this amount (the simulator's rule)")
             if s.get("swapped"):
