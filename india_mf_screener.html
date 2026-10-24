@@ -1134,6 +1134,58 @@ footer a{color:var(--text2)}
 @media (max-width:1100px){.brk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:560px){.brk{padding:14px}.brk-grid{grid-template-columns:1fr}}
 .flt-reset{display:inline-block;margin-left:8px;border:1px solid var(--border2,var(--border));background:var(--surface);color:var(--text);border-radius:999px;padding:5px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}.flt-reset:hover{border-color:var(--accent,#4a90e2)}
+
+/* Mutual Fund NAV/date status only — premium gold card, theme-independent contrast. */
+.hero #dataStatus.vts-st{
+  --gold-ink:#35240c;--gold-muted:#695333;--gold-edge:#c49a48;
+  position:relative;isolation:isolate;overflow:hidden;
+  padding:clamp(18px,3vw,28px)!important;margin-top:16px;
+  border:1px solid var(--gold-edge)!important;border-radius:22px!important;
+  background:linear-gradient(130deg,#fff9e8 0%,#f4dfaa 48%,#d9b66b 100%)!important;
+  color:var(--gold-ink)!important;
+  box-shadow:0 12px 30px rgba(91,61,15,.17),inset 0 1px 0 rgba(255,255,255,.85)!important;
+}
+.hero #dataStatus.vts-st::before{
+  content:"";position:absolute;z-index:-1;pointer-events:none;
+  width:260px;height:260px;right:-105px;top:-155px;border-radius:50%;
+  border:38px solid rgba(255,255,255,.23);
+}
+.hero #dataStatus.vts-st .vts-st-r{
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.45fr);
+  align-items:start;gap:12px;padding:11px 0!important;
+  border-bottom:1px solid rgba(105,76,30,.22)!important;
+  color:var(--gold-ink)!important;background:transparent!important;
+}
+.hero #dataStatus.vts-st .vts-st-r>span{
+  color:var(--gold-muted)!important;font-size:clamp(13px,1.5vw,15px)!important;
+  font-weight:600!important;line-height:1.45;overflow-wrap:anywhere;
+}
+.hero #dataStatus.vts-st .vts-st-r>b{
+  color:var(--gold-ink)!important;font-size:clamp(13px,1.55vw,16px)!important;
+  font-weight:750!important;text-align:right;line-height:1.45;
+  overflow-wrap:anywhere;font-variant-numeric:tabular-nums;
+}
+.hero #dataStatus.vts-st .vts-st-r .ok{color:#12633b!important;font-weight:800}
+.hero #dataStatus.vts-st .vts-st-r .warn{color:#8b261e!important;font-weight:800}
+.hero #dataStatus.vts-st .vts-st-n{
+  margin:13px 0 0!important;color:#604820!important;
+  font-size:13px!important;line-height:1.6!important;overflow-wrap:anywhere;
+}
+.hero #dataStatus.vts-st[hidden]{display:none!important}
+.hero #metaChips .chip{
+  border-color:#bb944c!important;
+  background:linear-gradient(125deg,#fff9e9,#eed49b)!important;
+  color:#3e2c11!important;box-shadow:0 2px 7px rgba(73,51,19,.1);
+}
+.hero #metaChips .chip .dot{background:#087a42!important}
+@media(max-width:520px){
+  .hero #dataStatus.vts-st{padding:17px 15px!important;border-radius:18px!important}
+  .hero #dataStatus.vts-st .vts-st-r{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:10px}
+  .hero #dataStatus.vts-st .vts-st-r>span,
+  .hero #dataStatus.vts-st .vts-st-r>b{font-size:12.5px!important}
+  .hero #metaChips .chip{white-space:normal;max-width:100%}
+}
+
 </style>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"VilfinTV","item":"https://vilfintv.com/"},{"@type":"ListItem","position":2,"name":"VilfinTV Screeners","item":"https://vilfintv.com/"},{"@type":"ListItem","position":3,"name":"India Mutual Fund Screener","item":"https://vilfintv.com/india_mf_screener.html"}]}
