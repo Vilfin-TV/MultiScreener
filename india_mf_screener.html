@@ -2198,6 +2198,7 @@ function renderMeta(){
     note: 'Fund houses publish NAVs every business evening; the screener refreshes within about 30 minutes, with morning catch-up runs.' };
   if (window.VTSim && VTSim.statusCard) VTSim.statusCard($('dataStatus'), stOpt);
   fetch(BASE + 'audit.json?v=' + bust(), {cache:'no-cache'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(a){
+    if (!a || a.asOf !== D.asOf || a.funds !== D.count || !Number.isSafeInteger(a.checks) || a.checks <= 0 || !Number.isSafeInteger(a.failures) || a.failures < 0 || a.failures > a.checks) { stOpt.audit = {pending: true, title: 'A verified audit matching the displayed NAV date and fund count is not available yet.'}; if (window.VTSim) VTSim.statusCard($('dataStatus'), stOpt); return; }
     if (a && a.checks && window.VTSim && VTSim.statusCard) { stOpt.audit = { passed: a.checks - (a.failures || 0), errors: a.failures || 0, title: a.checks.toLocaleString('en-IN') + ' automated checks for ' + fmtDate(a.asOf) + (a.recomputedFunds ? ' · ' + a.recomputedFunds + ' funds independently recomputed' : '') + ' · returns re-checked against official NAV history' }; VTSim.statusCard($('dataStatus'), stOpt); }
     if (!a || a.failures !== 0) return;
     var t = a.checks.toLocaleString('en-IN') + ' automated accuracy checks passed for ' + fmtDate(a.asOf) + (a.recomputedFunds ? ' · ' + a.recomputedFunds + ' funds independently recomputed' : '') + ' · NAVs re-checked against official AMFI data through the day';

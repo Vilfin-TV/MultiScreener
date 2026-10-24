@@ -1294,9 +1294,12 @@ function verifyEngine(){
   $("#stAsOf").textContent = fmtDate(d.asOf) + " US close";
   $("#stCount").textContent = d.etfs.length;
   syncTimes(d);
-  $("#stAudit").innerHTML = (a.critical || bad)
-    ? `<span class="warn">${bad} engine mismatch${bad===1?"":"es"}</span>`
-    : `<span class="ok">${total.toLocaleString("en-US")} checks passed</span>`;
+  const verified = Number.isSafeInteger(a.passed) && a.passed > 0 && Number.isSafeInteger(a.critical) && a.critical >= 0;
+  $("#stAudit").innerHTML = !verified
+    ? '<span class="warn">Audit pending</span>'
+    : (a.critical || bad)
+      ? `<span class="warn">${a.critical + bad} audit issue${a.critical + bad===1?"":"s"} under review</span>`
+      : `<span class="ok">${total.toLocaleString("en-US")} checks passed</span>`;
 }
 
 /* ---------- Compute ---------- */
@@ -2345,3 +2348,4 @@ load().then(() => {
 </script>
 </body>
 </html>
+

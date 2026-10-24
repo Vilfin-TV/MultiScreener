@@ -1742,10 +1742,11 @@ function renderChips(v){
     note: 'Near-live prices about every 30 minutes in market hours (delayed); the official close and every figure are rebuilt after 4:47 pm IST.' };
   if (window.VTSim && VTSim.statusCard) VTSim.statusCard($('dataStatus'), stOpt);
   getJSON('data/etf_audit.json?v=' + encodeURIComponent(D.generated)).then(function(A){
+    if (!A || A.asOf !== D.asOf || !Number.isSafeInteger(A.checks) || A.checks <= 0 || !Number.isSafeInteger(A.errors) || A.errors < 0 || A.errors > A.checks) { stOpt.audit = {pending: true, title: 'A verified audit matching the displayed closing-price date is not available yet.'}; if (window.VTSim) VTSim.statusCard($('dataStatus'), stOpt); var pendingChip = $('auditChip'); if (pendingChip) pendingChip.style.display = 'none'; return; }
     if (A && A.checks && window.VTSim && VTSim.statusCard) { stOpt.audit = { passed: A.checks - (A.errors || 0), errors: A.errors || 0, title: 'Independent daily audit for ' + fmtDate(A.asOf) + ': prices, returns, risk, liquidity, premium, scores, ratings, holdings and the Portfolio Simulator recomputed from raw daily prices' }; VTSim.statusCard($('dataStatus'), stOpt); }
     var el = $('auditChip'); if (!el || !A || !A.checks) return;
     el.className = 'chip' + (A.errors ? ' warn' : '');
-    el.innerHTML = '<span class="dot"></span>' + Number(A.checks - A.errors).toLocaleString('en-IN') + ' accuracy checks passed';
+    el.innerHTML = '<span class="dot"></span>' + (A.errors ? A.errors + ' audit issues under review' : Number(A.checks).toLocaleString('en-IN') + ' accuracy checks passed');
     el.title = 'Independent daily audit for ' + fmtDate(A.asOf) + ': prices, returns, risk, liquidity, premium, scores, ratings, holdings and Portfolio Simulator recomputed from the raw daily prices';
     el.style.display = '';
   }).catch(function(){});

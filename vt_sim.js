@@ -1477,7 +1477,7 @@
       var n = o.times ? nextIST(o.times, hol) : null, a = o.audit;
       var rows = [['Data as of', esc(o.asOf || '–')], ['Updated (your time)', o.updated ? esc(f(new Date(o.updated))) : '–'],
                   ['Next update', n ? 'about ' + esc(f(n)) : '–'], [esc(o.covered[0]), esc(o.covered[1])],
-                  ['Accuracy audit', a ? (a.errors ? '<span class="warn">' + esc(String(a.errors)) + ' issue' + (a.errors > 1 ? 's' : '') + ' under review</span>' : '<span class="ok">' + Number(a.passed).toLocaleString('en-IN') + ' checks passed</span>') : '–']];
+                  ['Accuracy audit', a ? (a.pending ? '<span class="warn">Audit pending</span>' : a.errors ? '<span class="warn">' + esc(String(a.errors)) + ' issue' + (a.errors > 1 ? 's' : '') + ' under review</span>' : '<span class="ok">' + Number(a.passed).toLocaleString('en-IN') + ' checks passed</span>') : '–']];
       el.innerHTML = rows.map(function (r, i) { return '<div class="vts-st-r"' + (i === 4 && a && a.title ? ' title="' + esc(a.title) + '"' : i === 2 && o.note ? ' title="' + esc(o.note) + '"' : '') + '><span>' + r[0] + '</span><b>' + r[1] + '</b></div>'; }).join('') +
         (o.note ? '<p class="vts-st-n">' + esc(o.note) + '</p>' : '');
       el.hidden = false;
