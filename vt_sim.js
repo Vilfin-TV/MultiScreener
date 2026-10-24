@@ -444,7 +444,9 @@
     var prod = el.getAttribute('data-vts-buy'), mf = prod === 'mf', gl = prod === 'gl', what = mf ? 'mutual fund' : gl ? 'US-listed ETF' : 'ETF';
     var CUR = sb.cur === 'USD' ? '$' : '₹', LOC = sb.cur === 'USD' ? 'en-US' : 'en-IN', BN = sb.bench || 'Nifty 50', BK = sb.benchKey || 'NIFTYBEES';
     var UD = mf ? 3 : gl ? 4 : 0;
-    var rows = (sb.rows || []).filter(function (r) { return r.product === prod; });
+    var ultimate=el.getAttribute('data-vts-mode')==='ultimate';
+    var rows = (sb.rows || []).filter(function (r) { return r.product === prod && (ultimate ? r.strategy==='ultimate' : r.strategy!=='ultimate'); });
+    if(ultimate)sb=Object.assign({},sb,{start:'2026-10-26'});
     if (!rows.length) { el.innerHTML = ''; return; }
     var dt = function (x, yr) { var s = new Date(String(x).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); return yr === false ? s.replace(/ \d{4}$/, '') : s; };
     var dtw = function (x) { return new Date(String(x).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }); };
@@ -453,11 +455,11 @@
     var sinr = function (v, dp) { return v == null ? '–' : (v > 0 ? '+' : v < 0 ? '−' : '') + CUR + num(Math.abs(v), dp == null ? 2 : dp); };
     var spct = function (v, dp) { return v == null ? '–' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(dp == null ? 2 : dp) + '%'; };
     var cl = function (v) { return v == null ? 'na' : v > 0 ? 'up' : v < 0 ? 'dn' : ''; };
-    var started = new Date() >= new Date(sb.start + 'T00:00:00');
+    var started = new Date() >= new Date(sb.start + (ultimate?'T00:00:00+05:30':'T00:00:00'));
     var initials = function (n) { return String(n).split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase(); };
     var hue = function (n) { var h = 0; for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) % 360; return h; };
     var av = function (r, big) { return '<span class="vts-pf-av' + (big ? ' lg' : '') + '" style="background:hsl(' + hue(r.name) + ' 55% 42%)" aria-hidden="true">' + esc(initials(r.name)) + '</span>'; };
-    var plan = function (r) { return '10+ yr ' + esc(r.risk) + ' · ' + esc(r.freq) + (r.amt ? ' ' + inr(r.amt, 0) : ''); };
+    var plan = function (r) { return (ultimate?'7 yr · 16%+ target · ':'10+ yr ') + esc(r.risk) + ' · ' + esc(r.freq) + (r.amt ? ' ' + inr(r.amt, 0) : ''); };
     var status = function (r) {
       if (r.ret != null) return '<b class="' + cl(r.ret) + '">' + spct(r.ret) + '</b><small>' + (r.metric === 'xirr' ? 'XIRR' : 'total') + '</small>';
       if (!started) return '<b class="na">Starts ' + esc(dt(sb.start, false)) + '</b>';
@@ -465,7 +467,7 @@
       return '<b class="na">' + (r.credit ? 'Units credited ' + esc(dt(r.credit, false)) : 'Buy in progress') + '</b>';
     };
     rows.sort(function (a, b) { return (b.ret == null ? -1e9 : b.ret) - (a.ret == null ? -1e9 : a.ret) || (a.name < b.name ? -1 : 1); });
-    var key = 'vt_simbuy_' + prod, sel = null;
+    var key = 'vt_simbuy_' + prod + (ultimate?'_ultimate':''), sel = null;
     try { sel = localStorage.getItem(key); } catch (e) {}
     var cur = rows.filter(function (r) { return r.name === sel; })[0] || rows[0];
     var best = rows.filter(function (r) { return r.ret != null; })[0];
@@ -503,6 +505,12 @@
       '<div class="vts-pf-list" role="listbox" aria-label="Switch account" hidden></div></div>' +
       '<div class="vts-pv" aria-live="polite"></div>' +
       '<p class="vts-buy-n">Total return: absolute for accounts under one year old, XIRR after. Day change excludes new money. Updated ' + esc(dt(sb.updated)) + (sb.auditOk === false ? ' · figures withheld while a data check is resolved' : '') + '.</p></div></details>';
+    if(ultimate){
+      el.querySelector('.vts-buy-h').setAttribute('aria-label','Ultimate Simulation Folio — John');
+      el.querySelector('.vts-buy-t1>b').textContent='🏆 Ultimate Simulation Folio — John';
+      el.querySelector('.vts-buy-sub').textContent='₹20,000/month · seven years · up to five eligible funds · costs included · 16%+ target, not guaranteed. First purchase window: 26 Oct 2026.';
+      var rule=el.querySelector('.vts-buy-rule');if(rule)rule.innerHTML='<summary>How John buys</summary><p>Fresh verified data before the cut-off; first and last trading weeks; whole monthly fund targets, subject to eligibility and fund minimums. MF orders use applicable official NAVs; ETF orders use the model market-on-close price and whole units. Missing evidence keeps money in cash. Details and all checks appear under Strategy & checks.</p>';
+    }
     var sw = el.querySelector('.vts-pf-sw'), me = el.querySelector('.vts-pf-me'), stEl = el.querySelector('.vts-pf-cur'), list = el.querySelector('.vts-pf-list'), pv = el.querySelector('.vts-pv');
     var cache = {}, tab = 'today', per = '1M';
 
@@ -566,6 +574,7 @@
     }
     /* The buying strategy each agent follows — exactly the engine's rules (sim_config.json), in plain words. */
     function strategy(r, x, nri) {
+      if(ultimate)return [['Budget','Separate ₹20,000 per month for this folio, costs included.'],['Selection','50 eligibility gates; failed sleeves stay in verified parking or cash.'],['Goal','Seven years; 16%+ target is not guaranteed.'],['Tax','Resident India, no other taxable income, new regime; allowances shared with John’s other folio.']];
       var st = stepNote(r);
       return strategy_(r, x, nri).concat(st ? [st] : []);
     }
@@ -628,12 +637,13 @@
                        'The simulation assumes the model\'s funds accept US-based investors; in practice several fund houses do not']
                     : ['No TDS: capital-gains tax is paid through the yearly return — equity held over a year 12.5% on gains above ₹1.25 lakh a year, under a year 20%; debt at the income slab',
                        'Yearly tax harvesting in March: long-term equity gains booked within the ₹1.25 lakh exemption and bought back'];
+      if(ultimate)tax=['Resident India; no other taxable income; new regime. Normal slab and special-rate capital gains are calculated separately.','Annual allowances are shared across John’s MF and ETF folios. Tax harvesting uses settled FIFO lots and actual costs.','16%+ return is an aspiration; no tax saving or investment return is guaranteed.'];
       var row = function (k, v) { return '<div class="vts-pm-r"><span>' + k + '</span><b>' + v + '</b></div>'; };
       var h = '<div class="vts-pm-h">' + av(r, true).replace('vts-pf-av lg', 'vts-pf-av xl') + '<div><h3 id="vtsPmT">' + esc(r.name) + (nri ? ' <i class="vts-buy-nri">NRI</i>' : '') + stepTag(r) + '</h3>' +
         '<p>' + esc(r.role || 'VilfinTV team') + ' · VilfinTV</p></div><button type="button" class="vts-pm-x" aria-label="Close profile">✕</button></div>' +
         '<div class="vts-pm-b"><div class="vts-pm-c"><h4>At VilfinTV</h4>' + row('Role', esc(r.role || '–')) + row('Works on', esc(r.desk || '–')) + row('Team', esc(tm[0])) + row('Based in', esc(tm[1])) +
-        '<h4>Investor profile</h4>' + row('Residency', nri ? 'Non-resident Indian (NRI)' : 'Resident Indian') + row('Model portfolio', '10+ years · ' + esc(r.risk)) +
-        row('Buys', esc(r.freq) + (r.amt ? ' · ' + inr(r.amt, 0) : '') + ' — ' + esc(WHEN[r.freq] || '')) + row('Started', esc(dt(sb.start))) +
+        '<h4>Investor profile</h4>' + row('Residency', nri ? 'Non-resident Indian (NRI)' : 'Resident Indian') + row('Model portfolio', (ultimate?'7 years · ':'10+ years · ') + esc(r.risk)) +
+        row('Buys', (ultimate?'First and last trading weeks · ': '') + esc(r.freq) + (r.amt ? ' · ' + inr(r.amt, 0) : '') + ' — ' + esc(ultimate?'up to five distinct funds/month; October starts 26 Oct':(WHEN[r.freq] || ''))) + row('Started', esc(dt(sb.start))) +
         (r.step ? row(r.step.k === 'bonus' ? 'Year-end bonus' : 'Salary hike', r.step.k === 'bonus' ? inr(r.step.amount, 0) + ' every 31 Dec → added to the first buy of January'
           : '+' + r.step.pct + '% of ' + inr(r.amt, 0) + ' every January (' + (new Date(sb.start + 'T00:00:00').getFullYear() + 1) + ': ' + inr(stepAmt(r, 1), 0) + ')') : '') +
         row('Account', esc(acct)) +
@@ -689,14 +699,19 @@
       var valueNote = ledgerValid
         ? 'Valued as of ' + esc(dt(valDate, false)) +
           (historyMatches && scoreboardMatches ? ' · audited close' : ' · ledger audited; cross-source sync pending')
-        : 'Valuation unavailable — audited ledger is missing or inconsistent';
+        : (ultimate&&!started?'Scheduled for 26 Oct 2026 · no purchases yet':'Valuation unavailable — audited ledger is missing or inconsistent');
+      var cds=(x&&x.contributionDates)||[], dated=cds.filter(function(d){return valDate&&d<=valDate;}), contributionNote=dated.length?'First '+dt(dated[0])+' · latest '+dt(dated[dated.length-1]):'No dated contributions yet';
+      if(!cds.length&&!ultimate&&a&&a.orders){var buys=a.orders.filter(function(o){return o.side==='buy'&&o.placedAt&&(!valDate||o.placedAt<=valDate);}).map(function(o){return o.placedAt;}).sort();if(buys.length)contributionNote='First buy '+dt(buys[0])+' · latest '+dt(buys[buys.length-1]);}
+      if(x&&x.pendingContributionDates&&x.pendingContributionDates.length)contributionNote+=' · '+x.pendingContributionDates.length+' contribution(s) after valuation date';
+      var asOfNote=ledgerValid?'As of '+dt(valDate):'Awaiting first audited valuation';
       var h = '<div class="vts-pv-top"><div class="vts-pv-v"><span>Current value</span><b>' + valueText + '</b>' +
         '<small>' + valueNote + '</small>' + '</div>' +
-        '<div class="vts-pv-k"><div><span>Invested</span><b>' + (x ? inr(x.inv) : '–') + '</b></div>' +
-        '<div><span>Total gain</span><b class="' + cl(x && x.gain) + '">' + (x && x.gain != null ? sinr(x.gain) + ' <small>' + spct(r.ret) + '</small>' : '–') + '</b></div>' +
-        '<div><span>' + (last ? (last.first ? 'Since purchase' : 'Day change · ' + esc(dt(last.d, false))) : 'Day change') + '</span><b class="' + cl(last && last.chg) + '">' + (last ? sinr(last.chg) + ' <small>' + spct(last.pct) + '</small>' : '–') + '</b></div>' +
-        '<div><span>Same money in ' + esc(BN) + '</span>' + (function () { var bv = last && last.inv ? (last.bval / last.inv - 1) * 100 : (x && x.bench); return '<b class="' + cl(bv) + '">' + (bv != null ? spct(bv) : '–') + '</b>'; })() + '</div></div></div>';
+        '<div class="vts-pv-k"><div><span>Invested</span><b>' + (x ? inr(x.inv) : '–') + '</b><small>'+esc(contributionNote)+'</small></div>' +
+        '<div><span>Total gain</span><b class="' + cl(x && x.gain) + '">' + (x && x.gain != null ? sinr(x.gain) + ' <small>' + spct(r.ret) + '</small>' : '–') + '</b><small>'+esc(asOfNote)+'</small></div>' +
+        '<div><span>' + (last ? (last.first ? 'Since purchase · '+esc(dt(last.d)) : 'Day change · ' + esc(dt(last.d))) : 'Day change') + '</span><b class="' + cl(last && last.chg) + '">' + (last ? sinr(last.chg) + ' <small>' + spct(last.pct) + '</small>' : '–') + '</b></div>' +
+        '<div><span>Same money in ' + esc(BN) + '</span>' + (function () { var bv = last && last.inv ? (last.bval / last.inv - 1) * 100 : (x && x.bench); return '<b class="' + cl(bv) + '">' + (bv != null ? spct(bv) : '–') + '</b><small>'+esc(asOfNote)+(ledgerValid&&x&&x.benchmarkPriceDate&&x.benchmarkPriceDate!==valDate?' · quote '+esc(dt(x.benchmarkPriceDate)):'')+'</small>'; })() + '</div></div></div>';
       var tabs = [['today', 'Summary'], ['bench', 'vs ' + BN], ['brk', 'Breakdown'], ['hold', 'Holdings'], ['hist', 'History'], ['orders', 'Orders'], ['tax', 'Tax harvesting']];
+      if(ultimate)tabs=tabs.concat([['strategy','Strategy & checks'],['metrics','Returns & risk'],['backtest','Historical test']]);
       h += '<div class="vts-tabs vts-pv-tabs" role="tablist">' + tabs.map(function (t) { return '<button type="button" role="tab" data-t="' + t[0] + '" class="' + (tab === t[0] ? 'on' : '') + '" aria-selected="' + (tab === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div>';
       h += '<div class="vts-pv-pane">' + pane(r, a) + '</div>';
       pv.innerHTML = h;
@@ -718,6 +733,7 @@
 
     function pane(r, a) {
       var rc = (a && a.recent) || [], last = rc[rc.length - 1];
+      if(ultimate&&['strategy','metrics','backtest'].indexOf(tab)>=0)return window.VTUltimate?VTUltimate.render(tab,a&&a.ultimate):'<p>Strategy viewer unavailable.</p>';
       if (tab === 'tax') return taxHarvest(a && a.taxHarvest);
       if (tab === 'orders') return orders(r, a);
       if (tab === 'today') return today(r, last);
@@ -1073,7 +1089,7 @@
     '.vts-pv-v b{display:block;font-size:22px;font-variant-numeric:tabular-nums;margin-top:2px}.vts-pv-v small{display:block;font-size:11.5px;color:var(--text2);margin-top:2px}' +
     '.vts-pv-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.vts-pv-k div{border:1px solid var(--border);border-radius:10px;padding:8px 10px;min-width:0}' +
     '.vts-pv-k span{display:block;font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}.vts-pv-k b{display:block;font-size:14px;font-variant-numeric:tabular-nums;margin-top:2px}.vts-pv-k b small{font-size:11.5px;font-weight:700}' +
-    '.vts-pv-tabs{margin-bottom:12px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;align-items:stretch}.vts-pv-tabs button{height:auto;min-height:36px;font-size:13px;padding:4px 4px;min-width:0;white-space:normal;line-height:1.15;overflow-wrap:anywhere}' +
+    '.vts-pv-tabs{margin-bottom:12px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;align-items:stretch}[data-vts-mode="ultimate"] .vts-pv-tabs{grid-template-columns:repeat(5,minmax(0,1fr))}@media(max-width:760px){[data-vts-mode="ultimate"] .vts-pv-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}}.vts-pv-tabs button{height:auto;min-height:36px;font-size:13px;padding:4px 4px;min-width:0;white-space:normal;line-height:1.15;overflow-wrap:anywhere}' +
     '.vts-pv-e{margin:8px 0 0;font-size:11.5px;color:var(--text3,var(--text2));line-height:1.55}' +
     '.vts-sum{font-size:13.5px;line-height:1.6}.vts-sum-l{margin:0 0 10px;font-size:14.5px}.vts-sum h4{margin:12px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2)}' +
     '.vts-sum-m{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}.vts-sum-m li{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12.5px}.vts-sum-m b{font-variant-numeric:tabular-nums}' +

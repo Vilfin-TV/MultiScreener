@@ -5,49 +5,270 @@
   "schedule": {
     "monthDay": 3,
     "weekday": 0,
-    "quarterMonths": [1, 4, 7, 10],
+    "quarterMonths": [
+      1,
+      4,
+      7,
+      10
+    ],
     "anchorDay": 19,
     "anchorMonth": 10
   },
-  "monthly": {"c": 10000, "b": 10000, "a": 20000, "v": 20000},
+  "monthly": {
+    "c": 10000,
+    "b": 10000,
+    "a": 20000,
+    "v": 20000
+  },
   "stepUps": {
     "_comment": "Yearly changes to the regular instalment (owner's rules, 20 Oct 2026), one account each. bonus: the person receives a year-end bonus (31 December) and adds all of it to the first regular instalment of the new year (the first one dated in January), split by the model like any instalment. hike: the person gets a salary hike at the end of the year and raises the regular instalment by `pct` % of the original monthly / weekly amount from the first instalment of January, every year (a fixed step, not compounding), rounded to ₹`round`. Instalments before January 2027 are unchanged. These agents hold no dip reserve.",
-    "bonus": {"amount": 20000, "accounts": ["Arjun-MF", "Vishnu-ETF"]},
-    "hike": {"pct": 10, "round": 10, "accounts": ["Aswin-MF", "Sanal-ETF"]}
+    "bonus": {
+      "amount": 20000,
+      "accounts": [
+        "Arjun-MF",
+        "Vishnu-ETF"
+      ]
+    },
+    "hike": {
+      "pct": 10,
+      "round": 10,
+      "accounts": [
+        "Aswin-MF",
+        "Sanal-ETF"
+      ]
+    }
   },
-  "riskNames": {"c": "Conservative", "b": "Balanced", "a": "Aggressive", "v": "Very aggressive"},
-  "freqNames": {"m": "Monthly", "w": "Weekly", "q": "Quarterly", "y": "Yearly", "l": "One-time"},
+  "riskNames": {
+    "c": "Conservative",
+    "b": "Balanced",
+    "a": "Aggressive",
+    "v": "Very aggressive"
+  },
+  "freqNames": {
+    "m": "Monthly",
+    "w": "Weekly",
+    "q": "Quarterly",
+    "y": "Yearly",
+    "l": "One-time"
+  },
   "_personsComment": "VilfinTV staff (roles from VilfinTV's newsroom features): team core = VilfinTV HQ, India; recruit = joined VilfinTV HQ in 2026; us = on the US AI training programme 2026-27 (NRI, one-time investors).",
   "persons": [
-    {"name": "Arjun",     "risk": "c", "freq": "m", "res": "resident", "role": "Team Lead", "desk": "India News · daily task assignments", "team": "core"},
-    {"name": "Aswin",     "risk": "c", "freq": "w", "res": "resident", "role": "Global News & Governance", "desk": "Breaking news from around the world", "team": "core"},
-    {"name": "Sooraj",    "risk": "c", "freq": "q", "res": "resident", "role": "Malayalam News", "desk": "Malayalam news and comedy drafts", "team": "core"},
-    {"name": "Midhun",    "risk": "c", "freq": "y", "res": "resident", "role": "Sports", "desk": "Sports scores and live updates", "team": "core"},
-    {"name": "Govind",    "risk": "b", "freq": "m", "res": "resident", "role": "Creative Stories", "desk": "Creative stories and travel content", "team": "core"},
-    {"name": "Vishnu",    "risk": "b", "freq": "w", "res": "resident", "role": "Academy & Audit", "desk": "Academy courses and content audit", "team": "core"},
-    {"name": "Arun",      "risk": "b", "freq": "q", "res": "resident", "role": "Publisher & Design", "desk": "Publishing stories and image optimisation", "team": "core"},
-    {"name": "Sreeram",   "risk": "b", "freq": "y", "res": "resident", "role": "Security", "desk": "Site and server security", "team": "core"},
-    {"name": "Nithin",    "risk": "a", "freq": "m", "res": "resident", "role": "AI & Database", "desk": "AI model training and database upkeep", "team": "core"},
-    {"name": "Sanal",     "risk": "a", "freq": "w", "res": "resident", "role": "Marketing & SEO", "desk": "Search reach and social promotion", "team": "core"},
-    {"name": "Rahul",     "risk": "a", "freq": "q", "res": "resident", "role": "IPTV & Social", "desk": "IPTV, WhatsApp and Telegram updates", "team": "core"},
-    {"name": "Vimal",     "risk": "a", "freq": "y", "res": "resident", "role": "DevOps", "desk": "Server performance and site delivery", "team": "core"},
-    {"name": "Aishwarya", "risk": "v", "freq": "m", "res": "resident", "role": "Business & AI", "desk": "Business and AI desk", "team": "recruit"},
-    {"name": "Pooja",     "risk": "v", "freq": "w", "res": "resident", "role": "Tech & QA", "desk": "Technology and quality checks", "team": "recruit"},
-    {"name": "Fathima",   "risk": "v", "freq": "q", "res": "resident", "role": "Innovation & R&D", "desk": "Innovation and research projects", "team": "recruit"},
-    {"name": "Teressa",   "risk": "v", "freq": "y", "res": "resident", "role": "Research", "desk": "Research desk", "team": "recruit"},
-    {"name": "Abhinav",   "risk": "c", "freq": "l", "res": "nri", "role": "Business & AI", "desk": "Business and markets coverage", "team": "us"},
-    {"name": "Rohith",    "risk": "b", "freq": "l", "res": "nri", "role": "Tech & QA", "desk": "Technology and quality checks", "team": "us"},
-    {"name": "Jithin",    "risk": "a", "freq": "l", "res": "nri", "role": "Innovation & R&D", "desk": "Innovation and research projects", "team": "us"},
-    {"name": "Akhil",     "risk": "v", "freq": "l", "res": "nri", "role": "Research", "desk": "Internet research", "team": "us"}
+    {
+      "name": "Arjun",
+      "risk": "c",
+      "freq": "m",
+      "res": "resident",
+      "role": "Team Lead",
+      "desk": "India News · daily task assignments",
+      "team": "core"
+    },
+    {
+      "name": "Aswin",
+      "risk": "c",
+      "freq": "w",
+      "res": "resident",
+      "role": "Global News & Governance",
+      "desk": "Breaking news from around the world",
+      "team": "core"
+    },
+    {
+      "name": "Sooraj",
+      "risk": "c",
+      "freq": "q",
+      "res": "resident",
+      "role": "Malayalam News",
+      "desk": "Malayalam news and comedy drafts",
+      "team": "core"
+    },
+    {
+      "name": "Midhun",
+      "risk": "c",
+      "freq": "y",
+      "res": "resident",
+      "role": "Sports",
+      "desk": "Sports scores and live updates",
+      "team": "core"
+    },
+    {
+      "name": "Govind",
+      "risk": "b",
+      "freq": "m",
+      "res": "resident",
+      "role": "Creative Stories",
+      "desk": "Creative stories and travel content",
+      "team": "core"
+    },
+    {
+      "name": "Vishnu",
+      "risk": "b",
+      "freq": "w",
+      "res": "resident",
+      "role": "Academy & Audit",
+      "desk": "Academy courses and content audit",
+      "team": "core"
+    },
+    {
+      "name": "Arun",
+      "risk": "b",
+      "freq": "q",
+      "res": "resident",
+      "role": "Publisher & Design",
+      "desk": "Publishing stories and image optimisation",
+      "team": "core"
+    },
+    {
+      "name": "Sreeram",
+      "risk": "b",
+      "freq": "y",
+      "res": "resident",
+      "role": "Security",
+      "desk": "Site and server security",
+      "team": "core"
+    },
+    {
+      "name": "Nithin",
+      "risk": "a",
+      "freq": "m",
+      "res": "resident",
+      "role": "AI & Database",
+      "desk": "AI model training and database upkeep",
+      "team": "core"
+    },
+    {
+      "name": "Sanal",
+      "risk": "a",
+      "freq": "w",
+      "res": "resident",
+      "role": "Marketing & SEO",
+      "desk": "Search reach and social promotion",
+      "team": "core"
+    },
+    {
+      "name": "Rahul",
+      "risk": "a",
+      "freq": "q",
+      "res": "resident",
+      "role": "IPTV & Social",
+      "desk": "IPTV, WhatsApp and Telegram updates",
+      "team": "core"
+    },
+    {
+      "name": "Vimal",
+      "risk": "a",
+      "freq": "y",
+      "res": "resident",
+      "role": "DevOps",
+      "desk": "Server performance and site delivery",
+      "team": "core"
+    },
+    {
+      "name": "Aishwarya",
+      "risk": "v",
+      "freq": "m",
+      "res": "resident",
+      "role": "Business & AI",
+      "desk": "Business and AI desk",
+      "team": "recruit"
+    },
+    {
+      "name": "Pooja",
+      "risk": "v",
+      "freq": "w",
+      "res": "resident",
+      "role": "Tech & QA",
+      "desk": "Technology and quality checks",
+      "team": "recruit"
+    },
+    {
+      "name": "Fathima",
+      "risk": "v",
+      "freq": "q",
+      "res": "resident",
+      "role": "Innovation & R&D",
+      "desk": "Innovation and research projects",
+      "team": "recruit"
+    },
+    {
+      "name": "Teressa",
+      "risk": "v",
+      "freq": "y",
+      "res": "resident",
+      "role": "Research",
+      "desk": "Research desk",
+      "team": "recruit"
+    },
+    {
+      "name": "Abhinav",
+      "risk": "c",
+      "freq": "l",
+      "res": "nri",
+      "role": "Business & AI",
+      "desk": "Business and markets coverage",
+      "team": "us"
+    },
+    {
+      "name": "Rohith",
+      "risk": "b",
+      "freq": "l",
+      "res": "nri",
+      "role": "Tech & QA",
+      "desk": "Technology and quality checks",
+      "team": "us"
+    },
+    {
+      "name": "Jithin",
+      "risk": "a",
+      "freq": "l",
+      "res": "nri",
+      "role": "Innovation & R&D",
+      "desk": "Innovation and research projects",
+      "team": "us"
+    },
+    {
+      "name": "Akhil",
+      "risk": "v",
+      "freq": "l",
+      "res": "nri",
+      "role": "Research",
+      "desk": "Internet research",
+      "team": "us"
+    },
+    {
+      "name": "John",
+      "risk": "a",
+      "freq": "m",
+      "res": "resident",
+      "role": "Manager",
+      "desk": "Ultimate Simulation Folio · seven-year goal",
+      "team": "core",
+      "products": [
+        "mf",
+        "etf"
+      ],
+      "strategy": "ultimate",
+      "start": "2026-10-26",
+      "horizon": "h7",
+      "taxProfile": {
+        "regime": "new",
+        "otherIncome": 0
+      }
+    }
   ],
-  "benchmark": {"mf": 120716, "mfName": "UTI Nifty 50 Index Fund", "etf": "NIFTYBEES"},
+  "benchmark": {
+    "mf": 120716,
+    "mfName": "UTI Nifty 50 Index Fund",
+    "etf": "NIFTYBEES"
+  },
   "mfRules": {
-    "stampDuty": 0.00005,
+    "stampDuty": 5e-05,
     "unitDecimals": 3,
     "creditBusinessDays": 2,
-    "sttRedeemEquity": 0.00001,
+    "sttRedeemEquity": 1e-05,
     "exitLoadIfUnknown": 0.01,
-    "liquidSubs": ["liquid", "overnight"]
+    "liquidSubs": [
+      "liquid",
+      "overnight"
+    ]
   },
   "etfRules": {
     "_comment": "How every simulated ETF trade is priced (buys and sells alike). The order is placed on its plan date and executes as a market-on-close trade: the exchange's official closing price of the first trading session on or after the order date (the close is set at 3:30 pm IST from the weighted average of the last 30 minutes of trading). Exchange holidays, weekends and days the ETF did not trade roll to the next session. Whole units only, within the budget including cash carried from earlier buys; charges per etfFees; units credited T+1. Every fill records this rule id and the audit checks each trade against it.",
@@ -61,11 +282,11 @@
     "brokerageNriMin": 20,
     "brokerageNriMax": 100,
     "stampBuy": 0.00015,
-    "exchange": 0.0000297,
-    "sebi": 0.000001,
-    "ipft": 0.000001,
+    "exchange": 2.97e-05,
+    "sebi": 1e-06,
+    "ipft": 1e-06,
     "gst": 0.18,
-    "sttSellEquity": 0.00001,
+    "sttSellEquity": 1e-05,
     "dpSell": 13.5,
     "creditBusinessDays": 1
   },
@@ -74,7 +295,11 @@
     "droppedStreak": 2,
     "minHoldMonths": 12,
     "deferMaxMonths": 6,
-    "harvestMonths": [1, 2, 3]
+    "harvestMonths": [
+      1,
+      2,
+      3
+    ]
   },
   "taxHarvest": {
     "_comment": "Once a financial year, on the first trading day on/after 10 March, every agent harvests tax with the same rules a careful investor would use. The yearly equity LTCG exemption is per person, so the MF and ETF accounts share it (MF first). Gain harvesting: sell long-term, exit-load-free, unlocked equity lots (FIFO) whose gains fit in the person's unused exemption and buy the same fund / ETF back with the proceeds (higher cost basis, fresh holding period). Loss harvesting: if the person has taxable realised gains this year, sell equity lots standing at a loss (up to those gains) and buy them back. Done only when the tax saved beats the round-trip costs (stamp duty, STT, ETF brokerage / DP) and the gain is at least minGain.",
@@ -83,37 +308,253 @@
     "minGain": 1000,
     "nriGainHarvest": false
   },
-  "tax": {"stcgEquity": 0.20, "ltcgEquity": 0.125, "ltcgExempt": 125000, "debtSlab": 0.30, "cess": 0.04, "ltcgDaysEquity": 365},
+  "tax": {
+    "stcgEquity": 0.2,
+    "ltcgEquity": 0.125,
+    "ltcgExempt": 125000,
+    "debtSlab": 0.3,
+    "cess": 0.04,
+    "ltcgDaysEquity": 365
+  },
   "daily": {
     "_comment": "Daily portfolio summary journal (store['days']). Market moves are the official closes of these index-tracking ETFs; look-through sector exposure (from the funds' latest monthly portfolios) is linked to the tracker of the same sector (names matched case-insensitively).",
-    "market": [["NIFTYBEES", "Nifty 50"], ["JUNIORBEES", "Nifty Next 50"], ["MID150BEES", "Nifty Midcap 150"], ["HDFCSML250", "Nifty Smallcap 250"],
-               ["BANKBEES", "Nifty Bank"], ["PSUBNKBEES", "Nifty PSU Bank"], ["ITBEES", "Nifty IT"], ["PHARMABEES", "Nifty Pharma"],
-               ["AUTOBEES", "Nifty Auto"], ["FMCGIETF", "Nifty FMCG"], ["CONSUMBEES", "Nifty India Consumption"], ["INFRABEES", "Nifty Infra"],
-               ["METALIETF", "Nifty Metal"], ["OILIETF", "Nifty Oil & Gas"], ["CPSEETF", "Nifty CPSE"], ["MODEFENCE", "Nifty India Defence"],
-               ["MON100", "Nasdaq 100"], ["MASPTOP50", "S&P 500 Top 50"], ["HNGSNGBEES", "Hang Seng"], ["GOLDBEES", "Gold"], ["SILVERBEES", "Silver"]],
-    "sectorTracker": {"banks": "BANKBEES", "it - software": "ITBEES", "it - services": "ITBEES", "pharmaceuticals & biotechnology": "PHARMABEES",
-                      "healthcare services": "PHARMABEES", "automobiles": "AUTOBEES", "auto components": "AUTOBEES", "diversified fmcg": "FMCGIETF",
-                      "food products": "FMCGIETF", "personal products": "FMCGIETF", "beverages": "FMCGIETF", "cigarettes & tobacco products": "FMCGIETF",
-                      "petroleum products": "OILIETF", "oil": "OILIETF", "gas": "OILIETF", "consumable fuels": "OILIETF",
-                      "ferrous metals": "METALIETF", "non - ferrous metals": "METALIETF", "minerals & mining": "METALIETF", "diversified metals": "METALIETF",
-                      "aerospace & defense": "MODEFENCE", "construction": "INFRABEES", "cement & cement products": "INFRABEES", "power": "INFRABEES",
-                      "telecom - services": "INFRABEES", "transport infrastructure": "INFRABEES", "retailing": "CONSUMBEES",
-                      "consumer durables": "CONSUMBEES", "leisure services": "CONSUMBEES"},
+    "market": [
+      [
+        "NIFTYBEES",
+        "Nifty 50"
+      ],
+      [
+        "JUNIORBEES",
+        "Nifty Next 50"
+      ],
+      [
+        "MID150BEES",
+        "Nifty Midcap 150"
+      ],
+      [
+        "HDFCSML250",
+        "Nifty Smallcap 250"
+      ],
+      [
+        "BANKBEES",
+        "Nifty Bank"
+      ],
+      [
+        "PSUBNKBEES",
+        "Nifty PSU Bank"
+      ],
+      [
+        "ITBEES",
+        "Nifty IT"
+      ],
+      [
+        "PHARMABEES",
+        "Nifty Pharma"
+      ],
+      [
+        "AUTOBEES",
+        "Nifty Auto"
+      ],
+      [
+        "FMCGIETF",
+        "Nifty FMCG"
+      ],
+      [
+        "CONSUMBEES",
+        "Nifty India Consumption"
+      ],
+      [
+        "INFRABEES",
+        "Nifty Infra"
+      ],
+      [
+        "METALIETF",
+        "Nifty Metal"
+      ],
+      [
+        "OILIETF",
+        "Nifty Oil & Gas"
+      ],
+      [
+        "CPSEETF",
+        "Nifty CPSE"
+      ],
+      [
+        "MODEFENCE",
+        "Nifty India Defence"
+      ],
+      [
+        "MON100",
+        "Nasdaq 100"
+      ],
+      [
+        "MASPTOP50",
+        "S&P 500 Top 50"
+      ],
+      [
+        "HNGSNGBEES",
+        "Hang Seng"
+      ],
+      [
+        "GOLDBEES",
+        "Gold"
+      ],
+      [
+        "SILVERBEES",
+        "Silver"
+      ]
+    ],
+    "sectorTracker": {
+      "banks": "BANKBEES",
+      "it - software": "ITBEES",
+      "it - services": "ITBEES",
+      "pharmaceuticals & biotechnology": "PHARMABEES",
+      "healthcare services": "PHARMABEES",
+      "automobiles": "AUTOBEES",
+      "auto components": "AUTOBEES",
+      "diversified fmcg": "FMCGIETF",
+      "food products": "FMCGIETF",
+      "personal products": "FMCGIETF",
+      "beverages": "FMCGIETF",
+      "cigarettes & tobacco products": "FMCGIETF",
+      "petroleum products": "OILIETF",
+      "oil": "OILIETF",
+      "gas": "OILIETF",
+      "consumable fuels": "OILIETF",
+      "ferrous metals": "METALIETF",
+      "non - ferrous metals": "METALIETF",
+      "minerals & mining": "METALIETF",
+      "diversified metals": "METALIETF",
+      "aerospace & defense": "MODEFENCE",
+      "construction": "INFRABEES",
+      "cement & cement products": "INFRABEES",
+      "power": "INFRABEES",
+      "telecom - services": "INFRABEES",
+      "transport infrastructure": "INFRABEES",
+      "retailing": "CONSUMBEES",
+      "consumer durables": "CONSUMBEES",
+      "leisure services": "CONSUMBEES"
+    },
     "keepPublicDays": 14
   },
   "dipRule": {
     "_comment": "Market-dip lump sums (shared by the Portfolio Simulator pages and the agents). Each segment's fall = how far its index tracker's official close is below its highest close of the last `lookback` sessions. A buy fires on the day the fall first reaches a deeper tier in the current fall (tiers reset once the index is back within `resetPct` of its high), after 26 checks. Amount by tier, never below `min` or above `max`. Agents in `persons` hold `reserve` per account in a liquid fund (MF) / liquid ETF (ETF) and buy only from it.",
-    "lookback": 63, "resetPct": 1.0, "tiers": [[15, 20000], [10, 10000], [5, 5000]], "min": 5000, "max": 20000,
-    "value": {"pePctMax": 0.8, "peMedMax": 1.15, "pbPctMax": 0.8, "n50PctMax": 0.8, "metalPctMax": 0.9, "metalVs200Max": 15.0, "dxy3mMax": 5.0, "d5Min": -12.0, "dd52Max": 30.0, "down10Max": 7, "vixMax": 35.0, "inr3mMin": -4.0, "us10y3mMax": 0.75},
-    "confirmPts": 1.5, "crashDayPct": -8.0, "maxFallPct": 40.0,
-    "segments": {
-      "large":  {"label": "Large cap", "index": "Nifty 50", "trk": "NIFTYBEES", "trk2": "SETFNIF50", "val": "n50", "eyGapMin": -4.5, "mf": ["core", "lmcore"], "etf": ["n50"]},
-      "mid":    {"label": "Mid cap", "index": "Nifty Midcap 150", "trk": "MIDCAPETF", "trk2": "MIDCAPIETF", "val": "mid150", "eyGapMin": -5.5, "mf": ["mid"], "etf": ["mid"]},
-      "small":  {"label": "Small cap", "index": "Nifty Smallcap 250", "trk": "HDFCSML250", "trk2": "MOSMALL250", "val": "sml250", "eyGapMin": -5.5, "mf": ["small"], "etf": ["small"]},
-      "gold":   {"label": "Gold", "index": "Domestic gold price", "trk": "GOLDBEES", "trk2": "GOLDIETF", "val": null, "metal": "gold", "mf": ["metal"], "etf": ["gold"]},
-      "silver": {"label": "Silver", "index": "Domestic silver price", "trk": "SILVERBEES", "trk2": "SILVERIETF", "val": null, "metal": "silver", "mf": ["metal"], "etf": ["silver"]}
+    "lookback": 63,
+    "resetPct": 1.0,
+    "tiers": [
+      [
+        15,
+        20000
+      ],
+      [
+        10,
+        10000
+      ],
+      [
+        5,
+        5000
+      ]
+    ],
+    "min": 5000,
+    "max": 20000,
+    "value": {
+      "pePctMax": 0.8,
+      "peMedMax": 1.15,
+      "pbPctMax": 0.8,
+      "n50PctMax": 0.8,
+      "metalPctMax": 0.9,
+      "metalVs200Max": 15.0,
+      "dxy3mMax": 5.0,
+      "d5Min": -12.0,
+      "dd52Max": 30.0,
+      "down10Max": 7,
+      "vixMax": 35.0,
+      "inr3mMin": -4.0,
+      "us10y3mMax": 0.75
     },
-    "persons": ["Govind", "Nithin", "Aishwarya"],
-    "reserve": 20000, "reserveFrom": "2026-10-21", "historyFrom": "2026-04-01"
+    "confirmPts": 1.5,
+    "crashDayPct": -8.0,
+    "maxFallPct": 40.0,
+    "segments": {
+      "large": {
+        "label": "Large cap",
+        "index": "Nifty 50",
+        "trk": "NIFTYBEES",
+        "trk2": "SETFNIF50",
+        "val": "n50",
+        "eyGapMin": -4.5,
+        "mf": [
+          "core",
+          "lmcore"
+        ],
+        "etf": [
+          "n50"
+        ]
+      },
+      "mid": {
+        "label": "Mid cap",
+        "index": "Nifty Midcap 150",
+        "trk": "MIDCAPETF",
+        "trk2": "MIDCAPIETF",
+        "val": "mid150",
+        "eyGapMin": -5.5,
+        "mf": [
+          "mid"
+        ],
+        "etf": [
+          "mid"
+        ]
+      },
+      "small": {
+        "label": "Small cap",
+        "index": "Nifty Smallcap 250",
+        "trk": "HDFCSML250",
+        "trk2": "MOSMALL250",
+        "val": "sml250",
+        "eyGapMin": -5.5,
+        "mf": [
+          "small"
+        ],
+        "etf": [
+          "small"
+        ]
+      },
+      "gold": {
+        "label": "Gold",
+        "index": "Domestic gold price",
+        "trk": "GOLDBEES",
+        "trk2": "GOLDIETF",
+        "val": null,
+        "metal": "gold",
+        "mf": [
+          "metal"
+        ],
+        "etf": [
+          "gold"
+        ]
+      },
+      "silver": {
+        "label": "Silver",
+        "index": "Domestic silver price",
+        "trk": "SILVERBEES",
+        "trk2": "SILVERIETF",
+        "val": null,
+        "metal": "silver",
+        "mf": [
+          "metal"
+        ],
+        "etf": [
+          "silver"
+        ]
+      }
+    },
+    "persons": [
+      "Govind",
+      "Nithin",
+      "Aishwarya"
+    ],
+    "reserve": 20000,
+    "reserveFrom": "2026-10-21",
+    "historyFrom": "2026-04-01"
   }
 }

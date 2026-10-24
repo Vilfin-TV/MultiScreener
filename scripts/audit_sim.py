@@ -483,6 +483,7 @@ def main() -> int:
 
     # schedule & amounts
     for p in CFG["persons"]:
+        if p.get("strategy")=="ultimate": continue
         exp = [iso(d) for d in expected_dates(p["freq"], start, today)]
         for prod in ("MF", "ETF"):
             aid = f"{p['name']}-{prod}"
@@ -501,6 +502,7 @@ def main() -> int:
 
     # plan & legs
     for e in inst:
+        if persons[e["acct"].rsplit("-",1)[0]].get("strategy")=="ultimate": continue
         legs = [o for o in orders.values() if o.get("iid") == e["iid"]]
         A.check("plan", e["ref"] in store.get("plans", {}), f"{e['iid']}: plan {e['ref']} not recorded")
         tot = r2(sum(o["amount"] for o in legs))
@@ -541,6 +543,7 @@ def main() -> int:
             person = persons.get(aid.rsplit("-", 1)[0]) or {}
             freq = person.get("freq", "m")
             flag = "W" if freq == "w" else "S" if freq in ("d", "m") else "L"
+            if person.get("strategy")=="ultimate": flag="L"
             flags = status.get(str(o["code"]))
             A.check("availability", isinstance(flags, str) and flag in flags,
                     f"{o['oid']}: fresh {flag} purchase of {o['code']} is unavailable or unverified ({flags!r})")
@@ -639,7 +642,7 @@ def main() -> int:
                 continue
             amt = o["amount"] if o.get("amount") is not None else funded.get(o["oid"])
             ck = ("dip:" if "|dip|" in o.get("iid", "") else "rv:" if "|review|" in o.get("iid", "") else "hv:" if "|harvest|" in o.get("iid", "") else "") + str(o["slot"])
-            budget = r2(amt + carry.get(ck, 0.0))
+            budget = r2(amt + (0.0 if o.get("strategy")=="ultimate" else carry.get(ck, 0.0)))
             px = (prices.get("etf", {}).get(o["sym"]) or {}).get(e["tradeDate"])
             A.check("etf", px is not None and abs(px - e["price"]) < 1e-9, f"{o['oid']}: price {e['price']} not the recorded close of {e['tradeDate']}")
             A.check("etf", day(e["tradeDate"]) >= day(o["T"]) and open_day(day(e["tradeDate"])), f"{o['oid']}: trade date {e['tradeDate']}")
@@ -671,6 +674,7 @@ def main() -> int:
     for oid, o in orders.items():
         if o["side"] != "sell" or o.get("level") not in ("weak", "severe", "harvest"):
             continue
+        if o.get('strategy')=='ultimate':continue  # separately recomputed profile/settlement checks below
         rv = reviews.get(o["iid"])
         A.check("rules", rv is not None, f"{oid}: sale without its review / harvest record")
         d = redeems.get(oid)
@@ -742,7 +746,7 @@ def main() -> int:
                 A.check("value", h["priceDate"] is not None and (day(acc["series"][-1][0]) - day(h["priceDate"])).days <= 12,
                         f"{aid}: {h['key']} price from {h['priceDate']} is stale", warn=True)
             val = sum(h["units"] * (h["price"] or 0) for h in acc["holdings"])
-            pend = sum((t["amount"] or 0) for t in acc["txns"] if t["side"] == "buy" and t.get("units") is None) if aid.endswith("-MF") else 0.0
+            pend = sum((t["amount"] or 0) for t in acc["txns"] if t["side"] == "buy" and t.get("units") is None) if aid.endswith("-MF") and not acc.get("cashAccount") else 0.0
             val += pend + (acc.get("cash") or 0)
             A.check("value", abs(val - acc["value"]) < 1.0, f"{aid}: value {acc['value']} vs recomputed {r2(val)}")
             inv = sum(e["amount"] for e in money if e["acct"] == aid)
@@ -783,11 +787,12 @@ def main() -> int:
             continue
         aid, ds = e["a"], e["d"]
         mf = aid.endswith("-MF")
+        ca = next((a.get("cashAccount",False) for a in view["accounts"] if a["id"]==aid),False)
         lots, cash, pend, inv, out = {}, 0.0, 0.0, 0.0, 0.0
         for x in acc_inst.get(aid, []):
             if x["T"] <= ds:
                 inv += x["amount"]
-                cash += 0 if mf else x["amount"]
+                cash += x["amount"] if not mf or ca else 0
         for x in acc_evs.get(aid, []):
             o = orders[x["oid"]]
             if o["T"] > ds:
@@ -804,14 +809,16 @@ def main() -> int:
                     left = round(left - take, 6)
                 if o.get("withdraw"):
                     out += x["net"]
-                elif not mf:
+                elif not mf or ca:
                     cash += x["net"]
                 continue
             cost = x["amount"] if x["k"] == "allot" else x["gross"] + x["charges"]["total"]
             lots.setdefault(key, []).append([x["credit"], x["units"], cost, o["T"], o["oid"]])
             if not mf:
                 cash -= x["gross"] + x["charges"]["total"]
-        if mf:
+            elif ca:
+                cash -= x["amount"]
+        if mf and not ca:
             for o in acc_orders.get(aid, []):
                 if o["side"] == "buy" and o["T"] <= ds and o["oid"] not in done:
                     pend += o["amount"] if o.get("amount") is not None else funded.get(o["oid"], 0.0)
@@ -837,8 +844,8 @@ def main() -> int:
             later = [x for x in b if h[3] and h[3] < x <= ds]
             A.check("daily", not later, f"{aid} {ds}: {key} valued at {h[3]} although a later price ({later[:1]}) is on record", warn=True)
             val += cu * (h[2] or 0) + uc
-        A.check("daily", abs(e["pend"] - pend) < 0.02 and abs(e["cash"] - (0.0 if mf else cash)) < 0.02, f"{aid} {ds}: pending {e['pend']} / cash {e['cash']} vs {r2(pend)} / {r2(cash)}")
-        val += pend + (0.0 if mf else cash)
+        A.check("daily", abs(e["pend"] - pend) < 0.02 and abs(e["cash"] - (cash if not mf or ca else 0.0)) < 0.02, f"{aid} {ds}: pending {e['pend']} / cash {e['cash']} vs {r2(pend)} / {r2(cash)}")
+        val += pend + (cash if not mf or ca else 0.0)
         A.check("daily", abs(e["val"] - val) < 0.1 and abs(e["inv"] - inv) < 0.01 and abs(e["out"] - out) < 0.02,
                 f"{aid} {ds}: value / invested {e['val']} / {e['inv']} vs recomputed {r2(val)} / {r2(inv)}")
         lt = e.get("lt", lastd.get(aid, {}).get("_lt", {}))
@@ -896,6 +903,9 @@ def main() -> int:
         peer = next((x for x in view['accounts'] if x['name'] == a['name'] and x['id'] != a['id']), None)
         if peer:
             A.check('taxProfile', t.get('annualEstimate') == peer.get('taxHarvest', {}).get('annualEstimate') and t.get('additionalLTCGRoom') == peer.get('taxHarvest', {}).get('additionalLTCGRoom'), f"{a['id']}: per-person allowance differs between products")
+
+    from audit_ultimate import audit as audit_ultimate
+    audit_ultimate(A,store,view,CFG,open_day)
 
     res_out = {"v": 1, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "events": len(evs),
                "checks": A.n, "errors": A.errors[:200], "warnings": A.warnings[:200], "nErrors": len(A.errors),

@@ -25,6 +25,14 @@ on:
       - 'scripts/sim_xirr.js'
       - 'scripts/sim_tax.py'
       - 'scripts/test_sim_tax.py'
+      - 'scripts/ultimate_*.py'
+      - 'scripts/build_ultimate_folio.py'
+      - 'scripts/build_fund_earnings.py'
+      - 'scripts/download_ultimate_history.py'
+      - 'scripts/refresh_ultimate.py'
+      - 'scripts/audit_ultimate.py'
+      - 'scripts/test_ultimate*.py'
+      - 'scripts/test_fund_earnings.py'
       - 'scripts/dip_rules.py'
       - '.github/workflows/sim_ledger.yml'
   schedule:
@@ -60,7 +68,7 @@ jobs:
 
       - name: Install tools
         run: |
-          pip install -q requests
+          pip install -q requests numpy pandas scipy yfinance
           npm install -g wrangler@3
 
       - name: Find a trusted ledger copy (main → backup → dated → off-site)
@@ -125,6 +133,14 @@ jobs:
 
       - name: Verify profile tax rules and fiscal boundaries
         run: python -m unittest discover -s scripts -p test_sim_tax.py
+
+      - name: Refresh John's prospective eligibility evidence and historical coverage
+        run: python scripts/refresh_ultimate.py
+
+      - name: Validate John's budget, source availability, eligibility and history rules
+        run: |
+          python -m unittest discover -s scripts -p 'test_ultimate*.py'
+          python -m unittest discover -s scripts -p test_fund_earnings.py
 
       - name: Run the simulator engine
         run: python scripts/sim_engine.py --store "$RUNNER_TEMP/sim/ledger.json" --view "$RUNNER_TEMP/sim/view.json"
@@ -195,4 +211,4 @@ jobs:
           json.dump(sb, open("data/sim_scoreboard.json", "w"), separators=(",", ":"), ensure_ascii=False)
           print(f"scoreboard: {len(sb['rows'])} rows · ledger {len(evs)} entries · daily journal {len(days)} records")
           EOF
-          bash scripts/push_data.sh "chore(data): Simulator Buy scoreboard" data/sim_meta.json data/sim_scoreboard.json data/sim
+          bash scripts/push_data.sh "chore(data): audited simulator and John folios" data/sim_meta.json data/sim_scoreboard.json data/sim data/ultimate_folio.json data/mf/fund_earnings.json

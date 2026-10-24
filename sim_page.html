@@ -139,6 +139,7 @@ details.x summary{cursor:pointer;color:var(--acc);font-size:12px}
   <nav class="tabs"><div class="in">
     <button class="tab on" data-v="Overview">Leaderboard</button>
     <button class="tab" data-v="Stmt">Statement</button>
+    <button class="tab" data-v="Ultimate">John · Ultimate folios</button>
     <button class="tab" data-v="Tax">Tax harvesting</button>
     <button class="tab" data-v="Audit">Audit</button>
     <button class="tab" data-v="Snaps">Permanent copies</button>
@@ -176,12 +177,44 @@ details.x summary{cursor:pointer;color:var(--acc);font-size:12px}
       <div class="card" id="stmt"></div>
     </section>
 
+    <section id="vUltimate" class="hide"><div class="card" id="ultimate"></div></section>
     <section id="vTax" class="hide"><div class="card" id="tax"></div></section>
     <section id="vAudit" class="hide"><div class="card" id="audit"></div></section>
     <section id="vSnaps" class="hide"><div class="card" id="snaps"></div></section>
   </main>
 </div>
 
+<script>/* Shared, read-only John folio panels for the public and private statements. */
+(function(){'use strict';
+  function e(s){return String(s==null?'—':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function n(v,s){return typeof v==='number'&&isFinite(v)?v.toLocaleString('en-IN',{maximumFractionDigits:2})+(s||''):'Unavailable';}
+  function table(headers,rows){return '<div style="overflow-x:auto;max-width:100%" tabindex="0"><table style="width:100%;min-width:'+(headers.length>8?'1100':'720')+'px;border-collapse:collapse;text-align:left"><thead><tr>'+headers.map(function(h){return '<th style="padding:10px;border-bottom:1px solid #cbd5e1;white-space:nowrap">'+e(h)+'</th>';}).join('')+'</tr></thead><tbody>'+rows.map(function(r){return '<tr>'+r.map(function(v){return '<td style="padding:10px;border-bottom:1px solid #e2e8f0;vertical-align:top">'+v+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table></div>';}
+  function render(kind,u){
+    if(!u||!u.plan)return '<p>Waiting for an audited strategy snapshot.</p>';
+    var p=u.plan,selected=p.selected||[],h='<p><b>John · Manager · India resident · no other taxable income</b></p><p>₹20,000 per month in this folio, including modelled costs; separate ₹20,000 mutual fund and ₹20,000 ETF budgets. Start: <b>26 Oct 2026</b>. Seven-year goal; 16%+ annualised return is a target, not a forecast or guarantee.</p>';
+    h+='<p>Market evidence as of <b>'+e(u.asOf)+'</b>. '+e(u.status)+'.</p>';
+    if(kind==='strategy'){
+      h+='<p><b>Plan '+e(p.mode)+'</b> · '+e(p.reason)+'</p><p>First and last trading weeks; October starts on 26 Oct with ₹20,000. Normally ₹10,000 funding in each window. Purchases meet whole monthly fund targets and minimum amounts. Up to five distinct funds per month; fewer when evidence fails. Failed sleeves stay in verified parking or cash. Cash allocation: <b>'+n(p.cashWeight,'%')+'</b>.</p>';
+      h+=table(['Fund / ETF','Category','Monthly target','P/E','Look-through earnings growth','Eligibility'],selected.map(function(c){var cs=c.checks||[],pass=cs.filter(function(x){return x.state==='pass';}).length,na=cs.filter(function(x){return x.state==='na';}).length;return [e(c.name),e(c.category),'₹'+n(20000*c.weight/100)+' · '+n(c.weight,'%'),n(c.earnings&&c.earnings.pe),n(c.earnings&&c.earnings.earningsGrowth,'%'),pass+' passed'+(na?' · '+na+' N/A':'')+' / '+cs.length];}));
+      h+='<p>Plan A: diversified eligible funds. Plan B: reduce equity when broad-market valuation reaches its 80th historical percentile. Plan C: verified parking or cash when evidence is missing. During the final two years, progressively reduce equity. No fallback is assumed to deliver 16%.</p><p>Ranking emphasises lower P/E and stronger comparable earnings. Earnings growth holds the current disclosed stock quantities constant; it is not a fund’s own EPS or a forecast. Tax-aware rotations require a verified cheaper replacement and costs below the policy limit. Tax harvesting uses John’s shared MF/ETF allowances and FIFO lots.</p>';
+      selected.forEach(function(c){h+='<details style="margin:12px 0"><summary><b>'+e(c.name)+' — eligibility evidence</b></summary>'+table(['Check','Result','Observed value'],c.checks.map(function(x){return [e(x.label),e(x.state==='na'?'Not applicable':x.state),e(typeof x.value==='object'?JSON.stringify(x.value):x.value)];}))+'</details>';});
+    }else if(kind==='metrics'){
+      h+='<p>Actual daily NAV / adjusted-price histories. 1 year is absolute return; 3, 5 and 7 years are annualised CAGR. Fund costs are embedded in NAV. Investor taxes and entry/exit costs are excluded. Missing history remains unavailable.</p>';
+      var rows=selected.map(function(c){return metricRow(c.name,c.history);});rows.push(metricRow('Current mix · hypothetical one-time buy and hold',p.history));
+      h+=table(['Fund / current mix','1Y','3Y CAGR','5Y CAGR','7Y CAGR','Since inception*','Annualised volatility','Max drawdown','Risk / 10','Observed history'],rows);
+      h+='<p>*Since-inception return is shown only when the observed start is within seven days of the recorded launch. The current mix uses its common observed history, with fixed units and cash; it is not John’s actual SIP performance. Risk /10 combines 60% volatility and 40% drawdown, capped at 10; maximum drawdown is peak-to-trough over the available history.</p>';
+      if(u.historicalWarning)h+='<p>'+e(u.historicalWarning)+'</p>';
+    }else{
+      var b=u.backtest||{};h+='<p><b>Historical illustration — limited validation</b></p><p>'+e(b.basis||'Historical data not yet available')+'</p>';
+      h+=table(['Period','From','Through','Contributions','Ending value','SIP XIRR','Max drawdown'],(b.cases||[]).map(function(c){return [c.years+' years',e(c.from),e(c.to),'₹'+n(c.contributed),'₹'+n(c.terminalValue),n(c.xirr,'%'),n(c.maximumDrawdown,'%')];}));
+      h+='<p>₹20,000 monthly, historical selected mix, entry costs included. No exit costs or investor taxes; cash earns zero. Monthly funding differs from John’s live first/last-week execution. Today’s selection introduces hindsight and survivorship bias. A full point-in-time backtest of the adaptive 50-check strategy is unavailable because historical portfolio and earnings snapshots were not archived. Future decisions are archived prospectively.</p>';
+    }
+    return '<div style="min-width:0;overflow-wrap:anywhere;line-height:1.65">'+h+'</div>';
+  }
+  function metricRow(name,m){m=m||{};var r=m.returns||{};return [e(name),n(r['1'],'%'),n(r['3'],'%'),n(r['5'],'%'),n(r['7'],'%'),n(m.inceptionVerified?m.sinceInception:null,'%')+(m.inceptionVerified&&m.sinceAnnualised?' CAGR':''),n(m.volatility,'%'),n(m.maximumDrawdown,'%'),n(m.risk10),e(m.from)+' → '+e(m.asOf)];}
+  window.VTUltimate={render:render};
+})();
+</script>
 <script>
 (() => {
 'use strict';
@@ -247,24 +280,25 @@ const TYPE = { plan: ['Purchase', 'Sale'], reserve: ['Dip reserve (liquid)', 'Sa
 function stateAt(a, d) {
   const units = {}, cost = {}, names = {};
   let cash = 0, pend = 0, contrib = 0, wd = 0;
+  if(a.cashAccount){contrib=(a.funding||[]).filter(x=>x.T<=d).reduce((s,x)=>s+x.amount,0);cash=contrib;}
   for (const t of a.txns) {
     if (t.T > d) continue;
     const k = String(t.code ?? t.sym); names[k] = t.name;
     const doneBy = t.navDate && t.navDate <= d && t.units != null;
     if (t.side === 'buy') {
-      if (paidIn(t)) { contrib += t.amount || 0; if (a.product === 'etf') cash += t.amount || 0; }
+      if (paidIn(t) && !a.cashAccount) { contrib += t.amount || 0; if (a.product === 'etf') cash += t.amount || 0; }
       if (doneBy) {
         units[k] = (units[k] || 0) + t.units;
         const c = a.product === 'mf' ? t.amount : t.gross + t.charges.total;
         cost[k] = (cost[k] || 0) + c;
-        if (a.product === 'etf') cash -= t.gross + t.charges.total;
-      } else if (a.product === 'mf' || !paidIn(t)) pend += t.amount || 0;
+        if (a.product === 'etf') cash -= t.gross + t.charges.total; else if(a.cashAccount)cash-=t.amount;
+      } else if (!a.cashAccount && (a.product === 'mf' || !paidIn(t))) pend += t.amount || 0;
       else { /* ETF plan buy awaiting the close: the cash is already in the account */ }
     } else if (doneBy) {
       const u0 = units[k] || 0;
       if (u0 > 0) cost[k] = (cost[k] || 0) * (1 - Math.min(1, t.units / u0));
       units[k] = u0 - t.units;
-      if (t.src === 'withdraw') wd += t.net; else if (a.product === 'etf') cash += t.net;
+      if (t.src === 'withdraw') wd += t.net; else if (a.product === 'etf' || a.cashAccount) cash += t.net;
       else pend += 0;
     }
   }
@@ -276,13 +310,13 @@ function stateAt(a, d) {
     hold.push({ key: k, name: names[k], units: units[k], cost: cost[k], price: p, priceDate: pd, value: v });
   }
   // MF switches (review, dip buy, tax harvesting): the sell proceeds wait until the switch-in is allotted
-  if (a.product === 'mf') for (const t of a.txns) if (t.side === 'sell' && SWITCH[t.src] && t.navDate && t.navDate <= d) {
+  if (a.product === 'mf' && !a.cashAccount) for (const t of a.txns) if (t.side === 'sell' && SWITCH[t.src] && t.navDate && t.navDate <= d) {
     const inn = a.txns.find(x => x.side === 'buy' && x.oid === t.oid.replace(/\|out$/, '|in'));
     if (!inn || !(inn.navDate && inn.navDate <= d)) pend += t.net;
   }
-  if (a.product === 'etf') for (const t of a.txns) if (t.side === 'buy' && SWITCH[t.src] && t.T <= d && !(t.navDate && t.navDate <= d)) pend -= t.amount || 0;
+  if (a.product === 'etf' && !a.cashAccount) for (const t of a.txns) if (t.side === 'buy' && SWITCH[t.src] && t.T <= d && !(t.navDate && t.navDate <= d)) pend -= t.amount || 0;
   hold.sort((x, y) => y.value - x.value);
-  return { val: val + pend + (a.product === 'etf' ? cash : 0), hold, cash, pend, contrib, wd };
+  return { val: val + pend + (a.product === 'etf' || a.cashAccount ? cash : 0), hold, cash, pend, contrib, wd };
 }
 function xirr(flows) {
   if (!flows.some(f => f[1] > 0) || !flows.some(f => f[1] < 0)) return null;
@@ -314,7 +348,8 @@ function boot() {
 }
 function show(v) {
   $$('.tab').forEach(b => b.classList.toggle('on', b.dataset.v === v));
-  ['Overview', 'Stmt', 'Tax', 'Audit', 'Snaps'].forEach(x => $('#v' + x).classList.toggle('hide', x !== v));
+  ['Overview', 'Stmt', 'Ultimate', 'Tax', 'Audit', 'Snaps'].forEach(x => $('#v' + x).classList.toggle('hide', x !== v));
+  if (v === 'Ultimate') renderUltimate();
   if (v === 'Tax') renderTax();
   if (v === 'Stmt') renderStmt();
   if (v === 'Snaps') renderSnaps();
@@ -329,6 +364,10 @@ function setHash() {
 let ovSort = { k: 'ret', d: -1 }, ovP = 'all', ovR = 'all';
 $('#ovProd').onclick = e => { const b = e.target.closest('button'); if (!b) return; ovP = b.dataset.p; $$('#ovProd button').forEach(x => x.classList.toggle('on', x === b)); renderOverview(); };
 $('#ovRisk').onclick = e => { const b = e.target.closest('button'); if (!b) return; ovR = b.dataset.r; $$('#ovRisk button').forEach(x => x.classList.toggle('on', x === b)); renderOverview(); };
+function renderUltimate(){
+  const accounts=V.accounts.filter(a=>a.strategy==='ultimate');
+  $('#ultimate').innerHTML='<h2>John · Ultimate Simulation Folios</h2><p>Private statement: same audited strategy, rules, metrics and historical scenarios as the public page.</p>'+accounts.map(a=>`<details open><summary><b>${esc(a.product.toUpperCase())} · ${esc(a.id)}</b></summary>${VTUltimate.render('strategy',a.ultimate)}${VTUltimate.render('metrics',a.ultimate)}${VTUltimate.render('backtest',a.ultimate)}</details>`).join('');
+}
 function renderOverview() {
   // before the first valuation, orders placed count at cost (as in the statement: orders in progress at their amount)
   const placed = a => a.txns.filter(paidIn).reduce((s, t) => s + (t.amount || 0), 0);
@@ -394,14 +433,15 @@ function renderStmt() {
   const inP = a.txns.filter(x => x.T >= f && x.T <= t);
   const contrib = close.contrib - open.contrib, wd = close.wd - open.wd, gain = close.val - open.val - contrib + wd;
   const flowsAll = a.txns.filter(x => paidIn(x) && x.T <= t).reduce((m, x) => { m[x.T] = (m[x.T] || 0) + (x.amount || 0); return m; }, {});
+  if(a.cashAccount){for(const k of Object.keys(flowsAll))delete flowsAll[k];for(const x of a.funding||[])if(x.T<=t)flowsAll[x.T]=x.amount;}
   const fl = Object.entries(flowsAll).map(([d, v]) => [d, -v]).concat(a.txns.filter(x => x.src === 'withdraw' && x.navDate && x.navDate <= t).map(x => [x.credit, x.net]));
-  const xr = close.val > 0 ? xirr(fl.concat([[t, close.val]])) : null, days = (Date.parse(t) - Date.parse(V.start)) / 864e5;
-  const p = V.plans[Object.keys(V.plans).sort().pop()], planSlots = isMF ? p.mf[a.plan] : p.etf[a.plan];
+  const xr = close.val > 0 ? xirr(fl.concat([[t, close.val]])) : null, days = (Date.parse(t) - Date.parse(a.start||V.start)) / 864e5;
+  const p = V.plans[Object.keys(V.plans).sort().pop()], planSlots = a.strategy==='ultimate'?(a.ultimate?.plan?.selected||[]).map(c=>({label:c.category,code:c.name,sym:c.key,name:c.name,w:c.weight})):(isMF ? p.mf[a.plan] : p.etf[a.plan]);
   const sched = { m: `${cfg.schedule.monthDay}rd of every month`, w: 'every ' + new Date(V.start + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long' }), q: `${cfg.schedule.anchorDay} Jan / Apr / Jul / Oct`, y: `${cfg.schedule.anchorDay} October every year`, l: `one-time on ${dt(V.start)}` }[a.freq];
   let h = `<div class="stmt-h"><div><div class="t">Statement of Account — ${isMF ? 'Mutual Funds' : 'ETF Demat & Trading'}</div>
     <dl><dt>Investor</dt><dd>${esc(a.name)} <span class="muted" style="font-weight:500">(VilfinTV agent)</span></dd><dt>Account</dt><dd class="mono">${esc(a.id)}</dd>
     <dt>Residency</dt><dd>${a.res === 'nri' ? 'Non-resident Indian (NRE/NRO · PIS for ETFs)' : 'Resident individual'}</dd>
-    <dt>Model</dt><dd>Portfolio Simulator · 10+ years · ${esc(a.riskName)}</dd><dt>Instructions</dt><dd>${esc(a.freqName)} ${inr(a.amount)} · ${sched}; next trading day when the market is closed</dd>
+    <dt>Model</dt><dd>${a.strategy==='ultimate'?'Ultimate Simulation Folio · 7 years':'Portfolio Simulator · 10+ years'} · ${esc(a.riskName)}</dd><dt>Instructions</dt><dd>${esc(a.freqName)} ${inr(a.amount)} · ${a.strategy==='ultimate'?'first and last trading weeks; October starts 26 Oct 2026':sched}; next trading day when the market is closed</dd>
     <dt>Period</dt><dd>${dt(f)} to ${dt(t)}</dd></dl></div>
     <div class="r">Generated ${new Date().toLocaleString('en-IN')}<br>Ledger ${(V.events || 0).toLocaleString('en-IN')} entries<br><span class="mono">head ${esc(String(V.head || '').slice(0, 16))}</span><br>${AUD ? (AUD.nErrors ? '<b class="neg">Audit: errors</b>' : '<b class="pos">✓ Independently audited</b>') : ''}</div></div>`;
   if (!a.txns.length) h += `<div class="note" style="margin-bottom:14px">${iso(new Date()) < V.start ? 'Simulated buying starts on <b>' + dt(V.start) + '</b> — this statement fills in automatically after the first order.' : 'No orders yet — the first order appears after the next daily update.'}</div>`;
@@ -420,7 +460,7 @@ function renderStmt() {
       <td class="n">${num(x.price, 4)}</td><td>${dt(x.priceDate)}</td><td class="n"><b>${inr(x.value, 2)}</b></td><td class="n ${cls(x.value - x.cost)}">${inr(x.value - x.cost, 2)}</td><td class="n ${cls(x.value - x.cost)}">${pct((x.value / x.cost - 1) * 100)}</td><td class="n">${hv ? (x.value / hv * 100).toFixed(1) + '%' : ''}</td></tr>`).join('') +
     `<tr class="tot"><td>Total</td><td></td><td></td><td class="n">${inr(hold.reduce((s, x) => s + x.cost, 0), 2)}</td><td></td><td></td><td class="n">${inr(hv, 2)}</td><td class="n">${inr(hv - hold.reduce((s, x) => s + x.cost, 0), 2)}</td><td></td><td></td></tr></tbody></table></div>`;
   if (!isMF || close.pend) h += `<p class="sub" style="margin-top:8px">${!isMF ? 'Cash balance (uninvested fractions carried to the next purchase): <b>' + inr(close.cash, 2) + '</b>. ' : ''}${close.pend ? 'Orders in progress: <b>' + inr(close.pend, 2) + '</b>.' : ''}</p>`;
-  h += `<details class="x"><summary>Model allocation for this account (latest plan)</summary><div class="tw" style="margin-top:8px"><table><thead><tr><th>Role</th><th>${isMF ? 'Fund' : 'ETF'}</th><th class="n">Weight</th></tr></thead><tbody>${planSlots.map(s => `<tr><td>${esc(s.label || s.key || s.id)}</td><td>${esc(isMF ? (s.code) : s.name || s.sym)}</td><td class="n">${s.w}%</td></tr>`).join('')}</tbody></table></div></details>`;
+  h += `<details class="x"><summary>Model allocation for this account (latest plan)</summary><div class="tw" style="margin-top:8px"><table><thead><tr><th>Role</th><th>${isMF ? 'Fund' : 'ETF'}</th><th class="n">Weight</th></tr></thead><tbody>${(planSlots||[]).map(s => `<tr><td>${esc(s.label || s.key || s.id)}</td><td>${esc(isMF ? (s.code) : s.name || s.sym)}</td><td class="n">${s.w}%</td></tr>`).join('')}</tbody></table></div></details>`;
 
   // transactions
   const run = {};
@@ -446,18 +486,20 @@ function renderStmt() {
   // ETF cash ledger / capital gains
   const sells = inP.filter(x => x.side === 'sell' && x.gains);
   h += `<div><h3>Realised capital gains in period</h3><div class="tw"><table><thead><tr><th>Sold</th><th>Bought</th><th class="n">Units</th><th class="n">Cost</th><th class="n">Value</th><th class="n">Gain</th><th>Term</th></tr></thead><tbody>${sells.length ? sells.flatMap(x => x.gains.map(g => `<tr><td>${dt(x.navDate)}</td><td>${dt(g.buyDate)}</td><td class="n">${num(g.units, isMF ? 3 : 0)}</td><td class="n">${inr(g.cost, 2)}</td><td class="n">${inr(g.value, 2)}</td><td class="n ${cls(g.gain)}">${inr(g.gain, 2)}</td><td>${g.term === 'LT' ? 'Long term' : g.term === 'ST' ? 'Short term' : 'Slab rate'}</td></tr>`)).join('') : '<tr><td colspan="7" class="muted">No sales in this period.</td></tr>'}</tbody></table></div></div></div>`;
-  if (!isMF) {
+  if (!isMF || a.cashAccount) {
     let c = open.cash || 0; const L = [];
+    if(a.cashAccount)for(const x of a.funding||[])if(x.T>=f&&x.T<=t){c+=x.amount;L.push([x.T,'Contribution credited',x.amount,null,c]);}
     for (const x of inP) {
-      if (paidIn(x)) { c += x.amount; L.push([x.T, (x.src === 'reserve' ? 'Dip reserve credited — ' : 'Instalment credited — ') + x.label, x.amount, null, c]); }
-      if (x.side === 'buy' && x.units != null) { const v = x.gross + x.charges.total; c -= v; L.push([x.navDate, 'Bought ' + x.units + ' × ' + x.sym, null, v, c]); }
+      if (paidIn(x) && !a.cashAccount) { c += x.amount; L.push([x.T, (x.src === 'reserve' ? 'Dip reserve credited — ' : 'Instalment credited — ') + x.label, x.amount, null, c]); }
+      if (x.side === 'buy' && x.units != null) { const v = isMF ? x.amount : x.gross + x.charges.total; c -= v; L.push([x.navDate, 'Bought ' + x.units + ' × ' + (x.sym||x.code), null, v, c]); }
       if (x.side === 'sell' && x.net != null && x.src !== 'withdraw') { c += x.net; L.push([x.navDate, 'Sold ' + x.units + ' × ' + x.sym, x.net, null, c]); }
     }
+    if(a.cashAccount){L.sort((x,y)=>x[0].localeCompare(y[0]));c=open.cash||0;for(const row of L){c+=(row[2]||0)-(row[3]||0);row[4]=c;}}
     h += `<details class="x" style="margin-top:12px"><summary>Cash ledger (${L.length} entries)</summary><div class="tw" style="margin-top:8px"><table><thead><tr><th>Date</th><th>Description</th><th class="n">Credit</th><th class="n">Debit</th><th class="n">Balance</th></tr></thead><tbody><tr><td>${dt(f)}</td><td>Opening balance</td><td></td><td></td><td class="n">${inr(open.cash || 0, 2)}</td></tr>${L.map(r => `<tr><td>${dt(r[0])}</td><td>${esc(r[1])}</td><td class="n">${r[2] != null ? inr(r[2], 2) : ''}</td><td class="n">${r[3] != null ? inr(r[3], 2) : ''}</td><td class="n">${inr(r[4], 2)}</td></tr>`).join('')}</tbody></table></div></details>`;
   }
   // sell review (monthly) & tax harvesting (March) — the agent follows these decisions exactly
   const R = cfg.sellRules || {}, nm = k => (a.txns.find(x => String(x.code ?? x.sym) === String(k)) || {}).name || k;
-  const last = (a.reviews || []).filter(r => r.T <= t).slice(-1)[0];
+  const last = (a.strategy==='ultimate'?[]:(a.reviews || [])).filter(r => r.T <= t).slice(-1)[0];
   const actTxt = { hold: 'Hold', watch: 'Watch', wait: 'Wait', sell: 'Sell' }, actCls = { hold: 'p-ok', watch: 'p-ord', wait: 'p-wip', sell: 'p-bad' };
   h += `<h3>Sell review${last ? ' — ' + dt(last.T) : ''}</h3>`;
   if (!last) h += `<p class="sub">Monthly on the ${cfg.schedule.anchorDay}th from ${dt(addDays(V.start, 28))}. A holding is sold only when it is no longer the model portfolio's choice for its role for ${R.droppedStreak || 2} reviews in a row (or is no longer listed — then at once). Non-urgent sales wait until the account is ${R.minHoldMonths || 12} months old and then take only units (oldest first) that are free of exit load and past the short-term tax period; at most ${R.deferMaxMonths || 6} months of waiting. Proceeds switch into the model's current choice.</p>`;
@@ -466,6 +508,7 @@ function renderStmt() {
   h += `<h3>Tax harvesting</h3>` + (hvs.length ? hvs.map(x => `<p class="sub" style="margin-bottom:6px">${dt(x.T)} · unused exemption ${inr(x.exemptLeft)}</p><div class="tw" style="margin-bottom:10px"><table><thead><tr><th>${isMF ? 'Scheme' : 'ETF'}</th><th>Type</th><th class="n">Units</th><th class="n">Gain booked</th><th class="n">Tax saved</th><th class="n">Costs</th><th>Decision</th></tr></thead><tbody>${x.items.map(i => `<tr><td class="wrap">${esc(nm(i.key))}</td><td>${i.mode === 'gain' ? 'Gain harvest' : 'Loss harvest'}</td><td class="n">${num(i.units, isMF ? 3 : 0)}</td><td class="n ${cls(i.gain)}">${inr(i.gain, 2)}</td><td class="n">${inr(i.saving, 2)}</td><td class="n">${inr(i.cost, 2)}</td><td>${i.action === 'harvest' ? pill('Harvested').replace('p-out', 'p-ok') : '<span class="muted">Skipped</span>'}<br><span class="muted" style="font-size:11px">${esc(i.note)}</span></td></tr>`).join('')}</tbody></table></div>`).join('')
     : `<p class="sub">Each year on the first trading day from ${(cfg.taxHarvest || {}).day || 10} March: long-term equity gains are booked up to the person's unused ₹1.25 lakh exemption (shared by the MF and ETF accounts) and bought back; losses are booked only against gains already taxable that year — and only when the tax saved beats the round-trip costs.</p>`);
   h += `<div class="note" style="margin-top:14px">Simulated account of a VilfinTV agent that follows the Portfolio Simulator's model portfolio with real-life order rules: official end-of-day NAVs (liquid and overnight funds: previous day's NAV), exchange closing prices (ETF trades execute at the official close of the trade date, 3:30 pm IST), stamp duty, exchange and statutory charges, settlement days and the exchange holiday calendar. Educational record only — not investment advice, not a broker or registrar statement. Tax shown for NRI accounts is an estimate of TDS.</div>`;
+  if(a.ultimate)h+='<h3>Ultimate strategy · source as of '+esc(a.ultimate.asOf)+'</h3>'+VTUltimate.render('strategy',a.ultimate);
   $('#stmt').innerHTML = h;
   chart(a, t);
 }

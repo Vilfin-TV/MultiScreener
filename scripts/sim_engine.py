@@ -131,12 +131,14 @@ def contribution(a: dict, nominal: date, first_of_year: bool) -> tuple[int, dict
 def accounts() -> list[dict]:
     out = []
     for p in CFG["persons"]:
-        for prod in ("mf", "etf"):
+        for prod in p.get('products', ("mf", "etf")):
             out.append({"id": f"{p['name']}-{prod.upper()}", "name": p["name"], "product": prod, "risk": p["risk"],
                         "freq": p["freq"], "res": p["res"], "plan": CFG["horizon"] + p["risk"],
                         "role": p.get("role"), "desk": p.get("desk"), "team": p.get("team"),
                         "amount": instalment_amount(p["risk"], p["freq"]),
-                        "step": step_kind(f"{p['name']}-{prod.upper()}")})
+                        "step": step_kind(f"{p['name']}-{prod.upper()}"),
+                        **({'strategy':p['strategy'],'start':p['start'],'horizon':p['horizon'],'cashAccount':True,
+                            'plan':p['horizon']+p['risk'],'amount':20000} if p.get('strategy')=='ultimate' else {})})
     return out
 
 
@@ -540,7 +542,7 @@ def replay(events: list[dict]) -> dict:
             a["inst"].append(ev)
             if k == "reserve" and not ev.get("n"):
                 a["reserve"] = ev
-            if ev["acct"].endswith("-ETF"):
+            if ev["acct"].endswith("-ETF") or ev.get('cashAccount'):
                 a["cash"] += ev["amount"]
         elif k == "order":
             a = st.setdefault(ev["acct"], {"inst": [], "orders": [], "lots": {}, "cash": 0.0, "carry": {}, "sells": []})
@@ -558,6 +560,8 @@ def replay(events: list[dict]) -> dict:
             if k == "fill":
                 a["cash"] = r2(a["cash"] - ev["gross"] - ev["charges"]["total"])
                 a["carry"][carry_key(o)] = ev["carry"]
+            elif o.get('cashAccount'):
+                a['cash'] = r2(a['cash'] - ev['amount'])
         elif k == "redeem":
             o = orders[ev["oid"]]
             o["done"] = ev
@@ -573,7 +577,7 @@ def replay(events: list[dict]) -> dict:
                 left = round(left - take, 6)
                 if lots[0]["units"] <= 1e-9:
                     lots.pop(0)
-            if o["acct"].endswith("-ETF") and not o.get("withdraw"):
+            if (o["acct"].endswith("-ETF") or o.get('cashAccount')) and not o.get("withdraw"):
                 a["cash"] = r2(a["cash"] + ev["net"])
             a["sells"].append(dict(ev, withdraw=bool(o.get("withdraw"))))
     return st
@@ -730,6 +734,8 @@ class Engine:
         st = replay(self.store["events"])
         start = D(CFG["start"])
         for a in self.accts:
+            if a.get('strategy') == 'ultimate':
+                continue
             have = {e["T"] for e in st.get(a["id"], {}).get("inst", []) if e["k"] == "instalment"}
             prev_year = None
             for nominal, T in schedule(a["freq"], self.today):
@@ -896,7 +902,7 @@ class Engine:
         d, px = self.mkt.etf_session_on_or_after(o["sym"], T, upto)
         if not px:
             return None
-        budget = r2(o["amount"] + carry.get(carry_key(o), 0.0))
+        budget = r2(o["amount"] + (0.0 if o.get('strategy')=='ultimate' else carry.get(carry_key(o), 0.0)))
         eq = self.mkt.etf_equity(o["sym"])
         n, ch = etf_units_for(budget, px, res, eq)
         gross = r2(n * px)
@@ -1065,6 +1071,8 @@ class Engine:
         done = {e["rid"] for e in self.store["events"] if e["k"] == "review"}
         for a in self.accts:
             prev = []                                            # this account's earlier reviews (for streaks)
+            if a.get('strategy') == 'ultimate':
+                continue
             for T in self.review_dates():
                 rid = f"{a['id']}|review|{T.isoformat()}"
                 if rid in done:
@@ -1190,6 +1198,8 @@ class Engine:
                 continue
             for name in dict.fromkeys(a["name"] for a in self.accts):
                 for a in [x for x in self.accts if x["name"] == name]:
+                    if a.get('strategy') == 'ultimate':
+                        continue
                     rid = f"{a['id']}|harvest|{T.isoformat()}"
                     if rid in done:
                         continue
@@ -1506,6 +1516,8 @@ class Engine:
     def run(self):
         self.snapshot()
         self.place_orders()
+        from ultimate_execution import run as ultimate_run
+        ultimate_run(self)
         self.place_reserves()
         self.manual_sells()
         self.settle()
@@ -1518,6 +1530,8 @@ class Engine:
             self.settle()
         self.review()
         self.harvest()
+        from ultimate_review import run as ultimate_review
+        ultimate_review(self)
         self.settle()                    # review / harvest sells
         self.fund_review_buys()
         self.settle()                    # switch-in buys with the sell proceeds
@@ -1540,13 +1554,13 @@ class Engine:
                 px = self.price(a["product"], key, V)
                 val += u * (px or 0)
             for o in s["orders"]:                    # ETF money waiting for a fill is still in the account's cash
-                if "done" not in o and o["side"] == "buy" and a["product"] == "mf":
+                if "done" not in o and o["side"] == "buy" and a["product"] == "mf" and not a.get('cashAccount'):
                     pend += o["amount"] if o.get("amount") is not None else funded.get(o["oid"], 0.0)
-            if a["product"] == "etf":
+            if a["product"] == "etf" or a.get('cashAccount'):
                 val += s["cash"]
             ser = self.store["series"].setdefault(a["id"], [])
-            if V < D(CFG["start"]):                  # latest prices predate the first order — nothing to value yet
-                ser[:] = [r for r in ser if r[0] >= CFG["start"]]
+            if V < D(a.get('start',CFG["start"])):  # no future contribution valued against older prices
+                ser[:] = [r for r in ser if r[0] >= a.get('start',CFG["start"])]
                 continue
             invested = sum(i["amount"] for i in s["inst"])
             bench = self.benchmark(a, s["inst"], V)
@@ -1755,10 +1769,10 @@ class Engine:
             cred_any = cred_any or cu > 0
             hold.append([key, cu, px, pd.isoformat() if pd else None, qx, qd.isoformat() if qd else None, hv, uc])
             val += hv
-        if not cred_any:
+        if not cred_any and not (a.get('cashAccount') and s['inst']):
             return None
         pend = 0.0
-        if mf:
+        if mf and not a.get('cashAccount'):
             funded = {e["oid"]: e["amount"] for e in evs if e["k"] == "fund"}
             for o in s["orders"]:
                 if "done" not in o and o["side"] == "buy":
@@ -1767,7 +1781,7 @@ class Engine:
             for o in s["orders"]:
                 if o["side"] == "sell" and "done" in o and not o.get("withdraw") and self._infrom.get(o["oid"], "") > ds:
                     pend += o["done"]["net"]
-        cash = r2(s["cash"]) if not mf else 0.0
+        cash = r2(s["cash"]) if not mf or a.get('cashAccount') else 0.0
         val = r2(val + pend + cash)
         inv = r2(sum(i["amount"] for i in s["inst"]))
         out = r2(sum(x["net"] for x in s["sells"] if x.get("withdraw")))
@@ -1881,7 +1895,7 @@ def build_view(store: dict, eng: Engine) -> dict:
                    "name": o.get("name") or (eng.mkt.funds.get(int(o["code"])) or {}).get("name") if o.get("code") else o.get("name") or o.get("sym"),
                    "slot": o.get("slot"), "label": o.get("label"), "amount": amount,
                    "note": "; ".join(x for x in (o.get("note") or o.get("reason"), steps.get(o.get("iid"))) if x) or None, "ref": o.get("ref"),
-                   "src": "withdraw" if o.get("withdraw") else "review" if o.get("iid", "").count("|review|") else
+                   "src": "withdraw" if o.get("withdraw") else "harvest" if o.get('strategy')=='ultimate' and o.get('level')=='harvest' else "review" if '|ultimate-review|' in o.get('iid','') else "review" if o.get("iid", "").count("|review|") else
                    "dip" if "|dip|" in o.get("iid", "") else "reserve" if o.get("slot") == "reserve" else
                    "harvest" if "|harvest|" in o.get("iid", "") else "plan"}
             if done and done["k"] == "allot":
@@ -1921,11 +1935,14 @@ def build_view(store: dict, eng: Engine) -> dict:
         flows += [(D(e["payout"]), e["net"]) for e in s["sells"] if e.get("withdraw")]   # switches stay invested
         x = xirr(flows + [(D(last[0]), last[2])]) if last and last[2] > 0 else None
         xb = xirr(flows + [(D(last[0]), last[3])]) if last and last[3] > 0 else None
-        days = (D(last[0]) - D(CFG["start"])).days if last else 0
+        days = (D(last[0]) - D(a.get('start', CFG["start"]))).days if last else 0
         out["accounts"].append({**a, "riskName": CFG["riskNames"][a["risk"]], "freqName": CFG["freqNames"][a["freq"]],
                                 "valuationDate": last[0] if last else None, "invested": last[1] if last else 0, "value": last[2] if last else 0,
                                 "benchValue": last[3] if last else 0, "xirr": x, "benchXirr": xb, "days": days,
-                                "cash": r2(s["cash"]) if a["product"] == "etf" else None, "carry": s.get("carry", {}),
+                                "cash": r2(s["cash"]) if a["product"] == "etf" or a.get('cashAccount') else None, "carry": s.get("carry", {}),
+                                "benchmarkPriceDate": (eng.mkt.mf_latest(int(CFG['benchmark']['mf']),V)[0] if a['product']=='mf' else eng.mkt.etf_latest(CFG['benchmark']['etf'],V)[0]).isoformat() if (eng.mkt.mf_latest(int(CFG['benchmark']['mf']),V)[0] if a['product']=='mf' else eng.mkt.etf_latest(CFG['benchmark']['etf'],V)[0]) else None,
+                                "contributionDates": sorted({i["T"] for i in s["inst"]}),
+                                "funding": [{"T":i['T'],"amount":i['amount']} for i in s['inst']],
                                 "txns": txns, "holdings": holdings, "series": ser,
                                 "dip": dip_summary(store, a, s),
                                 "reviews": [r for r in reviews if r["acct"] == a["id"]],
@@ -1933,6 +1950,9 @@ def build_view(store: dict, eng: Engine) -> dict:
     from sim_tax import snapshot as tax_snapshot
     for a in out['accounts']:
         a['taxHarvest'] = tax_snapshot(store, out, a, eng)
+        if a.get('strategy')=='ultimate':
+            from ultimate_execution import public as ultimate_public
+            a['ultimate'] = ultimate_public(eng,a)
     # price history of everything held or bought (statements for any past date are valued from it)
     keys = {"mf": {str(CFG["benchmark"]["mf"])}, "etf": {CFG["benchmark"]["etf"]}}
     for a in out["accounts"]:
@@ -2022,9 +2042,14 @@ def account_detail(a: dict, valued: bool, sub_names: dict, today: date) -> dict:
         pass
     out = {"inv": r2(a["invested"]), "val": r2(a["value"]) if valued else None, "gain": r2(a["value"] - a["invested"]) if valued else None,
            "bench": round((a["benchValue"] / a["invested"] - 1) * 100, 2) if valued and a.get("benchValue") else None,
-           "asOf": a["valuationDate"], "next": nxt, "hold": hold, "pend": pend[:12]}
-    if not mf:
+           "asOf": a["valuationDate"], "next": nxt, "hold": hold, "pend": pend[:12],
+           "contributionDates":a.get("contributionDates",[]),"benchmarkAsOf":a["valuationDate"],"benchmarkPriceDate":a.get('benchmarkPriceDate'),
+           "pendingContributionDates":[d for d in a.get("contributionDates",[]) if d>(a["valuationDate"] or "0000")]}
+    if not mf or a.get('cashAccount'):
         out["cash"] = a.get("cash")
+    if a.get('strategy')=='ultimate':
+        from ultimate_execution import schedule as ultimate_schedule
+        out['next']=next((d.isoformat() for d,_ in ultimate_schedule(today+timedelta(days=400),is_trading) if d>today),None)
     if a.get("dip"):
         dp = a["dip"]
         empty = [e for e in dp["events"] if e["action"] == "skip" and e["why"].startswith("reserve left")]
@@ -2060,7 +2085,8 @@ def scoreboard(view: dict, audit_ok: bool) -> dict:
                "amt": a["amount"], "nri": a["res"] == "nri", "role": a.get("role"), "desk": a.get("desk"), "team": a.get("team"),
                "dip": a["name"] in DIP["persons"],
                **({"step": {"k": a["step"], **{k: v for k, v in (CFG["stepUps"][a["step"]]).items() if k != "accounts"}}} if a.get("step") else {}),
-               "since": view["start"], "days": a["days"] if valued else 0,
+               "since": a.get('start',view["start"]), "days": a["days"] if valued else 0,
+               **({'strategy':'ultimate','horizon':7,'start':a['start']} if a.get('strategy')=='ultimate' else {}),
                "metric": "xirr" if valued and a["days"] >= 365 else "abs",
                "ret": (round((a["xirr"] or 0) * 100, 2) if a["days"] >= 365 else round(absr, 2)) if valued and audit_ok else None}
         if credit_by:
@@ -2243,6 +2269,7 @@ def account_files(store: dict, view: dict, sb: dict) -> dict:
                   **{k: row[k] for k in ("name", "product", "risk", "freq", "amt", "nri", "since", "metric", "ret") if k in row},
                   "credit": row.get("credit"), "detail": row.pop("detail", None),
                   "taxHarvest": a.get("taxHarvest"),
+                  **({'ultimate':a['ultimate'],'strategy':'ultimate','role':a.get('role'),'desk':a.get('desk')} if a.get('ultimate') else {}),
                   # Publish only already-audited simulated ledger transactions; no private account keys,
                   # references, notes or fabricated clock timestamps.
                   "orders": [
