@@ -16,6 +16,7 @@ def inspect(store):
     orders = {e["oid"]: e for e in events if e.get("k") == "order"}
     completed = {e["oid"]: e for e in events if e.get("k") in ("allot", "fill")}
     findings = []
+    later_sells = {e.get("oid") for e in events if e.get("k") == "redeem"}
     for oid, order in orders.items():
         rule = RESTRICTIONS.get(str(order.get("code")))
         if not rule or order.get("side") != "buy" or order.get("T", "") < rule["effective"]:
@@ -25,11 +26,21 @@ def inspect(store):
             "oid": oid, "acct": order.get("acct"), "date": order.get("T"),
             "code": str(order.get("code")), "scheme": rule["name"],
             "amount": order.get("amount"), "completed": bool(done),
+            "allotment": ({"units": done.get("units"), "nav": done.get("nav"), "amount": done.get("amount"), "credit": done.get("credit")} if done else None),
             "action": "requires registration evidence or controlled correction",
         })
+    # A reversal is not safe if any affected units were subsequently sold.
+    # Flag *all* sales in the affected scheme/account for manual lot matching.
+    for finding in findings:
+        finding["subsequentRedemptions"] = [o["oid"] for o in orders.values()
+            if o.get("acct") == finding["acct"] and str(o.get("code")) == finding["code"]
+            and o.get("side") == "sell" and o.get("T", "") >= finding["date"]
+            and o.get("oid") in later_sells]
     return {"mode": "READ_ONLY", "eventCount": len(events),
             "ledgerHead": events[-1]["h"] if events else None,
             "affectedOrders": len(findings),
+            "totalAmount": round(sum(float(f["allotment"]["amount"] if f["allotment"] else f["amount"] or 0) for f in findings), 2),
+            "safeToAutoReverse": False,
             "affectedAccounts": dict(Counter(f["acct"] for f in findings)),
             "findings": findings,
             "warning": "No ledger mutations, NAV changes, reallocations or public publication performed."}
