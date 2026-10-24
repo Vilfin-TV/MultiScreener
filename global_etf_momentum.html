@@ -694,6 +694,8 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
   image-rendering:pixelated;flex:none;
 }
 @media(max-width:760px){.hero #status.status .vt-page-qr{width:72px;height:72px}}
+.gtr{border:1px solid var(--line);border-radius:12px;padding:16px;margin:18px 0;background:var(--surface)}.gtr-head{display:flex;gap:12px;justify-content:space-between;align-items:start;flex-wrap:wrap}.gtr-head h3{margin:0}.gtr-head p{font-size:12px;color:var(--ink-3);margin:4px 0 8px}.gtr-ranges{display:flex;gap:4px;flex-wrap:wrap}.gtr-ranges button{font:inherit;font-size:12px;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);cursor:pointer}.gtr-ranges button[aria-pressed=true]{background:#245fbd;color:white}.gtr-plot svg{display:block;width:100%;height:auto;min-height:180px}.gtr .taxnote a{text-decoration:underline}
+@media(max-width:520px){.mode{min-width:0;overflow-wrap:anywhere}}
 </style>
 <!-- faq-jsonld -->
 <script type="application/ld+json">
@@ -778,7 +780,7 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
   <section class="card detail" id="detail" hidden aria-labelledby="dTitle">
     <div class="dh">
       <div class="ttl"><div class="t" id="dTitle"></div><div class="n" id="dName"></div></div>
-      <div class="acts"><button class="btn back" type="button" id="dBack">← Back to all ETFs</button><button class="btn" type="button" id="dCopy">Copy link</button><a class="btn" id="dChart" href="#" target="_blank" rel="noopener">Open full chart</a><button class="btn" type="button" id="dClose" aria-label="Close details">✕ Close</button></div>
+      <div class="acts"><button class="btn back" type="button" id="dBack">← Back to all ETFs</button><button class="btn" type="button" id="dCopy">Copy link</button><a class="btn" id="dChart" href="#" target="_blank" rel="noopener">Live chart ↗</a><button class="btn" type="button" id="dClose" aria-label="Close details">✕ Close</button></div>
     </div>
     <div class="db" id="dBody"></div>
   </section>
@@ -1155,6 +1157,7 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
 <div class="tip" id="tip" role="tooltip"></div>
 
 <script src="vt_sim.js?v=0ba801be"></script>
+<script src="vt_global_chart.js?v=20261024"></script>
 <script>
 (() => {
 "use strict";
@@ -1551,12 +1554,13 @@ function openDrawer(t, opts){
     <div class="sect">Fund facts</div>
     <div class="stats">${stat("Region",esc(e.reg))}${stat("Asset class",esc(e.ac))}${stat("Listed since",e.inc?fmtDate(e.inc):"–")}</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><a class="btn" href="?v=guide#invest" id="dInvest">Ways to invest</a></div>
-    </div></div>${deepHtml(e)}`;
+    </div></div><section class="gtr" id="globalTradingChart"></section>${deepHtml(e)}`;
   $("#dChart").href = "https://www.tradingview.com/chart/?symbol=" + encodeURIComponent(e.t);
   $("#dCopy").textContent = "Copy link";
   drawChart(e, b);
   if (g) drawTrail(e);
   deepBind(e);
+  if(window.VTGlobalChart) VTGlobalChart.mount($("#globalTradingChart"),e.t,S.data.asOf);
   $("#dInvest").onclick = ev => { ev.preventDefault(); setView("guide", { anchor: "invest" }); };
   $("#detail").hidden = false;
   if (VIEW !== "scr") setView("scr", { keep: true });

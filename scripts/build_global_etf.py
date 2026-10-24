@@ -281,7 +281,7 @@ def drop_open_session(df):
 def daily_export(raw, as_of):
     """Official daily closes (not dividend-adjusted), cash dividends by ex-date and splits of every ETF the Portfolio
     Simulator can choose plus the market trackers — read by scripts/gsim_engine.py to price every simulated trade."""
-    tick = sorted(set(ALL_CANDS) | set(MARKET))
+    tick = sorted({u[0] for u in U} | set(ALL_CANDS) | set(MARKET))
     dates = [d for d in raw.index if d <= as_of][-DAILY_SESSIONS:]
     out = {"v": 1, "asOf": str(as_of.date()), "dates": [str(d.date()) for d in dates], "c": {}, "div": {}, "split": {}}
     for t in tick:
@@ -732,3 +732,4 @@ def build(dry=False):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("--dry-run", action="store_true")
     sys.exit(build(ap.parse_args().dry_run))
+
