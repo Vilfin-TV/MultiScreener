@@ -85,6 +85,37 @@ jobs:
           print(f"ledger continues the published head ({n} entries)")
           EOF
 
+      - name: Verify market data availability before new orders
+        run: |
+          python - <<'PY'
+          import json, sys
+          from datetime import date, datetime
+          from pathlib import Path
+          # Do not substitute invented prices or assume stale subscription
+          # statuses mean purchases are open. A failed upstream download must
+          # stop publication; the trusted private ledger is retained for retry.
+          for filename, label in [('data/mf/screener.json', 'Mutual fund purchase status'),
+                                  ('data/etf_momentum.json', 'ETF market prices')]:
+              p = Path(filename)
+              if not p.exists():
+                  sys.exit(f'::error::{label} source missing: {filename}; no orders published')
+              try:
+                  data = json.loads(p.read_text())
+                  if filename.endswith('screener.json'):
+                      assert data.get('rows') and 'buy' in data.get('cols', [])
+                      d = date.fromisoformat(data['asOf'][:10])
+                  else:
+                      etfs = data['etfs']
+                      assert etfs
+                      d = max(date.fromisoformat(e['d'][:10]) for e in etfs if e.get('d'))
+                  age = (date.today() - d).days
+                  if age < 0 or age > 5:
+                      sys.exit(f'::error::{label} stale or future-dated ({d}, age {age} days); retry after source recovery')
+                  print(f'{label}: {d} ({age} calendar days old)')
+              except Exception as exc:
+                  sys.exit(f'::error::{label} invalid: {exc}; no orders published')
+          PY
+
       - name: Run the simulator engine
         run: python scripts/sim_engine.py --store "$RUNNER_TEMP/sim/ledger.json" --view "$RUNNER_TEMP/sim/view.json"
 
