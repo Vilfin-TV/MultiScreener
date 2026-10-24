@@ -689,6 +689,7 @@ def summarise(blk: dict, large: set, mid: set) -> dict:
     top = sorted([h for h in hs if h["isin"]], key=lambda h: -h["pct"])[:15]
     return {
         "n": len(eq), "nAll": len(hs),
+        "equityISIN": [[h["isin"], round(h["pct"], 4)] for h in eq if h.get("isin") and h["pct"] > 0],
         "mix": {k: round(v, 2) for k, v in kinds.items()} | {"cashOther": round(max(0.0, 100 - listed), 2)},
         "top": [[h["name"][:80], h["ind"][:50], round(h["pct"], 2), h["isin"], h["kind"]] for h in top],
         "top10": round(sum(h["pct"] for h in sorted(eq, key=lambda h: -h["pct"])[:10]), 2),
@@ -773,6 +774,10 @@ def main():
     det = {}
     for f in (ROOT / "data" / "mf" / "d").glob("*.json"):
         det.update(json.load(open(f)))
+    previous_portfolios = {}
+    for pf_file in OUT.glob("*.json"):
+        if not pf_file.name.startswith("_"):
+            previous_portfolios.update(json.loads(pf_file.read_text(encoding="utf-8")))
     funds_by_amc = defaultdict(list)
     sub_of, name_of, aum_of = {}, {}, {}
     for r in scr["rows"]:
@@ -816,6 +821,7 @@ def main():
             continue
         if (meta.get(amc, {}).get("month") == info["month"] and meta[amc].get("funds", 0) > 0
                 and not meta[amc].get("dlFail") and "--force" not in sys.argv
+                and not any(str(f["code"]) in previous_portfolios and "equityISIN" not in previous_portfolios[str(f["code"])] for f in funds_by_amc[amc])
                 and (meta[amc].get("etfMonth") == info["month"] or not etf_by_amc.get(amc))):
             log.info("%s: %s already processed", amc, info["month"])
             continue
