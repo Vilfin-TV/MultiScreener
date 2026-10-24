@@ -3577,12 +3577,36 @@ function sizePlan(plan, amt, fq){
     // Multi-asset substitution is permitted only for a precious-metals
     // allocation, never for unrelated equity, index or debt sleeves.
     if (purchaseUnavailable && (restricted || /gold|silver|precious|commodit/i.test(s.label + ' ' + s.asset))) {
-      replacement = FUNDS.filter(function(f){
-        return f && f.code != code && typeof f.buy === 'string' &&
-          f.buy.indexOf(needed) >= 0 && f.sub !== 'gold' &&
-          /multi.asset|commodit/i.test((f.name || '') + ' ' + (f.subLabel || '')) &&
-          (!isNum(f.sipMin) || f.sipMin <= amt * s.w / 100);
-      }).sort(function(a,b){ return (b.rating || 0) - (a.rating || 0) || (b.aum || 0) - (a.aum || 0); })[0] || null;
+      // A precious-metal sleeve must not be replaced by an arbitrary
+      // diversified FoF merely because its name contains "multi asset".
+      // Rank only schemes with a current positive purchase flag and
+      // enough observable risk/cost history to compare responsibly.
+      var targetAmount = amt * s.w / 100;
+      var eligible = FUNDS.filter(function(f){
+        return f && String(f.code) !== String(code) && String(f.code) !== '118663' &&
+          typeof f.buy === 'string' && f.buy.indexOf(needed) >= 0 &&
+          (f.sub === 'multiasset' || f.sub === 'idx_commod' ||
+           /commodit|metal/i.test(f.name || '')) &&
+          isNum(f.sipMin) && f.sipMin > 0 && f.sipMin <= targetAmount &&
+          isNum(f.lumpMin) && f.lumpMin <= targetAmount &&
+          isNum(f.ter) && f.ter >= 0 && f.ter <= 1.5 &&
+          isNum(f.aum) && f.aum >= 200 &&
+          isNum(f.mdd) && f.mdd <= 0 &&
+          isNum(f.sharpe) && f.sharpe > 0 &&
+          isNum(f.r1y) && isNum(f.r3y) &&
+          isNum(f.rating) && f.rating >= 3;
+      });
+      // A commodities index is equity-sector exposure, not physical gold;
+      // do not imply it is a gold equivalent.
+      eligible.sort(function(a,b){
+        function rank(f){
+          return f.rating * 15 + Math.min(f.sharpe,2) * 15 +
+            Math.min(f.r3y,25) * 0.6 - f.ter * 12 +
+            Math.max(f.mdd,-40) * 0.3 + Math.min(f.aum,10000) / 10000;
+        }
+        return rank(b) - rank(a) || String(a.code).localeCompare(String(b.code));
+      });
+      replacement = eligible[0] || null;
       if (replacement) code = replacement.code;
     }
     return {key:s.key, label:s.label, asset:s.asset, w:s.w, code:code, swapped:swapped, src:s, merged:[], er:s.er, vol:s.vol, tax:s.tax,
@@ -3852,12 +3876,24 @@ function renderSip(){
     if (s.merged.length) flags.push('<span class="tag" title="Includes the allocation for ' + esc(s.merged.join(', ')) + '">+ ' + esc(s.merged.join(', ')) + '</span>');
     if (s.purchaseBlocked) flags.push('<span class="tag" style="color:#b91c1c">Fresh purchase blocked — no verified alternative</span>');
     if (s.purchaseReplacement) flags.push('<span class="tag">Temporary multi-asset / commodity alternative; verify AMC before order</span>');
-    var ck = (src.checks || []).filter(function(c){ return !/open for investment/i.test(c[0]); });
+    var ck = (s.purchaseReplacement ? [] : (src.checks || []).filter(function(c){ return !/open for investment/i.test(c[0]); }));
+    if (s.purchaseReplacement) {
+      ck.push(['Alternative asset type', /multi.asset|commodit|metal/i.test(f.name || ''), 'Temporary allocation, not equivalent to physical gold']);
+      ck.push(['Fund rating', isNum(f.rating) && f.rating >= 3, isNum(f.rating) ? f.rating + '/5' : 'Unrated']);
+      ck.push(['Fund size', isNum(f.aum) && f.aum >= 200, isNum(f.aum) ? inr(f.aum) + ' crore' : 'Unavailable']);
+      ck.push(['Expense ratio', isNum(f.ter) && f.ter <= 1.5, isNum(f.ter) ? f.ter.toFixed(2) + '%' : 'Unavailable']);
+      ck.push(['Sharpe ratio', isNum(f.sharpe) && f.sharpe > 0, isNum(f.sharpe) ? f.sharpe.toFixed(2) : 'Unavailable']);
+      ck.push(['Historical drawdown', isNum(f.mdd) && f.mdd <= 0, isNum(f.mdd) ? f.mdd.toFixed(1) + '%' : 'Unavailable']);
+      ck.push(['1Y and 3Y returns available', isNum(f.r1y) && isNum(f.r3y), 'Historical returns do not guarantee future performance']);
+      ck.push(['Minimum purchase', isNum(f.sipMin) && isNum(f.lumpMin) && Math.max(f.sipMin,f.lumpMin) <= s.amt, 'Checked against this allocation']);
+      ck.push(['Temporary replacement', true, 'Original Gold FoF restricted; reassess when fresh purchases reopen']);
+    }
     ck.push(['Fresh purchase eligibility', !s.purchaseBlocked && !!(f.buy && /[SW]/.test(f.buy)),
       s.purchaseBlocked ? 'Blocked; no purchase permitted' : s.purchaseReplacement ? 'Alternative selected from currently eligible screener data; confirm with AMC before order' : 'Based on current screener purchase flags']);
     var passed = ck.filter(function(c){ return c[1]; }).length;
     var chk = '<ul class="chk">' + ck.map(function(c){ return '<li class="' + (c[1] ? '' : 'x') + '"><span><b>' + esc(c[0]) + '</b>' + (c[2] ? ' — ' + esc(c[2]) : '') + '</span></li>'; }).join('') + '</ul>';
-    var why = (src.why || []).map(function(w){ return '<li>' + esc(w) + '</li>'; }).join('');
+    var why = (s.purchaseReplacement ? [] : (src.why || [])).map(function(w){ return '<li>' + esc(w) + '</li>'; }).join('');
+    if (s.purchaseReplacement) why += '<li>Temporary substitute for restricted Gold FoF; selected from eligible multi-asset/commodity candidates using rating, fund size, cost, Sharpe, drawdown and return-history checks. This is not a gold-equivalent investment.</li>';
     if (src.pool) why += '<li>Ranked #1 of ' + src.pool + ' funds that passed every check' + (isNum(src.score) ? ' (score ' + Math.round(src.score) + '/100)' : '') + '</li>';
     if (src.since) why += '<li>In this plan since ' + fmtDate(src.since) + '</li>';
     var alts = (src.alts || []).filter(function(c){ return BY[c] && c !== s.code; }).map(function(c){ return '<a href="#" data-open="' + c + '">' + esc(shortName(BY[c].name)) + '</a>'; }).join(' · ');
