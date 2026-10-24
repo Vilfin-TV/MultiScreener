@@ -31,6 +31,8 @@ on:
     paths:
       - 'scripts/build_mf_screener.py'
       - 'scripts/mf_common.py'
+      - 'scripts/mf_return_audit.py'
+      - 'scripts/test_mf_return_audit.py'
       - 'scripts/mf_enrich.py'
       - 'scripts/build_mf_nfo.py'
       - 'scripts/build_smart_sip.py'
@@ -136,6 +138,9 @@ jobs:
 
       - name: Smart SIP model plans
         run: python scripts/build_smart_sip.py
+
+      - name: Official return comparison date regression checks
+        run: python -m unittest discover -s scripts -p test_mf_return_audit.py -v
 
       - name: Market-dip rule and purchase-restriction regression checks
         run: python -m unittest discover -s scripts -p test_mf_dip_candidates.py -v

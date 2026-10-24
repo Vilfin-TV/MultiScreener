@@ -41,6 +41,7 @@ import requests
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mf_common as C  # noqa: E402
 import mf_enrich as E  # noqa: E402
+from mf_return_audit import official_base_return
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "mf"
@@ -1291,6 +1292,7 @@ def dump_validation(universe, work, results, facts, bench, asof, risk_asof, seri
     # returns recomputed purely from AMFI's official NAVs (latest NAV file + official history on the base date)
     off = {"1w": [], "1m": [], "3m": [], "6m": [], "1y": [], "3y": [], "5y": [], "10y": []}
     off_bad = []
+    off_missing = Counter()
     per = {"1w": ("d", 7), "1m": ("m", 1), "3m": ("m", 3), "6m": ("m", 6), "1y": ("m", 12), "3y": ("m", 36), "5y": ("m", 60), "10y": ("m", 120)}
     for r in work:
         s = series[r["code"]]
@@ -1298,22 +1300,21 @@ def dump_validation(universe, work, results, facts, bench, asof, risk_asof, seri
             continue
         for k, (kind, n) in per.items():
             t = r["date"] - timedelta(days=n) if kind == "d" else C.shift_months(r["date"], -n)
-            base = None
-            for back in range(0, 4):
-                v = SNAPS.get((t - timedelta(days=back)).isoformat(), {}).get(str(r["code"]))
-                if v:
-                    base = v
-                    break
             ours = results[r["code"]]["tr"].get(k)
-            if base is None or ours is None:
+            bi = s.base_idx(t.toordinal())
+            if bi < 0 or ours is None:
                 continue
-            x = r["nav"] / base
-            o = (x - 1 if (kind == "d" or n <= 12) else x ** (12.0 / n) - 1) * 100
+            base_day = C.iso(s.d[bi])
+            o = official_base_return(r["code"], base_day, r["nav"], n / 12 if kind == "m" and n > 12 else 0, SNAPS)
+            if o is None:
+                off_missing[k] += 1
+                continue
             d = abs(o - ours)
             off[k].append(d)
             if d > 0.01 and len(off_bad) < 30:
                 off_bad.append({"code": r["code"], "name": r["disp"], "period": k, "ours": ours, "official": round(o, 4)})
-    vs_official = {k: {"n": len(v), "exact_0.01pp": round(float(np.mean(np.array(v) <= 0.01)) * 100, 2)}
+    vs_official = {k: {"n": len(v), "exact_0.01pp": round(float(np.mean(np.array(v) <= 0.01)) * 100, 2),
+                       "missingExactBaseDate": off_missing[k], "comparison": "same NAV base date"}
                    for k, v in off.items() if v}
     log.info("Validation vs AMFI official NAVs: %s", json.dumps(vs_official))
     both = []
