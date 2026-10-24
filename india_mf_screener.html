@@ -1218,6 +1218,51 @@ footer a{color:var(--text2)}
   .hero #metaChips .chip{white-space:normal;max-width:100%}
 }
 
+
+/* Final desktop hero geometry: compact status card and vertically centered heading.
+   Keep search outside the hero at full available width; no mobile changes. */
+@media(min-width:761px){
+  section.hero:has(>#dataStatus:not([hidden])){
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(250px,300px)!important;
+    align-items:center!important;
+    gap:14px 24px!important;
+    padding:10px 0 12px!important;
+    min-height:0!important;
+  }
+  section.hero:has(>#dataStatus:not([hidden]))>div:first-child{
+    grid-column:1!important;grid-row:1!important;
+    align-self:center!important;
+    display:flex;flex-direction:column;justify-content:center;
+    min-width:0;
+  }
+  section.hero:has(>#dataStatus:not([hidden]))>#dataStatus{
+    grid-column:2!important;grid-row:1!important;
+    align-self:center!important;
+    padding:9px 13px!important;
+    margin:0!important;
+    border-radius:14px!important;
+    max-width:300px;
+  }
+  section.hero #dataStatus.vts-st .vts-st-r{
+    padding:3px 0!important;
+    gap:5px!important;
+    grid-template-columns:minmax(0,0.9fr) minmax(0,1.3fr)!important;
+  }
+  section.hero #dataStatus.vts-st .vts-st-r>span,
+  section.hero #dataStatus.vts-st .vts-st-r>b{
+    font-size:11px!important;
+    line-height:1.15!important;
+  }
+  section.hero #dataStatus.vts-st .vts-st-n{
+    margin:5px 0 0!important;
+    font-size:10px!important;
+    line-height:1.25!important;
+  }
+  section.hero:has(>#dataStatus:not([hidden]))+section.searchbar{
+    margin-top:0!important;
+  }
+}
 </style>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"VilfinTV","item":"https://vilfintv.com/"},{"@type":"ListItem","position":2,"name":"VilfinTV Screeners","item":"https://vilfintv.com/"},{"@type":"ListItem","position":3,"name":"India Mutual Fund Screener","item":"https://vilfintv.com/india_mf_screener.html"}]}
