@@ -800,7 +800,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
     <div style="display: flex; align-items: center; gap: 16px;">
       <button class="story-theme-btn" onclick="cycleTheme()" title="Change theme">&#x1F3A8;</button>
       <div style="font-size: 14px; color: var(--text2); font-weight: 500;">
-        Already have a VilfinTV account? <a href="#" style="color:var(--blue); font-weight: 600; margin-left: 4px;">Log in</a>
+        Explore free lessons and practice activities
       </div>
     </div>
   </div>
@@ -835,8 +835,8 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
           <a href="#" onclick="openCbseLesson('math', 4); return false;">Class 4 Math</a>
           <a href="#" onclick="openCbseLesson('math', 5); return false;">Class 5 Math</a>
           <a href="#" onclick="openCbseLesson('math', 6); return false;">Class 6 Math</a>
-          <a href="#" onclick="openCbseLesson('math', 7); return false;">Class 7 Math</a>
-          <a href="#" onclick="openCbseLesson('math', 8); return false;">Class 8 Math</a>
+          <a href="education.html?subject=cbse-math-7" onclick="openCbseLesson('math', 7); return false;">Class 7 Math</a>
+          <a href="education.html?subject=cbse-math-8" onclick="openCbseLesson('math', 8); return false;">Class 8 Math</a>
         </div>
       </div>
 
@@ -847,8 +847,8 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
           <div class="subject-title">Math: High school & College</div>
         </div>
         <div class="subject-links">
-          <a href="#" onclick="openCbseLesson('math', 9); return false;">Class 9 Math</a>
-          <a href="#" onclick="openCbseLesson('math', 10); return false;">Class 10 Math</a>
+          <a href="education.html?subject=cbse-math-9" onclick="openCbseLesson('math', 9); return false;">Class 9 Math</a>
+          <a href="education.html?subject=cbse-math-10" onclick="openCbseLesson('math', 10); return false;">Class 10 Math</a>
           <a href="#" onclick="return false; alert('Coming Soon');">High School Geometry</a>
           <a href="#" onclick="return false; alert('Coming Soon');">Calculus</a>
         </div>
@@ -895,7 +895,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
           <div class="subject-title">Language</div>
         </div>
         <div class="subject-links">
-          <a href="#" onclick="openJlpt(5); return false;">Japanese</a>
+          <a href="education.html?jlpt=5" onclick="openJlpt(5); return false;">Japanese</a>
           <a href="#" onclick="openCbseLesson('english', 10); return false;">English</a>
           <a href="#" onclick="openCbseLesson('hindi', 10); return false;">Hindi</a>
           <a href="#" onclick="alert('Coming Soon'); return false;">Malayalam</a>
@@ -1628,9 +1628,10 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
       <div class="footer-col-title">Japanese Hub</div>
       <ul class="footer-links">
         <li><a href="#" onclick="openJlpt(5); return false;">JLPT N5 vocabulary</a></li>
-        <li><a href="#" onclick="openJlpt(4); return false;">JLPT N4 Kanji Drills</a></li>
-        <li><a href="#" onclick="openJlpt(3); return false;">JLPT N3 Formal Polite</a></li>
-        <li><a href="#" onclick="openJlpt(1); return false;">JLPT N1 Classical particles</a></li>
+        <li><a href="education.html?jlpt=4" onclick="openJlpt(4); return false;">JLPT N4 Kanji Drills</a></li>
+        <li><a href="education.html?jlpt=3" onclick="openJlpt(3); return false;">JLPT N3 Formal Polite</a></li>
+        <li><a href="education.html?jlpt=2" onclick="openJlpt(2); return false;">JLPT N2 Practice</a></li>
+        <li><a href="education.html?jlpt=1" onclick="openJlpt(1); return false;">JLPT N1 Classical particles</a></li>
       </ul>
     </div>
     <div>
@@ -1652,8 +1653,8 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
   </div>
 
   <div class="footer-bottom">
-    <p>&copy; 2026 VilfinTV Academy. NCERT &amp; JLPT curriculum resources updated in real time.</p>
-    <p>Institutional-Grade Education Hub</p>
+    <p>&copy; 2026 VilfinTV Academy. Educational resources and practice tools. Check individual lessons for updates.</p>
+    <p>Free interactive learning resources</p>
   </div>
 </footer>
 <!-- Navigation Logic -->
@@ -11213,7 +11214,8 @@ document.addEventListener('DOMContentLoaded', function() {
   } catch(e){ console.error(e); }
   try {
     var _subj = new URLSearchParams(window.location.search).get('subject');
-    if (_subj === 'macroeconomics' && typeof openMacroLesson === 'function') openMacroLesson();
+    if (/^cbse-math-(7|8|9|10)$/.test(_subj) && typeof openCbseLesson === 'function') openCbseLesson('math', parseInt(_subj.split('-').pop(), 10));
+    else if (_subj === 'macroeconomics' && typeof openMacroLesson === 'function') openMacroLesson();
     else if (_subj === 'microeconomics' && typeof openMicroLesson === 'function') openMicroLesson();
     else if (_subj === 'finance' && typeof openFinanceLesson === 'function') openFinanceLesson();
     else if (_subj === 'web-development' && typeof openWebLesson === 'function') openWebLesson(0);
