@@ -1263,6 +1263,18 @@ footer a{color:var(--text2)}
     margin-top:0!important;
   }
 }
+
+/* Page-specific QR badge; reserved space prevents overlap with NAV rows. */
+.hero #dataStatus.vts-st{position:relative;isolation:isolate}
+.hero #dataStatus.vts-st::before{
+  content:"";display:block;width:72px;height:72px;margin:0 0 8px;
+  border:4px solid #fff;border-radius:6px;box-sizing:border-box;
+  background:#fff url("https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=https%3A%2F%2Fvilfintv.com%2Findia_mf_screener.html") center/contain no-repeat;
+  image-rendering:pixelated;
+}
+@media(min-width:761px){
+  section.hero #dataStatus.vts-st::before{width:66px;height:66px;margin-bottom:6px}
+}
 </style>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"VilfinTV","item":"https://vilfintv.com/"},{"@type":"ListItem","position":2,"name":"VilfinTV Screeners","item":"https://vilfintv.com/"},{"@type":"ListItem","position":3,"name":"India Mutual Fund Screener","item":"https://vilfintv.com/india_mf_screener.html"}]}
