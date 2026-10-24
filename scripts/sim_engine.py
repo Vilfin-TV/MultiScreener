@@ -2229,6 +2229,13 @@ def account_files(store: dict, view: dict, sb: dict) -> dict:
         if es:
             row["day"] = {"d": es[-1]["d"], "chg": es[-1]["chg"], "pct": es[-1]["pct"], "first": es[-1]["first"]}
         out[f] = {"v": 1, "id": a["id"], "updated": sb["updated"], "auditOk": sb["auditOk"],
+                  "corrections": [
+                      {"id": e['correctionId'], "restatedAt": e['ts'],
+                       "reason": "Historical simulation corrected because fresh Nippon Gold purchases were suspended.",
+                       "order": x['oid'], "date": x['date'], "amount": x['amount'],
+                       "fromCode": x['fromCode'], "toCode": x['toCode']}
+                      for e in store.get('events',[]) if e.get('k')=='restatement'
+                      for x in e.get('orders',[]) if x.get('acct')==a['id']],
                   **{k: row[k] for k in ("name", "product", "risk", "freq", "amt", "nri", "since", "metric", "ret") if k in row},
                   "credit": row.get("credit"), "detail": row.pop("detail", None),
                   # Publish only already-audited simulated ledger transactions; no private account keys,
@@ -2296,3 +2303,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+

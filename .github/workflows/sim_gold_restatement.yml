@@ -1,0 +1,89 @@
+name: Restate restricted gold purchases
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/sim_restate_gold.py'
+      - 'scripts/sim_gold_correction.json'
+      - 'scripts/test_sim_restate_gold.py'
+      - '.github/workflows/sim_gold_restatement.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: sim-ledger
+  cancel-in-progress: false
+jobs:
+  restate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install tools
+        run: |
+          pip install -q requests
+          npm install -g wrangler@3
+      - name: Correction regression tests
+        run: python -m unittest discover -s scripts -p test_sim_restate_gold.py -v
+      - name: Restore trusted original privately
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SIM_BACKUP_KEY: ${{ secrets.SIM_BACKUP_KEY }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/correction" "$RUNNER_TEMP/candidate"
+          python scripts/sim_restore.py --out "$RUNNER_TEMP/correction/original-ledger.json"
+      - name: Prepare candidate and official NAV restatement
+        id: prepare
+        run: |
+          python scripts/sim_restate_gold.py --store "$RUNNER_TEMP/correction/original-ledger.json" --out "$RUNNER_TEMP/candidate/ledger.json" --view "$RUNNER_TEMP/candidate/view.json" --report "$RUNNER_TEMP/correction/report.json"
+          python - <<'PY'
+          import json,os
+          r=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'correction/report.json')))
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write('apply='+str(r['authorisedApply']).lower()+'\n')
+              f.write('already='+str(r['alreadyApplied']).lower()+'\n')
+          PY
+      - name: Retrieve original archive when retrying an applied correction
+        if: steps.prepare.outputs.already == 'true'
+        run: wrangler r2 object get "vilfintv-sim/sim/corrections/nippon-gold-2026-10-24/original-ledger.json" --file "$RUNNER_TEMP/correction/original-ledger.json"
+      - name: Independent complete audit against original private ledger
+        run: python scripts/audit_sim.py --store "$RUNNER_TEMP/candidate/ledger.json" --view "$RUNNER_TEMP/candidate/view.json" --original-store "$RUNNER_TEMP/correction/original-ledger.json" --out "$RUNNER_TEMP/candidate/audit.json"
+      - name: Preserve original privately before any replacement
+        if: steps.prepare.outputs.apply == 'true'
+        run: |
+          key="vilfintv-sim/sim/corrections/nippon-gold-2026-10-24"
+          if wrangler r2 object get "$key/original-ledger.json" --file "$RUNNER_TEMP/correction/existing-original.json"; then
+            cmp "$RUNNER_TEMP/correction/original-ledger.json" "$RUNNER_TEMP/correction/existing-original.json"
+          else
+            wrangler r2 object put "$key/original-ledger.json" --file "$RUNNER_TEMP/correction/original-ledger.json" --content-type application/json
+          fi
+          wrangler r2 object put "$key/report.json" --file "$RUNNER_TEMP/correction/report.json" --content-type application/json
+          for f in ledger view audit; do
+            wrangler r2 object put "$key/$f.json" --file "$RUNNER_TEMP/candidate/$f.json" --content-type application/json
+          done
+      - name: Store corrected private ledger and backup
+        if: steps.prepare.outputs.apply == 'true'
+        run: |
+          d=$(TZ=Asia/Kolkata date +%F)
+          for f in ledger view audit; do
+            wrangler r2 object put "vilfintv-sim/sim/snapshots/$d/$f.json" --file "$RUNNER_TEMP/candidate/$f.json" --content-type application/json
+          done
+          wrangler r2 object put "vilfintv-sim-backup/sim/ledger.json" --file "$RUNNER_TEMP/candidate/ledger.json" --content-type application/json
+          for f in ledger view audit; do
+            wrangler r2 object put "vilfintv-sim/sim/$f.json" --file "$RUNNER_TEMP/candidate/$f.json" --content-type application/json
+          done
+      - name: Publish corrected public ledger and scoreboard
+        if: steps.prepare.outputs.apply == 'true'
+        run: |
+          python scripts/publish_sim_correction.py --dir "$RUNNER_TEMP/candidate"
+          bash scripts/push_data.sh "chore(data): restate 15 suspended gold purchases into eligible alternatives" data/sim_meta.json data/sim_scoreboard.json data/sim_corrections.json data/sim

@@ -387,6 +387,7 @@ def main() -> int:
     ap.add_argument("--view", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--today")
+    ap.add_argument("--original-store", help="Original private ledger for independently checking an authorised restatement")
     args = ap.parse_args()
     store = json.loads(Path(args.store).read_text())
     view = json.loads(Path(args.view).read_text())
@@ -439,6 +440,32 @@ def main() -> int:
     A.check("chain", view.get("head") == (evs[-1]["h"] if evs else None), "view built from a different ledger")
 
     orders = {e["oid"]: e for e in evs if e["k"] == "order"}
+    # Owner-authorised historical restatements remain visible and independently
+    # checked; this does not waive any NAV, cash, schedule or availability check.
+    restatements = [e for e in evs if e.get('k')=='restatement']
+    if restatements:
+        manifest=json.loads((ROOT/'scripts/sim_gold_correction.json').read_text(encoding='utf-8'))
+        mh=hashlib.sha256(json.dumps({k:v for k,v in manifest.items() if k!='apply'},sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
+        expected={r['oid']:r for r in manifest['orders']}
+        A.check('restatement',len(restatements)==1,'Only the single specifically authorised restatement is permitted')
+        re=restatements[0]
+        A.check('restatement',re.get('correctionId')==manifest['id'] and re.get('manifestSha256')==mh,'Correction manifest does not match approval')
+        A.check('restatement',re.get('count')==15 and re.get('totalAmount')==manifest['expectedTotal'],'Correction count/amount does not match approval')
+        A.check('restatement',{x['oid'] for x in re.get('orders',[])}==set(expected),'Corrected order set differs from approval')
+        for oid,r in expected.items():
+            o=orders.get(oid) or {}
+            A.check('restatement',o.get('code')==r['to'] and o.get('replacesCode')==r['from'] and o.get('correctionId')==manifest['id']
+                    and o.get('amount')==r['amount'] and o.get('acct')==r['acct'] and o.get('T')==r['date'],f'{oid}: replacement or contribution changed')
+        if args.original_store:
+            raw=Path(args.original_store).read_bytes(); original=json.loads(raw)
+            A.check('restatement',hashlib.sha256(raw).hexdigest()==re.get('originalFileSha256'),'Original private archive digest mismatch')
+            A.check('restatement',len(original['events'])==re.get('originalEvents') and original['events'][-1]['h']==re.get('originalHead'),'Original archive count/head mismatch')
+            for old,new in zip(original['events'],evs):
+                body=lambda x:{k:v for k,v in x.items() if k not in ('seq','prev','h')}
+                if old.get('oid') not in expected or old.get('k') not in ('order','allot'):
+                    A.check('restatement',body(old)==body(new),f"Unrelated historical event {old['seq']} changed")
+                else:
+                    A.check('restatement',old.get('amount')==new.get('amount') and old.get('oid')==new.get('oid'),f"Original contribution changed at {old['seq']}")
     # Historical compliance check, independent of today's screener snapshot.
     # A simulated contribution is NOT a documented pre-registered SIP.
     for o in orders.values():
@@ -864,3 +891,4 @@ if __name__ == "__main__":
     except Exception as e:  # noqa: BLE001 — a ledger the audit cannot even read is a failed audit
         print(f"Simulator Buy audit: FAILED — the ledger could not be checked ({type(e).__name__}: {e})")
         sys.exit(1)
+
