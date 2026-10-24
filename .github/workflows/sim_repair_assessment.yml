@@ -1,0 +1,60 @@
+name: Simulator Ledger Repair Assessment
+
+# Safe first phase only. Does not mutate or publish the private ledger.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: sim-ledger
+  cancel-in-progress: false
+
+jobs:
+  assess:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install private ledger restore dependencies
+        run: |
+          pip install -q requests
+          npm install -g wrangler@3
+      - name: Restore trusted ledger without modifying it
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SIM_BACKUP_KEY: ${{ secrets.SIM_BACKUP_KEY }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/sim"
+          python scripts/sim_restore.py --out "$RUNNER_TEMP/sim/ledger.json"
+      - name: Verify published ledger continuity
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          from pathlib import Path
+          meta = json.loads(Path('data/sim_meta.json').read_text())
+          events = json.loads((Path(os.environ['RUNNER_TEMP']) / 'sim/ledger.json').read_text())['events']
+          n = meta.get('events', 0)
+          if n and (len(events) < n or events[n-1]['h'] != meta['head']):
+              sys.exit('::error::Private ledger does not continue the published head')
+          print('Private ledger continues the published head')
+          PY
+      - name: Assess affected orders (read-only)
+        run: |
+          python scripts/sim_repair_assess.py --store "$RUNNER_TEMP/sim/ledger.json" --out "$RUNNER_TEMP/sim/repair-assessment.json"
+      - name: Upload private assessment only
+        uses: actions/upload-artifact@v4
+        with:
+          name: restricted-gold-ledger-assessment
+          path: ${{ runner.temp }}/sim/repair-assessment.json
+          retention-days: 7
