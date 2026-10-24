@@ -487,6 +487,32 @@ def main() -> int:
                 A.check("plan", x is not None and x["sym"] == o["sym"] and abs(o["amount"] - r2(e["amount"] * x["w"] / 100)) < 0.02,
                         f"{o['oid']}: ETF / budget does not match the plan")
 
+    # Independent fresh-purchase gate: check only orders dated on/after the
+    # current screener snapshot. Older completed trades cannot be judged using
+    # today's subscription restrictions. Unknown status is NOT permission.
+    try:
+        market = json.loads((ROOT / "data" / "mf" / "screener.json").read_text())
+        cols = market["cols"]
+        status = {str(r[cols.index("code")]): r[cols.index("buy")] for r in market["rows"]}
+        status_asof = market["asOf"][:10]
+        A.check("availability", bool(status_asof), "MF purchase-status snapshot has no as-of date")
+        for o in orders.values():
+            if not o.get("code") or o.get("side") != "buy" or o["T"] < status_asof:
+                continue
+            # Only fresh contribution orders. Switches and dip reserve orders
+            # require a separate transaction-type eligibility check.
+            if not o.get("iid") or o.get("slot") == "reserve":
+                continue
+            aid = o.get("acct", "")
+            person = persons.get(aid.rsplit("-", 1)[0]) or {}
+            freq = person.get("freq", "m")
+            flag = "W" if freq == "w" else "S" if freq in ("d", "m") else "L"
+            flags = status.get(str(o["code"]))
+            A.check("availability", isinstance(flags, str) and flag in flags,
+                    f"{o['oid']}: fresh {flag} purchase of {o['code']} is unavailable or unverified ({flags!r})")
+    except Exception as exc:
+        A.check("availability", False, f"cannot verify current MF subscription status: {exc}")
+
     # MF allotments
     liquid = set(CFG["mfRules"]["liquidSubs"])
     subs = {}
