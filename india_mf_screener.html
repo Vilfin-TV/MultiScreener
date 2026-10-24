@@ -3898,6 +3898,30 @@ function renderSip(){
       ck.push(['1Y and 3Y returns available', isNum(f.r1y) && isNum(f.r3y), 'Historical returns do not guarantee future performance']);
       ck.push(['Minimum purchase', isNum(f.sipMin) && isNum(f.lumpMin) && Math.max(f.sipMin,f.lumpMin) <= s.amt, 'Checked against this allocation']);
       ck.push(['Temporary replacement', true, 'Original Gold FoF restricted; reassess when fresh purchases reopen']);
+      // Additional independent, fund-specific evidence checks. Missing
+      // observations fail visibly; never pad the count with assumed passes.
+      var monthlyBudget = s.amt;
+      var safeNum = function(v){ return typeof v === 'number' && Number.isFinite(v); };
+      ck.push(['Scheme identity recorded', !!f.code && !!f.name, String(f.code || 'Not available')]);
+      ck.push(['AMC identity recorded', !!f.amcName, f.amcName || 'Not available']);
+      ck.push(['Multi-asset/commodity classification', f.sub === 'multiasset' || f.sub === 'idx_commod' || /commodit|metal/i.test(f.name || ''), f.subLabel || 'Not available']);
+      ck.push(['Original restricted scheme excluded', String(f.code) !== String(s.purchaseReplacement), 'Original scheme ' + s.purchaseReplacement]);
+      ck.push(['New SIP allowed in data', typeof f.buy === 'string' && f.buy.indexOf('S') >= 0, 'SIP flag ' + (f.buy || 'unavailable')]);
+      ck.push(['New lump sum allowed in data', typeof f.buy === 'string' && f.buy.indexOf('W') >= 0, 'Lump-sum flag ' + (f.buy || 'unavailable')]);
+      ck.push(['SIP minimum published', safeNum(f.sipMin) && f.sipMin > 0, safeNum(f.sipMin) ? inr(f.sipMin) : 'Unavailable']);
+      ck.push(['Lump-sum minimum published', safeNum(f.lumpMin) && f.lumpMin > 0, safeNum(f.lumpMin) ? inr(f.lumpMin) : 'Unavailable']);
+      ck.push(['SIP minimum within allocation', safeNum(f.sipMin) && f.sipMin <= monthlyBudget, safeNum(f.sipMin) ? inr(f.sipMin) + ' vs ' + inr(monthlyBudget) : 'Unavailable']);
+      ck.push(['Lump-sum minimum within allocation', safeNum(f.lumpMin) && f.lumpMin <= monthlyBudget, safeNum(f.lumpMin) ? inr(f.lumpMin) + ' vs ' + inr(monthlyBudget) : 'Unavailable']);
+      ck.push(['TER nonnegative', safeNum(f.ter) && f.ter >= 0, safeNum(f.ter) ? f.ter.toFixed(2) + '%' : 'Unavailable']);
+      ck.push(['TER under 1%', safeNum(f.ter) && f.ter < 1, safeNum(f.ter) ? f.ter.toFixed(2) + '%' : 'Unavailable']);
+      ck.push(['AUM above ₹1,000 crore', safeNum(f.aum) && f.aum >= 1000, safeNum(f.aum) ? inr(f.aum) + ' crore' : 'Unavailable']);
+      ck.push(['Sharpe above 1', safeNum(f.sharpe) && f.sharpe >= 1, safeNum(f.sharpe) ? f.sharpe.toFixed(2) : 'Unavailable']);
+      ck.push(['Drawdown within 20%', safeNum(f.mdd) && f.mdd >= -20 && f.mdd <= 0, safeNum(f.mdd) ? f.mdd.toFixed(1) + '%' : 'Unavailable']);
+      ck.push(['Positive one-year return', safeNum(f.r1y) && f.r1y > 0, safeNum(f.r1y) ? f.r1y.toFixed(2) + '%' : 'Unavailable']);
+      ck.push(['Positive three-year return', safeNum(f.r3y) && f.r3y > 0, safeNum(f.r3y) ? f.r3y.toFixed(2) + '%' : 'Unavailable']);
+      ck.push(['Return observations plausible', safeNum(f.r1y) && safeNum(f.r3y) && f.r1y > -100 && f.r3y > -100, 'Historical values only']);
+      ck.push(['Independent live AMC confirmation', false, 'Not verified; purchase status must be confirmed before executing any order']);
+
     }
     ck.push(['Fresh purchase eligibility', !s.purchaseBlocked && !!(f.buy && /[SW]/.test(f.buy)),
       s.purchaseBlocked ? 'Blocked; no purchase permitted' : s.purchaseReplacement ? 'Alternative selected from currently eligible screener data; confirm with AMC before order' : 'Based on current screener purchase flags']);
