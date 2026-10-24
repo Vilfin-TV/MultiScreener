@@ -1777,10 +1777,12 @@ def main() -> int:
                 if slot in cuts:
                     c = cuts[slot]
                     slots[-1]["gate"] = {**c, "toLabel": SLOTS[c["to"]][0]}
+            allocation_fallbacks = []
             for sk in skipped:
                 tgt = next((x for x in FALLBACK.get(sk, []) if any(z["key"] == x for z in slots)), None)
                 tgt = next(z for z in slots if z["key"] == tgt) if tgt else max(slots, key=lambda z: z["w"])
                 tgt["w"] += weights[sk]
+                allocation_fallbacks.append({"from": sk, "to": tgt["key"], "weight": weights[sk], "reason": "no_eligible_fund"})
                 tgt["note"] = (tgt["note"] + " " if tgt["note"] else "") + f"Includes the {SLOTS[sk][0].lower()} allocation (no fund currently passes every check)."
             apply_fund_pe(u, slots, fpe, dec, pid, review)
             for k in list(pst["slots"]):
@@ -1799,7 +1801,7 @@ def main() -> int:
             for s in slots:
                 mix[s["asset"]] = mix.get(s["asset"], 0) + s["w"]
             plans[pid] = {
-                "horizon": hz_label, "risk": rk_label, "years": yrs, "yearsMin": ymin, "yearsMax": ymax, "tilt": applied, "rotated": rotated, "metalTilt": metal_tilt, "multiFor": multi_drop,
+                "horizon": hz_label, "risk": rk_label, "years": yrs, "yearsMin": ymin, "yearsMax": ymax, "tilt": applied, "rotated": rotated, "metalTilt": metal_tilt, "multiFor": multi_drop, "allocationFallbacks": allocation_fallbacks,
                 "slots": slots, "mix": mix, "ter": round(sum((u.g(s["code"], "ter") or 0) * s["w"] for s in slots) / 100, 2),
                 "er": round(sum(s["er"] * s["w"] for s in slots) / 100, 2),
                 "hist": {k: past_return(u, slots, k) for k in ("r3y", "r5y")},

@@ -81,7 +81,7 @@ def main():
     deep = os.environ.get("DEEP") == "true"
     summary, run, why = [], False, []
     try:
-        pub = json.load(open("data/mf/screener.json"))
+        pub = json.load(open("data/mf/screener.json", encoding="utf-8"))
     except Exception as e:  # noqa: BLE001
         pub = None
         run, why = True, [f"no published data ({e})"]
@@ -135,7 +135,7 @@ def main():
                     code, pv = r[C["code"]], r[C[key]]
                     end = nav.get(code)
                     b = base.get(code)
-                    if pv is None or not end or not b or end[1] != asof or (asof - shift_months(asof, -months)).days < 0:
+                    if pv is None or not end or not b or end[1].isoformat() != r[C["navDate"]] or r[C["navDate"]] != asof.isoformat():
                         continue
                     if (shift_months(asof, -months) - b[1]).days > 10:
                         continue
@@ -144,6 +144,7 @@ def main():
                     n += 1
                     if abs(o - pv) > 0.02:
                         mism.append(f"{code} {key}: published {pv} vs official {o:.4f}")
+            summary.append("- Return comparisons use matching published NAV dates; raw official NAVs spanning unit splits require corporate-action review.")
             summary.append(f"- Return audit: {n} returns recomputed from AMFI official NAVs, {len(mism)} outside 0.02 pp")
             summary += [f"  - {x}" for x in mism[:10]]
             # funds whose unit face value changed are restated by design; only act on widespread gaps

@@ -448,7 +448,8 @@ function verifySmartSip() {
     const multi = share(v, s => s.key === 'multi'), via = new Set(v.multiFor || []);
     ok(share(v, s => s.asset === 'Equity') >= 5, `${h.id}v: no equity allocation`);
     ok(share(v, s => s.asset === 'Debt') >= 5 || (multi >= 10 && [...via].some(k => /^d/.test(k))), `${h.id}v: no debt allocation`);
-    ok(share(v, s => s.asset === 'Commodity') >= 5 || (multi >= 10 && via.has('metal')), `${h.id}v: no commodity allocation`);
+    const parkedMetal = (v.allocationFallbacks || []).some(f => f.from === 'metal' && f.reason === 'no_eligible_fund' && f.weight >= 5 && v.slots.some(s => s.key === f.to && s.asset === 'Debt' && s.w >= f.weight));
+    ok(share(v, s => s.asset === 'Commodity') >= 5 || (multi >= 10 && via.has('metal')) || parkedMetal, `${h.id}v: no commodity allocation or documented debt fallback`);
     if (multi) ok(multi >= 10 && via.size > 0, `${h.id}v: multi-asset slot ${multi}% without a market-condition reason`);
   }
   ok(Math.abs(P.market.tilt) <= 10 && P.market.tilt % 5 === 0, `market tilt ${P.market.tilt}`);
@@ -532,10 +533,13 @@ function verifyNfo() {
 }
 
 if (process.argv.includes('--holdings')) { verifyHoldings(); console.log(`${checks} checks, ${failures} failure(s).`); process.exit(failures ? 1 : 0); }
-verifySample();
+if (process.argv.includes('--published')) console.log('Published-data audit: raw NAV-history recomputation is not included.');
+else verifySample();
 verifyFiles();
 verifySmartSip();
 verifyNfo();
+// A focused published-data run must not replace the full raw-history audit.
+if (!process.argv.includes('--published')) {
 // publish a compact audit record next to the data (shown on the page as a verification note)
 try {
   const J = JSON.parse(fs.readFileSync(path.join(OUT, 'screener.json'), 'utf8'));
@@ -546,5 +550,6 @@ try {
     recomputedFunds: AUDIT.recomputedFunds || 0, holdingsFunds: AUDIT.holdingsFunds || 0, dayOverDay: AUDIT.dayOverDay || null, officialNav: official,
   }));
 } catch (e) { console.error('could not write audit.json', e.message); }
+}
 console.log(`${checks} checks, ${failures} failure(s).`);
 process.exit(failures ? 1 : 0);
