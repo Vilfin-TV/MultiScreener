@@ -679,7 +679,7 @@
       /* Never stamp today's date on a previous market-close valuation.
          Validate the ledger against its own last history row and the audited scoreboard. */
       var valDate = x && x.asOf, lastDate = last && last.d;
-      var validDate = function (d) { return typeof d === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(d); };
+      var validDate = function (d) { return typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d); };
       var ledgerValid = !!(x && a && a.auditOk === true &&
         validDate(valDate) && validDate(a.updated) && valDate === a.updated &&
         x.val != null && typeof x.val === 'number' && isFinite(x.val));
