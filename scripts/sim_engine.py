@@ -2209,6 +2209,22 @@ def account_files(store: dict, view: dict, sb: dict) -> dict:
         out[f] = {"v": 1, "id": a["id"], "updated": sb["updated"], "auditOk": sb["auditOk"],
                   **{k: row[k] for k in ("name", "product", "risk", "freq", "amt", "nri", "since", "metric", "ret") if k in row},
                   "credit": row.get("credit"), "detail": row.pop("detail", None),
+                  # Publish only already-audited simulated ledger transactions; no private account keys,
+                  # references, notes or fabricated clock timestamps.
+                  "orders": [
+                      {"id": str(t.get("oid", "")), "placedAt": t.get("T"),
+                       "completedAt": t.get("navDate") if t.get("status") in ("Settled", "Allotted", "Paid out") else None,
+                       "settledAt": t.get("credit"),
+                       "name": t.get("name"), "symbol": t.get("sym") or str(t.get("code") or ""),
+                       "side": t.get("side"), "quantity": t.get("units"), "price": t.get("price"),
+                       "amount": t.get("amount"),
+                       "status": ("Completed" if t.get("status") in ("Settled", "Allotted", "Paid out")
+                                  else "In progress" if "progress" in t.get("status", "").lower() or
+                                       "awaiting" in t.get("status", "").lower()
+                                  else t.get("status", "Unknown"))}
+                      for t in a.get("txns", [])
+                  ],
+
                   "series": [[e["d"], e["val"], e["inv"], e["pct"], e["bpct"], e["bval"]] for e in es],
                   "recent": [{"d": e["d"], "val": e["val"], "inv": e["inv"], "chg": e["chg"], "pct": e["pct"], "bval": e["bval"],
                               "bchg": e["bchg"], "bpct": e["bpct"], "first": e["first"], "cash": e["cash"], "pend": e["pend"],
