@@ -696,7 +696,7 @@
         '<div><span>Total gain</span><b class="' + cl(x && x.gain) + '">' + (x && x.gain != null ? sinr(x.gain) + ' <small>' + spct(r.ret) + '</small>' : '–') + '</b></div>' +
         '<div><span>' + (last ? (last.first ? 'Since purchase' : 'Day change · ' + esc(dt(last.d, false))) : 'Day change') + '</span><b class="' + cl(last && last.chg) + '">' + (last ? sinr(last.chg) + ' <small>' + spct(last.pct) + '</small>' : '–') + '</b></div>' +
         '<div><span>Same money in ' + esc(BN) + '</span>' + (function () { var bv = last && last.inv ? (last.bval / last.inv - 1) * 100 : (x && x.bench); return '<b class="' + cl(bv) + '">' + (bv != null ? spct(bv) : '–') + '</b>'; })() + '</div></div></div>';
-      var tabs = [['today', 'Summary'], ['bench', 'vs ' + BN], ['brk', 'Breakdown'], ['hold', 'Holdings'], ['hist', 'History']];
+      var tabs = [['today', 'Summary'], ['bench', 'vs ' + BN], ['brk', 'Breakdown'], ['hold', 'Holdings'], ['hist', 'History'], ['orders', 'Orders']];
       h += '<div class="vts-tabs vts-pv-tabs" role="tablist">' + tabs.map(function (t) { return '<button type="button" role="tab" data-t="' + t[0] + '" class="' + (tab === t[0] ? 'on' : '') + '" aria-selected="' + (tab === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div>';
       h += '<div class="vts-pv-pane">' + pane(r, a) + '</div>';
       pv.innerHTML = h;
@@ -706,6 +706,8 @@
       });
       var pb = pv.querySelector('.vts-ch-per');
       if (pb) pb.addEventListener('click', function (e) { var b = e.target.closest('button[data-p]'); if (!b) return; per = b.getAttribute('data-p'); render(r, a); });
+      var orderRoot = pv.querySelector('.vts-orders');
+      if (orderRoot) { orderRoot.addEventListener('change', function(){ fillOrders(a); }); fillOrders(a); }
       chartHover(pv.querySelector('.vts-ch'));
       var ov = pv.querySelector('.vts-olap');
       if (ov) ov.addEventListener('change', function () { ovSel = [+ov.querySelector('[data-o="0"]').value, +ov.querySelector('[data-o="1"]').value]; ov.querySelector('.vts-olap-r').innerHTML = overlapOut(a.breakdown); });
@@ -716,11 +718,38 @@
 
     function pane(r, a) {
       var rc = (a && a.recent) || [], last = rc[rc.length - 1];
+      if (tab === 'orders') return orders(r, a);
       if (tab === 'today') return today(r, last);
       if (tab === 'bench') return bench(a);
       if (tab === 'hold') return holdings(r, a && a.detail);
       if (tab === 'brk') return breakdown(r, a && a.breakdown);
       return history(rc);
+    }
+
+    function orders(r, a) {
+      var x = a && a.detail, pending = x && x.hold ? x.hold.filter(function(q){return Number(q.pu) > 0;}) : [];
+      var transactions = a && Array.isArray(a.orders) && a.auditOk === true ? a.orders : [];
+      var h = '<section class="vts-orders"><h3>Simulated orders</h3><p class="vts-pv-e">Educational model trades, not exchange orders. Completion time is displayed only when recorded in the audited order ledger.</p>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:9px;margin:12px 0"><label>From <input type="date" data-ord-from style="max-width:155px"></label><label>To <input type="date" data-ord-to style="max-width:155px"></label><label>Status <select data-ord-status><option value="">All</option><option value="in progress">In progress</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option><option value="rejected">Rejected</option></select></label></div><div data-ord-results></div></section>';
+      return h;
+    }
+    function fillOrders(a) {
+      var root = pv.querySelector('.vts-orders'); if (!root) return;
+      var list = Array.isArray(a && a.orders) && a.auditOk === true ? a.orders : [];
+      var from = root.querySelector('[data-ord-from]').value, to = root.querySelector('[data-ord-to]').value, status = root.querySelector('[data-ord-status]').value;
+      var rows = list.filter(function(o) {
+        var d = String(o.placedAt || o.date || '').slice(0,10);
+        return (!from || d >= from) && (!to || d <= to) && (!status || String(o.status || '').toLowerCase() === status);
+      });
+      var out = root.querySelector('[data-ord-results]');
+      if (!list.length) {
+        out.innerHTML = '<p class="vts-pv-e">Order-by-order execution records are not published in this audited profile. Holdings and daily history cannot establish individual trade timestamps. No orders have been inferred or invented.</p>';
+        return;
+      }
+      out.innerHTML = '<p class="vts-pv-e">' + rows.length + ' of ' + list.length + ' audited orders</p>' + rows.map(function(o) {
+        var placed = o.placedAt || o.date || 'Not recorded', done = o.completedAt || 'Not recorded';
+        return '<div class="vts-hist-r" style="display:block;padding:12px;border-bottom:1px solid #ddd"><b>' + esc(o.name || o.symbol || 'Order') + '</b> · ' + esc(o.side || 'Buy') + '<p>' + esc(o.status || 'Unknown') + ' · ' + esc(String(placed)) + '</p><p>Quantity: ' + esc(o.quantity == null ? 'Not recorded' : String(o.quantity)) + ' · Price: ' + (o.price == null ? 'Not recorded' : inr(o.price)) + ' · Amount: ' + (o.amount == null ? 'Not recorded' : inr(o.amount)) + '</p><small>Completed: ' + esc(String(done)) + '</small></div>';
+      }).join('') || '<p class="vts-pv-e">No matching orders.</p>';
     }
 
     function today(r, e) {
