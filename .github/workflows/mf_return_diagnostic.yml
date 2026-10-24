@@ -1,0 +1,49 @@
+name: MF return audit diagnostic
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [.github/workflows/mf_return_diagnostic.yml]
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache/restore@v4
+        with:
+          path: .mfcache
+          key: mf-return-diagnostic-${{ github.run_id }}
+          restore-keys: mf-cache-
+      - name: Inspect public AMFI return anchors
+        run: |
+          python - <<'PY'
+          import json,gzip,datetime,bisect
+          from pathlib import Path
+          v=json.load(open('.mfcache/validation.json'))
+          print('MISMATCHES',json.dumps(v.get('officialMismatches'),ensure_ascii=False))
+          def gz(n):
+              return json.loads(gzip.decompress(Path('.mfcache/'+n+'.json.gz').read_bytes()))
+          snaps=gz('amfi_days')
+          hist=gz('hist')
+          j=json.load(open('data/mf/screener.json'));c={k:i for i,k in enumerate(j['cols'])}
+          n=0
+          for row in j['rows']:
+              code=str(row[c['code']])
+              if row[c['r5y']] is None or row[c['navDate']]!='2026-10-23':continue
+              pts=hist.get(code,[])
+              anchor=[p for p in pts if datetime.date(2021,10,19).toordinal()<=p[0]<=datetime.date(2021,10,25).toordinal()]
+              official={d:vals.get(code) for d,vals in snaps.items() if '2021-10-19'<=d<='2021-10-25' and vals.get(code) is not None}
+              if not official:continue
+              base=next((official[d] for d in sorted(official,reverse=True) if d<='2021-10-23'),None)
+              if base is None:continue
+              calc=((row[c['nav']]/base)**.2-1)*100
+              if abs(calc-row[c['r5y']])>.01 or code=='118955':
+                  print('ANCHOR',json.dumps({'code':code,'name':row[c['name']],'nav':row[c['nav']],'published5y':row[c['r5y']],'rawOfficial5y':calc,'official':official,'history':[(datetime.date.fromordinal(p[0]).isoformat(),p[1]) for p in anchor]},ensure_ascii=False))
+                  n+=1
+                  if n>=12:break
+          PY
