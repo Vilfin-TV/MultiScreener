@@ -680,7 +680,7 @@
          Validate the ledger against its own last history row and the audited scoreboard. */
       var valDate = x && x.asOf, lastDate = last && last.d;
       var synced = !!(x && valDate && lastDate && sb.updated &&
-        /^\\d{4}-\\d{2}-\\d{2}$/.test(valDate) &&
+        /^\d{4}-\d{2}-\d{2}$/.test(valDate) &&
         valDate === lastDate && valDate === sb.updated &&
         a.updated === sb.updated && sb.auditOk !== false && a.auditOk !== false &&
         x.val != null && isFinite(x.val));
