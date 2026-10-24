@@ -3566,7 +3566,24 @@ function sizePlan(plan, amt, fq){
         if (alt) { swapped = code; code = alt; }
       }
     }
-    return {key:s.key, label:s.label, asset:s.asset, w:s.w, code:code, swapped:swapped, src:s, merged:[], er:s.er, vol:s.vol, tax:s.tax};
+    // Never present a restricted fund as investable. Substitute only a
+    // currently flagged eligible multi-asset/commodity candidate; otherwise
+    // keep the allocation visibly blocked, without fabricating a purchase.
+    var originalCode = code, restricted = String(code) === '118663' ||
+      !!(BY[code] && BY[code].sub === 'gold' && BY[code].buy === '');
+    var needed = fq === 'w' ? 'W' : 'S';
+    var replacement = null;
+    if (restricted || !(BY[code] && typeof BY[code].buy === 'string' && BY[code].buy.indexOf(needed) >= 0)) {
+      replacement = FUNDS.filter(function(f){
+        return f && f.code != code && typeof f.buy === 'string' &&
+          f.buy.indexOf(needed) >= 0 && f.sub !== 'gold' &&
+          /multi.asset|commodit/i.test((f.name || '') + ' ' + (f.subLabel || '')) &&
+          (!isNum(f.sipMin) || f.sipMin <= amt * s.w / 100);
+      }).sort(function(a,b){ return (b.rating || 0) - (a.rating || 0) || (b.aum || 0) - (a.aum || 0); })[0] || null;
+      if (replacement) code = replacement.code;
+    }
+    return {key:s.key, label:s.label, asset:s.asset, w:s.w, code:code, swapped:swapped, src:s, merged:[], er:s.er, vol:s.vol, tax:s.tax,
+      purchaseBlocked:restricted && !replacement, purchaseReplacement:replacement ? originalCode : null};
   });
   var full = Math.max.apply(null, slots.map(function(s){ return sipMinOf(s.code) * 100 / s.w; }));
   full = Math.ceil(full / 500) * 500;
@@ -3830,7 +3847,12 @@ function renderSip(){
     if (s.swapped) flags.push('<span class="tag" title="' + esc((BY[s.swapped] || {}).name || '') + ' does not offer weekly SIPs">Weekly-SIP alternate</span>');
     if (src.gate && src.w > 0) flags.push('<span class="tag" title="' + esc(src.gate.reason === 'fund' ? 'Expensive portfolio: ' + src.gate.index : src.gate.index + ' is expensive vs its 10-year history') + '">Reduced this month (−' + src.gate.cut + ' pts)</span>');
     if (s.merged.length) flags.push('<span class="tag" title="Includes the allocation for ' + esc(s.merged.join(', ')) + '">+ ' + esc(s.merged.join(', ')) + '</span>');
-    var ck = src.checks || [], passed = ck.filter(function(c){ return c[1]; }).length;
+    if (s.purchaseBlocked) flags.push('<span class="tag" style="color:#b91c1c">Fresh purchase blocked — no verified alternative</span>');
+    if (s.purchaseReplacement) flags.push('<span class="tag">Temporary multi-asset / commodity alternative; verify AMC before order</span>');
+    var ck = (src.checks || []).filter(function(c){ return !/open for investment/i.test(c[0]); });
+    ck.push(['Fresh purchase eligibility', !s.purchaseBlocked && !!(f.buy && /[SW]/.test(f.buy)),
+      s.purchaseBlocked ? 'Blocked; no purchase permitted' : s.purchaseReplacement ? 'Alternative selected from currently eligible screener data; confirm with AMC before order' : 'Based on current screener purchase flags']);
+    var passed = ck.filter(function(c){ return c[1]; }).length;
     var chk = '<ul class="chk">' + ck.map(function(c){ return '<li class="' + (c[1] ? '' : 'x') + '"><span><b>' + esc(c[0]) + '</b>' + (c[2] ? ' — ' + esc(c[2]) : '') + '</span></li>'; }).join('') + '</ul>';
     var why = (src.why || []).map(function(w){ return '<li>' + esc(w) + '</li>'; }).join('');
     if (src.pool) why += '<li>Ranked #1 of ' + src.pool + ' funds that passed every check' + (isNum(src.score) ? ' (score ' + Math.round(src.score) + '/100)' : '') + '</li>';
