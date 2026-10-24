@@ -104,6 +104,11 @@ jobs:
                   if filename.endswith('screener.json'):
                       assert data.get('rows') and 'buy' in data.get('cols', [])
                       d = date.fromisoformat(data['asOf'][:10])
+                      cols = data['cols']
+                      sub_idx, buy_idx = cols.index('sub'), cols.index('buy')
+                      gold = [r for r in data['rows'] if r[sub_idx] == 'gold']
+                      if not gold or any(r[buy_idx] != '' for r in gold):
+                          sys.exit('::error::Gold FoF purchase-status safeguard not reflected in the downloaded screener data; rebuild MF data before simulator orders')
                   else:
                       etfs = data['etfs']
                       assert etfs
