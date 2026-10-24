@@ -662,6 +662,16 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
   .hero #status.status .row>span{font-size:12.5px!important}
 }
 
+
+/* QR code for this Global ETF page, in its own layout row above status data. */
+.hero #status.status::after{content:none!important}
+.hero #status.status .vt-page-qr{
+  display:block;width:78px;height:78px;box-sizing:border-box;
+  margin:0 0 10px;border:4px solid #fff;border-radius:6px;
+  background:#fff url("https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=https%3A%2F%2Fvilfintv.com%2Fglobal_etf_momentum.html") center/contain no-repeat;
+  image-rendering:pixelated;flex:none;
+}
+@media(max-width:760px){.hero #status.status .vt-page-qr{width:72px;height:72px}}
 </style>
 <!-- faq-jsonld -->
 <script type="application/ld+json">
@@ -727,6 +737,7 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
       <div class="hero-kpis" id="heroKpis"></div>
     </div>
     <div class="status" id="status" aria-live="polite">
+      <span class="vt-page-qr" role="img" aria-label="QR code linking to the Global ETF Momentum page"></span>
       <div class="row"><span>Data as of</span><span id="stAsOf"><span class="skel" style="display:inline-block;width:90px"></span></span></div>
       <div class="row"><span>Updated (your time)</span><span id="stUpd">–</span></div>
       <div class="row"><span>Next update</span><span id="stNext">–</span></div>
