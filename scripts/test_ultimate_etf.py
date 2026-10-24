@@ -9,6 +9,9 @@ class ETFEligibility(unittest.TestCase):
     def states(self):return {x['id']:x['state'] for x in candidate(**self.e)['checks']}
     def test_all_fifty_gates_have_unique_ids(self):
         c=candidate(**self.e);self.assertTrue(c['eligible']);self.assertEqual(len(c['checks']),50);self.assertEqual(len(self.states()),50)
+    def test_archived_evidence_rebuilds_all_gate_values_exactly(self):
+        c=candidate(**self.e);r=candidate(**c['evidence'])
+        self.assertEqual(c['checks'],r['checks']);self.assertEqual(c['eligible'],r['eligible'])
     def test_wrong_declared_benchmark_blocks_fund(self):
         self.e['e']['x']['benchmark']='Nifty Smallcap 250 TRI';self.assertEqual(self.states()['mandate'],'fail')
     def test_missing_volume_and_stale_price_fail_closed(self):

@@ -86,7 +86,9 @@ def candidate(e,ex,p,earn,context,bars,peers):
     return dict(key=sym,name=e['n'],category=cat,amc=e.get('a'),tax='equity',min=0,earnings=earn,facts=e,
                 checks=r,eligible=all(x['state']=='pass' for x in r),passed=sum(x['state']=='pass' for x in r),applicable=50,
                 evidence={'e':e,'ex':ex,'p':p,'earn':earn,'context':context,
-                          'bars':{k:bars.get(k,[])[-20:] for k in ('t','c','v')},
+                          # Retain every volume observation: gate 13 records
+                          # the full observation count, not just its last20.
+                          'bars':{k:bars.get(k,[]) if k=='v' else bars.get(k,[])[-20:] for k in ('t','c','v')},
                           'peers':[{'vol':x.get('vol'),'r':{'1y':(x.get('r') or {}).get('1y')}} for x in peers]})
 
 def candidates(data,extras,holdings,earn,daily_of,gates=None):

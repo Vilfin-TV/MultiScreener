@@ -175,7 +175,12 @@ def build(download_etf=False):
     # independent ledger audit, rather than trusting a stored pass count.
     for product,chosen,pool in [('mf',plan,candidates),('etf',ep,ec)]:
         by={c['key']:c for c in pool}
-        for c in chosen['selected']:c['evidence']=by[c['key']]['evidence']
+        for c in chosen['selected']:
+            c['evidence']=by[c['key']]['evidence']
+            from ultimate_etf import candidate as verify_etf
+            rebuilt=checks(**c['evidence']) if product=='mf' else verify_etf(**c['evidence'])
+            if not rebuilt['eligible'] or rebuilt['checks']!=c['checks']:
+                raise ValueError('Archived eligibility evidence cannot reproduce '+c['key'])
     # Current eligible alternatives support revalidation and tax-aware rotation.
     public=[c for c in candidates if c['eligible']]+[c for c in public if not c['eligible']]
     out['candidates']={'mf':public,'etf':ec}
