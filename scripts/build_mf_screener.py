@@ -1058,8 +1058,14 @@ def min_amount(txt, sip: bool = False):
 def buy_flags(f, sub=None):
     """Purchase status: "L" lump sum accepted, "S" SIP accepted, "W" weekly SIP offered; "" = closed to fresh
     money (e.g. overseas schemes paused at the industry overseas-investment limit); None = not known yet."""
-    if sub in ("gold", "silver", "multicomm", "idx_commod"):
-        return "LS"
+    # Never assume precious-metal FoFs accept subscriptions merely because NAVs publish.
+    # Gold ETF FoF fresh lump sums/new SIPs were paused from 15–16 Oct 2026;
+    # existing registered SIP instalments are a different transaction type.
+    # Keep the conservative block until scheme-level AMC confirmation reopens.
+    if sub == "gold":
+        return ""
+    # Other commodity categories must use actual per-scheme availability metadata.
+
     la, sa = f.get("lump_available"), f.get("sip_available")
     if la is None and sa is None:
         return None
