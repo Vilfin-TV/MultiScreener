@@ -23,6 +23,8 @@ on:
       - 'scripts/audit_sim.py'
       - 'scripts/sim_restore.py'
       - 'scripts/sim_xirr.js'
+      - 'scripts/sim_tax.py'
+      - 'scripts/test_sim_tax.py'
       - 'scripts/dip_rules.py'
       - '.github/workflows/sim_ledger.yml'
   schedule:
@@ -120,6 +122,9 @@ jobs:
               except Exception as exc:
                   sys.exit(f'::error::{label} invalid: {exc}; no orders published')
           PY
+
+      - name: Verify profile tax rules and fiscal boundaries
+        run: python -m unittest discover -s scripts -p test_sim_tax.py
 
       - name: Run the simulator engine
         run: python scripts/sim_engine.py --store "$RUNNER_TEMP/sim/ledger.json" --view "$RUNNER_TEMP/sim/view.json"

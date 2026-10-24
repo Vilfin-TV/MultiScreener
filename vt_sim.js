@@ -696,7 +696,7 @@
         '<div><span>Total gain</span><b class="' + cl(x && x.gain) + '">' + (x && x.gain != null ? sinr(x.gain) + ' <small>' + spct(r.ret) + '</small>' : '–') + '</b></div>' +
         '<div><span>' + (last ? (last.first ? 'Since purchase' : 'Day change · ' + esc(dt(last.d, false))) : 'Day change') + '</span><b class="' + cl(last && last.chg) + '">' + (last ? sinr(last.chg) + ' <small>' + spct(last.pct) + '</small>' : '–') + '</b></div>' +
         '<div><span>Same money in ' + esc(BN) + '</span>' + (function () { var bv = last && last.inv ? (last.bval / last.inv - 1) * 100 : (x && x.bench); return '<b class="' + cl(bv) + '">' + (bv != null ? spct(bv) : '–') + '</b>'; })() + '</div></div></div>';
-      var tabs = [['today', 'Summary'], ['bench', 'vs ' + BN], ['brk', 'Breakdown'], ['hold', 'Holdings'], ['hist', 'History'], ['orders', 'Orders']];
+      var tabs = [['today', 'Summary'], ['bench', 'vs ' + BN], ['brk', 'Breakdown'], ['hold', 'Holdings'], ['hist', 'History'], ['orders', 'Orders'], ['tax', 'Tax harvesting']];
       h += '<div class="vts-tabs vts-pv-tabs" role="tablist">' + tabs.map(function (t) { return '<button type="button" role="tab" data-t="' + t[0] + '" class="' + (tab === t[0] ? 'on' : '') + '" aria-selected="' + (tab === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div>';
       h += '<div class="vts-pv-pane">' + pane(r, a) + '</div>';
       pv.innerHTML = h;
@@ -718,12 +718,25 @@
 
     function pane(r, a) {
       var rc = (a && a.recent) || [], last = rc[rc.length - 1];
+      if (tab === 'tax') return taxHarvest(a && a.taxHarvest);
       if (tab === 'orders') return orders(r, a);
       if (tab === 'today') return today(r, last);
       if (tab === 'bench') return bench(a);
       if (tab === 'hold') return holdings(r, a && a.detail);
       if (tab === 'brk') return breakdown(r, a && a.breakdown);
       return history(rc);
+    }
+
+    function taxHarvest(t) {
+      if (!t) return '<p class="vts-pv-e">The audited tax snapshot is not available for this account yet.</p>';
+      var p=t.profile, a=t.annualEstimate, h='<section class="vts-tax"><h3>Tax harvesting · FY '+esc(t.financialYear)+'</h3><p class="vts-pv-e">As of '+esc(dt(t.asOf))+' · '+esc(p.assumption)+'. Indian tax estimate; foreign tax credits and unfiled carried-forward losses are excluded.</p>';
+      h+='<ul class="vts-sum-m">'+[['Additional equity LTCG room',t.additionalLTCGRoom],['Estimated annual Indian tax',a.tax],['TDS already deducted',t.tdsPaid],['Realised equity LT gains / losses',t.realised.eqLT],['Realised equity ST gains / losses',t.realised.eqST],['Realised gains at normal slab',t.realised.slabST]].map(function(x){return '<li><span>'+x[0]+'</span><b>'+ (x[1]==null?'Unavailable':inr(x[1]))+'</b></li>';}).join('')+'</ul>';
+      h+='<p class="vts-pv-e">The annual exemption is shared across '+esc(t.sharedAccounts.join(' and '))+'. TDS is a tax prepayment, separate from the estimated liability.</p>';
+      if(a.limitation)h+='<p>'+esc(a.limitation)+'</p>';
+      h+=(t.opportunities||[]).map(function(o){return '<div class="vts-hist-r" style="display:block;padding:12px 0"><b>'+esc(o.name)+'</b><p>'+esc(o.action)+' · '+esc(o.reason||'Settled FIFO lots with no exit load')+'</p><ul class="vts-sum-m">'+[['Eligible LT gain',o.eligibleGain],['Eligible capital loss',o.eligibleLoss],['Future tax-saving ceiling',o.futureTaxSavingCeiling],['Current loss tax saving',o.currentLossTaxSaving],['Estimated round-trip cost',o.roundTripCost]].map(function(x){return '<li><span>'+x[0]+'</span><b>'+inr(x[1])+'</b></li>';}).join('')+'</ul>'+(o.nextEligible?'<small>Next LT eligibility: '+esc(dt(o.nextEligible))+'</small>':'')+'</div>';}).join('') || '<p>No holdings to harvest yet.</p>';
+      var executed=(t.executed||[]).filter(function(x){return x.items&&x.items.some(function(i){return i.action==='harvest';});});
+      h+='<h4>Executed harvests</h4><p>'+executed.length+' recorded harvest session'+(executed.length===1?'':'s')+'.</p><p class="vts-pv-e">'+esc(t.note)+'</p><p class="vts-pv-e">Rules: '+p.sources.map(function(u){return '<a target="_blank" rel="noopener" href="'+esc(u)+'">Income Tax Department ↗</a>';}).join(' · ')+'</p></section>';
+      return h;
     }
 
     function orders(r, a) {
@@ -1060,7 +1073,7 @@
     '.vts-pv-v b{display:block;font-size:22px;font-variant-numeric:tabular-nums;margin-top:2px}.vts-pv-v small{display:block;font-size:11.5px;color:var(--text2);margin-top:2px}' +
     '.vts-pv-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.vts-pv-k div{border:1px solid var(--border);border-radius:10px;padding:8px 10px;min-width:0}' +
     '.vts-pv-k span{display:block;font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}.vts-pv-k b{display:block;font-size:14px;font-variant-numeric:tabular-nums;margin-top:2px}.vts-pv-k b small{font-size:11.5px;font-weight:700}' +
-    '.vts-pv-tabs{margin-bottom:12px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;align-items:stretch}.vts-pv-tabs button{height:auto;min-height:36px;font-size:13px;padding:4px 4px;min-width:0;white-space:normal;line-height:1.15;overflow-wrap:anywhere}' +
+    '.vts-pv-tabs{margin-bottom:12px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;align-items:stretch}.vts-pv-tabs button{height:auto;min-height:36px;font-size:13px;padding:4px 4px;min-width:0;white-space:normal;line-height:1.15;overflow-wrap:anywhere}' +
     '.vts-pv-e{margin:8px 0 0;font-size:11.5px;color:var(--text3,var(--text2));line-height:1.55}' +
     '.vts-sum{font-size:13.5px;line-height:1.6}.vts-sum-l{margin:0 0 10px;font-size:14.5px}.vts-sum h4{margin:12px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2)}' +
     '.vts-sum-m{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}.vts-sum-m li{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12.5px}.vts-sum-m b{font-variant-numeric:tabular-nums}' +

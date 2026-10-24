@@ -139,6 +139,7 @@ details.x summary{cursor:pointer;color:var(--acc);font-size:12px}
   <nav class="tabs"><div class="in">
     <button class="tab on" data-v="Overview">Leaderboard</button>
     <button class="tab" data-v="Stmt">Statement</button>
+    <button class="tab" data-v="Tax">Tax harvesting</button>
     <button class="tab" data-v="Audit">Audit</button>
     <button class="tab" data-v="Snaps">Permanent copies</button>
   </div></nav>
@@ -175,6 +176,7 @@ details.x summary{cursor:pointer;color:var(--acc);font-size:12px}
       <div class="card" id="stmt"></div>
     </section>
 
+    <section id="vTax" class="hide"><div class="card" id="tax"></div></section>
     <section id="vAudit" class="hide"><div class="card" id="audit"></div></section>
     <section id="vSnaps" class="hide"><div class="card" id="snaps"></div></section>
   </main>
@@ -312,7 +314,8 @@ function boot() {
 }
 function show(v) {
   $$('.tab').forEach(b => b.classList.toggle('on', b.dataset.v === v));
-  ['Overview', 'Stmt', 'Audit', 'Snaps'].forEach(x => $('#v' + x).classList.toggle('hide', x !== v));
+  ['Overview', 'Stmt', 'Tax', 'Audit', 'Snaps'].forEach(x => $('#v' + x).classList.toggle('hide', x !== v));
+  if (v === 'Tax') renderTax();
   if (v === 'Stmt') renderStmt();
   if (v === 'Snaps') renderSnaps();
 }
@@ -504,6 +507,22 @@ function chart(a, t) {
 }
 
 // ───────── audit & snapshots ─────────
+let taxAccount='';
+function renderTax(){
+ const list=V.accounts, a=list.find(x=>x.id===taxAccount)||list[0];taxAccount=a.id;
+ let h='<h2>Tax harvesting</h2><label>Account <select id="taxAccount">'+list.map(x=>'<option value="'+esc(x.id)+'"'+(x.id===a.id?' selected':'')+'>'+esc(x.id)+'</option>').join('')+'</select></label>';
+ const t=a.taxHarvest;
+ if(!t)h+='<p>The audited tax snapshot is not available yet.</p>';
+ else{
+  const e=t.annualEstimate;
+  h+='<p class="sub">FY '+esc(t.financialYear)+' · '+dt(t.asOf)+' · '+esc(t.profile.assumption)+'. Shared across '+esc(t.sharedAccounts.join(' and '))+'. TDS is separate from final tax.</p>';
+  h+='<div class="tw"><table><thead><tr><th>Additional equity LTCG room</th><th>Estimated annual Indian tax</th><th>TDS paid</th></tr></thead><tbody><tr>'+[t.additionalLTCGRoom,e.tax,t.tdsPaid].map(x=>'<td>'+(x==null?'Unavailable':inr(x,2))+'</td>').join('')+'</tr></tbody></table></div>';
+  if(e.limitation)h+='<p>'+esc(e.limitation)+'</p>';
+  h+='<h3>FIFO opportunities</h3><div class="tw"><table><thead><tr><th>Holding</th><th>Eligible LT gain</th><th>Eligible loss</th><th>Future saving ceiling</th><th>Current loss tax saving</th><th>Round-trip cost</th><th>Assessment</th></tr></thead><tbody>'+(t.opportunities||[]).map(o=>'<tr><td class="wrap">'+esc(o.name)+'</td>'+[o.eligibleGain,o.eligibleLoss,o.futureTaxSavingCeiling,o.currentLossTaxSaving,o.roundTripCost].map(x=>'<td>'+inr(x,2)+'</td>').join('')+'<td class="wrap">'+esc(o.action)+'<br>'+esc(o.reason||'Settled FIFO, no exit load')+(o.nextEligible?'<br>Next LT: '+dt(o.nextEligible):'')+'</td></tr>').join('')+'</tbody></table></div><p class="sub">'+esc(t.note)+'</p><h3>Executed harvest sessions</h3><p>'+(t.executed||[]).filter(x=>(x.items||[]).some(i=>i.action==='harvest')).length+' recorded. Order-level details remain in the account statement.</p>';
+ }
+ $('#tax').innerHTML=h;$('#taxAccount').onchange=()=>{taxAccount=$('#taxAccount').value;renderTax();};
+}
+
 function renderAudit() {
   const el = $('#audit');
   if (!AUD) { el.innerHTML = '<h2>Independent audit</h2><p class="sub">No audit has been published yet.</p>'; return; }
@@ -537,3 +556,4 @@ async function renderSnaps() {
 </script>
 </body>
 </html>
+

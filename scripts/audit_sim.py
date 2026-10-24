@@ -871,6 +871,32 @@ def main() -> int:
     except Exception as e:  # noqa: BLE001
         A.check("xirr", False, f"XIRR cross-check could not run: {e}")
 
+    # Independently rebuild each person's FY capital-gains totals from redemption
+    # lots; never trust the statement's aggregate or duplicate its MF/ETF allowance.
+    tax_today = date.fromisoformat(view['today'])
+    fy_start = date(tax_today.year - (tax_today.month < 4), 4, 1).isoformat()
+    for a in view['accounts']:
+        t = a.get('taxHarvest') or {}
+        raw = dict(eqLT=0.0, otherLT=0.0, eqST=0.0, slabST=0.0)
+        raw_tds = 0.0
+        for e in evs:
+            if e['k'] != 'redeem': continue
+            o = orders.get(e['oid'], {})
+            if o.get('acct', '').rsplit('-', 1)[0] != a['name'] or not fy_start <= o.get('T', '') <= view['today']: continue
+            raw_tds += e.get('tds', 0)
+            for g in e.get('gains', []):
+                k = 'eqLT' if g['term'] == 'LT' and g['class'] == 'equity' else 'otherLT' if g['term'] == 'LT' else 'eqST' if g['term'] == 'ST' else 'slabST'
+                raw[k] += g['gain']
+        A.check('taxProfile', bool(t) and t.get('asOf') == view['today'], f"{a['id']}: missing or misdated FY tax snapshot")
+        A.check('taxProfile', all(abs(t.get('realised', {}).get(k, float('inf')) - r2(v)) < .011 for k,v in raw.items()), f"{a['id']}: FY gains do not match redemption lots")
+        A.check('taxProfile', abs(t.get('tdsPaid', float('inf')) - r2(raw_tds)) < .011, f"{a['id']}: TDS differs from ledger")
+        shared = sorted(x['id'] for x in view['accounts'] if x['name'] == a['name'])
+        A.check('taxProfile', sorted(t.get('sharedAccounts', [])) == shared, f"{a['id']}: annual exemption not shared by person")
+        A.check('taxProfile', t.get('profile', {}).get('residency') == a['res'], f"{a['id']}: incorrect tax residency")
+        peer = next((x for x in view['accounts'] if x['name'] == a['name'] and x['id'] != a['id']), None)
+        if peer:
+            A.check('taxProfile', t.get('annualEstimate') == peer.get('taxHarvest', {}).get('annualEstimate') and t.get('additionalLTCGRoom') == peer.get('taxHarvest', {}).get('additionalLTCGRoom'), f"{a['id']}: per-person allowance differs between products")
+
     res_out = {"v": 1, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "events": len(evs),
                "checks": A.n, "errors": A.errors[:200], "warnings": A.warnings[:200], "nErrors": len(A.errors),
                "nWarnings": len(A.warnings), "areas": {k: {"checks": v[0], "issues": v[1]} for k, v in sorted(A.by.items())}}

@@ -696,6 +696,7 @@ def person_gains(st: dict, name: str, T: date, skip_iid_tag: str = "") -> dict:
 # ───────────────────────────── engine ─────────────────────────────
 class Engine:
     def __init__(self, store: dict, today: date, network: bool, backtest: bool = False):
+        self.CFG = CFG
         self.store, self.today, self.backtest = store, today, backtest
         self.mkt = Market(store, network, backtest)
         self.accts = accounts()
@@ -1929,6 +1930,9 @@ def build_view(store: dict, eng: Engine) -> dict:
                                 "dip": dip_summary(store, a, s),
                                 "reviews": [r for r in reviews if r["acct"] == a["id"]],
                                 "harvests": [h for h in harvests if h["acct"] == a["id"]]})
+    from sim_tax import snapshot as tax_snapshot
+    for a in out['accounts']:
+        a['taxHarvest'] = tax_snapshot(store, out, a, eng)
     # price history of everything held or bought (statements for any past date are valued from it)
     keys = {"mf": {str(CFG["benchmark"]["mf"])}, "etf": {CFG["benchmark"]["etf"]}}
     for a in out["accounts"]:
@@ -2238,6 +2242,7 @@ def account_files(store: dict, view: dict, sb: dict) -> dict:
                       for x in e.get('orders',[]) if x.get('acct')==a['id']],
                   **{k: row[k] for k in ("name", "product", "risk", "freq", "amt", "nri", "since", "metric", "ret") if k in row},
                   "credit": row.get("credit"), "detail": row.pop("detail", None),
+                  "taxHarvest": a.get("taxHarvest"),
                   # Publish only already-audited simulated ledger transactions; no private account keys,
                   # references, notes or fabricated clock timestamps.
                   "orders": [
