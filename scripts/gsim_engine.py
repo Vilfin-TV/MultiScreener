@@ -674,6 +674,21 @@ def public(view, audit_ok):
         files[row["f"]] = {"v": 1, "id": a["id"], "updated": view["asOf"] or CFG["start"], "auditOk": True,
                            **{k: row[k] for k in ("name", "product", "risk", "freq", "amt", "nri", "since", "metric", "ret")},
                            "credit": row.get("credit"), "detail": detail,
+                           "orders": [
+                               {"id": str(o.get("id", "")), "placedAt": o.get("d"),
+                                "completedAt": fill.get("T") if fill and fill.get("k") == "fill" else None,
+                                "settledAt": fill.get("cr") if fill and fill.get("k") == "fill" else None,
+                                "name": o.get("t"), "symbol": o.get("t"), "side": "buy",
+                                "quantity": fill.get("n") if fill and fill.get("k") == "fill" else None,
+                                "price": fill.get("px") if fill and fill.get("k") == "fill" else None,
+                                "amount": fill.get("cost") if fill and fill.get("k") == "fill" else o.get("cash"),
+                                "status": ("Completed" if fill and fill.get("k") == "fill" and
+                                           fill.get("cr", "9999") <= view["today"] else "In progress")}
+                               for o in a["events"] if o.get("k") == "order"
+                               for fill in [next((e for e in a["events"] if e.get("id") == o.get("id")
+                                                 and e.get("k") in ("fill", "carry")), None)]
+                           ],
+
                            "series": [[e["d"], e["val"], e["inv"], e["pct"], e["bpct"], e["bval"]] for e in ds],
                            "recent": [{k: e[k] for k in ("d", "val", "inv", "chg", "pct", "bval", "bchg", "bpct", "first", "cash", "pend", "hold", "mkt")} for e in ds[-keep:]],
                            "breakdown": {"alloc": sorted([[k, round(v / at * 100, 2)] for k, v in alloc.items()], key=lambda x: -x[1]),
