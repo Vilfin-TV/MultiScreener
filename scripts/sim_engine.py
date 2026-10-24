@@ -768,10 +768,15 @@ class Engine:
                     return False
                 flags = info.get("buy")
                 return isinstance(flags, str) and required in flags
+            # Dated AMC restriction: never replay a fresh Nippon Gold Savings
+            # subscription on or after the effective 2026-10-16 cutoff.
+            # This remains enforced even if an older market snapshot says LS.
+            def restricted(c):
+                return str(c) == "118663" and T.isoformat() >= "2026-10-16"
             original = code
-            if not available(code):
+            if restricted(code) or not available(code):
                 alt = next((c for c in (s["src"].get("alts") or [])
-                            if c != code and available(c)), None)
+                            if c != code and not restricted(c) and available(c)), None)
                 if alt is None:
                     # A weekly order can use a SIP-enabled fund only if the
                     # weekly frequency is explicitly supported; never infer it.
