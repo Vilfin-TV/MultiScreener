@@ -620,6 +620,23 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
 #simchart text{fill:var(--ink-3);font-size:11px}
 #simchart .gl{stroke:var(--line-2)}
 .steps{margin:14px 0 0;padding-left:20px;font-size:13.5px;color:var(--ink-2);display:grid;gap:6px}
+
+/* Global ETF date/coverage/audit status: matching theme-independent gold card. */
+.hero #status.status{position:relative;isolation:isolate;overflow:hidden;border:1px solid #c49a48!important;border-radius:22px!important;background:linear-gradient(130deg,#fff9e8 0%,#f4dfaa 48%,#d9b66b 100%)!important;color:#35240c!important;box-shadow:0 12px 30px rgba(91,61,15,.17),inset 0 1px 0 rgba(255,255,255,.85)!important;padding:clamp(18px,3vw,28px)!important;min-width:0!important;backdrop-filter:none!important}
+.hero #status.status::before{content:"";position:absolute;z-index:-1;pointer-events:none;width:260px;height:260px;right:-105px;top:-155px;border-radius:50%;border:38px solid rgba(255,255,255,.23)}
+.hero #status.status .row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.45fr);align-items:start;gap:12px;padding:11px 0!important;border-bottom:1px solid rgba(105,76,30,.22)!important;font-size:14px!important;color:#35240c!important}
+.hero #status.status .row>span:first-child{color:#695333!important;font-weight:600!important;overflow-wrap:anywhere}
+.hero #status.status .row>span:last-child{color:#35240c!important;font-weight:750!important;text-align:right;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.hero #status.status .ok{color:#12633b!important;font-weight:800}
+.hero #status.status .warn{color:#8b261e!important;font-weight:800}
+@media(max-width:760px){
+ .hero>div:first-child{min-width:0}
+ .hero h1{font-size:clamp(25px,7vw,32px)!important;white-space:normal!important;overflow-wrap:break-word;line-height:1.15}
+ .hero>div:first-child>p{display:block!important;-webkit-line-clamp:unset!important;overflow:visible!important;white-space:normal!important;text-overflow:clip!important;overflow-wrap:break-word;line-height:1.6!important}
+ .hero #status.status{padding:17px 15px!important;border-radius:18px!important}
+ .hero #status.status .row{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:10px;font-size:12.5px!important}
+}
+
 </style>
 <!-- faq-jsonld -->
 <script type="application/ld+json">
