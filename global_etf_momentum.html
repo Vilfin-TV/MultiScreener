@@ -620,6 +620,48 @@ footer a{color:var(--ink-2);text-decoration:none}footer a:hover{text-decoration:
 #simchart text{fill:var(--ink-3);font-size:11px}
 #simchart .gl{stroke:var(--line-2)}
 .steps{margin:14px 0 0;padding-left:20px;font-size:13.5px;color:var(--ink-2);display:grid;gap:6px}
+
+/* Platinum credit-card treatment: scoped to hero NAV/date status only. */
+.hero #status.status{
+  position:relative;isolation:isolate;overflow:hidden;min-width:0;
+  padding:clamp(18px,3vw,28px)!important;margin-top:14px;
+  border:1px solid #7d879d!important;border-radius:22px!important;
+  background:linear-gradient(132deg,#fff 0%,#e4e6ed 45%,#a9b0c0 100%)!important;color:#182235!important;
+  box-shadow:0 12px 30px rgba(25,39,60,.17),inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
+.hero #status.status::before{
+  content:"";position:absolute;z-index:-1;pointer-events:none;
+  width:260px;height:260px;right:-105px;top:-155px;
+  border-radius:50%;border:38px solid rgba(255,255,255,.22);
+}
+.hero #status.status .row{
+  display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.45fr);
+  gap:12px;align-items:start;padding:11px 0!important;
+  border-bottom:1px solid rgba(40,52,76,.2)!important;
+  background:transparent!important;color:#182235!important;
+}
+.hero #status.status .row>span:first-child{
+  color:#43516a!important;font-size:clamp(13px,1.5vw,15px)!important;
+  font-weight:600!important;line-height:1.45;overflow-wrap:anywhere;
+}
+.hero #status.status .row>span:last-child{
+  color:#182235!important;font-size:clamp(13px,1.55vw,16px)!important;
+  font-weight:750!important;text-align:right;line-height:1.45;
+  overflow-wrap:anywhere;font-variant-numeric:tabular-nums;
+}
+.hero #status.status .ok{color:#11633a!important;font-weight:800}
+.hero #status.status .warn{color:#90261f!important;font-weight:800}
+
+.hero #heroKpis{display:none!important}
+@media(max-width:760px){
+  .hero>div:first-child{min-width:0;width:100%}
+  .hero h1{font-size:clamp(26px,7vw,32px)!important;line-height:1.14;white-space:normal;overflow-wrap:break-word}
+  .hero>div:first-child>p{display:block!important;-webkit-line-clamp:unset!important;-webkit-box-orient:initial!important;overflow:visible!important;white-space:normal!important;text-overflow:clip!important;overflow-wrap:break-word;line-height:1.6!important}
+  .hero #status.status{padding:17px 15px!important;border-radius:18px!important}
+  .hero #status.status .row{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:10px}
+  .hero #status.status .row>span{font-size:12.5px!important}
+}
+
 </style>
 <!-- faq-jsonld -->
 <script type="application/ld+json">
