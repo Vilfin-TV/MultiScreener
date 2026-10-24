@@ -7,7 +7,7 @@ and estimated immediate tax plus costs below 1% of the position's value.
 from datetime import date
 import math
 from ultimate_execution import latest,eligible,free_cash
-from sim_tax import annual_gains,profile,liability,gain_room,bucket
+from sim_tax import annual_gains,profile,liability,gain_room,bucket,holding_term
 
 def run(eng):
     from sim_engine import replay,append,is_trading,tax_class,term_for,load_pct,etf_charges,r2
@@ -60,7 +60,7 @@ def run(eng):
             trial=dict(realised);gain=0
             for l in usable:
                 g=l['units']*px-l['cost'];gain+=g
-                term=term_for(tc,(T-date.fromisoformat(l['date'])).days)
+                term=holding_term(tc,l['date'],T)
                 trial[bucket({'class':tc,'term':term})]+=g
             after=liability(trial,taxprofile)['tax']
             if after is None:continue
@@ -79,7 +79,7 @@ def run(eng):
             if not replacement and T.month==3 and T.day>=10 and key in valid and tc=='equity':
                 rid=aid+'|ultimate-harvest|'+str(T.year)
                 if any(e['k']=='harvest' and e.get('rid')==rid for e in eng.store['events']):continue
-                all_lt=all(term_for(tc,(T-date.fromisoformat(l['date'])).days)=='LT' for l in usable)
+                all_lt=all(holding_term(tc,l['date'],T)=='LT' for l in usable)
                 room=gain_room(realised,taxprofile) or 0
                 # Avoid shared-room overbooking while an earlier sale awaits NAV.
                 if any(o.get('level')=='harvest' and 'done' not in o for st in replay(eng.store['events']).values() for o in st['orders'] if o.get('acct','').startswith('John-')):continue

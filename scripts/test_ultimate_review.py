@@ -6,6 +6,36 @@ import sim_engine as se
 import ultimate_review as ur
 
 class Reviews(unittest.TestCase):
+    def test_calendar_holding_period_in_a_leap_year(self):
+        from sim_tax import holding_term
+        self.assertEqual(holding_term('equity','2027-10-26','2028-10-26'),'ST')
+        self.assertEqual(holding_term('equity','2027-10-26','2028-10-27'),'LT')
+    def test_24month_non_equity_and_specified_debt(self):
+        from sim_tax import holding_term
+        self.assertEqual(holding_term('other','2027-10-26','2029-10-26'),'slab')
+        self.assertEqual(holding_term('other','2027-10-26','2029-10-27'),'LT')
+        self.assertEqual(holding_term('debt','2026-10-26','2033-10-27'),'slab')
+    def test_rolled_fill_uses_acquisition_date_not_order_date(self):
+        evs=[{'k':'instalment','acct':'John-ETF','amount':1000},
+             {'k':'order','oid':'x','acct':'John-ETF','T':'2026-10-26','sym':'ABC','strategy':'ultimate'},
+             {'k':'fill','oid':'x','tradeDate':'2026-10-27','units':1,'gross':100,'charges':{'total':1},'carry':899,'credit':'2026-10-28'}]
+        self.assertEqual(se.replay(evs)['John-ETF']['lots']['ABC'][0]['date'],'2026-10-27')
+    def test_tax_year_uses_actual_execution_date(self):
+        from sim_tax import annual_gains
+        evs=[{'k':'order','oid':'s','acct':'John-MF','T':'2028-03-31'},
+             {'k':'redeem','oid':'s','taxDate':'2028-04-01','gains':[{'class':'equity','term':'LT','gain':100}], 'charges':{'total':0}}]
+        self.assertEqual(annual_gains({'events':evs},'John','2028-03-31')[0]['eqLT'],0)
+        self.assertEqual(annual_gains({'events':evs},'John','2028-04-01')[0]['eqLT'],100)
+    def test_actual_redemption_respects_leap_year_anniversary(self):
+        eng,s=self.engine(when='2028-10-26')
+        for e in eng.store['events']:
+            if e['k']=='order':e['T']='2027-10-26'
+            if e['k']=='allot':e['credit']='2027-10-28'
+        order=se.append(eng.store,'order',oid='leap-sale',acct='John-MF',T='2028-10-26',side='sell',code=1,units=10000,strategy='ultimate',cashAccount=True)
+        eng.nav_date_for=lambda *args:(date(2028,10,26),10)
+        se.Engine.redeem(eng,order,eng.today,eng.today,eng.accts[0])
+        done=eng.store['events'][-1]
+        self.assertEqual(done['k'],'redeem');self.assertEqual(done['gains'][0]['term'],'ST');self.assertEqual(done['gains'][0]['days'],366)
     def engine(self,when='2028-03-10',price=10,mode='gain'):
         store={'events':[]};aid='John-MF'
         se.append(store,'instalment',acct=aid,iid=aid+'|2026-10-26',T='2026-10-26',amount=50000,cashAccount=True)

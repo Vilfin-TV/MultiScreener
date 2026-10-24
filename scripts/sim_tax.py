@@ -4,7 +4,8 @@ Indian estimates only. Existing agents retain their explicit flat-slab model;
 John has zero other income under the new regime. No foreign tax credits or
 unfiled carry-forward losses are invented. TDS remains a separate cash flow.
 """
-from datetime import date
+from datetime import date,timedelta
+import calendar
 import copy
 import math
 
@@ -12,6 +13,19 @@ SOURCES=[
     'https://www.incometaxindia.gov.in/en/sale-of-shares',
     'https://www.incometaxindia.gov.in/w/tax-rates-and-computation',
 ]
+
+def long_term_on(tclass,bought):
+    """First day after the statutory 12/24 calendar-month holding period."""
+    b=date.fromisoformat(bought) if isinstance(bought,str) else bought
+    if tclass=='debt':return None
+    years=2 if tclass=='other' else 1
+    anniversary=date(b.year+years,b.month,min(b.day,calendar.monthrange(b.year+years,b.month)[1]))
+    return anniversary+timedelta(days=1)
+
+def holding_term(tclass,bought,sold):
+    s=date.fromisoformat(sold) if isinstance(sold,str) else sold
+    threshold=long_term_on(tclass,bought)
+    return 'LT' if threshold and s>=threshold else 'ST' if tclass=='equity' else 'slab'
 
 def profile(person, config):
     special=person.get('taxProfile') or {}
@@ -109,7 +123,8 @@ def annual_gains(store,name,asof):
     for e in store.get('events',[]):
         if e['k']!='redeem':continue
         o=orders.get(e['oid'],{})
-        if o.get('acct','').rsplit('-',1)[0]!=name or o.get('T','9999')>str(asof)[:10] or fy(o.get('T'))!=fy(asof):continue
+        tax_date=e.get('taxDate',o.get('T','9999-01-01'))
+        if o.get('acct','').rsplit('-',1)[0]!=name or tax_date>str(asof)[:10] or fy(tax_date)!=fy(asof):continue
         tds+=e.get('tds',0);charges+=(e.get('charges') or {}).get('total',0)
         for lot in e.get('gains',[]):g[bucket(lot)]+=lot['gain']
     return g,round(tds,2),round(charges,2)
@@ -134,18 +149,19 @@ def snapshot(store,view,a,eng):
         for lot in sorted(h['lots'],key=lambda x:(x['date'],x.get('oid',''))):
             if not price_ok:reason='Latest verified price unavailable or older than five days';break
             age=(today-date.fromisoformat(lot['date'])).days
-            earliest=date.fromordinal(date.fromisoformat(lot['date']).toordinal()+366)
+            earliest=long_term_on(tc,lot['date']) if a.get('strategy')=='ultimate' else date.fromordinal(date.fromisoformat(lot['date']).toordinal()+366)
+            is_lt=holding_term(tc,lot['date'],today)=='LT' if a.get('strategy')=='ultimate' else age>365
             if tc!='equity':reason='Tax harvesting currently covers equity-taxed holdings';break
             if lot['credit']>asof:reason='Awaiting settlement';break
             if not rule.get('known'):reason='Exit load unverified';break
             if (f or {}).get('lock') and age<365*(f or {})['lock']:reason='Units remain locked';break
             if load_pct(rule,age)>0:reason='Exit load still applies';break
             gain=lot['units']*(h['price'] or 0)-lot['cost']
-            if age<=365 and gain>=0:reason='FIFO gains have not completed the long-term holding period';next_date=earliest.isoformat();break
+            if not is_lt and gain>=0:reason='FIFO gains have not completed the long-term holding period';next_date=earliest.isoformat();break
             if gain>=0:eligible_gain+=gain
             else:
                 eligible_loss-=gain
-                if age<=365:st_loss-=gain
+                if not is_lt:st_loss-=gain
                 else:lt_loss-=gain
             units+=lot['units']
         value=units*(h['price'] or 0)

@@ -554,7 +554,8 @@ def replay(events: list[dict]) -> dict:
             o["done"] = ev
             a = st[o["acct"]]
             key = str(o.get("code") or o.get("sym"))
-            a["lots"].setdefault(key, []).append({"date": o["T"], "units": ev["units"], "cost": ev["amount"] if k == "allot" else ev["gross"] + ev["charges"]["total"],
+            acquired=(ev.get('tradeDate') if k=='fill' else max(o['T'],ev.get('navDate',o['T']))) if o.get('strategy')=='ultimate' else o['T']
+            a["lots"].setdefault(key, []).append({"date": acquired, "units": ev["units"], "cost": ev["amount"] if k == "allot" else ev["gross"] + ev["charges"]["total"],
                                                   "price": ev.get("nav", ev.get("price")), "oid": o["oid"], "credit": ev["credit"]})
             a["lots"][key].sort(key=lambda l: (l["date"], l["oid"]))     # FIFO by purchase date, whatever order a run filled them in
             if k == "fill":
@@ -948,17 +949,19 @@ class Engine:
         tclass = tax_class(f, o.get("sym"), self.mkt)
         rule = self.mkt.exit_rule(int(o["code"])) if f is not None else {"tiers": [], "days": 0, "known": True}
         left, gains, exit_load = units, [], 0.0
+        tax_date=nd if acc.get('strategy')=='ultimate' and not liquid else T
         for l in lots:
             if left <= 1e-9:
                 break
             take = min(left, l["units"])
             cost = l["cost"] * take / l["units"]
-            days = (T - D(l["date"])).days
+            days = (tax_date - D(l["date"])).days
             val = take * px
             if f is not None:
                 exit_load += val * load_pct(rule, days) / 100
+            from sim_tax import holding_term
             gains.append({"buyDate": l["date"], "units": round(take, 6), "cost": r2(cost), "value": r2(val), "gain": r2(val - cost),
-                          "days": days, "term": term_for(tclass, days), "class": tclass})
+                          "days": days, "term": holding_term(tclass,l['date'],tax_date) if acc.get('strategy')=='ultimate' else term_for(tclass, days), "class": tclass})
             left -= take
         if f is not None:
             charges = {"exitLoad": r2(exit_load), "stt": r2(gross * CFG["mfRules"]["sttRedeemEquity"]) if equity else 0.0}
@@ -980,6 +983,7 @@ class Engine:
         append(self.store, "redeem", oid=o["oid"], navDate=nd.isoformat(), price=px, units=round(units, 6), gross=gross,
                charges=charges, tds=r2(tds), net=net, gains=gains, payout=payout.isoformat(),
                exitRule=rule["tiers"] if f is not None else None,
+               **({'taxDate':tax_date.isoformat()} if acc.get('strategy')=='ultimate' else {}),
                **({} if o.get("code") else {"rule": CFG["etfRules"]["id"], "priceTime": CFG["etfRules"]["priceTime"]}))
 
     # monthly sell review — tax- and exit-load-aware (CFG["sellRules"]); the agents follow it exactly

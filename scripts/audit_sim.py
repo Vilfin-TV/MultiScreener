@@ -889,7 +889,7 @@ def main() -> int:
         for e in evs:
             if e['k'] != 'redeem': continue
             o = orders.get(e['oid'], {})
-            if o.get('acct', '').rsplit('-', 1)[0] != a['name'] or not fy_start <= o.get('T', '') <= view['today']: continue
+            if o.get('acct', '').rsplit('-', 1)[0] != a['name'] or not fy_start <= e.get('taxDate',o.get('T', '')) <= view['today']: continue
             raw_tds += e.get('tds', 0)
             for g in e.get('gains', []):
                 k = 'eqLT' if g['term'] == 'LT' and g['class'] == 'equity' else 'otherLT' if g['term'] == 'LT' else 'eqST' if g['term'] == 'ST' else 'slabST'

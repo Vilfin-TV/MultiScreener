@@ -46,6 +46,9 @@ immediate tax plus round-trip costs below 1%. Harvests are evaluated in March
 using the shared MF/ETF tax profile, existing realised gains, long-term gain room,
 actual costs and settled/load-free lots. Losses have no claimed benefit without
 taxable gains to offset. Repurchases wait for settlement and fresh eligibility.
+Holding periods use actual acquisition/execution dates and 12/24 calendar months,
+including leap years; realised gains follow the execution date's tax year.
+The statutory periods are documented by the [Income Tax Department](https://www.incometaxindia.gov.in/en/sale-of-shares).
 Resident annual income tax is estimated separately; it is not an imaginary
 broker deduction. Rates are current model assumptions, not seven-year guarantees.
 

@@ -74,6 +74,12 @@ def audit(A,store,view,cfg,open_day):
                     bought=[(orders[x['oid']],x) for x in evs if x['k'] in ('allot','fill') and orders[x['oid']]['acct']==aid and str(orders[x['oid']].get('code') or orders[x['oid']].get('sym'))==key and x['seq']<e['seq']]
                     A.check('ultimate',sum(x['units'] for _,x in bought if x['credit']<=o['T'])+1e-6>=e['units'],o['oid']+': insufficient settled units')
                     A.check('ultimate',not e['charges'].get('exitLoad'),o['oid']+': unapproved exit load')
+                    sold=date.fromisoformat(e.get('taxDate',e['navDate']))
+                    for g in e['gains']:
+                        b=date.fromisoformat(g['buyDate']);y=b.year+(2 if g['class']=='other' else 1)
+                        anniversary=date(y,b.month,min(b.day,calendar.monthrange(y,b.month)[1]))
+                        expected='LT' if g['class']!='debt' and sold>anniversary else 'ST' if g['class']=='equity' else 'slab'
+                        A.check('ultimate',g['term']==expected and g['days']==(sold-b).days,o['oid']+': holding period differs from actual calendar dates')
                     if (o.get('decision') or {}).get('mode')=='gain':A.check('ultimate',all(g['term']=='LT' for g in e['gains']),o['oid']+': short-term gain harvest')
                     if (o.get('decision') or {}).get('mode')=='loss':A.check('ultimate',sum(g['gain'] for g in e['gains'])<0,o['oid']+': loss harvest has no loss')
                 cash += e['net'] if e['k']=='redeem' else -(e['amount'] if e['k']=='allot' else e['gross']+e['charges']['total'])
