@@ -679,14 +679,17 @@
       /* Never stamp today's date on a previous market-close valuation.
          Validate the ledger against its own last history row and the audited scoreboard. */
       var valDate = x && x.asOf, lastDate = last && last.d;
-      var synced = !!(x && valDate && lastDate && sb.updated &&
-        /^\d{4}-\d{2}-\d{2}$/.test(valDate) &&
-        valDate === lastDate && valDate === sb.updated &&
-        a.updated === sb.updated && sb.auditOk !== false && a.auditOk !== false &&
-        x.val != null && isFinite(x.val));
-      var valueText = synced ? inr(x.val) : '–';
-      var valueNote = synced ? 'Valued as of ' + esc(dt(valDate, false)) + ' · latest audited close' :
-        'Valuation unavailable — ledger date or audit is not in sync';
+      var validDate = function (d) { return typeof d === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(d); };
+      var ledgerValid = !!(x && a && a.auditOk === true &&
+        validDate(valDate) && validDate(a.updated) && valDate === a.updated &&
+        x.val != null && typeof x.val === 'number' && isFinite(x.val));
+      var historyMatches = !!(lastDate && lastDate === valDate);
+      var scoreboardMatches = !!(sb && sb.updated === valDate && sb.auditOk !== false);
+      var valueText = ledgerValid ? inr(x.val) : '–';
+      var valueNote = ledgerValid
+        ? 'Valued as of ' + esc(dt(valDate, false)) +
+          (historyMatches && scoreboardMatches ? ' · audited close' : ' · ledger audited; cross-source sync pending')
+        : 'Valuation unavailable — audited ledger is missing or inconsistent';
       var h = '<div class="vts-pv-top"><div class="vts-pv-v"><span>Current value</span><b>' + valueText + '</b>' +
         '<small>' + valueNote + '</small>' + '</div>' +
         '<div class="vts-pv-k"><div><span>Invested</span><b>' + (x ? inr(x.inv) : '–') + '</b></div>' +
