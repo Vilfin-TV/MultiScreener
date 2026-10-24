@@ -158,16 +158,17 @@ html[data-theme="silver"] .vt-brand-name span,html[data-theme="app"] .vt-brand-n
 .crumbs a:hover{color:var(--accent2)}
 .hero{padding:14px 0 18px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
 @media(min-width:761px){.hero:has(>.vts-st:not([hidden])){display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,360px);column-gap:24px;row-gap:12px;align-items:start}.hero:has(>.vts-st:not([hidden]))>div:first-child{grid-column:1;grid-row:1;align-self:start}.hero:has(>.vts-st:not([hidden]))>#metaChips{grid-column:1;grid-row:2;align-self:start}.hero:has(>.vts-st:not([hidden]))>.vts-st{grid-column:2;grid-row:1/span 2;align-self:start}.hero:has(>.vts-st:not([hidden]))+section.searchbar{margin-top:0}}
-/* Desktop-only: fill the vacant left column alongside the data-status card.
-   Mobile retains the original document structure and styles. */
+/* Desktop only: keep full-width search in its original position.
+   The NAV card is condensed, not moved into the search grid. */
 @media(min-width:761px){
-  .hero.mf-desktop-compact{grid-template-columns:minmax(0,1fr) minmax(300px,360px);display:grid;gap:14px 24px;align-items:start;padding-bottom:16px}
-  .hero.mf-desktop-compact>div:first-child{grid-column:1;grid-row:1}
-  .hero.mf-desktop-compact>#metaChips{grid-column:1;grid-row:2}
-  .hero.mf-desktop-compact>.searchbar{grid-column:1;grid-row:3;margin:0;min-width:0}
-  .hero.mf-desktop-compact>.vts-st:not([hidden]){grid-column:2;grid-row:1/span 3;align-self:start}
-  .hero.mf-desktop-compact>.searchbar .fld{min-width:0}
-  .hero.mf-desktop-compact>.searchbar .tabs{flex-wrap:wrap}
+  .hero:has(>.vts-st:not([hidden])){display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,300px);gap:12px 22px;align-items:start;padding-bottom:12px}
+  .hero:has(>.vts-st:not([hidden]))>div:first-child{grid-column:1;grid-row:1}
+  .hero:has(>.vts-st:not([hidden]))>.vts-st{grid-column:2;grid-row:1;align-self:start}
+  .hero #dataStatus.vts-st{padding:12px 15px!important;margin-top:0!important;border-radius:15px!important;box-shadow:0 4px 14px rgba(91,61,15,.12)!important}
+  .hero #dataStatus.vts-st .vts-st-r{padding:5px 0!important;gap:7px;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+  .hero #dataStatus.vts-st .vts-st-r>span,.hero #dataStatus.vts-st .vts-st-r>b{font-size:12px!important;line-height:1.25!important}
+  .hero #dataStatus.vts-st .vts-st-n{font-size:11px!important;line-height:1.35!important;margin:7px 0 0!important}
+  section.searchbar[aria-label="Find a fund"]{grid-template-columns:minmax(0,1fr) auto}
 }
 @media(max-width:760px){.hero>.vts-st{flex:1 1 100%}}
 .hero .vts-st .vts-st-n{font-size:11.5px;margin:6px 0 0;max-width:none;color:var(--text3)}
@@ -4166,26 +4167,6 @@ boot();
   });
 })();
 </script>
-<script>
-/* Move search controls into the empty desktop hero column; restore exact
-   original sibling placement at <=760px so mobile is unchanged. */
-(function(){
-  function alignDesktopHero(){
-    var hero=document.querySelector('section.hero');
-    var search=document.querySelector('section.searchbar[aria-label="Find a fund"]');
-    if(!hero||!search)return;
-    if(window.matchMedia('(min-width:761px)').matches){
-      if(search.parentElement!==hero)hero.insertBefore(search,document.getElementById('dataStatus'));
-      hero.classList.add('mf-desktop-compact');
-    }else{
-      if(search.parentElement===hero)hero.parentElement.insertBefore(search,hero.nextSibling);
-      hero.classList.remove('mf-desktop-compact');
-    }
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',alignDesktopHero);
-  else alignDesktopHero();
-  window.addEventListener('resize',alignDesktopHero,{passive:true});
-})();
-</script>
+
 </body>
 </html>
