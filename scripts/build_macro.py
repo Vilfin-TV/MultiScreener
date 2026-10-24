@@ -41,6 +41,8 @@ log = logging.getLogger("macro")
 INDICES = {
     "Nifty 50": "n50", "Nifty Next 50": "nn50", "Nifty 500": "n500", "Nifty Midcap 150": "mid150", "Nifty Smallcap 250": "sml250",
     "Nifty Microcap 250": "micro250", "Nifty Total Market": "totalmkt",
+    "Nifty50 Value 20": "value20", "Nifty200 Quality 30": "quality30",
+    "Nifty200 Momentum 30": "momentum30", "Nifty100 Low Volatility 30": "lowvol30",
     "Nifty Bank": "bank", "Nifty Financial Services": "fin", "Nifty Private Bank": "pvtbank", "Nifty PSU Bank": "psubank",
     "Nifty IT": "it", "Nifty Pharma": "pharma", "Nifty Healthcare Index": "health", "Nifty FMCG": "fmcg",
     "Nifty India Consumption": "consumption", "Nifty Auto": "auto", "Nifty Infrastructure": "infra",
@@ -675,3 +677,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+

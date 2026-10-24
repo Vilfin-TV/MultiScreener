@@ -235,7 +235,7 @@ def _num(x):
 
 def load(p, default=None):
     try:
-        return json.loads(Path(p).read_text())
+        return json.loads(Path(p).read_text(encoding="utf-8"))
     except Exception:  # noqa: BLE001
         return default
 
@@ -1736,7 +1736,9 @@ def main() -> int:
                 inc = pst["slots"].get(slot)
                 code, alts, action, note = choose(u, slot, ctx, chosen, amc_count, inc, review, cache)
                 if code is None and slot == "metal":
-                    gold_cands = sorted([c for c in u.by_subs(["gold"]) if (u.g(c, "aum") or 0) >= 50 and c not in chosen], key=lambda c: -(u.g(c, "aum") or 0))
+                    # A failed replacement must not reselect a scheme closed to fresh money.
+                    gold_cands = sorted([c for c in u.by_subs(["gold"]) if buy_ok(u, c) and (u.g(c, "lumpMin") or 0) <= LUMP_MAX
+                                         and (u.g(c, "aum") or 0) >= 50 and c not in chosen], key=lambda c: -(u.g(c, "aum") or 0))
                     if gold_cands:
                         code = gold_cands[0]
                         alts, action, note = gold_cands[1:3], "new", ""
@@ -1820,6 +1822,9 @@ def main() -> int:
     dip = dip_rules.mf_block(plans, row, lambda c: by_sub.get(u.g(c, "sub"), []),
                      lambda c: exit_rule(u.info(c).get("exitLoad"), u.g(c, "exitNil")),
                      lambda c: fund_pe_info(u, c, fpe), macro, gates, metal_choice, scr["asOf"], [row(c) for c in u.rows])
+    from mf_dip_candidates import build as build_dip_candidates
+    dip["extra"] = build_dip_candidates(plans, [row(c) for c in u.rows], macro,
+                                       load(MF / "fund_pe.json", {}) or {}, u.detail, scr["asOf"])
     out = {"v": VERSION, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "asOf": scr["asOf"],
            "reviewed": state["reviewed"], "nextReview": date(today.year + (today.month == 12), today.month % 12 + 1, 1).isoformat(),
            "market": {"tilt": tilt, "tiltNow": tilt_now, "components": tilt_comps, "rotation": rotation, "gates": gates,
@@ -1846,3 +1851,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+

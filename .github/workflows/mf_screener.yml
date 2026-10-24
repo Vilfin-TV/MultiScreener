@@ -35,6 +35,8 @@ on:
       - 'scripts/build_mf_nfo.py'
       - 'scripts/build_smart_sip.py'
       - 'scripts/dip_rules.py'
+      - 'scripts/mf_dip_candidates.py'
+      - 'scripts/test_mf_dip_candidates.py'
       - 'scripts/audit_mf_holdings.py'
       - 'scripts/build_macro.py'
       - 'scripts/audit_mf_live.py'
@@ -135,6 +137,9 @@ jobs:
       - name: Smart SIP model plans
         run: python scripts/build_smart_sip.py
 
+      - name: Market-dip rule and purchase-restriction regression checks
+        run: python -m unittest discover -s scripts -p test_mf_dip_candidates.py -v
+
       - name: Smart SIP accuracy audit (recompute every plan from the published data)
         id: sipaudit
         continue-on-error: true
@@ -190,3 +195,4 @@ jobs:
           done
           echo "All push attempts failed."
           exit 1
+

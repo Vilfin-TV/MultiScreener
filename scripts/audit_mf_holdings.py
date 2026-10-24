@@ -315,6 +315,20 @@ def audit_smartsip() -> int:
             if not c or c["seg"] != seg or codes.get(c["slot"]) != c["code"] or x["n"] != 37 or x["passed"] != sum(1 for y in allc if y[1]) \
                     or x["ok"] != all(y[1] for y in allc) or len(allc) != 37:
                 E(f"dip {pid} {seg}: entry does not match the plan's fund / its 37 checks")
+    extra = dp.get("extra") or {}
+    for pid, entries in (extra.get("plans") or {}).items():
+        for seg, entry in entries.items():
+            ec = (extra.get("cands") or [])[entry["c"]]
+            checks = extra["segments"][seg]["checks"] + ec["checks"]
+            if len(checks) != 37 or entry["n"] != 37 or entry["passed"] != sum(bool(c[1]) for c in checks) or entry["ok"] != all(c[1] for c in checks):
+                E(f"dip extra {pid}/{seg}: count/verdict mismatch")
+            if ec["scope"] != "extra" or ec["code"] not in F or ec["fundOk"] != all(c[1] for c in ec["checks"][:-1]):
+                E(f"dip extra {pid}/{seg}: invalid candidate or fund verdict")
+            from dip_rules import mf_purchase
+            if ec.get("purchase") != mf_purchase({"code":ec["code"],"buy":g(ec["code"],"buy")}):
+                E(f"dip extra {pid}/{seg}: stale purchase status")
+            if entry["ok"] and (not ec["purchase"]["lump"] or not all(c[1] for c in ec.get("selection") or [])):
+                E(f"dip extra {pid}/{seg}: buy despite failed purchase/selection checks")
     if pf_missing:
         amcs = scr["amcs"]
         W(f"{len(pf_missing)} recommended funds have no current portfolio (credit-quality / fund P/E checks use "
@@ -332,3 +346,4 @@ def audit_smartsip() -> int:
 
 if __name__ == "__main__":
     sys.exit(audit_smartsip() if "--smartsip" in sys.argv else main())
+

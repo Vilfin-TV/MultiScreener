@@ -12,8 +12,8 @@ Signal (per segment: large / mid / small cap, gold, silver), from official close
              worse than `crashDayPct` (a crash day / bad print waits a session) and the fall is within `maxFallPct`
 A buy day that is not confirmed does not use up its tier, so the next confirmed close at that tier can still buy.
 
-30 checks before any dip lump sum: 8 market-trigger checks, 10 market & valuation checks and 12 fund (or ETF) checks. The agents
-recompute the trigger checks from recorded prices themselves; checks 8–25 come from the published plan snapshot.
+37 checks before any dip lump sum: 8 market-trigger, 14 market/valuation and 15 fund checks.
+The agents recompute the trigger checks from recorded prices themselves.
 """
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ SIM_START = json.loads((ROOT / "scripts" / "sim_config.json").read_text())["star
 def tier_of(fall: float) -> tuple[int, int]:
     """(tier %, amount ₹) for a fall in % — the deepest tier reached, (0, 0) below the first."""
     for t, amt in RULE["tiers"]:
-        if fall >= t:
+        if fall + 1e-9 >= t:  # avoid 100→90 computing as 9.999999999999998%
             return t, max(RULE["min"], min(RULE["max"], amt))
     return 0, 0
 
@@ -110,10 +110,10 @@ def segment_states(syms_from: str | None = None) -> dict:
             continue
         last = st[-1]
         sigs = [{"d": x["d"], "tier": x["tier"], "fall": round(x["fall"], 2), "amount": x["amount"]}
-                for x in st if x["signal"] and x["d"] > start][-6:]        # forward only: nothing before the start
+                for x in st if x["signal"] and x["d"] >= start][-6:]
         out[key] = {"label": s["label"], "index": s["index"], "trk": s["trk"], "trk2": s["trk2"],
                     **{k: (round(v, 2) if isinstance(v, float) else v) for k, v in last.items()},
-                    "epBeforeStart": bool(last["ep"] and (last["epDate"] or "") <= start), "recent": sigs, **trend(cl)}
+                    "epBeforeStart": bool(last["ep"] and (last["epDate"] or "") < start), "recent": sigs, **trend(cl)}
     return out
 
 
@@ -156,10 +156,10 @@ def trigger_checks(st: dict, data_date: str) -> list:
     ]
 
 
-def valuation_checks(seg: str, macro: dict, gate: dict | None, metal_choice: str | None, extra: tuple, st: dict | None = None) -> list:
+def valuation_checks(seg: str, macro: dict, gate: dict | None, metal_choice: str | None, extra: tuple, st: dict | None = None, config: dict | None = None) -> list:
     """Checks 9–18 (market & valuation). `extra` = (label, ok, detail) for check 15 (fund P/E for funds, index match
     for ETFs); `st` = the segment state (5-session move and fall from the 52-week high for checks 17–18)."""
-    s = RULE["segments"][seg]
+    s = config if config is not None else RULE["segments"][seg]
     st = st or {}
     val, n50 = (macro.get("valuation") or {}), (macro.get("valuation") or {}).get("n50") or {}
     gr = macro.get("growth") or {}
@@ -216,11 +216,26 @@ def _med(xs):
     return xs[len(xs) // 2] if xs else None
 
 
-def mf_fund_checks(slot: dict, f: dict, peers: list[dict], exit_rule, tier_amt: int) -> list:
+def mf_purchase(f: dict) -> dict:
+    """Fresh lump sums, not existing SIP instalments. A published NAV never proves availability."""
+    if str(f.get("code")) == "118663":
+        return {"state": "paused", "lump": False, "label": "Fresh lump-sum purchases paused",
+                "detail": "From 16 Oct 2026: fresh/additional lump sums, switch-ins and new SIP/STP registrations suspended; existing registered SIP/STP instalments may continue.",
+                "source": "https://mf.nipponindiaim.com/InvestorServices/Addenda/79-Restriction-on-subsscription-of-Gold-savings-fund.pdf",
+                "effective": "2026-10-16"}
+    buy = f.get("buy")
+    if not isinstance(buy, str):
+        return {"state": "unknown", "lump": False, "label": "Fresh purchase status unverified", "detail": "No positive lump-sum eligibility flag in the current screener."}
+    if "L" not in buy:
+        return {"state": "paused", "lump": False, "label": "Fresh lump-sum purchases paused", "detail": "The current screener does not permit fresh lump-sum orders; existing SIPs are a separate transaction type."}
+    return {"state": "open", "lump": True, "label": "Lump sums accepted", "detail": "Current screener flag allows fresh lump sums; confirm the AMC terms before an order."}
+
+
+def mf_fund_checks(slot: dict, f: dict, peers: list[dict], exit_rule, tier_amt: int, asof: str | None = None) -> list:
     """Checks 23–37 for a mutual fund (screener row `f`, same-category `peers`)."""
     ter_m, r3_m, mdd_m = _med([p.get("ter") for p in peers]), _med([p.get("r3y") for p in peers]), _med([p.get("mdd") for p in peers])
     r1_m, sh_m = _med([p.get("r1y") for p in peers]), _med([p.get("sharpe") for p in peers])
-    nav_last = max((p.get("navDate") or "" for p in peers), default="") or f.get("navDate") or ""
+    nav_last = asof or max((p.get("navDate") or "" for p in peers), default="") or f.get("navDate") or ""
     nav_age = (date.fromisoformat(nav_last) - date.fromisoformat(f["navDate"])).days if f.get("navDate") and nav_last else None
     sc = slot.get("checks") or []
     er = exit_rule
@@ -228,20 +243,20 @@ def mf_fund_checks(slot: dict, f: dict, peers: list[dict], exit_rule, tier_amt: 
     return [
         _chk("Model's choice for this segment", True, f"{slot.get('label')} — {f.get('name')}"),
         _chk("Passes every check of its model slot", sc and all(c[1] for c in sc), f"{sum(1 for c in sc if c[1])} of {len(sc)} slot checks"),
-        _chk("Open for lump-sum purchases", "L" in (f.get("buy") or ""), "accepts one-time purchases" if "L" in (f.get("buy") or "") else "lump sums paused"),
-        _chk("Lump-sum minimum ≤ ₹5,000", (f.get("lumpMin") or 0) <= RULE["min"], f"₹{int(f.get('lumpMin') or 0):,} minimum"),
-        _chk("Exit load ≤ 1% and within 12 months", not long_load, "nil" if not er.get("tiers") else ", ".join(f"{p}% within {d} days" for d, p in er["tiers"])),
+        _chk("Open for lump-sum purchases", mf_purchase(f)["lump"], mf_purchase(f)["label"] + ": " + mf_purchase(f)["detail"]),
+        _chk("Lump-sum minimum ≤ ₹5,000", isinstance(f.get("lumpMin"), (int, float)) and 0 < f["lumpMin"] <= RULE["min"], f"₹{f['lumpMin']:,} minimum" if f.get("lumpMin") is not None else "minimum not disclosed"),
+        _chk("Exit load ≤ 1% and within 12 months", er.get("known", False) and not long_load, "terms unverified" if not er.get("known") else "nil" if not er.get("tiers") else ", ".join(f"{p}% within {d} days" for d, p in er["tiers"])),
         _chk("Expense ratio ≤ category median", f.get("ter") is not None and ter_m is not None and f["ter"] <= ter_m + 1e-9, f"{f.get('ter')}% vs median {ter_m}%"),
         _chk("Fund size ≥ ₹500 cr", (f.get("aum") or 0) >= 500, f"₹{round(f.get('aum') or 0):,} cr"),
         _chk("Track record ≥ 3 years", f.get("r3y") is not None, "3-year return on file" if f.get("r3y") is not None else "under 3 years"),
         _chk("3-year return near or above category median", f.get("r3y") is not None and r3_m is not None and f["r3y"] >= r3_m - 1, f"{f.get('r3y')}% a year vs median {r3_m}%"),
         _chk("Worst fall no deeper than category median − 5 pt", f.get("mdd") is not None and mdd_m is not None and f["mdd"] >= mdd_m - 5, f"{f.get('mdd')}% vs median {mdd_m}%"),
-        _chk("Status not lagging", f.get("status") not in ("Underperforming", "Out of track"), f.get("status") or "not rated"),
+        _chk("Status not lagging", bool(f.get("status")) and f.get("status") not in ("Underperforming", "Out of track"), f.get("status") or "not rated"),
         _chk("1-year return near or above category median", f.get("r1y") is not None and r1_m is not None and f["r1y"] >= r1_m - 2,
              f"{f.get('r1y')}% vs median {r1_m}% (within 2 pt)"),
         _chk("Risk-adjusted return (Sharpe) near category median", f.get("sharpe") is not None and sh_m is not None and f["sharpe"] >= sh_m - 0.1,
              f"Sharpe {f.get('sharpe')} vs median {sh_m} (within 0.1)"),
-        _chk("NAV up to date", nav_age is not None and nav_age <= 5, f"NAV of {f.get('navDate')}" + (f" ({nav_age} days behind its category)" if nav_age else "")),
+        _chk("NAV up to date", nav_age is not None and 0 <= nav_age <= 5, f"NAV of {f.get('navDate')}" + (f" ({nav_age} days behind published data)" if nav_age else "")),
         _chk("Dip amount within ₹5,000–₹20,000", tier_amt > 0 and RULE["min"] <= tier_amt <= RULE["max"], f"₹{tier_amt:,} at the current fall" if tier_amt else "no dip tier reached"),
     ]
 
@@ -395,26 +410,28 @@ def mf_block(plans: dict, fund, peers, exit_of, fpe_of, macro: dict, gates: dict
                          f"portfolio P/E {fi['pe']} vs {fi['peerPe']} category median ({fi['prem']:.2f}×)" if fi
                          else "portfolio P/E not published — the segment's index P/E applies (checks 9–10)")
             chk = valuation_checks(seg, macro, gate, metal_choice, extra, segs[seg]) + \
-                mf_fund_checks(sl, f, peers(sl["code"]), exit_of(sl["code"]), segs[seg]["amount"])
+                mf_fund_checks(sl, f, peers(sl["code"]), exit_of(sl["code"]), segs[seg]["amount"], asof)
             cand = {"seg": seg, "slot": sl["key"], "code": sl["code"], "name": f.get("name"), "checks": chk,
-                    "fundOk": all(c[1] for c in chk[:-1])}
+                    "purchase": mf_purchase(f), "fundOk": all(c[1] for c in chk[:-1])}
             m[seg] = _plan_entry(segs, seg, _add(cands, seen, cand), cand)
         pmap[pid] = m
     alts = {}
     for seg, cfg in RULE["segments"].items():
         mt = cfg.get("metal")
-        if not mt or mt == metal_choice or seg not in segs:
+        if not mt or seg not in segs or (mt == metal_choice and any(seg in m for m in pmap.values())):
             continue
         pool = [f for f in rows if f.get("sub") == mt and metal_of(f.get("name")) == mt]
         best = None
         for f in pool:
             slot = {"key": "metal", "label": f"Precious metals — {mt}", "checks": []}
             chk = valuation_checks(seg, macro, gates.get("metal"), metal_choice, ("Fund holds the metal", True, f.get("name")), segs[seg]) + \
-                _alt_first(mf_fund_checks(slot, f, pool, exit_of(f["code"]), segs[seg]["amount"]), mt, metal_choice, "fund", len(pool),
+                _alt_first(mf_fund_checks(slot, f, pool, exit_of(f["code"]), segs[seg]["amount"], asof), mt, metal_choice, "fund", len(pool),
                            "most fund checks passed, then lowest expense ratio and largest size")
+            if mt == metal_choice:
+                chk[N_MKT] = _chk("Model's choice for this segment", False, "No eligible fund in the regular plan; displayed for information only, never purchased.")
             key = (-_alt_rank(chk), f.get("ter") if f.get("ter") is not None else 9, -(f.get("aum") or 0), f["code"])
             if best is None or key < best[0]:
-                best = (key, {"seg": seg, "slot": "metal", "code": f["code"], "name": f.get("name"), "checks": chk, "fundOk": False, "info": True})
+                best = (key, {"seg": seg, "slot": "metal", "code": f["code"], "name": f.get("name"), "purchase": mf_purchase(f), "checks": chk, "fundOk": False, "info": True})
         if best:
             alts[seg] = best[1]
     _info_alts(alts, cands, pmap)
@@ -475,3 +492,4 @@ def etf_block(plans: dict, slots: dict, row, ex_of, vols_of, cap_of, names_of, m
     liq = next((slots[x["id"]]["sym"] for p in plans.values() for x in p["slots"] if x["id"] == "liquid" and slots.get("liquid")), None)
     return {"asOf": asof, "rule": rule_public(), "segments": segs, "cands": cands, "plans": pmap, "alts": alts,
             "reserve": {"sym": liq or "LIQUIDBEES", "why": "the model's liquid ETF" if liq else "default liquid ETF"}}
+

@@ -4125,7 +4125,7 @@ function renderSip(){
   var cut = h.indexOf('<div class="mi-head">');
   $('sipBody').innerHTML = cut < 0 ? h : h.slice(0, cut);
   $('sipMarket').innerHTML = cut < 0 ? '' : h.slice(cut);
-  $('sipDip').innerHTML = window.VTSim && VTSim.dipPanel ? VTSim.dipPanel({blk: SIP.dip, pid: P.hz + P.rk, kind: 'mf'}) : '';
+  $('sipDip').innerHTML = window.VTSim && VTSim.dipPanel ? VTSim.dipPanel({blk: SIP.dip, pid: P.hz + P.rk, kind: 'mf', funds: BY}) : '';
   bindDonuts();
 }
 function bindSip(){
@@ -4237,3 +4237,4 @@ boot();
 
 </body>
 </html>
+

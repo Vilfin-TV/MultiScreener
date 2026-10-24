@@ -1099,20 +1099,25 @@
     '@media (max-width:760px){.vts-bl-r{grid-template-columns:minmax(0,1.9fr) minmax(36px,1fr) 46px;gap:8px}.vts-pv-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.vts-olap-p{grid-template-columns:1fr}.vts-pv-top{grid-template-columns:1fr}.vts-pv-k{grid-template-columns:repeat(2,minmax(0,1fr))}.vts-pf-me .vts-pf-av.lg{width:36px;height:36px}' +
     '.vts-hist-r.hd{display:none}.vts-hist-r{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:4px}.vts-hist-r>span:first-child{grid-column:1/-1;font-weight:700}.vts-hist-r>span:not(:first-child){text-align:left}' +
     '.vts-hist-r>span[data-l]::before{content:attr(data-l);display:block;font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}.vts-ch-k b{font-size:15px}}';
-  /* ── Market-dip lump sums (data: smartsip.json / etf_smart.json → dip). When a segment's index tracker closes 3% or
-     more below its 3-month high, the model adds a one-time amount (₹5,000 · ₹10,000 at 5% · ₹20,000 at 10%), once per
-     new tier in a fall, only when all 37 checks pass. Shown for the selected plan, just above Simulator Buy. ── */
+  /* Market-dip lump sums: configured 5/10/15% tiers; every one of 37 checks must pass. */
   function dipPanel(o) {
     var b = o && o.blk;
     if (!b || !b.segments) return '';
     style();
+    // Additional candidates have their own eligibility checks and never alter regular allocations or agent ledgers.
+    if (o.kind === 'mf' && b.extra) {
+      var off = (b.cands || []).length, ep = ((b.extra.plans || {})[o.pid] || {}), mergedPlan = Object.assign({}, (b.plans || {})[o.pid]);
+      Object.keys(ep).forEach(function(k){ mergedPlan[k] = Object.assign({}, ep[k], {c:ep[k].c + off}); });
+      var mergedPlans = {}; mergedPlans[o.pid] = mergedPlan;
+      b = Object.assign({}, b, {segments:Object.assign({},b.segments,b.extra.segments),cands:(b.cands || []).concat(b.extra.cands || []),plans:mergedPlans});
+    }
     var R = b.rule || {}, segs = b.segments, plan = (b.plans || {})[o.pid] || {}, etf = o.kind === 'etf', what = etf ? 'ETF' : 'fund';
     var tiers = (R.tiers || []).slice().sort(function (x, y) { return x[0] - y[0]; }), first = tiers.length ? tiers[0][0] : 5;
     var start = R.start || '2026-10-19', NM = (R.n || {}).mkt || 14, NA = (R.n || {}).all || 37;
     var inr = function (v) { return '₹' + Number(v || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 }); };
     var dt = function (x, y) { return x ? new Date(String(x).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-GB', y ? { day: 'numeric', month: 'short', year: 'numeric' } : { day: 'numeric', month: 'short' }) : ''; };
     var last = Object.keys(segs).reduce(function (m, k) { return segs[k].d > m ? segs[k].d : m; }, '');
-    var order = ['large', 'mid', 'small', 'gold', 'silver'];
+    var order = ['large', 'mid', 'small', 'gold', 'silver', 'next50', 'value', 'quality', 'momentum', 'lowvol', 'best'];
     var buys = [];
     var rows = order.filter(function (k) { return segs[k]; }).map(function (k) {
       var s = segs[k], e = plan[k], c = e ? (b.cands || [])[e.c] : null, alt = !c && b.alts ? b.alts[k] : null;
@@ -1121,46 +1126,59 @@
       var lvl = function (t) { return tiers.filter(function (x) { return x[0] === t; })[0]; };
       var next = tiers.filter(function (t) { return t[0] > Math.max(s.ep || 0, s.tier || 0); })[0];
       var today = s.d === last;
-      var all = mc ? (s.checks || []).concat(mc.checks || []) : null;
+      var all = mc ? (s.checks || []).concat(mc.checks || []).map(function(x){return x.slice();}) : null;
+      var purchase = mc && !etf ? mc.purchase : null;
+      if (mc && !etf && o.funds) {
+        var live = o.funds[mc.code], flags = live && live.buy;
+        if (String(mc.code) === '118663') purchase = {state:'paused',lump:false,label:'Fresh lump-sum purchases paused',detail:'Effective 16 Oct 2026. Existing registered SIP/STP instalments are separate.',source:'https://mf.nipponindiaim.com/InvestorServices/Addenda/79-Restriction-on-subsscription-of-Gold-savings-fund.pdf'};
+        else if (typeof flags !== 'string') purchase = {state:'unknown',lump:false,label:'Fresh purchase status unverified',detail:'No current positive lump-sum eligibility flag.'};
+        else purchase = {state:flags.indexOf('L') >= 0 ? 'open':'paused',lump:flags.indexOf('L') >= 0,label:flags.indexOf('L') >= 0 ? 'Lump sums accepted':'Fresh lump-sum purchases paused',detail:'Current screener eligibility; existing SIP instalments are a separate transaction type.'};
+      }
+      if (all && purchase) all.forEach(function(x){if(x[0] === 'Open for lump-sum purchases'){x[1]=purchase.lump === true;x[2]=purchase.label + ': ' + (purchase.detail || '');}});
       var ok = all ? all.filter(function (x) { return x[1]; }).length : null;
       var firstFail = all ? (all.filter(function (x) { return !x[1]; })[0] || [])[0] : null;
-      var dip = s.signal && today;                                     // a new, held, confirmed level on the latest close
-      var tone = dip && c && e && e.ok ? 'go' : dip && c ? 'no' : 'q';
+      var dip = s.signal && today && s.d === b.asOf && s.d >= start;
+      var complete = !!all && all.length === NA && all.every(function(x){return x[1] === true;});
+      var tone = dip && c && e && complete && (etf || purchase && purchase.lump === true) ? 'go' : dip && c ? 'no' : 'q';
       // plain-language status
       var st;
       if (fall < first) st = 'No dip — ' + fall.toFixed(1) + '% below its 3-month high. The model acts only from ' + first + '%; keep your regular plan.';
-      else if (dip && !(c && e && e.ok)) st = 'Dip on ' + dt(s.d) + ': ' + fall.toFixed(1) + '% down for two closes (' + s.tier + '% level), but not bought' + (c ? ' — a check failed (see the red tag).' : ' — not part of this model portfolio.');
+      else if (dip && tone !== 'go') st = 'Dip on ' + dt(s.d) + ': ' + fall.toFixed(1) + '% down for two closes (' + s.tier + '% level), but not bought' + (c ? ' — a check failed (see the red tag).' : ' — not part of this model portfolio.');
       else if (dip) st = 'Dip confirmed on ' + dt(s.d) + ': ' + fall.toFixed(1) + '% down and held for two closes → ' + s.tier + '% level, model amount ' + inr(s.amount) + '.';
       else if (s.raw > (s.ep || 0) && s.tier < s.raw) st = 'Down ' + fall.toFixed(1) + '% today — waits for a second close at ' + s.raw + '%+ to rule out a one-day dip.';
       else if (s.tier > (s.ep || 0) && !s.conf) st = 'Down ' + fall.toFixed(1) + '% — not yet confirmed by the second ' + (etf ? 'ETF' : 'tracker') + ' on the same index; waits.';
       else if (s.tier > (s.ep || 0) && !s.sane) st = 'Down ' + fall.toFixed(1) + '% — a crash-day or unusual close; the model waits a session.';
       else if (s.ep) st = (s.epBeforeStart ? 'Down ' + fall.toFixed(1) + '% — this fall began before the ' + dt(start, true) + ' start, so its ' + s.ep + '% level is not bought.'
-                                          : 'Down ' + fall.toFixed(1) + '% — the ' + s.ep + '% level was already bought on ' + dt(s.epDate) + '.') +
+                                          : 'Down ' + fall.toFixed(1) + '% — the ' + s.ep + '% signal level was recorded on ' + dt(s.epDate) + ' (this does not confirm a purchase).') +
                          (next ? ' Next model amount only if it reaches ' + next[0] + '% (' + inr(next[1]) + ').' : ' No deeper level is left in this fall.');
       else st = 'Down ' + fall.toFixed(1) + '% — no new level today.';
+      if (purchase && !purchase.lump) st = purchase.label + ' — no fresh lump-sum order is permitted. ' + st;
       if (tone === 'go') buys.push({ seg: s.label, amt: s.amount, name: etf ? c.sym : c.name });
       var tag = !c ? '<span class="vts-dip-tag q">' + (alt ? /model holds/.test((alt.checks[NM] || [])[2] || '') ? 'Info only · model holds ' + (k === 'silver' ? 'gold' : 'silver') + ' now' : 'Info only · not in this plan' : 'Not in this plan') + '</span>'
         : tone === 'go' ? '<span class="vts-dip-tag go">✓ Can buy today · ' + inr(s.amount) + ' (optional)</span>'
         : tone === 'no' ? '<span class="vts-dip-tag no">✕ Not today — ' + esc(firstFail || 'a check failed') + '</span>'
         : '<span class="vts-dip-tag q">No dip buy today</span>';
+      var purchaseTag = purchase && !purchase.lump ? '<span class="vts-dip-tag no">⏸ ' + esc(purchase.label) + '</span>' : '';
       var grp = function (t, from, xs) {
         return '<div class="vts-dip-g"><h5>' + t + '</h5>' + xs.map(function (x, i) {
           return '<div class="vts-dip-c ' + (x[1] ? 'ok' : 'no') + '"><i>' + (x[1] ? '✓' : '✕') + '</i><span><b>' + (from + i) + '. ' + esc(x[0]) + '</b>' + esc(x[2]) + '</span></div>';
         }).join('') + '</div>';
       };
-      var det = grp('Market trigger', 1, s.checks || []) +
-        (mc ? grp('Market & valuation', 9, mc.checks.slice(0, NM)) + grp(etf ? 'ETF checks' : 'Fund checks', 9 + NM, mc.checks.slice(NM)) +
+      var det = grp('Market trigger', 1, all ? all.slice(0,8) : s.checks || []) +
+        (mc ? grp('Market & valuation', 9, all.slice(8, 8 + NM)) + grp(etf ? 'ETF checks' : 'Fund checks', 9 + NM, all.slice(8 + NM)) +
              (alt ? '<p class="vts-dip-na">' + esc(s.label) + ' is not part of this model portfolio, so no dip amount applies. ' + (/model holds/.test((alt.checks[NM] || [])[2] || '') ? 'The top-ranked ' + what : 'The model\'s ' + what + ' for this segment (from the other plans)') + ' is shown for information, with every check.</p>' : '')
            : grp('Market & valuation', 9, s.mkt || []) + '<p class="vts-dip-na">' + esc(s.label) + ' is not part of this model portfolio, so the ' + what + ' checks (' + (9 + NM) + '–' + NA + ') do not apply and no dip amount is shown.</p>');
+      if (purchase && !purchase.lump) det += '<p class="vts-dip-na"><b>' + esc(purchase.label) + '.</b> ' + esc(purchase.detail || '') + (purchase.source && /^https:\/\//.test(purchase.source) ? ' <a href="' + esc(purchase.source) + '" target="_blank" rel="noopener">Official AMC notice</a>' : '') + '</p>';
+      if (mc && mc.selection) det += '<div class="vts-dip-na"><b>Candidate selection subchecks (included in check 24)</b>' + mc.selection.map(function(x){return '<p>' + (x[1] ? '✓ ':'✕ ') + esc(x[0]) + ': ' + esc(x[2]) + '</p>';}).join('') + (mc.metrics && mc.metrics.pe ? '<p>Portfolio P/E: ' + esc(mc.metrics.pe) + '; disclosed equity coverage ' + esc(mc.metrics.coverPct) + '%. ' + esc(mc.metrics.epsIndex) + ' index EPS growth: ' + esc(mc.metrics.epsGrowth == null ? 'unavailable' : mc.metrics.epsGrowth + '%') + '. Index EPS is a benchmark measure, not fund-level EPS.</p>' : '') + '</div>';
       var n = mc ? all.length : (s.checks || []).length + (s.mkt || []).length;
       var nOk = mc ? ok : (s.checks || []).concat(s.mkt || []).filter(function (x) { return x[1]; }).length;
       return '<details class="vts-dip-r ' + tone + '"><summary>' +
-        '<span class="vts-dip-s"><b>' + esc(s.label) + '</b><small>' + esc(s.index) + '</small></span>' +
+        '<span class="vts-dip-s"><b>' + esc(s.label) + '</b><small>' + esc(s.index) + (s.extra ? ' · additional candidate' : '') + '</small></span>' +
         '<span class="vts-dip-f"><b>' + (fall > 0.005 ? '−' + fall.toFixed(2) + '%' : '0.00%') + '</b><span class="vts-dip-m" aria-hidden="true">' +
           tiers.map(function (t) { return '<i style="left:' + (t[0] / 18 * 100) + '%"></i>'; }).join('') + '<em style="width:' + w + '%"></em></span><small>below the 3-month high · ' + esc(dt(s.d)) + '</small></span>' +
         '<span class="vts-dip-st">' + esc(st) + '</span>' +
-        '<span class="vts-dip-fd">' + (mc ? '<b>' + esc(etf ? mc.sym + ' · ' + (mc.name || '') : mc.name || '') + '</b>' : '') + tag + '</span>' +
-        '<span class="vts-dip-k ' + (c && e && e.ok ? 'ok' : '') + '">' + nOk + '/' + n + '<small>checks</small></span><span class="vts-dip-ch" aria-hidden="true">›</span></summary>' +
+        '<span class="vts-dip-fd">' + (mc ? '<b>' + esc(etf ? mc.sym + ' · ' + (mc.name || '') : mc.name || '') + '</b>' : '') + purchaseTag + tag + '</span>' +
+        '<span class="vts-dip-k ' + (c && e && complete ? 'ok' : '') + '">' + nOk + '/' + n + '<small>checks</small></span><span class="vts-dip-ch" aria-hidden="true">›</span></summary>' +
         '<div class="vts-dip-d">' + det + '</div></details>';
     }).join('');
     var rv = b.reserve || {}, who = (R.persons || []).join(', ').replace(/, ([^,]*)$/, ' and $1');
@@ -1178,6 +1196,7 @@
       '<p class="vts-dip-n">Checks: 1–8 market trigger (fall, two-close hold, confirmation by a second ' + (etf ? 'ETF' : 'tracker') + ', crash-day and data guards), 9–' + (8 + NM) + ' market & valuation (P/E, P/B, earnings, bond yields, economy, volatility, 5-session, 10-close, 200-day and 52-week trend), ' + (9 + NM) + '–' + NA + ' the ' + what + ' itself (cost, size, returns, risk, tracking, NAV). Tap a segment for every check and its figure. ' +
       (who ? 'In Simulator Buy, ' + esc(who) + ' follow this rule with a ' + inr(R.reserve) + ' reserve in ' + (etf ? 'a liquid ETF (' + esc(rv.sym || 'liquid ETF') + ')' : 'a liquid fund (' + esc(rv.name || 'liquid fund') + ')') +
         ', topped up with the same ' + inr(R.reserve) + ' on the first trading day of the month after it is used up. ' : '') +
+      (o.kind === 'mf' && b.extra ? 'Additional candidates are separate from regular allocations and simulated-agent orders. Nifty Next 50 requires 5+ years and balanced or higher risk; the five satellites require 7+ years and aggressive or very aggressive risk. Best overall compares plain broad-market index funds, equally ranking lower current portfolio P/E and higher 12-month benchmark EPS growth after eligibility checks, with cost and fund size as tie-breakers. Missing inputs block a buy; a displayed candidate is not a recommendation. ' : '') +
       'Educational model — not investment advice.</p></section>';
   }
   CSS += '.vts-na{color:var(--text2);font-size:11px;font-weight:600;white-space:nowrap}';
@@ -1456,3 +1475,4 @@
 
   window.VTSim = { tabSettle: tabSettle, gate: gate, accepted: accepted, faqCols: faqCols, riskPanel: riskPanel, ecoPanel: ecoPanel, risk10: risk10, css: style, simBuy: simBuy, dipPanel: dipPanel, col: col, colOpen: colOpen, houseStrip: houseStrip, houseAv: houseAv, statusCard: statusCard, nextIST: nextIST };
 })();
+
