@@ -1,0 +1,18 @@
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const context = {Date};
+vm.createContext(context);
+vm.runInContext(fs.readFileSync('data_freshness.js','utf8'),context);
+const f = context.VTDataFreshness;
+const now = new Date('2026-10-23T12:00:00Z');
+assert.equal(f.weekdaysSince('2026-10-22',now),1);
+assert.equal(f.weekdaysSince('2026-10-16',new Date('2026-10-19T12:00:00Z')),1);
+assert.equal(f.status('2026-10-22',now).warn,false);
+assert.equal(f.status('2026-10-19',now).warn,true);
+assert.equal(f.status('2026-10-24',now).warn,true);
+assert.equal(f.status('invalid',now).warn,true);
+assert.equal(f.status('2026-02-30',now).warn,true);
+assert.equal(f.status('2026-10-16',new Date('2026-10-19T12:00:00Z')).warn,false);
+console.log('Market-data freshness regression checks passed');
