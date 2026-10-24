@@ -11,9 +11,11 @@
   ],
   "publishedData": {
     "funds": 1703,
-    "checks": 63378,
+    "checks": 72706,
     "errors": 0,
-    "rawHistoryRecomputationIncluded": false
+    "rawHistoryRecomputationIncluded": true,
+    "recomputedFunds": 200,
+    "workflow": "https://github.com/Vilfin-TV/MultiScreener/actions/runs/40076657102"
   },
   "holdings": {
     "portfolios": 903,
@@ -63,9 +65,94 @@
   },
   "knownLimitations": [
     "8 recommended funds have no current portfolio (credit-quality / fund P/E checks use category rules): Axis Money Market Fund (Axis); Axis Value Fund (Axis); BANDHAN Small Cap Fund (Bandhan); Edelweiss Balanced Advantage Fund (Edelweiss); Edelweiss Equity Savings Fund (Edelweiss); Edelweiss Mid Cap Fund (Edelweiss); Kotak Pioneer Fund (Kotak Mahindra); Mahindra Manulife Multi Cap Fund (Mahindra Manulife)",
-    "HDFC Nifty SDL Oct 2026 Index Fund (151456) latest published NAV is 14 Oct 2026; check maturity/redemption status before use.",
+    "HDFC Nifty SDL Oct 2026 Index Fund (151456) final NAV is 14 Oct 2026; fresh purchases are already paused after its target maturity.",
     "11 liquid/overnight NAVs are dated beyond the majority NAV date; future-dated NAVs remain ineligible for dip-purchase checks.",
     "Ownership percentages are the verified 30 Jun 2026 NSE quarterly snapshot, not live holdings.",
-    "Raw NAV-history cache is unavailable in this audit checkout; the normal full-build independent recomputation gate remains required."
+    "Historical official return verification requires the exact base NAV date. Missing official snapshots are reported as missingExactBaseDate, rather than comparing against a different holding period. Raw unit-split NAV comparisons can still differ from split-adjusted returns."
+  ],
+  "browser": {
+    "checks": 7533,
+    "issues": 0,
+    "fixtures": [
+      "desktop dark",
+      "desktop light",
+      "tablet portrait",
+      "tablet landscape",
+      "phone",
+      "small phone"
+    ],
+    "liveFlowWidths": [
+      1366,
+      820,
+      390,
+      320
+    ],
+    "liveBrokerWidths": [
+      1920,
+      1440,
+      1366,
+      1280,
+      1120,
+      1024,
+      768,
+      390,
+      320
+    ],
+    "liveErrors": 0
+  },
+  "officialReturnComparison": {
+    "1w": {
+      "n": 1676,
+      "exact_0.01pp": 100,
+      "missingExactBaseDate": 23,
+      "comparison": "same NAV base date"
+    },
+    "1m": {
+      "n": 1660,
+      "exact_0.01pp": 100,
+      "missingExactBaseDate": 27,
+      "comparison": "same NAV base date"
+    },
+    "3m": {
+      "n": 1633,
+      "exact_0.01pp": 100,
+      "missingExactBaseDate": 14,
+      "comparison": "same NAV base date"
+    },
+    "6m": {
+      "n": 1608,
+      "exact_0.01pp": 99.94,
+      "missingExactBaseDate": 14,
+      "comparison": "same NAV base date"
+    },
+    "1y": {
+      "n": 1505,
+      "exact_0.01pp": 99.93,
+      "missingExactBaseDate": 20,
+      "comparison": "same NAV base date"
+    },
+    "3y": {
+      "n": 1123,
+      "exact_0.01pp": 99.91,
+      "missingExactBaseDate": 20,
+      "comparison": "same NAV base date"
+    },
+    "5y": {
+      "n": 29,
+      "exact_0.01pp": 100,
+      "missingExactBaseDate": 806,
+      "comparison": "same NAV base date"
+    },
+    "10y": {
+      "n": 511,
+      "exact_0.01pp": 99.8,
+      "missingExactBaseDate": 37,
+      "comparison": "same NAV base date"
+    }
+  },
+  "auditFixes": [
+    "Matching NAV dates required in live return spot checks.",
+    "Documented debt fallback accepted when no eligible gold/silver fund exists.",
+    "Exact historical NAV base dates required for official return comparisons; missing coverage is reported separately."
   ]
 }
