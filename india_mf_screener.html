@@ -3573,7 +3573,10 @@ function sizePlan(plan, amt, fq){
       !!(BY[code] && BY[code].sub === 'gold' && BY[code].buy === '');
     var needed = fq === 'w' ? 'W' : 'S';
     var replacement = null;
-    if (restricted || !(BY[code] && typeof BY[code].buy === 'string' && BY[code].buy.indexOf(needed) >= 0)) {
+    var purchaseUnavailable = restricted || !(BY[code] && typeof BY[code].buy === 'string' && BY[code].buy.indexOf(needed) >= 0);
+    // Multi-asset substitution is permitted only for a precious-metals
+    // allocation, never for unrelated equity, index or debt sleeves.
+    if (purchaseUnavailable && (restricted || /gold|silver|precious|commodit/i.test(s.label + ' ' + s.asset))) {
       replacement = FUNDS.filter(function(f){
         return f && f.code != code && typeof f.buy === 'string' &&
           f.buy.indexOf(needed) >= 0 && f.sub !== 'gold' &&
@@ -3583,7 +3586,7 @@ function sizePlan(plan, amt, fq){
       if (replacement) code = replacement.code;
     }
     return {key:s.key, label:s.label, asset:s.asset, w:s.w, code:code, swapped:swapped, src:s, merged:[], er:s.er, vol:s.vol, tax:s.tax,
-      purchaseBlocked:restricted && !replacement, purchaseReplacement:replacement ? originalCode : null};
+      purchaseBlocked:purchaseUnavailable && !replacement, purchaseReplacement:replacement ? originalCode : null};
   });
   var full = Math.max.apply(null, slots.map(function(s){ return sipMinOf(s.code) * 100 / s.w; }));
   full = Math.ceil(full / 500) * 500;
