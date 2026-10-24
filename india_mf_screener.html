@@ -1135,6 +1135,23 @@ footer a{color:var(--text2)}
 @media (max-width:560px){.brk{padding:14px}.brk-grid{grid-template-columns:1fr}}
 .flt-reset{display:inline-block;margin-left:8px;border:1px solid var(--border2,var(--border));background:var(--surface);color:var(--text);border-radius:999px;padding:5px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}.flt-reset:hover{border-color:var(--accent,#4a90e2)}
 
+/* Mobile readability: show full hero description and NAV-card note, never clamp. */
+@media(max-width:760px){
+  .hero>div:first-child{min-width:0;width:100%}
+  .hero h1{font-size:clamp(26px,7vw,32px);line-height:1.12;overflow-wrap:normal;white-space:normal}
+  .hero>div:first-child>p{
+    display:block!important;-webkit-line-clamp:unset!important;
+    -webkit-box-orient:initial!important;overflow:visible!important;
+    white-space:normal!important;text-overflow:clip!important;
+    overflow-wrap:break-word;line-height:1.6!important;
+  }
+  .hero #dataStatus.vts-st .vts-st-n{
+    display:block!important;-webkit-line-clamp:unset!important;
+    -webkit-box-orient:initial!important;overflow:visible!important;
+    white-space:normal!important;text-overflow:clip!important;
+    line-height:1.6!important;
+  }
+}
 /* NAV metadata is fully represented by the gold status card below.
    Hide only the redundant hero chip strip; leave data/status updates untouched. */
 .hero #metaChips{display:none!important}
