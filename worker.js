@@ -308,6 +308,34 @@ async function readResponseTextLimited(response, maxBytes = MAX_FEED_BYTES) {
   return new TextDecoder().decode(bytes);
 }
 
+/** Permit public RSS publisher hostnames; reject internal destinations. */
+function isPublicFeedUrl(raw) {
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+    if (u.username || u.password) return false;
+    const h = u.hostname.toLowerCase().replace(/[.]$/, '');
+    if (!h || !h.includes('.') || h === 'localhost' ||
+        ['.localhost', '.local', '.internal', '.test', '.invalid', '.home.arpa', '.onion'].some(s => h.endsWith(s))) return false;
+    if (h.includes(':') || /^[0-9.]+$/.test(h) || h.startsWith('0x')) return false;
+    if (u.port && u.port !== '80' && u.port !== '443') return false;
+    return true;
+  } catch (_) { return false; }
+}
+
+async function fetchPublicFeed(raw, options) {
+  let target = raw;
+  for (let redirects = 0; redirects <= 5; redirects++) {
+    if (!isPublicFeedUrl(target)) throw new Error('Unsafe feed destination');
+    const res = await fetch(target, { ...options, redirect: 'manual' });
+    if (![301, 302, 303, 307, 308].includes(res.status)) return res;
+    const location = res.headers.get('location');
+    if (!location || redirects === 5) throw new Error('Invalid feed redirect');
+    target = new URL(location, target).href;
+  }
+  throw new Error('Too many redirects');
+}
+
 async function fetchNewsFeedItems(url, fallbackUrl, limit = 6) {
   const tried = new Set();
   for (const candidate of [url, fallbackUrl]) {
