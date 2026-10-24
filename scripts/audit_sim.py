@@ -439,6 +439,13 @@ def main() -> int:
     A.check("chain", view.get("head") == (evs[-1]["h"] if evs else None), "view built from a different ledger")
 
     orders = {e["oid"]: e for e in evs if e["k"] == "order"}
+    # Historical compliance check, independent of today's screener snapshot.
+    # A simulated contribution is NOT a documented pre-registered SIP.
+    for o in orders.values():
+        if (o.get("side") == "buy" and str(o.get("code")) == "118663"
+                and o.get("T", "") >= "2026-10-16"):
+            A.check("availability", False,
+                    f"{o['oid']}: Nippon India Gold Savings Fund fresh buy after 2026-10-16 cutoff; private ledger correction required")
     done = {e["oid"]: e for e in evs if e["k"] in ("allot", "fill", "redeem")}
     funded = {e["oid"]: e["amount"] for e in evs if e["k"] == "fund"}
     inst = [e for e in evs if e["k"] == "instalment"]
